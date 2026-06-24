@@ -1,0 +1,23 @@
+# P9 비교 실험 전용 thresholds.
+# perception 임계값을 완화해 자연 FAIL율 ~40-60%로 낮춤.
+# 기하학적 실패(reach, clearance, collision)에 집중하는 비교 실험.
+
+clearance:
+  required_gripper_clearance: 0.06
+  collision_threshold: 0.01
+
+safety:
+  safety_distance: 0.30
+
+reachability:
+  reach_margin_floor: 0.0
+
+destination:
+  place_footprint_margin: 0.01
+
+perception:
+  confidence_threshold: 0.25   # 완화: 0.70 → 0.25
+  occlusion_block_ratio: 0.80  # 완화: 0.50 → 0.80 (더 많은 occlusion 허용)
+
+decision:
+  warn_band: 0.015

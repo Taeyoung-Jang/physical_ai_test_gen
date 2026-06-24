@@ -1,0 +1,28 @@
+# Franka Panda (shipped with pybullet_data as franka_panda/panda.urdf).
+robot:
+  urdf: franka_panda/panda.urdf      # resolved via pybullet_data.getDataPath()
+  base_position: [0.0, 0.0, 0.0]
+  base_orientation_rpy: [0.0, 0.0, 0.0]
+  use_fixed_base: true
+
+  num_arm_joints: 7                  # panda has 7 revolute arm DOF
+  ee_link_index: 11                  # panda_hand / grasp frame link index
+  finger_joint_indices: [9, 10]
+
+  # Reachability envelope (approx). Used by Reachability Oracle as a fast
+  # geometric pre-check before the full IK solve.
+  max_reach: 0.855                   # m, from base to ee fully extended
+  min_reach: 0.10                    # m, inner dead zone
+
+  gripper_open_width: 0.08           # m, max finger separation
+  gripper_finger_width: 0.02         # m, single finger thickness
+
+# Kinematic motion checker: poses are visited in order; the path between
+# consecutive poses is linearly interpolated in joint space and sampled.
+motion:
+  pose_sequence: [home, pre_grasp, grasp, lift, pre_place, place]
+  lift_height: 0.15                  # m above grasp
+  pre_offset: 0.10                   # m standoff above target/destination
+  path_samples_per_segment: 12       # waypoints sampled per segment for queries
+  ik_max_iters: 200
+  ik_residual_threshold: 0.005       # m, IK considered reached below this

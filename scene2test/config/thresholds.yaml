@@ -1,0 +1,25 @@
+# Oracle thresholds. Each robustness margin is (measured - required); the
+# binding (minimum) margin decides PASS/FAIL, and which margin is binding
+# decides the failure_type.
+
+clearance:
+  required_gripper_clearance: 0.06   # m, free space target needs around it
+  collision_threshold: 0.01          # m, min allowed body-to-body distance
+
+safety:
+  safety_distance: 0.30              # m, min path-to-human distance
+  # Human safety is hard-gated: safety_margin < 0 -> BLOCKED (overrides FAIL).
+
+reachability:
+  reach_margin_floor: 0.0            # reach_margin <= 0 -> unreachable
+
+destination:
+  place_footprint_margin: 0.01       # m, extra free space needed at goal
+
+perception:
+  confidence_threshold: 0.70         # below -> perception_margin < 0
+  occlusion_block_ratio: 0.50        # occlusion above this near target -> WARN/BLOCKED
+
+# Decision banding on the final (minimum) robustness value.
+decision:
+  warn_band: 0.015                   # 0 < robustness <= warn_band -> boundary/WARN

@@ -1,0 +1,17 @@
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+*.egg-info/
+dist/
+build/
+.ruff_cache/
+data/generated_scenes/*
+data/search_logs/*
+data/test_results/*
+data/scene_library/*
+models/*.pkl
+reports/*.md
+reports/*.csv
+.env.local

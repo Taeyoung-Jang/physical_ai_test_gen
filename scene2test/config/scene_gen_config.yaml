@@ -1,0 +1,42 @@
+# Track A: procedural base-scene generation. Every generated base scene must
+# be nominally solvable (PASS) before any mutation is applied. Failures are
+# introduced only by the Mutation Space Builder, never by the generator.
+scene_generation:
+  workspace:
+    table_x_range: [[0.35, 0.45], [0.75, 0.85]]   # [min_edge_range, max_edge_range]
+    table_y_halfwidth: [0.30, 0.40]
+    table_height: 0.0
+
+  target:
+    types: [block, cylinder, can]
+    size_range:
+      x: [0.04, 0.07]
+      y: [0.04, 0.07]
+      z: [0.06, 0.10]
+    # placed within an inner reachable annulus so nominal task succeeds
+    reach_fraction: [0.45, 0.80]   # fraction of max_reach for radial placement
+
+  obstacles:
+    count_range: [0, 3]
+    types: [block, cylinder]
+    size_range:
+      x: [0.04, 0.10]
+      y: [0.04, 0.10]
+      z: [0.05, 0.12]
+    min_gap_to_target: 0.08        # nominal scene keeps obstacles clear of target
+
+  destination:
+    types: [tray, bin, zone]
+    size_range:
+      x: [0.14, 0.20]
+      y: [0.10, 0.16]
+      z: [0.02, 0.05]
+
+  human_zone:
+    presence_prob: 0.5
+    radius_range: [0.10, 0.20]
+    min_dist_to_path: 0.35         # nominal scene keeps human clear of path
+
+  validity:
+    max_placement_attempts: 200    # rejection sampling budget per object
+    library_size: 20               # base scenes generated for the library

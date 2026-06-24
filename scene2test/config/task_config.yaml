@@ -1,0 +1,33 @@
+# Fixed task under test. The task itself does NOT vary; the system searches
+# for the SCENE conditions under which this task fails.
+task:
+  type: pick_and_place
+  target_role: target          # object to be picked
+  destination_role: destination # where it must be placed
+
+# Default base-scene template (used when not generated procedurally).
+# Coordinates are in the robot base frame, meters.
+base_scene:
+  support_surface:
+    id: table_1
+    type: plane
+    height: 0.0
+    bounds:
+      x: [0.20, 0.80]
+      y: [-0.35, 0.35]
+  objects:
+    - id: red_block
+      role: target
+      position: [0.45, -0.10, 0.05]
+      size: [0.06, 0.06, 0.08]
+      movable: true
+    - id: blue_obstacle
+      role: obstacle
+      position: [0.35, -0.08, 0.05]
+      size: [0.08, 0.08, 0.08]
+      movable: true
+    - id: tray
+      role: destination
+      position: [0.60, 0.20, 0.03]
+      size: [0.18, 0.12, 0.04]
+      movable: false
