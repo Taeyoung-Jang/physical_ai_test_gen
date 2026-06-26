@@ -20,7 +20,6 @@ import pybullet_data
 
 from scene_graph import ObjectNode, Role, SceneGraph
 
-
 # ---------------------------------------------------------------------------
 # 연결 관리
 # ---------------------------------------------------------------------------
@@ -183,6 +182,35 @@ def create_human_zone(position: list[float], radius: float) -> int:
 # ObjectNode → PyBullet body
 # ---------------------------------------------------------------------------
 
+def create_mesh(
+    position: list[float],
+    mesh_path: str,
+    size: list[float],
+    color: list[float],
+    mass: float = 0.1,
+) -> int:
+    """생성된 메쉬(.obj)를 시각으로, AABB box를 collision proxy로 스폰한다.
+
+    오목 메쉬의 정확한 충돌은 비싸므로, 본 시스템(kinematic clearance 테스트)에는
+    AABB box collision 으로 충분하다. 메쉬 로딩 실패 시 box 시각으로 폴백한다.
+    """
+    cid = get_client()
+    half = [size[0] / 2, size[1] / 2, size[2] / 2]
+    col_id = p.createCollisionShape(p.GEOM_BOX, halfExtents=half, physicsClientId=cid)
+    try:
+        vis_id = p.createVisualShape(
+            p.GEOM_MESH, fileName=mesh_path, meshScale=[1, 1, 1],
+            rgbaColor=color, physicsClientId=cid)
+    except Exception:
+        vis_id = p.createVisualShape(
+            p.GEOM_BOX, halfExtents=half, rgbaColor=color, physicsClientId=cid)
+    body_id = p.createMultiBody(
+        baseMass=mass, baseCollisionShapeIndex=col_id,
+        baseVisualShapeIndex=vis_id, basePosition=position, physicsClientId=cid)
+    p.changeDynamics(body_id, -1, lateralFriction=0.8, physicsClientId=cid)
+    return body_id
+
+
 def _spawn_object(obj: ObjectNode) -> int:
     """ObjectNode 하나를 PyBullet에 생성하고 body_id를 반환한다."""
     pos = list(obj.position)
@@ -194,12 +222,17 @@ def _spawn_object(obj: ObjectNode) -> int:
         radius = obj.extra.get("radius", max(size[0], size[1]) / 2)
         return create_human_zone(pos, radius)
 
+    # 생성된 3D 메쉬 asset (mesh_path 가 있을 때만; 기존 primitive 경로 불변)
+    mesh_path = obj.extra.get("mesh_path")
+    if obj.shape == "mesh" and mesh_path and os.path.exists(mesh_path):
+        return create_mesh(pos, mesh_path, size, color, mass)
+
     if obj.shape == "cylinder":
         radius = max(size[0], size[1]) / 2
         height = size[2]
         return create_cylinder(pos, radius, height, color, mass)
 
-    # block / tray / bin / zone / default → box
+    # block / tray / bin / zone / mesh(폴백) / default → box
     half_extents = [size[0] / 2, size[1] / 2, size[2] / 2]
     return create_box(pos, half_extents, color, mass)
 

@@ -209,3 +209,152 @@ Physical Oracle은 6종 안전 마진을 계산하여 최저값 기준으로 판
 | Random | 74% | 2종 |
 
 warm-start Active Search가 Random 대비 실패 발견률 +6%p, 실패 다양성 2배.
+
+---
+
+## v2: LAM-Guided 3D Failure Case Generator (신규)
+
+**핵심 확장:** 정책의 행동을 관찰하고, 그 정책이 **취약한 3D 실패 케이스를 자동으로 생성**합니다.
+
+```
+🤖 정책(rule/mini/VLA)
+  ↓ [OBSERVE] 행동 관찰: 어떤 객체를 집는가? 경로는?
+  ↓ [PROFILE] 취약성 분석: 어떤 유형의 실패를 보이는가?
+  ↓ [GENERATE] Guided 생성: 그 취약성을 드러내는 3D 장면 자동 구성
+  ↓ [REFINE] 경계값 정제: PASS↔FAIL 임계값 찾기
+  ↓
+📊 결과: 정책별 약점 + 실패 케이스 + 정량적 경계값
+```
+
+### 빠른 시작
+
+**1️⃣ 핵심 4단계 파이프라인 (5분)**
+
+```bash
+PYBULLET_MODE=DIRECT uv run python src/lam_guided/lam_guided_loop.py \
+    --scene data/scene_library/scene_00001.json \
+    --action-model mini \
+    --rounds 4 \
+    --batch-size 8 \
+    --enabled
+```
+
+산출물:
+- `reports/vulnerability_summary.md` — 정책 약점 (예: "distractor 혼동 45%")
+- `reports/counterexample_table.csv` — 발견한 실패들
+- `reports/boundary_report.md` — 정량적 경계값 (예: "14cm 이내면 안 됨")
+
+**2️⃣ 실패 케이스 시각화 (GIF)**
+
+```bash
+PYBULLET_MODE=DIRECT uv run python tools/animate_lam_failure.py --max 4
+open data/lam_anim/LAMFC_wrong_object_grounding_*.gif
+```
+
+**3️⃣ Closed-Loop VLA 통합 (Stub)**
+
+```bash
+PYBULLET_MODE=DIRECT uv run python tools/run_vla_rollout.py \
+    --scene data/scene_library/scene_00001.json \
+    --policy stub --insert distractor_red_can --gif
+```
+
+### 상세 가이드
+
+**기술 보고서:**
+- **[docs/TECHNICAL_REPORT.md](docs/TECHNICAL_REPORT.md)** — 📄 **English Technical Report** (Abstract, Methodology, Results)
+- **[docs/기술보고서.md](docs/기술보고서.md)** — 📄 **한글 기술보고서** (요약, 방법론, 결과)
+
+**실행 및 개념:**
+- **[LAM_GUIDED_WORKFLOW.md](LAM_GUIDED_WORKFLOW.md)** — 4단계 파이프라인 상세 설명 + 산출물 해석
+- **[EXECUTION.md](EXECUTION.md)** — 전체 명령어 레퍼런스 + 트러블슈팅
+- **[docs/openvla_integration.md](docs/openvla_integration.md)** — VLA 통합 (OpenVLA, Octo 등)
+- **[docs/3d_generation.md](docs/3d_generation.md)** — 3D 객체 생성 (Shap-E + 폴백)
+
+### 주요 특징
+
+| 기능 | 설명 |
+|---|---|
+| **정책 관찰** | 3가지 ActionModel: RuleLAMProxy (정상) / MiniActionModel (휴리스틱) / OpenVLAPolicy (실제 VLA) |
+| **취약성 진단** | 8차원 행동 특성 → 정책별 약점 자동 분류 |
+| **Guided 생성** | 4가지 failure family (distractor, occluder, path_blocker, human_safety) |
+| **안정성 검증** | 모든 생성 케이스 유효성 검증 (충돌, 범위, 겹침) |
+| **경계값 정제** | Binary search로 PASS↔FAIL 임계값 찾기 (stochastic policy 대응) |
+| **3D 객체** | Shap-E 텍스트→메쉬 생성 + 모델 없을 때 자동 폴백 |
+| **폐루프 정책** | OpenVLA 통합: 매 스텝 RGB→7-DoF action (Closed-loop) |
+
+### 테스트
+
+```bash
+# P11: LAM-Guided 루프 (10 tests)
+PYBULLET_MODE=DIRECT uv run python tests/test_p11_lam_guided.py
+
+# P12: Closed-loop VLA (5 tests)
+PYBULLET_MODE=DIRECT uv run python tests/test_p12_vla_closed_loop.py
+
+# P13: 3D 생성 + 폴백 (5 tests)
+PYBULLET_MODE=DIRECT uv run python tests/test_p13_asset_gen.py
+```
+
+모든 테스트 통과 (GPU 불필요, Apple Silicon M4 Pro에서 검증).
+
+### 설치 (선택)
+
+```bash
+# OpenVLA, Octo 등 VLA 모델
+uv sync --extra vla
+
+# Shap-E 3D 생성 모델
+uv sync --extra gen3d
+```
+
+---
+
+## 디렉터리 구조 (v2 확장)
+
+```
+src/
+  policies.py                    # ActionModel Protocol, RuleLAMProxy, MiniActionModel
+  policies_vla.py                # ClosedLoopPolicy, StubReachPolicy, OpenVLAPolicy
+  lam_guided/                    # Core LAM-Guided loop
+    types.py                     # RolloutTrace, BehaviorFeatures, VulnerabilityProfile
+    asset_bank.py                # GeneratedAsset 카탈로그 (procedural + generated)
+    asset_gen.py                 # 3D 생성 (Shap-E) + fallback
+    case_apply.py                # 새 객체 삽입 메커니즘
+    rollout.py                   # Policy rollout
+    policy_oracle.py             # 정책별 failure 진단
+    behavior_encoder.py          # 행동 특성 추출
+    vulnerability.py             # 취약성 분석
+    case_generator.py            # Guided 실패 케이스 생성
+    constraint_filter.py         # 유효성 검증
+    failure_memory.py            # Counterexample 축적
+    boundary_refiner.py          # 경계값 정제 (binary search)
+    closed_loop.py               # Closed-loop rollout (VLA용)
+    lam_guided_loop.py           # Main orchestrator + CLI
+
+tools/
+  animate_lam_failure.py         # Counterexample GIF 렌더링
+  run_vla_rollout.py             # VLA rollout 데모
+  gen3d_asset.py                 # 3D 객체 생성 데모
+
+config/
+  lam_guided_failure.yaml        # 마스터 플래그 + 파라미터
+
+tests/
+  test_p11_lam_guided.py         # LAM-Guided 루프 테스트
+  test_p12_vla_closed_loop.py    # Closed-loop VLA 테스트
+  test_p13_asset_gen.py          # 3D 생성 테스트
+
+docs/
+  openvla_integration.md         # VLA 통합 가이드
+  3d_generation.md               # 3D 객체 생성 가이드
+```
+
+---
+
+## 다음 단계
+
+- **비교 실험 (A/B/C):** Active Failure vs Random distractor vs LAM-Guided → 효율성 정량화
+- **더 많은 family:** destination_occupied, grasp_difficult_object (현재 4/6)
+- **VLA 전체 루프 연결:** LAM-Guided loop 내에서 OpenVLA와 폐루프 연결
+- **대시보드:** Streamlit app.py 확장 (LAM 결과 시각화)

@@ -249,6 +249,96 @@ uv run python tools/animate_failure.py \
 
 ---
 
+## v2: LAM-Guided Failure Case Generator
+
+기본 파이프라인이 "장면을 바꿔 실패를 찾는다"였다면, v2 확장은 **"LAM/정책이 실제로 어떻게 행동하는지 관찰 → 그 정책이 취약한 3D failure case를 생성 → 재실행"** 하는 행동 조건부(behavior-conditioned) 루프를 추가합니다. 기존 파이프라인은 손대지 않으며 `enabled` flag로 on/off 합니다. (설계: `.blueprint/01_blueprint.md`)
+
+```
+정책(ActionModel) 실행 관찰 → RolloutTrace
+   → 행동 취약성 추정 (VulnerabilityProfiler)
+   → 약점 family의 3D failure case 생성 (FailureCaseGenerator + GeneratedAssetBank)
+   → ConstraintFilter → 재실행 → Policy/Physical Oracle → FailureMemory
+   → BoundaryRefiner로 최소 perturbation 경계 탐색
+```
+
+### 핵심 차별점
+- **객체 선택 정책**: `MiniActionModel`(휴리스틱, 딥러닝 아님)은 색/형상/instruction 키워드 + 근접도로 객체를 채점 → 유사한 distractor가 들어오면 **wrong object grounding**이 발생. `RuleLAMProxy`는 항상 정답(baseline).
+- **두 개의 오라클**: 기존 Physical Oracle(충돌/clearance) + 신규 **Policy Oracle**(wrong_object_grounding, wrong_object_picked, safety_noncompliance, action_instability, recovery_failure).
+- **4개 failure family**: semantic_distractor, occluder, path_blocker, human_safety_intrusion.
+- **Kinematic 기반**: `run_kinematic_check(target_pos=…)`가 좌표를 받으므로, 정책이 고른 객체로 뻗는 데 sim 수정이 필요 없음. 새 객체는 `ObjectNode`로 삽입(기존 spawner 재사용, URDF 없음).
+
+### 실행
+```bash
+# 정상 정책 baseline (Demo 1) — wrong grounding 없음
+PYBULLET_MODE=DIRECT uv run python src/lam_guided/lam_guided_loop.py \
+    --scene data/scene_library/scene_00001.json --action-model rule --rounds 4 --enabled
+
+# 헷갈리는 정책으로 guided 생성 (Demo 2~4)
+PYBULLET_MODE=DIRECT uv run python src/lam_guided/lam_guided_loop.py \
+    --scene data/scene_library/scene_00001.json --action-model mini --rounds 4 --enabled
+```
+산출물: `data/lam_guided_logs/*.json`, `reports/{vulnerability_summary.md, counterexample_table.csv, boundary_report.md}`.
+
+### counterexample 시각화 (GIF)
+발견한 counterexample을 로봇 애니메이션 GIF로 렌더링합니다. wrong-grounding 케이스는
+**TARGET(초록 링, 테이블에 남음)** vs **PICKED(빨강 링, 그리퍼가 들어올림)** 마커로 "엉뚱한 객체를 집었음"을 명시합니다.
+```bash
+# 최신 LAM 로그의 family별 counterexample → GIF (data/lam_anim/)
+PYBULLET_MODE=DIRECT uv run python tools/animate_lam_failure.py --max 4
+# 특정 family / failure type만
+PYBULLET_MODE=DIRECT uv run python tools/animate_lam_failure.py --family semantic_distractor
+```
+TinyRenderer로 캡처(macOS GUI/OpenGL 문제 회피), 저장 전 프레임이 실제로 다른지 검증.
+
+### 핵심 결과 (같은 기계, 정책마다 다른 취약성)
+| 정책 | wrong_object_grounding | semantic_distractor 경계 |
+|---|---|---|
+| `rule` (정답) | 없음 | ~0.04m (최소 = 취약점 없음) |
+| `mini` (헷갈림) | 발견 | **~0.14m** (14cm 내 유사 distractor면 grounding 불안정) |
+
+검증: `PYBULLET_MODE=DIRECT uv run python tests/test_p11_lam_guided.py` (unit 7 + Demo 1~4).
+
+### 실제 VLA(OpenVLA) 통합 — closed-loop 정책
+테스트 대상 정책은 교체 가능하다. `MiniActionModel`(휴리스틱)을 넘어 **실제 OpenVLA**를
+붙이려면 closed-loop 경로를 쓴다: 매 스텝 [RGB 렌더 → `act()` → 7-DoF EE 델타 → IK → step].
+- `src/policies_vla.py` — `ClosedLoopPolicy`(reset/act), `StubReachPolicy`(GPU-free 검증용), `OpenVLAPolicy`(GPU)
+- `src/lam_guided/closed_loop.py` — `render_rgb`, `run_closed_loop_rollout`, `infer_selected_object`
+- 산출 `RolloutTrace`가 동일 스키마라 PolicyOracle/Physical 체크 불변 → OpenVLA는 **drop-in**
+
+```bash
+# stub 정책으로 closed-loop 데모 (별도 설치 불필요) — VLA 관측 GIF 포함
+PYBULLET_MODE=DIRECT uv run python tools/run_vla_rollout.py \
+    --scene data/scene_library/scene_00001.json --policy stub --insert distractor_red_can --gif
+
+# 실제 OpenVLA: 의존성 설치 후 device=auto (Apple Silicon이면 자동 MPS)
+uv sync --extra vla
+PYBULLET_MODE=DIRECT uv run python tools/run_vla_rollout.py \
+    --scene data/scene_library/scene_00001.json --policy openvla --unnorm-key bridge_orig
+```
+`OpenVLAPolicy`는 device를 자동 감지(Apple Silicon `mps`+fp16 / CUDA `cuda`+bf16 / `cpu`)하고
+flash-attn은 쓰지 않는다. 검증: `tests/test_p12_vla_closed_loop.py`.
+설치·성능 현실(M4 Pro)·embodiment 보정·Octo 대안은 [`docs/openvla_integration.md`](scene2test/docs/openvla_integration.md).
+
+### 3D Object Generation (Shap-E) — 없으면 default 폴백
+distractor/occluder를 **텍스트→3D 생성 메쉬**로 만들어 asset bank에 등록한다.
+**생성 모델이 없거나 실패하면 procedural default 객체로 자동 폴백**한다.
+- `src/lam_guided/asset_gen.py` — `ShapEGenerator`(diffusers, Apple Silicon은 CPU 자동), `acquire_asset`(실패→default)
+- `src/scene_builder.py` — `create_mesh` + `_spawn_object` 메쉬 분기(GEOM_MESH 시각 + box collision proxy)
+- 생성은 **offline 1회**(느림), 루프는 등록된 메쉬를 consume (블루프린트 14장 2단계)
+
+```bash
+uv sync --extra gen3d        # diffusers, trimesh (transformers 4.40.1 호환 버전 고정)
+# 실제 생성 (M4 Pro CPU ~30s) — index.json 등록 + 스냅샷
+PYBULLET_MODE=DIRECT uv run python tools/gen3d_asset.py \
+    --prompt "a red soda can" --asset-id gen3d_red_can --family semantic_distractor --steps 24
+# 모델 없이 폴백 확인
+PYBULLET_MODE=DIRECT uv run python tools/gen3d_asset.py --no-model
+```
+이 M4 Pro에서 Shap-E 실제 생성 동작 확인(can 형상 메쉬). 검증: `tests/test_p13_asset_gen.py`.
+상세는 [`docs/3d_generation.md`](scene2test/docs/3d_generation.md).
+
+---
+
 ## 디렉터리 구조
 
 ```
@@ -262,7 +352,8 @@ physical_ai_test_gen/
     │   ├── robot_config.yaml    Franka Panda 설정 (관절/그리퍼/reach)
     │   ├── thresholds.yaml      오라클 임계값 (6 margin 기준)
     │   ├── task_config.yaml
-    │   └── scene_gen_config.yaml
+    │   ├── scene_gen_config.yaml
+    │   └── lam_guided_failure.yaml  [v2] LAM-guided 루프 flag + knob
     ├── src/
     │   ├── scene_graph.py           SceneGraph 자료구조
     │   ├── scene_builder.py         PyBullet 씬 로드 + mutation 적용
@@ -276,16 +367,38 @@ physical_ai_test_gen/
     │   ├── surrogate_model.py       RFSurrogate / GPSurrogate
     │   ├── acquisition.py           Acquisition Function
     │   ├── active_failure_search.py 메인 탐색 루프 [CLI]
-    │   ├── reporter.py              리포트 생성
-    │   └── vision/rgbd_to_graph.py  RGB-D → Scene Graph (Track B)
+    │   ├── reporter.py              리포트 생성 (+v2 LAM 리포트 3종)
+    │   ├── vision/rgbd_to_graph.py  RGB-D → Scene Graph (Track B)
+    │   ├── policies.py              [v2] ActionModel (RuleLAMProxy, MiniActionModel)
+    │   ├── policies_vla.py          [v2] ClosedLoopPolicy (StubReachPolicy, OpenVLAPolicy)
+    │   └── lam_guided/              [v2] LAM-guided failure 루프 패키지
+    │       ├── types.py             RolloutTrace/BehaviorFeatures/VulnerabilityProfile/...
+    │       ├── asset_bank.py        GeneratedAssetBank + 씬 시맨틱 주석
+    │       ├── case_apply.py        새 객체(asset) 삽입
+    │       ├── rollout.py           선택 객체 kinematic rollout
+    │       ├── policy_oracle.py     Policy Oracle + 물리 체크
+    │       ├── behavior_encoder.py  RolloutTrace → BehaviorFeatures
+    │       ├── vulnerability.py     취약성 프로파일링
+    │       ├── case_generator.py    4 family failure case 생성
+    │       ├── constraint_filter.py 삽입 유효성 (validity 재사용)
+    │       ├── failure_memory.py    counterexample 저장 + novelty/redundancy
+    │       ├── boundary_refiner.py  최소 perturbation 경계 (binary search)
+    │       ├── closed_loop.py       [v2] VLA closed-loop rollout (RGB→act→IK)
+    │       ├── asset_gen.py         [v2] 3D 생성(Shap-E)+default 폴백
+    │       └── lam_guided_loop.py   오케스트레이터 [CLI]
     ├── tools/
     │   ├── view_scene.py            씬 스냅샷/뷰어
-    │   └── animate_failure.py       pick-and-place 애니메이션 (kinematic/physics)
-    ├── tests/                       phase별 검증 스크립트 (test_p1 ~ test_p10)
+    │   ├── animate_failure.py       pick-and-place 애니메이션 (kinematic/physics)
+    │   ├── animate_lam_failure.py   [v2] LAM counterexample GIF (TARGET/PICKED 마커)
+    │   ├── run_vla_rollout.py       [v2] closed-loop VLA rollout 데모 (stub/openvla)
+    │   └── gen3d_asset.py           [v2] 3D object 생성 데모 (+default 폴백)
+    ├── tests/                       phase별 검증 (test_p1 ~ test_p10, +test_p11 LAM-guided)
     └── data/
         ├── scene_library/          생성된 씬 JSON
         ├── search_logs/            탐색 결과 로그
-        └── failure_anim/           실패/성공 케이스 GIF
+        ├── failure_anim/           실패/성공 케이스 GIF
+        ├── generated_assets/       [v2] procedural asset index.json
+        └── lam_guided_logs/        [v2] LAM-guided 루프 로그 + counterexamples
 ```
 
 ---

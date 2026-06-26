@@ -253,3 +253,91 @@ def load_all_logs(log_dir: str) -> dict[str, list[dict]]:
             by_scene[scene_id] = []
         by_scene[scene_id].extend(recs)
     return by_scene
+
+
+# ---------------------------------------------------------------------------
+# LAM-Guided 리포트 (확장)
+# ---------------------------------------------------------------------------
+
+def generate_vulnerability_summary(
+    profile: dict,
+    output_dir: Optional[str] = None,
+    filename_stem: str = "vulnerability_summary",
+) -> str:
+    """VulnerabilityProfile dict → markdown 요약."""
+    scores = profile.get("scores", {})
+    fams = profile.get("recommended_families", [])
+    lines = ["# LAM Vulnerability Profile", ""]
+    lines.append(f"- scene: `{profile.get('scene_id', '')}`")
+    lines.append("")
+    lines.append("## 취약성 점수 (높을수록 약함)")
+    for axis, val in sorted(scores.items(), key=lambda x: -x[1]):
+        bar = "█" * int(round(val * 20))
+        lines.append(f"- {axis:24s} {val:5.2f}  {bar}")
+    lines.append("")
+    lines.append("## 추천 Failure Families")
+    for i, f in enumerate(fams, 1):
+        lines.append(f"{i}. {f}")
+    md = "\n".join(lines) + "\n"
+    if output_dir:
+        Path(output_dir).mkdir(parents=True, exist_ok=True)
+        (Path(output_dir) / f"{filename_stem}.md").write_text(md, encoding="utf-8")
+    return md
+
+
+def generate_counterexample_table(
+    records: list[dict],
+    output_dir: Optional[str] = None,
+    filename_stem: str = "counterexample_table",
+) -> pd.DataFrame:
+    """LAM-guided counterexample 목록 → DataFrame (+CSV).
+
+    레코드 키: case_id, family, verdict, failure_types, selected_obj_id,
+    expected_obj_id, reason 등.
+    """
+    rows = []
+    for rec in records:
+        rows.append({
+            "counterexample_id": rec.get("counterexample_id", ""),
+            "case_id":      rec.get("case_id", ""),
+            "family":       rec.get("family", ""),
+            "verdict":      rec.get("verdict", ""),
+            "failure_types": ",".join(rec.get("failure_types", [])),
+            "expected":     rec.get("expected_obj_id", ""),
+            "selected":     rec.get("selected_obj_id", ""),
+            "reason":       rec.get("reason", ""),
+        })
+    df = pd.DataFrame(rows)
+    if not df.empty:
+        order = {v: i for i, v in enumerate(VERDICT_ORDER)}
+        df = df.sort_values(by="verdict", key=lambda s: s.map(lambda v: order.get(v, 99)))
+    if output_dir:
+        Path(output_dir).mkdir(parents=True, exist_ok=True)
+        df.to_csv(Path(output_dir) / f"{filename_stem}.csv", index=False)
+    return df
+
+
+def generate_boundary_report(
+    boundaries: list[dict],
+    output_dir: Optional[str] = None,
+    filename_stem: str = "boundary_report",
+) -> str:
+    """BoundaryResult dict 목록 → markdown (최소 perturbation 경계)."""
+    lines = ["# Minimum Perturbation Boundary", ""]
+    if not boundaries:
+        lines.append("_경계 탐색 결과 없음._")
+    for b in boundaries:
+        lines.append(f"## {b.get('family', '')}")
+        lines.append(f"- parameter: `{b.get('param_name', '')}`")
+        lines.append(f"- FAIL ≤ {b.get('fail_value', 0):.3f} m / "
+                     f"PASS ≥ {b.get('pass_value', 0):.3f} m")
+        lines.append(f"- 추정 경계: **{b.get('boundary', 0):.3f} m**  "
+                     f"(iters={b.get('iters', 0)})")
+        if b.get("note"):
+            lines.append(f"- {b['note']}")
+        lines.append("")
+    md = "\n".join(lines) + "\n"
+    if output_dir:
+        Path(output_dir).mkdir(parents=True, exist_ok=True)
+        (Path(output_dir) / f"{filename_stem}.md").write_text(md, encoding="utf-8")
+    return md
