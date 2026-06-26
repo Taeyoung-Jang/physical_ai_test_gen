@@ -5,7 +5,7 @@ description = "3D Scene Graph 기반 Active Failure Search를 활용한 Physical
 requires-python = ">=3.11"
 dependencies = [
     "pybullet-arm64>=3.2.5",
-    "numpy>=1.24",
+    "numpy==1.26.4",
     "scipy>=1.10",
     "scikit-learn>=1.3",
     "open3d>=0.17",
@@ -17,12 +17,41 @@ dependencies = [
     "tabulate>=0.10.0",
     "imageio[ffmpeg]>=2.9",
     "pillow>=9.0",
+    "torch==2.2.0",
+    "torchvision==0.17.0",
+    "torchaudio==2.2.0",
+    "transformers==4.40.1",
+    "tokenizers==0.19.1",
+    "timm==0.9.10",
+    "sentencepiece==0.1.99",
 ]
 
 [project.optional-dependencies]
 dev = [
     "pytest>=7.0",
     "ruff>=0.1",
+]
+# 실제 VLA(OpenVLA) 통합용. Apple Silicon(MPS)·CUDA 공통.
+# 설치:  uv sync --extra vla   (torch는 macOS arm64에서 자동으로 MPS 빌드)
+# OpenVLA 호환을 위해 transformers/timm/tokenizers 버전을 고정한다.
+vla = [
+    "torch==2.2",
+    "torchvision>=0.17",
+    "transformers==4.40.1",
+    "tokenizers==0.19.1",
+    "timm==0.9.10",
+    "accelerate>=0.30",
+    "einops>=0.7",
+    "sentencepiece>=0.1.99",
+]
+# 3D object generation (Shap-E). 선택 설치. 없으면 procedural default 로 자동 폴백.
+# 설치:  uv sync --extra gen3d   (torch 는 --extra vla 와 공유)
+# diffusers 0.27.2 = OpenVLA용 transformers==4.40.1 과 호환되는 Shap-E 버전.
+gen3d = [
+    "torch>=2.2",
+    "diffusers==0.27.2",
+    "huggingface-hub==0.23.4",   # diffusers 0.27.2의 cached_download + transformers 4.40.1 호환
+    "trimesh>=4.0",
 ]
 
 [build-system]

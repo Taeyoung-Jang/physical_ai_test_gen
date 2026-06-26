@@ -1,0 +1,45 @@
+# LAM-Guided Failure Case Generator 설정.
+# 모든 신규 기능은 enabled flag 로 on/off 한다(기본 off).
+lam_guided_failure:
+  enabled: false                       # 마스터 flag
+  action_model: mini                   # mini(MiniActionModel) | rule(RuleLAMProxy baseline)
+  instruction_default: "pick up the red can"
+
+  enabled_families: [semantic_distractor, occluder, path_blocker, human_safety_intrusion]
+  candidates_per_round: 60
+  top_k_per_round: 8
+  rounds: 4
+  probe_per_round: 10                  # 라운드마다 정책 행동을 관찰할 probe rollout 수
+  seed: 0
+
+  mini_action_model:
+    noise_std: 0.12
+    safety_aware: false                # false면 safety_noncompliance(BLOCKED) 가능
+    weights: {keyword: 0.5, similarity: 0.4, occlusion: 0.3, distance: 0.15}
+
+  # guided 후보 점수화 (surrogate 없이): family_prior + novelty + coverage - redundancy
+  acquisition_weights:
+    family_prior: 0.40
+    novelty: 0.25
+    coverage: 0.20
+    redundancy: 0.15
+
+  policy_oracle:
+    instability_thresh: 3.5            # rad, EE 방향변화 누적 (정상 reach max~2.5 위)
+
+  generator:
+    selection_radius: 0.12             # distractor 최대 이격
+    min_separation: 0.04               # distractor 최소 이격 (reach가 실제로 달라지게)
+    occlusion_default: 0.55            # > thresholds.perception.occlusion_block_ratio(0.50)
+
+  boundary_refiner:
+    families: [semantic_distractor, path_blocker]
+    max_iters: 8
+    tolerance: 0.005                   # m
+    samples_per_eval: 30               # 확률적 정책이므로 한 값에서 여러 번 실행해 FAIL율 측정
+
+  paths:
+    asset_index: data/generated_assets/index.json
+    counterexamples: data/lam_guided_logs/counterexamples.jsonl
+    log_dir: data/lam_guided_logs
+    report_dir: reports
