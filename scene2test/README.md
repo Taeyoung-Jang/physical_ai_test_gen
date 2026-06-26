@@ -261,6 +261,11 @@ PYBULLET_MODE=DIRECT uv run python tools/run_vla_rollout.py \
 
 ### 상세 가이드
 
+**기술 보고서:**
+- **[docs/TECHNICAL_REPORT.md](docs/TECHNICAL_REPORT.md)** — 📄 **English Technical Report** (Abstract, Methodology, Results)
+- **[docs/기술보고서.md](docs/기술보고서.md)** — 📄 **한글 기술보고서** (요약, 방법론, 결과)
+
+**실행 및 개념:**
 - **[LAM_GUIDED_WORKFLOW.md](LAM_GUIDED_WORKFLOW.md)** — 4단계 파이프라인 상세 설명 + 산출물 해석
 - **[EXECUTION.md](EXECUTION.md)** — 전체 명령어 레퍼런스 + 트러블슈팅
 - **[docs/openvla_integration.md](docs/openvla_integration.md)** — VLA 통합 (OpenVLA, Octo 등)
