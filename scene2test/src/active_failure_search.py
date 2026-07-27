@@ -16,7 +16,7 @@ import json
 import os
 import time
 import uuid
-from dataclasses import dataclass, field, asdict
+from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Optional
 
@@ -26,11 +26,10 @@ from acquisition import (
     compute_acquisition_scores,
     select_topk_diverse,
 )
-from feature_extractor import build_feature_batch, build_feature_vector, FEATURE_NAMES
+from feature_extractor import build_feature_batch, build_feature_vector
 from mutation_space import (
-    PARAM_NAMES,
-    sample_random,
     sample_initial_seeds,
+    sample_random,
 )
 from physical_oracle import (
     OracleResult,
@@ -40,13 +39,11 @@ from physical_oracle import (
 )
 from scene_graph import SceneGraph
 from surrogate_model import (
+    MARGIN_NAMES,
+    GPSurrogate,
     MultiOutputSurrogate,
     RFSurrogate,
-    GPSurrogate,
-    build_training_data,
-    MARGIN_NAMES,
 )
-
 
 # ---------------------------------------------------------------------------
 # 탐색 설정
@@ -129,6 +126,15 @@ class ActiveFailureSearch:
         if self.cfg.surrogate_type == "gp":
             return GPSurrogate(random_state=self.cfg.seed)
         return RFSurrogate(random_state=self.cfg.seed)
+
+    # ------------------------------------------------------------------
+    # 단일 테스트 평가 (서브클래스 오버라이드 지점 — 예: hm3d.failure_search)
+    # ------------------------------------------------------------------
+
+    def _evaluate(self, params: dict, test_id: str) -> OracleResult:
+        return run_oracle_on_mutation(
+            self.sg, params, self.robot_cfg, self.thresholds, test_id=test_id
+        )
 
     # ------------------------------------------------------------------
     # 피처 벡터 빌드
@@ -226,9 +232,7 @@ class ActiveFailureSearch:
             test_id = f"R{round_idx:02d}_T{rank:02d}_{self._run_id}"
             t0 = time.perf_counter()
 
-            oracle_result: OracleResult = run_oracle_on_mutation(
-                self.sg, params, self.robot_cfg, self.thresholds, test_id=test_id
-            )
+            oracle_result: OracleResult = self._evaluate(params, test_id)
 
             elapsed = time.perf_counter() - t0
             fv = build_feature_vector(
@@ -387,9 +391,9 @@ def run_comparison(
 
 if __name__ == "__main__":
     import argparse
-    import yaml
-    import sys
     import os
+    import sys
+
     sys.path.insert(0, os.path.dirname(__file__))
 
     os.environ.setdefault("PYBULLET_MODE", "DIRECT")

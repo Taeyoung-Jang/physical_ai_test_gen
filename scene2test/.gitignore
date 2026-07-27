@@ -13,6 +13,9 @@ data/test_results/*
 data/scene_library/*
 data/hm3d_raw/
 data/hm3d_cache/
+data/hm3d_anim/
+data/hm3d_scene_graphs/
+data/hm3d_search_logs/
 reports/hm3d/
 models/*.pkl
 reports/*.md
