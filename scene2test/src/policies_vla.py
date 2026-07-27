@@ -85,7 +85,8 @@ class StubReachPolicy:
 def resolve_device_dtype(device: str = "auto"):
     """실행 환경에 맞는 (device, torch_dtype) 을 고른다.
 
-    cuda → bf16, Apple Silicon(mps) → fp16, cpu → fp32.
+    cuda → bf16, Apple Silicon MPS → fp32, cpu → fp32.
+    MPS는 float64 미지원이므로 fp32 사용 (fp16보다 안정적).
     flash-attn 은 CUDA 전용이므로 어디서나 'eager' attention 을 쓴다.
     """
     import torch
@@ -98,19 +99,37 @@ def resolve_device_dtype(device: str = "auto"):
             device = "cpu"
     if device.startswith("cuda"):
         dtype = torch.bfloat16
-    elif device == "mps":
-        dtype = torch.float16        # MPS는 bf16 지원이 불완전 → fp16
     else:
+        # MPS + CPU 모두 float32. MPS는 float64 미지원이므로 fp32로 고정.
         dtype = torch.float32
     return device, dtype
 
 
-class OpenVLAPolicy:
-    """openvla/openvla-7b wrapper. device 자동감지 (cuda / Apple Silicon → cpu / cpu).
+def _patch_float64_to_float32(model) -> None:
+    """모델 내 float64 파라미터·버퍼를 float32로 변환한다.
 
-    ⚠️ **Apple Silicon(MPS) 미지원**: OpenVLA-7B의 attention mask 계산이 MPS에서 실패하므로
-       자동으로 CPU로 폴백한다. M4 Pro의 경우 fp32 CPU 추론이 느리지만(~수 초/스텝)
-       메모리는 충분하다(통합메모리 16GB+). 가벼운 대안은 docs/openvla_integration.md 의 Octo 참고.
+    transformers 일부 구현(RoPE inv_freq 등)이 CPU 로딩 시 float64를 생성한다.
+    MPS는 float64를 지원하지 않으므로 .to(device) 전에 변환해야 한다.
+    """
+    import torch
+    for name, buf in list(model.named_buffers()):
+        if buf.dtype == torch.float64:
+            parts = name.split(".")
+            obj = model
+            for p in parts[:-1]:
+                obj = getattr(obj, p)
+            setattr(obj, parts[-1], buf.to(torch.float32))
+    for param in model.parameters():
+        if param.data.dtype == torch.float64:
+            param.data = param.data.to(torch.float32)
+
+
+class OpenVLAPolicy:
+    """openvla/openvla-7b wrapper. device 자동감지 (cuda / Apple Silicon MPS / cpu).
+
+    Apple Silicon (M1~M4): MPS + float32 로 동작한다.
+    MPS는 float64 미지원이므로 모델 로드 후 float64 버퍼를 float32로 패치한다.
+    attention_mask 는 MPS에서 불필요하므로 제거한다.
 
     flash_attention_2(CUDA 전용)는 쓰지 않고 eager attention 만 사용.
     모델은 실행 시 lazy 로딩(import 시 불필요).
@@ -125,7 +144,7 @@ class OpenVLAPolicy:
                  pos_scale: float = 1.0, frame_transform: Optional[np.ndarray] = None):
         self.model_id = model_id
         self.unnorm_key = unnorm_key
-        self.device = device                # "auto"면 _ensure_loaded 에서 결정
+        self.device = device
         self.pos_scale = pos_scale
         self.frame_transform = (np.eye(3) if frame_transform is None
                                 else np.array(frame_transform))
@@ -136,34 +155,46 @@ class OpenVLAPolicy:
     def _ensure_loaded(self):
         if self._model is not None:
             return
-        import torch  # noqa: 지연 import (실행 환경에서만)
+        import torch
         from transformers import AutoModelForVision2Seq, AutoProcessor
         self._torch = torch
         self.device, self._dtype = resolve_device_dtype(self.device)
-        # OpenVLA는 MPS에서 attention mask 계산 오류 발생 → CPU 폴백
-        # if self.device == "mps":
-        #     self.device = "cpu"
-        #     self._dtype = torch.float32
+
         self._processor = AutoProcessor.from_pretrained(
             self.model_id, trust_remote_code=True)
+        # CPU에 먼저 로드한 뒤 float64 버퍼를 패치하고 device로 이동
         self._model = AutoModelForVision2Seq.from_pretrained(
             self.model_id, torch_dtype=self._dtype,
-            attn_implementation="eager",          # flash-attn(CUDA전용) 미사용
-            low_cpu_mem_usage=True, trust_remote_code=True).to(self.device)
+            attn_implementation="eager",
+            low_cpu_mem_usage=True, trust_remote_code=True)
+        if self.device == "mps":
+            _patch_float64_to_float32(self._model)
+        self._model = self._model.to(self.device)
         print(f"[OpenVLA] loaded on device={self.device} dtype={self._dtype}")
 
     def reset(self, observation: SceneGraph, instruction: str) -> None:
-        pass                                # OpenVLA 는 frame 단위 stateless
+        pass  # OpenVLA 는 frame 단위 stateless
 
     def act(self, rgb: np.ndarray, instruction: str,
             robot_state: dict[str, Any]) -> np.ndarray:
         self._ensure_loaded()
+        import torch
         from PIL import Image
         img = Image.fromarray(np.asarray(rgb, dtype=np.uint8))
         prompt = f"In: What action should the robot take to {instruction}?\nOut:"
-        inputs = self._processor(prompt, img).to(self.device, dtype=self._dtype)
-        inputs.pop("attention_mask", None)
-        raw = self._model.predict_action(**inputs, unnorm_key=self.unnorm_key, do_sample=False, use_cache=False)
+        raw_inputs = self._processor(prompt, img)
+        # 정수형(input_ids 등)은 dtype 변환 없이 device만 이동,
+        # 부동소수형(pixel_values 등)은 model dtype으로 변환
+        inputs = {
+            k: (v.to(self.device, dtype=self._dtype)
+                if isinstance(v, torch.Tensor) and v.is_floating_point()
+                else v.to(self.device) if isinstance(v, torch.Tensor)
+                else v)
+            for k, v in raw_inputs.items()
+        }
+        inputs.pop("attention_mask", None)  # MPS에서 불필요, CPU에서도 제거
+        raw = self._model.predict_action(
+            **inputs, unnorm_key=self.unnorm_key, do_sample=False, use_cache=False)
         action = np.asarray(raw, dtype=float).reshape(-1)  # (7,)
         action[0:3] = self.pos_scale * (self.frame_transform @ action[0:3])
         return action

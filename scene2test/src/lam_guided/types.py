@@ -24,8 +24,8 @@ class RolloutTrace:
     scene_id: str
     instruction: str
     expected_obj_id: str                 # ground-truth target id (sg.target().id)
-    selected_obj_id: str                 # 정책이 실제로 고른 객체
-    grasp_success: bool                  # 선택 객체에 대한 IK 성공 여부
+    selected_obj_id: str                 # 실행 정책(VLA or IK)이 실제로 간 객체
+    grasp_success: bool                  # 선택 객체에 대한 IK/VLA grasp 성공 여부
     ee_path: list[list[float]] = field(default_factory=list)
     reach_margin: float = 0.0
     path_min_obstacle_dist: float = 1.0
@@ -36,6 +36,9 @@ class RolloutTrace:
     stopped_for_safety: bool = False
     object_scores: dict[str, float] = field(default_factory=dict)
     kinematic: dict[str, Any] = field(default_factory=dict)  # KinematicResult 스냅샷
+    # LAM+VLA 통합 모드 전용 필드
+    lam_selected_obj_id: Optional[str] = None   # LAM이 고른 객체 (VLA 실행 전 판단)
+    execution_mode: str = "lam_ik"              # "lam_ik" | "lam_vla"
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)

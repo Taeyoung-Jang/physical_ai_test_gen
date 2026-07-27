@@ -53,6 +53,10 @@ gen3d = [
     "huggingface-hub==0.23.4",   # diffusers 0.27.2의 cached_download + transformers 4.40.1 호환
     "trimesh>=4.0",
 ]
+# HM3D 실제 스캔 씬 로드 (GLB → OBJ 변환). 설치:  uv sync --extra hm3d
+hm3d = [
+    "trimesh>=4.0",
+]
 
 [build-system]
 requires = ["hatchling"]

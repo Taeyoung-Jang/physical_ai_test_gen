@@ -39,11 +39,13 @@ from lam_guided.case_generator import FailureCaseGenerator
 from lam_guided.constraint_filter import ConstraintFilter
 from lam_guided.failure_memory import FailureMemory
 from lam_guided.policy_oracle import PolicyVerdict, evaluate_physical_from_trace, evaluate_policy
+from lam_guided.closed_loop import run_closed_loop_rollout
 from lam_guided.rollout import make_observation, run_policy_rollout
 from lam_guided.types import FailureCaseCandidate, VulnerabilityProfile
 from lam_guided.vulnerability import VulnerabilityProfiler
 from physical_oracle import load_thresholds
 from policies import make_action_model
+from policies_vla import make_closed_loop_policy
 from scene_graph import SceneGraph
 from sim_runner import load_robot_config
 
@@ -71,7 +73,7 @@ class LoopResult:
 
 class LAMGuidedFailureLoop:
     def __init__(self, base_sg: SceneGraph, robot_cfg: dict, thresholds: dict,
-                 lam_cfg: dict, action_model=None):
+                 lam_cfg: dict, action_model=None, vla_policy=None):
         self.base_sg = annotate_scene_semantics(base_sg)
         self.robot_cfg = robot_cfg
         self.thr = thresholds
@@ -83,6 +85,7 @@ class LAMGuidedFailureLoop:
         self.policy = action_model or make_action_model(
             lam_cfg.get("action_model", "mini"),
             cfg=lam_cfg.get("mini_action_model", {}), seed=seed)
+        self.vla_policy = vla_policy  # ClosedLoopPolicy (optional)
         self.encoder = BehaviorTraceEncoder(thresholds)
         self.profiler = VulnerabilityProfiler(lam_cfg)
         self.generator = FailureCaseGenerator(self.bank, lam_cfg, robot_cfg, seed=seed)
@@ -97,9 +100,31 @@ class LAMGuidedFailureLoop:
     # --------------------------------------------------------------- helpers
     def _run_case(self, case: FailureCaseCandidate):
         scene = annotate_scene_semantics(apply_case(self.base_sg, case, self.bank))
-        plan = self.policy.predict(case.instruction or self.instruction,
-                                   make_observation(scene), self.rs)
-        trace = run_policy_rollout(scene, plan, self.robot_cfg, case.case_id)
+        instruction = case.instruction or self.instruction
+
+        # Step 1: LAM — 어떤 객체를 선택할지 결정 (open-loop)
+        plan = self.policy.predict(instruction, make_observation(scene), self.rs)
+
+        if self.vla_policy is not None:
+            # Step 2: VLA — 실제 closed-loop 실행 (LAM 선택과 독립적으로 RGB 기반)
+            max_steps = self.cfg.get("vla", {}).get("max_steps", 40)
+            trace = run_closed_loop_rollout(
+                scene_sg=scene,
+                policy=self.vla_policy,
+                robot_cfg=self.robot_cfg,
+                instruction=instruction,
+                case_id=case.case_id,
+                max_steps=max_steps,
+            )
+            # LAM 선택을 trace에 저장 (평가·취약성 분석에서 LAM/VLA 분리 판정용)
+            trace.lam_selected_obj_id = plan.selected_obj_id
+            trace.object_scores = dict(plan.object_scores)
+            trace.execution_mode = "lam_vla"
+        else:
+            # 기존 동작: LAM 선택 → IK one-shot 실행
+            trace = run_policy_rollout(scene, plan, self.robot_cfg, case.case_id)
+            trace.execution_mode = "lam_ik"
+
         result = evaluate_policy(trace, self.thr, self.cfg)
         phys = evaluate_physical_from_trace(trace, self.thr)
         feats = self.encoder.encode(trace)
@@ -288,6 +313,10 @@ def main():
     ap.add_argument("--config", default="config/lam_guided_failure.yaml")
     ap.add_argument("--enabled", action="store_true",
                     help="config의 enabled flag를 덮어써 강제 실행")
+    ap.add_argument("--vla", choices=["stub", "openvla"], default=None,
+                    help="VLA 정책 선택. stub=GPU 없이 동작, openvla=OpenVLA-7B(15GB)")
+    ap.add_argument("--vla-model", default="openvla/openvla-7b",
+                    help="OpenVLA HuggingFace 모델 ID (--vla openvla 시 적용)")
     args = ap.parse_args()
 
     lam_cfg = load_lam_config(args.config)
@@ -306,7 +335,16 @@ def main():
         lam_cfg.get("action_model", "mini"),
         cfg=lam_cfg.get("mini_action_model", {}), seed=lam_cfg.get("seed", 0))
 
-    loop = LAMGuidedFailureLoop(base_sg, robot_cfg, thr, lam_cfg, action_model)
+    vla_policy = None
+    if args.vla:
+        vla_cfg = lam_cfg.get("vla", {})
+        if args.vla == "openvla":
+            vla_cfg.setdefault("model_id", args.vla_model)
+        vla_policy = make_closed_loop_policy(args.vla, cfg=vla_cfg)
+        print(f"  VLA 정책: {args.vla} (mode=lam_vla)")
+
+    loop = LAMGuidedFailureLoop(base_sg, robot_cfg, thr, lam_cfg, action_model,
+                                vla_policy=vla_policy)
     loop.run(instruction=args.instruction, rounds=args.rounds, batch_size=args.batch_size)
 
 

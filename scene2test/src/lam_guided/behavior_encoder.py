@@ -14,13 +14,15 @@ class BehaviorTraceEncoder:
         self.safety_distance = thresholds["safety"]["safety_distance"]
 
     def encode(self, trace: RolloutTrace) -> BehaviorFeatures:
-        wrong = 1.0 if (trace.selected_obj_id != trace.expected_obj_id
+        # lam_vla 모드: LAM 선택 기준으로 취약성을 측정 (VLA 실행 결과와 분리)
+        lam_id = trace.lam_selected_obj_id or trace.selected_obj_id
+        wrong = 1.0 if (lam_id != trace.expected_obj_id
                         and trace.expected_obj_id) else 0.0
 
-        # selection_margin = score[selected] - score[expected] (작을수록 fragile)
+        # selection_margin: LAM 점수 기준 (작을수록 fragile)
         ss = trace.object_scores
-        if ss and trace.expected_obj_id in ss and trace.selected_obj_id in ss:
-            sel_margin = ss[trace.selected_obj_id] - ss[trace.expected_obj_id]
+        if ss and trace.expected_obj_id in ss and lam_id in ss:
+            sel_margin = ss[lam_id] - ss[trace.expected_obj_id]
         else:
             sel_margin = 0.0
 

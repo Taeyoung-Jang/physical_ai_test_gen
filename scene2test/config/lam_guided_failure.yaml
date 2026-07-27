@@ -38,6 +38,14 @@ lam_guided_failure:
     tolerance: 0.005                   # m
     samples_per_eval: 30               # 확률적 정책이므로 한 값에서 여러 번 실행해 FAIL율 측정
 
+  # VLA 통합 (LAM 선택 → VLA 실행)
+  # CLI: --vla stub | --vla openvla
+  vla:
+    model_id: "openvla/openvla-7b"   # --vla openvla 시 사용
+    device: "auto"                    # auto | cpu | cuda:0
+    pos_scale: 1.0
+    max_steps: 40                     # closed-loop 최대 스텝 수
+
   paths:
     asset_index: data/generated_assets/index.json
     counterexamples: data/lam_guided_logs/counterexamples.jsonl

@@ -11,6 +11,9 @@ data/generated_scenes/*
 data/search_logs/*
 data/test_results/*
 data/scene_library/*
+data/hm3d_raw/
+data/hm3d_cache/
+reports/hm3d/
 models/*.pkl
 reports/*.md
 reports/*.csv
