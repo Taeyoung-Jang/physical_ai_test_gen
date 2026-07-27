@@ -2408,6 +2408,9 @@ gen3d = [
     { name = "torch" },
     { name = "trimesh" },
 ]
+hm3d = [
+    { name = "trimesh" },
+]
 vla = [
     { name = "accelerate" },
     { name = "einops" },
@@ -2461,8 +2464,9 @@ requires-dist = [
     { name = "transformers", specifier = "==4.40.1" },
     { name = "transformers", marker = "extra == 'vla'", specifier = "==4.40.1" },
     { name = "trimesh", marker = "extra == 'gen3d'", specifier = ">=4.0" },
+    { name = "trimesh", marker = "extra == 'hm3d'", specifier = ">=4.0" },
 ]
-provides-extras = ["dev", "vla", "gen3d"]
+provides-extras = ["dev", "vla", "gen3d", "hm3d"]
 
 [package.metadata.requires-dev]
 dev = [
