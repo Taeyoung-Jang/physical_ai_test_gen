@@ -74,7 +74,7 @@ def main():
         project_bbox_to_image,
         view_to_world_pointcloud,
     )
-    from hm3d.semantics import extract_instances, select_support_surfaces
+    from hm3d.semantics import build_scene_graph, extract_instances
     from hm3d.workspace import WorkspacePlacementError, setup_workspace
     from sim_runner import load_robot_config
 
@@ -98,15 +98,17 @@ def main():
         extracted.semantic_glb_path, extracted.semantic_txt_path,
         offset=converted.offset,
     )
-    supports = select_support_surfaces(instances)
+    sg = build_scene_graph(instances, scene_id=entry.scene_dir, include_structural=True)
     robot_cfg = load_robot_config("config/robot_config.yaml")
 
-    candidates = supports if args.surface < 0 else [supports[args.surface]]
+    candidates = (
+        sg.support_surfaces if args.surface < 0 else [sg.support_surfaces[args.surface]]
+    )
     ws = None
-    for surface in candidates:
+    for surf in candidates:
         try:
             ws = setup_workspace(
-                converted, scene_ids, surface, instances, floor_z, robot_cfg, cid
+                converted, scene_ids, sg, surf.id, floor_z, robot_cfg, cid
             )
             break
         except WorkspacePlacementError:
@@ -114,8 +116,8 @@ def main():
     if ws is None:
         print("오류: 로봇 배치 실패")
         sys.exit(1)
-    print(f"[1/4] 작업공간: {entry.scene_dir} #{ws.surface.instance_id} "
-          f"{ws.surface.category} ({time.time()-t0:.1f}s)")
+    print(f"[1/4] 작업공간: {entry.scene_dir} {ws.surface.id} "
+          f"({time.time()-t0:.1f}s)")
 
     # ── 캡처 + 인식 ─────────────────────────────────────────────────────
     t0 = time.time()
@@ -140,7 +142,7 @@ def main():
 
     # ── 인식 SceneGraph 저장 ────────────────────────────────────────────
     role_map = {o.id: o.role for o in ws.sg.objects}
-    sg = build_perceived_scene_graph(
+    perceived_sg = build_perceived_scene_graph(
         scene_id=f"hm3d_{entry.scene_dir}_rgbd",
         surface=ws.surface,
         surface_height_measured=height_measured,
@@ -149,7 +151,7 @@ def main():
     )
     os.makedirs(args.out_dir, exist_ok=True)
     sg_path = os.path.join(args.out_dir, f"{entry.scene_dir}_rgbd.json")
-    sg.save(sg_path)
+    perceived_sg.save(sg_path)
 
     # ── GT 비교 ─────────────────────────────────────────────────────────
     gt_clutter = gt_clutter_on_surface(instances, ws.surface)

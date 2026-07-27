@@ -86,7 +86,7 @@ def main():
         load_hm3d_static,
         scene_extent_pybullet,
     )
-    from hm3d.semantics import extract_instances, select_support_surfaces
+    from hm3d.semantics import build_scene_graph, extract_instances
     from hm3d.workspace import run_case, setup_workspace
     from physical_oracle import load_thresholds
     from sim_runner import load_robot_config
@@ -111,29 +111,35 @@ def main():
     print(f"[1/4] 씬 로드: {entry.scene_dir} ({time.time()-t0:.1f}s, "
           f"바닥 z={floor_z:.2f})")
 
-    # ── 지지면 + 작업공간 ───────────────────────────────────────────────
+    # ── scene graph 생성 (Pipeline A) + 작업공간 구성 (Pipeline B) ───────
+    # setup_workspace는 표준 SceneGraph만 받으므로, 여기서 만드는 대신
+    # data/hm3d_scene_graphs/<scene>.json을 다른 도구로 생성해 로드해도 된다.
     instances = extract_instances(
         extracted.semantic_glb_path, extracted.semantic_txt_path,
         offset=converted.offset,
     )
-    supports = select_support_surfaces(instances)
-    if not supports:
+    sg = build_scene_graph(instances, scene_id=entry.scene_dir, include_structural=True)
+    if not sg.support_surfaces:
         print("오류: 지지면 후보가 없습니다.")
         sys.exit(1)
-    if args.surface >= len(supports):
-        print(f"오류: --surface {args.surface} 범위 밖 (후보 {len(supports)}개)")
+    if args.surface >= len(sg.support_surfaces):
+        print(f"오류: --surface {args.surface} 범위 밖 "
+              f"(후보 {len(sg.support_surfaces)}개)")
         sys.exit(1)
 
     robot_cfg = load_robot_config("config/robot_config.yaml")
-    candidates = supports if args.surface < 0 else [supports[args.surface]]
+    candidates = (
+        sg.support_surfaces if args.surface < 0 else [sg.support_surfaces[args.surface]]
+    )
     ws = None
-    for surface in candidates:
-        print(f"[2/4] 지지면 시도: #{surface.instance_id} {surface.category} "
-              f"(높이 {surface.top_z:.2f}m, 면적 {surface.footprint_area:.2f}m²)")
+    for surf in candidates:
+        area = (surf.bounds["x"][1] - surf.bounds["x"][0]) * \
+               (surf.bounds["y"][1] - surf.bounds["y"][0])
+        print(f"[2/4] 지지면 시도: {surf.id} "
+              f"(높이 {surf.height:.2f}m, 면적 {area:.2f}m²)")
         try:
             ws = setup_workspace(
-                converted, scene_body_ids, surface, instances, floor_z,
-                robot_cfg, cid,
+                converted, scene_body_ids, sg, surf.id, floor_z, robot_cfg, cid,
             )
             break
         except RuntimeError as e:

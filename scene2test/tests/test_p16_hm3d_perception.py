@@ -79,8 +79,8 @@ def test_hm3d_perception_e2e():
         gt_clutter_on_surface,
         view_to_world_pointcloud,
     )
-    from hm3d.semantics import extract_instances, select_support_surfaces
-    from hm3d.workspace import WorkspacePlacementError, setup_workspace
+    from hm3d.semantics import build_scene_graph, extract_instances
+    from hm3d.workspace import setup_workspace_auto
     from sim_runner import load_robot_config
 
     ds = HM3DDataset(split="minival")
@@ -95,17 +95,9 @@ def test_hm3d_perception_e2e():
         extracted.semantic_glb_path, extracted.semantic_txt_path,
         offset=converted.offset,
     )
+    sg = build_scene_graph(instances, scene_id=extracted.entry.scene_dir, include_structural=True)
     robot_cfg = load_robot_config("config/robot_config.yaml")
-    ws = None
-    for surface in select_support_surfaces(instances):
-        try:
-            ws = setup_workspace(
-                converted, scene_ids, surface, instances, floor_z, robot_cfg, cid
-            )
-            break
-        except WorkspacePlacementError:
-            continue
-    assert ws is not None
+    ws = setup_workspace_auto(converted, scene_ids, sg, floor_z, robot_cfg, cid)
 
     # 캡처 + 인식
     base = np.array(ws.robot_base_pos[:2])

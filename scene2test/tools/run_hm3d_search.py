@@ -57,7 +57,7 @@ def main():
         load_hm3d_static,
         scene_extent_pybullet,
     )
-    from hm3d.semantics import extract_instances, select_support_surfaces
+    from hm3d.semantics import build_scene_graph, extract_instances
     from hm3d.workspace import WorkspacePlacementError, setup_workspace
     from physical_oracle import load_thresholds
     from sim_runner import load_robot_config
@@ -82,15 +82,17 @@ def main():
         extracted.semantic_glb_path, extracted.semantic_txt_path,
         offset=converted.offset,
     )
-    supports = select_support_surfaces(instances)
+    sg = build_scene_graph(instances, scene_id=entry.scene_dir, include_structural=True)
     robot_cfg = load_robot_config("config/robot_config.yaml")
 
-    candidates = supports if args.surface < 0 else [supports[args.surface]]
+    candidates = (
+        sg.support_surfaces if args.surface < 0 else [sg.support_surfaces[args.surface]]
+    )
     ws = None
-    for surface in candidates:
+    for surf in candidates:
         try:
             ws = setup_workspace(
-                converted, scene_ids, surface, instances, floor_z, robot_cfg, cid
+                converted, scene_ids, sg, surf.id, floor_z, robot_cfg, cid
             )
             break
         except WorkspacePlacementError:
@@ -100,8 +102,8 @@ def main():
         sys.exit(1)
 
     session = HM3DSearchSession.create(ws, cid)
-    print(f"씬 준비 완료: {entry.scene_dir} #{ws.surface.instance_id} "
-          f"{ws.surface.category} ({time.time()-t0:.1f}s)")
+    print(f"씬 준비 완료: {entry.scene_dir} {ws.surface.id} "
+          f"({time.time()-t0:.1f}s)")
     print(f"  로봇 베이스(월드): {np.round(ws.robot_base_pos, 2).tolist()}, "
           f"로컬 프레임 θ={np.degrees(session.frame.theta):.0f}°")
 

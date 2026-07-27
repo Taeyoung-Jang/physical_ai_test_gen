@@ -31,12 +31,8 @@ def main():
         load_hm3d_static,
         scene_extent_pybullet,
     )
-    from hm3d.semantics import extract_instances, select_support_surfaces
-    from hm3d.workspace import (
-        WorkspacePlacementError,
-        run_case,
-        setup_workspace,
-    )
+    from hm3d.semantics import build_scene_graph, extract_instances
+    from hm3d.workspace import run_case, setup_workspace_auto
     from physical_oracle import Verdict, load_thresholds
     from sim_runner import load_robot_config
 
@@ -53,21 +49,14 @@ def main():
         extracted.semantic_glb_path, extracted.semantic_txt_path,
         offset=converted.offset,
     )
-    supports = select_support_surfaces(instances)
+    # setup_workspace는 표준 SceneGraph만 받는다 — HM3D가 만들었든, 저장된
+    # JSON을 다시 읽었든, 다른 파이프라인 산출물이든 동일하게 동작해야 한다.
+    sg = build_scene_graph(instances, scene_id=extracted.entry.scene_dir, include_structural=True)
     robot_cfg = load_robot_config("config/robot_config.yaml")
 
     # 1. 작업공간 구성 (배치 가능한 지지면 폴백)
-    ws = None
-    for surface in supports:
-        try:
-            ws = setup_workspace(
-                converted, scene_ids, surface, instances, floor_z, robot_cfg, cid
-            )
-            break
-        except WorkspacePlacementError:
-            continue
-    assert ws is not None, "모든 지지면에서 배치 실패"
-    print(f"[1] 작업공간 OK: #{ws.surface.instance_id} {ws.surface.category}, "
+    ws = setup_workspace_auto(converted, scene_ids, sg, floor_z, robot_cfg, cid)
+    print(f"[1] 작업공간 OK: {ws.surface.id}, "
           f"베이스 {np.round(ws.robot_base_pos, 2).tolist()}")
 
     # 2. 배치 기하 검증

@@ -31,7 +31,7 @@ from vision.rgbd_to_graph import (
 )
 
 from .semantics import SemanticInstance
-from .workspace import HM3DWorkspace
+from .workspace import HM3DWorkspace, SceneBox
 
 # GL 카메라 좌표 → CV 핀홀 좌표 플립
 _GL_TO_CV = np.diag([1.0, -1.0, -1.0, 1.0])
@@ -147,7 +147,7 @@ def detect_surface_clutter(
     pcd_world,
     valid: np.ndarray,
     seg: np.ndarray,
-    surface: SemanticInstance,
+    surface: SceneBox,
     exclude_body_ids: list[int],
     eps: float = 0.04,
     min_points: int = 30,
@@ -196,7 +196,7 @@ def detect_surface_clutter(
 
 def estimate_surface_height(
     pcd_world,
-    surface: SemanticInstance,
+    surface: SceneBox,
 ) -> Optional[float]:
     """상면 높이를 point cloud에서 실측한다 (semantic GT와 독립 검증용)."""
     pts = np.asarray(pcd_world.points)
@@ -217,7 +217,7 @@ def estimate_surface_height(
 
 def build_perceived_scene_graph(
     scene_id: str,
-    surface: SemanticInstance,
+    surface: SceneBox,
     surface_height_measured: Optional[float],
     detections: list[DetectedObject],
     role_map: dict[str, str],
@@ -233,7 +233,7 @@ def build_perceived_scene_graph(
         else surface.top_z
     )
     surf = SupportSurface(
-        id=f"perceived_{surface.instance_id:04d}",
+        id=f"perceived_{surface.id}",
         type="plane",
         height=height,
         bounds={
@@ -368,20 +368,26 @@ def compare_with_gt(
 
 def gt_clutter_on_surface(
     instances: list[SemanticInstance],
-    surface: SemanticInstance,
+    surface: SceneBox,
     z_band: tuple[float, float] = (0.015, 0.45),
 ) -> list[SemanticInstance]:
     """지지면 위에 '놓인' semantic 인스턴스 (클러터 GT).
 
     벽/커튼처럼 바닥부터 천장까지 이어지는 인스턴스는 xy가 겹쳐도
     상면에 놓인 물체가 아니므로, bbox 바닥이 상면 근처인 것만 취한다.
+
+    surface는 이미 지지면 자체를 선택한 SceneBox(workspace.py 변환 결과)라
+    instances(HM3D 원본 정밀 인스턴스 목록) 중 자기 자신은 xy+높이 bbox가
+    거의 일치하는 항목으로 식별해 제외한다 (두 타입 간 공유 ID 체계 없음).
     """
     top = surface.top_z
     lo, hi = surface.bbox_min, surface.bbox_max
     result = []
     for inst in instances:
-        if inst.instance_id == surface.instance_id:
-            continue
+        if (np.allclose(inst.bbox_min[:2], lo[:2], atol=0.02)
+                and np.allclose(inst.bbox_max[:2], hi[:2], atol=0.02)
+                and abs(inst.top_z - top) < 0.02):
+            continue  # 지지면 자기 자신
         c = inst.center
         if not (lo[0] - 0.05 < c[0] < hi[0] + 0.05
                 and lo[1] - 0.05 < c[1] < hi[1] + 0.05):
