@@ -20,8 +20,7 @@ from typing import Optional
 import numpy as np
 import open3d as o3d
 
-from scene_graph import SceneGraph, SupportSurface, ObjectNode, Relation, Role, UnknownRegion
-
+from scene_graph import ObjectNode, Relation, Role, SceneGraph, SupportSurface
 
 # ---------------------------------------------------------------------------
 # 카메라 내부 파라미터
@@ -68,7 +67,8 @@ def depth_to_pointcloud(
     intrinsics: CameraIntrinsics,
     depth_scale: float = 1.0,
     depth_max: float = 3.0,
-) -> o3d.geometry.PointCloud:
+    return_valid_mask: bool = False,
+):
     """Depth map (HxW float32) → Open3D PointCloud (camera 좌표계).
 
     Args:
@@ -77,6 +77,9 @@ def depth_to_pointcloud(
         intrinsics: 카메라 내부 파라미터.
         depth_scale: depth → 미터 변환 스케일 (1.0이면 이미 미터).
         depth_max: 이 거리 초과 포인트 필터링.
+        return_valid_mask: True면 (pcd, valid) 튜플 반환. valid는 (H, W) bool
+                     — 포인트 i는 valid 픽셀을 row-major 순회한 i번째 픽셀에
+                     대응한다 (extract_object_pointclouds의 픽셀↔포인트 매핑용).
     """
     h, w = depth_image.shape
     u_coords, v_coords = np.meshgrid(np.arange(w), np.arange(h))
@@ -89,6 +92,8 @@ def depth_to_pointcloud(
     points = np.stack([x, y, z], axis=-1).astype(np.float64)
     pcd = o3d.geometry.PointCloud()
     pcd.points = o3d.utility.Vector3dVector(points)
+    if return_valid_mask:
+        return pcd, valid
     return pcd
 
 
@@ -143,13 +148,20 @@ def extract_object_pointclouds(
     pcd_world: o3d.geometry.PointCloud,
     mask_map: dict[str, np.ndarray],
     image_shape: tuple[int, int],
+    valid_mask: Optional[np.ndarray] = None,
 ) -> dict[str, o3d.geometry.PointCloud]:
     """픽셀 마스크(H×W bool)를 이용해 객체별 포인트 클라우드를 추출한다.
 
+    pcd_world는 valid 픽셀에서만 생성된 포인트를 담고 있으므로,
+    픽셀 → 포인트 역매핑 테이블(pixel_to_point)을 만들어 색인한다.
+
     Args:
-        pcd_world: 전체 포인트 클라우드 (월드 좌표계)
+        pcd_world: 전체 포인트 클라우드 (월드 좌표계, valid 픽셀 순서)
         mask_map: {object_id: (H, W) bool ndarray}
         image_shape: (H, W)
+        valid_mask: depth_to_pointcloud(return_valid_mask=True)의 (H, W) bool.
+                    None이면 모든 픽셀이 valid하다고 가정한다 (이때 포인트 수는
+                    H*W와 같아야 한다).
 
     Returns:
         {object_id: PointCloud}
@@ -158,27 +170,35 @@ def extract_object_pointclouds(
     points = np.asarray(pcd_world.points)
     total = h * w
 
+    if valid_mask is None:
+        if len(points) != total:
+            raise ValueError(
+                f"valid_mask 없이 포인트 수({len(points)}) != H*W({total}). "
+                "depth_to_pointcloud(return_valid_mask=True)의 valid를 전달하세요."
+            )
+        valid_flat = np.ones(total, dtype=bool)
+    else:
+        valid_flat = valid_mask.flatten()
+        if int(valid_flat.sum()) != len(points):
+            raise ValueError(
+                f"valid 픽셀 수({int(valid_flat.sum())})와 포인트 수({len(points)}) 불일치"
+            )
+
+    # 픽셀(flat index) → 포인트 index 역매핑 (invalid 픽셀 = -1)
+    pixel_to_point = np.full(total, -1, dtype=np.int64)
+    pixel_to_point[np.where(valid_flat)[0]] = np.arange(len(points))
+
     result: dict[str, o3d.geometry.PointCloud] = {}
     for obj_id, mask in mask_map.items():
         flat_mask = mask.flatten()
-        # 유효 깊이 포인트 인덱스는 depth_to_pointcloud에서 valid 픽셀만 포함
-        # 단순화: 전체 포인트 중 mask == True인 인덱스 사용
         if len(flat_mask) != total:
             continue
-        # valid 마스크에서 추출된 포인트를 재색인
-        valid_indices = np.where(flat_mask)[0]
-        # pcd_world는 valid 포인트만 들어있으므로 직접 색인 불가
-        # 대신 픽셀 위치로 필터: points가 이미 valid에서만 왔으므로 overlap 필요
-        if len(points) == 0:
+        pt_idx = pixel_to_point[flat_mask]
+        pt_idx = pt_idx[pt_idx >= 0]
+        if len(pt_idx) == 0:
             continue
         obj_pcd = o3d.geometry.PointCloud()
-        # 간단한 근사: 전체 포인트에서 인덱스 범위로 추출
-        n_pts = min(len(points), len(valid_indices))
-        idx = valid_indices[:n_pts]
-        idx = idx[idx < len(points)]
-        if len(idx) == 0:
-            continue
-        obj_pcd.points = o3d.utility.Vector3dVector(points[idx])
+        obj_pcd.points = o3d.utility.Vector3dVector(points[pt_idx])
         result[obj_id] = obj_pcd
     return result
 
@@ -289,16 +309,17 @@ def rgbd_to_scene_graph(
     """
     h, w = depth_image.shape
 
-    # ── 포인트 클라우드 생성 ──────────────────────────────────────────────
-    pcd_cam = depth_to_pointcloud(depth_image, intrinsics)
+    # ── 포인트 클라우드 생성 (valid mask 포함 — Mode A 픽셀 매핑용) ──────
+    pcd_cam, valid_mask = depth_to_pointcloud(
+        depth_image, intrinsics, return_valid_mask=True
+    )
     pcd_world = transform_pointcloud(pcd_cam, extrinsic)
 
     # ── Support plane 추정 ───────────────────────────────────────────────
     if len(pcd_world.points) > 100:
-        plane_model, plane_z = estimate_support_plane(pcd_world)
+        _, plane_z = estimate_support_plane(pcd_world)
     else:
         plane_z = 0.0
-        plane_model = [0.0, 0.0, 1.0, -plane_z]
 
     # ── 테이블 bounds ────────────────────────────────────────────────────
     if support_bounds is None:
@@ -343,8 +364,10 @@ def rgbd_to_scene_graph(
             perception_margins[obj_id] = 1.0  # GT는 완전 인식
 
     elif mask_map is not None:
-        # Mode A: 픽셀 마스크로 분리
-        obj_pcds = extract_object_pointclouds(pcd_world, mask_map, (h, w))
+        # Mode A: 픽셀 마스크로 분리 (픽셀↔포인트 역매핑)
+        obj_pcds = extract_object_pointclouds(
+            pcd_world, mask_map, (h, w), valid_mask=valid_mask
+        )
         for obj_id, obj_pcd in obj_pcds.items():
             if len(obj_pcd.points) < 10:
                 continue
@@ -428,6 +451,7 @@ def capture_rgbd_from_pybullet(
         extrinsic: (4, 4) 카메라 → 월드 변환 행렬
     """
     import pybullet as p
+
     from scene_builder import get_client
 
     client = get_client()
