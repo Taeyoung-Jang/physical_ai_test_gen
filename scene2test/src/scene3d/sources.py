@@ -144,7 +144,7 @@ def _build_minimal_scene_graph(
     """semantic annotation 없는 임의 mesh용 최소 SceneGraph.
 
     인스턴스 단위 분해가 불가능하므로 전체 mesh AABB를 단일 OBSTACLE
-    ObjectNode로 담는다. 이 정도로도 mesh_loader/robot_workspace가 HM3D가
+    ObjectNode로 담는다. 이 정도로도 mesh_loader/workspace_setup가 HM3D가
     아닌 입력에도 그대로 동작한다는 것을 증명하기엔 충분하다 — 풍부한
     인스턴스 분해는 별도 인식 파이프라인(perception.py) 또는 이미 만들어진
     SceneGraph JSON을 붙이는 쪽으로 해결한다.

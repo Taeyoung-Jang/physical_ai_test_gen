@@ -1,6 +1,6 @@
 """run_failure_search.py — 3D scene 위에서 Active Failure Search 실행.
 
-흐름: 씬 1회 로드 + 작업공간 구성 (robot_workspace 재사용)
+흐름: 씬 1회 로드 + 작업공간 구성 (workspace_setup 재사용)
       → 로봇-로컬 SceneGraph로 기존 탐색 엔진 구동 (surrogate + acquisition)
       → mutation은 body teleport로 적용 (재로드 없음, 테스트당 ~0.1s)
 
@@ -60,8 +60,8 @@ def main():
         load_static_scene,
         scene_extent_pybullet,
     )
-    from scene3d.robot_workspace import WorkspacePlacementError, setup_workspace
     from scene3d.sources import generate_scene_graph, resolve_source
+    from scene3d.workspace_setup import WorkspacePlacementError, setup_workspace
     from sim_runner import load_robot_config
 
     # ── 씬 + 작업공간 1회 구성 ──────────────────────────────────────────

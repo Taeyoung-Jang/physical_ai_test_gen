@@ -1,6 +1,6 @@
 """run_perception.py — Stage 2: 3D scene에서 RGB-D 인식 SceneGraph 생성 + GT 비교.
 
-흐름: 입력 판별 → SceneGraph 생성 → 작업공간 구성 (robot_workspace 재사용)
+흐름: 입력 판별 → SceneGraph 생성 → 작업공간 구성 (workspace_setup 재사용)
       → RGB-D + segmentation 캡처
       → point cloud → spawn 객체(seg mask) + 클러터(DBSCAN) 인식
       → 인식 SceneGraph 저장 + GT 대비 오차 리포트 + 오버레이 PNG
@@ -77,11 +77,11 @@ def main():
         project_bbox_to_image,
         view_to_world_pointcloud,
     )
-    from scene3d.robot_workspace import WorkspacePlacementError, setup_workspace
     from scene3d.sources import generate_scene_graph, resolve_source
+    from scene3d.workspace_setup import WorkspacePlacementError, setup_workspace
     from sim_runner import load_robot_config
 
-    # ── 씬 + 작업공간 (robot_workspace 재사용) ──────────────────────────
+    # ── 씬 + 작업공간 (workspace_setup 재사용) ──────────────────────────
     t0 = time.time()
     try:
         source = resolve_source(args.source, split=args.split)

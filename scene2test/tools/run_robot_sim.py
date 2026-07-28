@@ -90,8 +90,8 @@ def main():
         load_static_scene,
         scene_extent_pybullet,
     )
-    from scene3d.robot_workspace import run_case, setup_workspace
     from scene3d.sources import generate_scene_graph, resolve_source
+    from scene3d.workspace_setup import run_case, setup_workspace
     from sim_runner import load_robot_config
 
     try:

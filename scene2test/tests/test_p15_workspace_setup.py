@@ -3,7 +3,7 @@
 HM3D 데이터셋(tar)이 없는 환경에서는 전체를 skip한다.
 
 실행:
-  PYBULLET_MODE=DIRECT uv run --extra scene3d python tests/test_p15_robot_workspace.py
+  PYBULLET_MODE=DIRECT uv run --extra scene3d python tests/test_p15_workspace_setup.py
 """
 from __future__ import annotations
 
@@ -32,8 +32,8 @@ def main():
         load_static_scene,
         scene_extent_pybullet,
     )
-    from scene3d.robot_workspace import run_case, setup_workspace_auto
     from scene3d.sources import generate_scene_graph, resolve_source
+    from scene3d.workspace_setup import run_case, setup_workspace_auto
     from sim_runner import load_robot_config
 
     # 입력 판별(Stage 1 진입점)부터 실제로 거쳐서 검증한다 — HM3D scene id를

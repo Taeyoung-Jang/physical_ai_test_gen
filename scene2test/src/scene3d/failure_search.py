@@ -10,7 +10,7 @@
 
 좌표계 전략:
   탐색 엔진(mutation 샘플러, validity, feature extractor)은 "로봇 베이스 =
-  원점, 작업 방향 = +x"를 전제한다. robot_workspace의 배치 inward 방향은
+  원점, 작업 방향 = +x"를 전제한다. workspace_setup의 배치 inward 방향은
   항상 축정렬(±x/±y)이므로, 하이브리드 SceneGraph를 **로봇-로컬 프레임**으로
   회전/평행이동해 넘기면 엔진 전체가 무수정으로 동작한다. 평가 시에만
   mutation 결과 위치를 월드 프레임으로 역변환해 body를 옮긴다.
@@ -31,7 +31,7 @@ from active_failure_search import ActiveFailureSearch, SearchConfig
 from physical_oracle import OracleResult
 from scene_graph import ObjectNode, Role, SceneGraph, SupportSurface
 
-from .robot_workspace import SceneWorkspace
+from .workspace_setup import SceneWorkspace
 
 # 미사용 body 주차 위치 (씬 밖 멀리)
 _PARK_POS = [500.0, 500.0, -50.0]

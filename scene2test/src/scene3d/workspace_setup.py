@@ -1,4 +1,4 @@
-"""robot_workspace.py — Stage 2: 3D scene 위 로봇 조작 작업공간 구성.
+"""workspace_setup.py — Stage 2: 3D scene 위 로봇 조작 작업공간 구성.
 
 지지면(테이블 등) 위에 target/obstacle/tray를 spawn하고 로봇을 지지면 옆
 받침대(pedestal) 위에 배치해, 기존 kinematic check + 6-margin oracle을
@@ -57,10 +57,10 @@ class WorkspacePlacementError(RuntimeError):
 
 @dataclass
 class SceneBox:
-    """robot_workspace.py 내부 배치/충돌 계산이 쓰는 최소 AABB 표현.
+    """workspace_setup.py 내부 배치/충돌 계산이 쓰는 최소 AABB 표현.
 
     SceneGraph의 ObjectNode/SupportSurface에서 변환해 만든다 — 이 타입
-    이후로 robot_workspace.py는 원본 scene graph 생성기가 무엇인지 알지 못한다.
+    이후로 workspace_setup.py는 원본 scene graph 생성기가 무엇인지 알지 못한다.
     """
 
     id: str
