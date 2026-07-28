@@ -1,4 +1,8 @@
-"""semantics.py — HM3D semantic annotation → 인스턴스 bbox → 실측 SceneGraph.
+"""hm3d_semantics.py — HM3D 데이터셋 백엔드: semantic annotation → 인스턴스 bbox → SceneGraph.
+
+scene3d.sources.generate_scene_graph()가 입력을 HM3D scene id로 판별했을
+때만 사용하는 Scene Graph 생성 백엔드 — HM3D의 텍스처 인코딩 방식에 고유하게
+결합되어 있다 (다른 3D scene 소스는 이 모듈을 거치지 않는다).
 
 HM3D semantic 데이터 구조:
   - <scene>.semantic.txt : "id,HEXCOLOR,\"category\",region" 팔레트 (헤더 1줄)
@@ -112,7 +116,7 @@ def extract_instances(
         import trimesh
     except ImportError as e:
         raise ImportError(
-            "trimesh가 필요합니다: uv sync --extra hm3d"
+            "trimesh가 필요합니다: uv sync --extra scene3d"
         ) from e
 
     palette = parse_semantic_txt(semantic_txt_path)

@@ -1,9 +1,9 @@
-"""test_p16 — HM3D RGB-D 인식 SceneGraph + GT 비교 검증 (Phase 4).
+"""test_p16 — RGB-D 인식 SceneGraph + GT 비교 검증.
 
-HM3D 데이터셋(tar)이 없는 환경에서는 전체를 skip한다.
+HM3D 데이터셋(tar)이 없는 환경에서는 E2E 파트를 skip한다.
 
 실행:
-  PYBULLET_MODE=DIRECT uv run --extra hm3d python tests/test_p16_hm3d_perception.py
+  PYBULLET_MODE=DIRECT uv run --extra scene3d python tests/test_p16_perception.py
 """
 from __future__ import annotations
 
@@ -55,7 +55,7 @@ def test_extract_object_pointclouds_mapping():
 
 
 def test_hm3d_perception_e2e():
-    from hm3d.dataset import DEFAULT_DATASET_DIR, HM3DDataset
+    from scene3d.hm3d_dataset import DEFAULT_DATASET_DIR
 
     if not os.path.isdir(DEFAULT_DATASET_DIR):
         print(f"SKIP: HM3D 데이터셋 없음 ({DEFAULT_DATASET_DIR})")
@@ -64,13 +64,14 @@ def test_hm3d_perception_e2e():
     import pybullet as p
     import pybullet_data
 
-    from hm3d.loader import (
+    from scene3d.hm3d_semantics import extract_instances
+    from scene3d.mesh_loader import (
         convert_glb_to_obj,
         find_free_floor_spots,
-        load_hm3d_static,
+        load_static_scene,
         scene_extent_pybullet,
     )
-    from hm3d.perception import (
+    from scene3d.perception import (
         capture_rgbd_seg,
         compare_with_gt,
         detect_spawned_objects,
@@ -79,23 +80,22 @@ def test_hm3d_perception_e2e():
         gt_clutter_on_surface,
         view_to_world_pointcloud,
     )
-    from hm3d.semantics import build_scene_graph, extract_instances
-    from hm3d.workspace import setup_workspace_auto
+    from scene3d.robot_workspace import setup_workspace_auto
+    from scene3d.sources import generate_scene_graph, resolve_source
     from sim_runner import load_robot_config
 
-    ds = HM3DDataset(split="minival")
-    extracted = ds.extract("00800")
-    converted = convert_glb_to_obj(extracted.glb_path, extracted.entry.scene_dir)
+    source = resolve_source("00800", split="minival")
+    converted = convert_glb_to_obj(source.glb_path, source.scene_id)
     cid = p.connect(p.DIRECT)
     p.setAdditionalSearchPath(pybullet_data.getDataPath(), physicsClientId=cid)
-    scene_ids = load_hm3d_static(converted, cid, collision=True)
+    scene_ids = load_static_scene(converted, cid, collision=True)
     lo, hi = scene_extent_pybullet(converted)
     _, floor_z = find_free_floor_spots(cid, lo, hi)
+    # gt_clutter_on_surface는 SceneGraph보다 정밀한 원본 인스턴스가 필요하다
     instances = extract_instances(
-        extracted.semantic_glb_path, extracted.semantic_txt_path,
-        offset=converted.offset,
+        source.semantic_glb_path, source.semantic_txt_path, offset=converted.offset,
     )
-    sg = build_scene_graph(instances, scene_id=extracted.entry.scene_dir, include_structural=True)
+    sg = generate_scene_graph(source, offset=converted.offset)
     robot_cfg = load_robot_config("config/robot_config.yaml")
     ws = setup_workspace_auto(converted, scene_ids, sg, floor_z, robot_cfg, cid)
 

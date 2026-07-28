@@ -1,5 +1,7 @@
-"""loader.py — HM3D GLB → OBJ 변환 캐시 + PyBullet static 로드.
+"""mesh_loader.py — 임의의 GLB mesh → OBJ 변환 캐시 + PyBullet static 로드.
 
+HM3D 전용이 아니다 — scene_id와 GLB 경로만 있으면 어떤 3D scan/mesh든
+동일하게 처리한다 (chunk 분할·오프셋 계산 로직은 입력 출처에 무관).
 PyBullet은 GLB를 읽지 못하므로 trimesh로 OBJ(+MTL/텍스처)로 변환해 캐시한다.
 
 변환 전략:
@@ -27,7 +29,7 @@ from typing import Optional
 import numpy as np
 import pybullet as p
 
-DEFAULT_CACHE_DIR = "data/hm3d_cache"
+DEFAULT_CACHE_DIR = "data/scene3d_cache"
 
 
 @dataclass
@@ -74,7 +76,7 @@ def convert_glb_to_obj(
         import trimesh
     except ImportError as e:
         raise ImportError(
-            "trimesh가 필요합니다: uv sync --extra hm3d (또는 --extra gen3d)"
+            "trimesh가 필요합니다: uv sync --extra scene3d (또는 --extra gen3d)"
         ) from e
 
     t0 = time.time()
@@ -139,7 +141,7 @@ def convert_glb_to_obj(
     )
 
 
-def load_hm3d_static(
+def load_static_scene(
     converted: ConvertedScene,
     client_id: int,
     collision: bool = True,

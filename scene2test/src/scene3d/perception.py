@@ -1,14 +1,16 @@
-"""perception.py — HM3D 씬 안 RGB-D 인식 → point cloud → 인식 SceneGraph (Phase 4).
+"""perception.py — 3D scene 안 RGB-D 인식 → point cloud → 인식 SceneGraph.
 
-Track B("인식 기반 Scene Graph")를 실제로 구동하는 모듈:
+인식 기반 Scene Graph 생성을 실제로 구동하는 모듈(로드된 3D scene이면
+출처 무관하게 동작):
 
-  RGB-D + segmentation 캡처 (PyBullet, 실제 스캔 씬)
+  RGB-D + segmentation 캡처 (PyBullet)
     → depth 역투영 point cloud (V-1 수정된 픽셀↔포인트 매핑)
     → spawn 객체: segmentation buffer GT mask로 분리 (V-2)
     → 지지면 위 클러터: 상면 위 포인트 DBSCAN 클러스터링 (mask 불필요한
-      class-agnostic 인식 — HM3D mesh chunk는 semantic 인스턴스와 1:1이
-      아니므로 seg buffer로 가구를 분리할 수 없다)
-    → 인식 SceneGraph 생성 + semantic GT와 비교 지표
+      class-agnostic 인식 — 스캔 mesh chunk는 semantic 인스턴스와 1:1이
+      아닌 경우가 많아 seg buffer만으로 가구를 분리할 수 없다)
+    → 인식 SceneGraph 생성 + semantic GT와 비교 지표 (GT 비교는 HM3D
+      semantic annotation이 있을 때만 가능 — gt_clutter_on_surface 참고)
 
 좌표계 주의: PyBullet view matrix는 OpenGL 관례(카메라 -z 전방, +y 위)이고
 핀홀 역투영은 CV 관례(+z 전방, +y 아래)다. 세계 좌표 변환 시
@@ -30,8 +32,8 @@ from vision.rgbd_to_graph import (
     extract_object_pointclouds,
 )
 
-from .semantics import SemanticInstance
-from .workspace import HM3DWorkspace, SceneBox
+from .hm3d_semantics import SemanticInstance
+from .robot_workspace import SceneBox, SceneWorkspace
 
 # GL 카메라 좌표 → CV 핀홀 좌표 플립
 _GL_TO_CV = np.diag([1.0, -1.0, -1.0, 1.0])
@@ -286,7 +288,7 @@ class PerceptionReport:
 
 
 def compare_with_gt(
-    workspace: HM3DWorkspace,
+    workspace: SceneWorkspace,
     detections: list[DetectedObject],
     surface_height_measured: Optional[float],
     gt_clutter: list[SemanticInstance],

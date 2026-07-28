@@ -1,9 +1,9 @@
-"""test_p17 — HM3D Active Failure Search 검증 (Phase 5).
+"""test_p17 — 3D scene 위 Active Failure Search 검증.
 
 HM3D 데이터셋(tar)이 없는 환경에서는 E2E 파트를 skip한다.
 
 실행:
-  PYBULLET_MODE=DIRECT uv run --extra hm3d python tests/test_p17_hm3d_search.py
+  PYBULLET_MODE=DIRECT uv run --extra scene3d python tests/test_p17_failure_search.py
 """
 from __future__ import annotations
 
@@ -18,7 +18,7 @@ import numpy as np
 
 def test_local_frame():
     """LocalFrame 왕복 변환 + 축정렬 회전 크기 교환."""
-    from hm3d.failure_search import LocalFrame
+    from scene3d.failure_search import LocalFrame
 
     for theta in (0.0, math.pi / 2, math.pi, -math.pi / 2):
         f = LocalFrame(base_xy=np.array([3.0, -2.0]), base_z=0.9, theta=theta)
@@ -35,7 +35,7 @@ def test_local_frame():
 
 
 def test_hm3d_search_e2e():
-    from hm3d.dataset import DEFAULT_DATASET_DIR, HM3DDataset
+    from scene3d.hm3d_dataset import DEFAULT_DATASET_DIR
 
     if not os.path.isdir(DEFAULT_DATASET_DIR):
         print(f"SKIP: HM3D 데이터셋 없음 ({DEFAULT_DATASET_DIR})")
@@ -45,34 +45,29 @@ def test_hm3d_search_e2e():
     import pybullet_data
 
     from active_failure_search import SearchConfig
-    from hm3d.failure_search import HM3DFailureSearch, HM3DSearchSession
-    from hm3d.loader import (
+    from physical_oracle import load_thresholds
+    from scene3d.failure_search import SceneFailureSearch, SceneSearchSession
+    from scene3d.mesh_loader import (
         convert_glb_to_obj,
         find_free_floor_spots,
-        load_hm3d_static,
+        load_static_scene,
         scene_extent_pybullet,
     )
-    from hm3d.semantics import build_scene_graph, extract_instances
-    from hm3d.workspace import setup_workspace_auto
-    from physical_oracle import load_thresholds
+    from scene3d.robot_workspace import setup_workspace_auto
+    from scene3d.sources import generate_scene_graph, resolve_source
     from sim_runner import load_robot_config
 
-    ds = HM3DDataset(split="minival")
-    extracted = ds.extract("00800")
-    converted = convert_glb_to_obj(extracted.glb_path, extracted.entry.scene_dir)
+    source = resolve_source("00800", split="minival")
+    converted = convert_glb_to_obj(source.glb_path, source.scene_id)
     cid = p.connect(p.DIRECT)
     p.setAdditionalSearchPath(pybullet_data.getDataPath(), physicsClientId=cid)
-    scene_ids = load_hm3d_static(converted, cid, collision=True)
+    scene_ids = load_static_scene(converted, cid, collision=True)
     lo, hi = scene_extent_pybullet(converted)
     _, floor_z = find_free_floor_spots(cid, lo, hi)
-    instances = extract_instances(
-        extracted.semantic_glb_path, extracted.semantic_txt_path,
-        offset=converted.offset,
-    )
-    sg = build_scene_graph(instances, scene_id=extracted.entry.scene_dir, include_structural=True)
+    sg = generate_scene_graph(source, offset=converted.offset)
     robot_cfg = load_robot_config("config/robot_config.yaml")
     ws = setup_workspace_auto(converted, scene_ids, sg, floor_z, robot_cfg, cid)
-    session = HM3DSearchSession.create(ws, cid)
+    session = SceneSearchSession.create(ws, cid)
 
     # 2) 로컬 SceneGraph: 로봇 기준 프레임 불변식
     local_sg = session.local_sg
@@ -87,9 +82,9 @@ def test_hm3d_search_e2e():
     thresholds = load_thresholds("config/thresholds.yaml")
     cfg = SearchConfig(
         num_rounds=1, tests_per_round=5, mode="random", seed=7,
-        log_dir="data/hm3d_search_logs",
+        log_dir="data/scene3d_search_logs",
     )
-    search = HM3DFailureSearch(session, thresholds, cfg)
+    search = SceneFailureSearch(session, thresholds, cfg)
     records = search.run()
     assert len(records) == 5
     for rec in records:

@@ -128,7 +128,7 @@ class ActiveFailureSearch:
         return RFSurrogate(random_state=self.cfg.seed)
 
     # ------------------------------------------------------------------
-    # 단일 테스트 평가 (서브클래스 오버라이드 지점 — 예: hm3d.failure_search)
+    # 단일 테스트 평가 (서브클래스 오버라이드 지점 — 예: scene3d.failure_search)
     # ------------------------------------------------------------------
 
     def _evaluate(self, params: dict, test_id: str) -> OracleResult:

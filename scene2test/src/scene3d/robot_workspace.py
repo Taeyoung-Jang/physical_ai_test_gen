@@ -1,12 +1,12 @@
-"""workspace.py — 실제 스캔 씬 위 조작 작업공간 구성 (Phase 3).
+"""robot_workspace.py — Stage 2: 3D scene 위 로봇 조작 작업공간 구성.
 
 지지면(테이블 등) 위에 target/obstacle/tray를 spawn하고 로봇을 지지면 옆
 받침대(pedestal) 위에 배치해, 기존 kinematic check + 6-margin oracle을
-실제 씬에서 실행할 수 있게 한다.
+실행할 수 있게 한다.
 
-**입력 계약 (다른 scene graph 생성기와 호환)**:
-  이 모듈은 표준 `SceneGraph`(scene_graph.py)만 소비하고 `hm3d.semantics`를
-  전혀 import하지 않는다. HM3D의 `build_scene_graph()`가 만든 SceneGraph든,
+**입력 계약 (어떤 Scene Graph 생성기든 호환)**:
+  이 모듈은 표준 `SceneGraph`(scene_graph.py)만 소비하고 HM3D 관련 모듈을
+  전혀 import하지 않는다. `sources.generate_scene_graph()`가 만든 것이든,
   저장된 JSON을 다시 읽은 것이든, 장차 다른 오픈소스 파이프라인이 만든
   SceneGraph든 — 아래 두 조건만 지키면 그대로 넣을 수 있다:
     1. `SupportSurface.bounds`가 지지면의 실제 xy 경계, `.height`가 상면 z
@@ -40,7 +40,7 @@ import pybullet as p
 
 from scene_graph import ObjectNode, Role, SceneGraph, SupportSurface
 
-from .loader import ConvertedScene, scene_extent_pybullet
+from .mesh_loader import ConvertedScene, scene_extent_pybullet
 
 # 작업 패치/spawn 기본 파라미터
 EDGE_STANDOFF = 0.26       # 지지면 변에서 로봇 베이스까지 바깥 거리 (m, 최소값)
@@ -57,10 +57,10 @@ class WorkspacePlacementError(RuntimeError):
 
 @dataclass
 class SceneBox:
-    """workspace.py 내부 배치/충돌 계산이 쓰는 최소 AABB 표현.
+    """robot_workspace.py 내부 배치/충돌 계산이 쓰는 최소 AABB 표현.
 
     SceneGraph의 ObjectNode/SupportSurface에서 변환해 만든다 — 이 타입
-    이후로 workspace.py는 원본 scene graph 생성기가 무엇인지 알지 못한다.
+    이후로 robot_workspace.py는 원본 scene graph 생성기가 무엇인지 알지 못한다.
     """
 
     id: str
@@ -109,7 +109,7 @@ def _box_from_support_surface(s: SupportSurface) -> SceneBox:
 
 
 @dataclass
-class HM3DWorkspace:
+class SceneWorkspace:
     """구성 완료된 작업공간."""
 
     surface: SceneBox
@@ -564,14 +564,14 @@ def setup_workspace(
     floor_z: float,
     robot_cfg: dict,
     cid: int,
-) -> HM3DWorkspace:
+) -> SceneWorkspace:
     """씬(로드 완료 상태) + 표준 SceneGraph로 작업공간을 구성한다.
 
     sg는 어떤 도구가 만들었든 상관없다(HM3D 자체 생성, 저장된 JSON 재로드,
     다른 오픈소스 파이프라인 산출물) — 이 함수가 실제로 쓰는 건
     sg.support_surfaces(지지면 후보)와 sg.objects(장애물 후보)뿐이다.
 
-    호출 전: load_hm3d_static(collision=True) 완료, floor_z 추정 완료.
+    호출 전: load_static_scene(collision=True) 완료, floor_z 추정 완료.
     이후 sim_runner.run_kinematic_check / physical_oracle.evaluate에 바로
     연결할 수 있는 상태를 반환한다.
 
@@ -621,7 +621,7 @@ def setup_workspace(
 
     proxies = spawn_obstacle_proxies(cid, proxy_instances)
 
-    return HM3DWorkspace(
+    return SceneWorkspace(
         surface=surface,
         robot_base_pos=base_pos,
         robot_body_id=robot_id,
@@ -642,7 +642,7 @@ def setup_workspace_auto(
     robot_cfg: dict,
     cid: int,
     surface_index: int = -1,
-) -> HM3DWorkspace:
+) -> SceneWorkspace:
     """지지면 후보를 순서대로 시도해 배치 가능한 첫 워크스페이스를 반환한다.
 
     surface_index >= 0이면 해당 지지면 하나만 시도(강제 지정).
@@ -668,7 +668,7 @@ def setup_workspace_auto(
     ) from last_err
 
 
-def run_case(workspace: HM3DWorkspace, thresholds: dict):
+def run_case(workspace: SceneWorkspace, thresholds: dict):
     """kinematic check + 6-margin oracle 실행 → OracleResult.
 
     obstacle = spawn한 obstacle_block + 주변 인스턴스 AABB proxy.

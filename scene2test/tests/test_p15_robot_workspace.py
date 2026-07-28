@@ -1,9 +1,9 @@
-"""test_p15 — HM3D 실제 씬 작업공간 + oracle E2E 검증 (Phase 3).
+"""test_p15 — 3D scene 작업공간 + oracle E2E 검증.
 
 HM3D 데이터셋(tar)이 없는 환경에서는 전체를 skip한다.
 
 실행:
-  PYBULLET_MODE=DIRECT uv run --extra hm3d python tests/test_p15_hm3d_workspace.py
+  PYBULLET_MODE=DIRECT uv run --extra scene3d python tests/test_p15_robot_workspace.py
 """
 from __future__ import annotations
 
@@ -16,7 +16,7 @@ import numpy as np
 
 
 def main():
-    from hm3d.dataset import DEFAULT_DATASET_DIR, HM3DDataset
+    from scene3d.hm3d_dataset import DEFAULT_DATASET_DIR
 
     if not os.path.isdir(DEFAULT_DATASET_DIR):
         print(f"SKIP: HM3D 데이터셋 없음 ({DEFAULT_DATASET_DIR})")
@@ -25,33 +25,31 @@ def main():
     import pybullet as p
     import pybullet_data
 
-    from hm3d.loader import (
+    from physical_oracle import Verdict, load_thresholds
+    from scene3d.mesh_loader import (
         convert_glb_to_obj,
         find_free_floor_spots,
-        load_hm3d_static,
+        load_static_scene,
         scene_extent_pybullet,
     )
-    from hm3d.semantics import build_scene_graph, extract_instances
-    from hm3d.workspace import run_case, setup_workspace_auto
-    from physical_oracle import Verdict, load_thresholds
+    from scene3d.robot_workspace import run_case, setup_workspace_auto
+    from scene3d.sources import generate_scene_graph, resolve_source
     from sim_runner import load_robot_config
 
-    ds = HM3DDataset(split="minival")
-    extracted = ds.extract("00800")
-    converted = convert_glb_to_obj(extracted.glb_path, extracted.entry.scene_dir)
+    # 입력 판별(Stage 1 진입점)부터 실제로 거쳐서 검증한다 — HM3D scene id를
+    # 넣으면 sources.resolve_source가 알아서 hm3d 백엔드로 위임해야 한다.
+    source = resolve_source("00800", split="minival")
+    assert source.kind == "hm3d"
+    converted = convert_glb_to_obj(source.glb_path, source.scene_id)
 
     cid = p.connect(p.DIRECT)
     p.setAdditionalSearchPath(pybullet_data.getDataPath(), physicsClientId=cid)
-    scene_ids = load_hm3d_static(converted, cid, collision=True)
+    scene_ids = load_static_scene(converted, cid, collision=True)
     lo, hi = scene_extent_pybullet(converted)
     _, floor_z = find_free_floor_spots(cid, lo, hi)
-    instances = extract_instances(
-        extracted.semantic_glb_path, extracted.semantic_txt_path,
-        offset=converted.offset,
-    )
     # setup_workspace는 표준 SceneGraph만 받는다 — HM3D가 만들었든, 저장된
     # JSON을 다시 읽었든, 다른 파이프라인 산출물이든 동일하게 동작해야 한다.
-    sg = build_scene_graph(instances, scene_id=extracted.entry.scene_dir, include_structural=True)
+    sg = generate_scene_graph(source, offset=converted.offset)
     robot_cfg = load_robot_config("config/robot_config.yaml")
 
     # 1. 작업공간 구성 (배치 가능한 지지면 폴백)
@@ -71,11 +69,11 @@ def main():
     assert abs(target[2] - (top + 0.03)) < 1e-6, "target은 상면 위"
     print(f"[2] 배치 기하 OK: 도달 {reach_xy:.2f}m, target z={target[2]:.2f}")
 
-    # 3. SceneGraph: spawn 3종 + HM3D 컨텍스트 객체
+    # 3. SceneGraph: spawn 3종 + 주변 컨텍스트 객체
     roles = {o.role for o in ws.sg.objects}
     assert {"target", "obstacle", "destination"} <= roles
     ctx = [o for o in ws.sg.objects if o.extra.get("hm3d_context")]
-    assert len(ctx) > 0, "주변 HM3D 인스턴스 컨텍스트 없음"
+    assert len(ctx) > 0, "주변 컨텍스트 객체 없음"
     print(f"[3] SceneGraph OK: 객체 {len(ws.sg.objects)}개 (컨텍스트 {len(ctx)}개)")
 
     # 4. oracle 실행 — margin이 전부 유한하고 verdict가 유효해야 함

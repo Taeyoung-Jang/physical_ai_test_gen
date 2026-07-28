@@ -1,5 +1,13 @@
 # HM3D 실제 3D Scene 시뮬레이션 통합 계획
 
+> **(2026-07-29 갱신)** 이 문서는 최초 계획의 역사적 기록입니다. 구현된
+> 코드는 이후 `src/scene3d/`로 일반화되었고, HM3D는 그 안의 한 백엔드
+> (`hm3d_dataset.py` + `hm3d_semantics.py`)입니다. 나머지 모듈
+> (`mesh_loader.py`, `robot_workspace.py`, `perception.py`,
+> `failure_search.py`, `sources.py`)은 어떤 3D scene 소스든 다룬다 —
+> 아래 "Phase" 번호는 지금은 "Scene Graph 생성" / "로봇 시뮬레이션"
+> 2단계로 재구성되었다.
+
 - 작성일: 2026-07-27
 - 데이터: `~/Documents/Workspace/3d_scene_data/habitat-matterport-3dresearch/dataset` (HM3D v0.2)
 - 목표: 절차적 가상 씬(테이블+블록)이 아닌 **실제 스캔된 실내 3D scene** 위에서

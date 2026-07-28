@@ -1,17 +1,21 @@
-"""load_hm3d_scene.py — HM3D 실제 스캔 씬을 PyBullet에 로드하고 스냅샷을 찍는다.
+"""inspect_scene_source.py — 임의의 3D scene 소스를 PyBullet에 로드하고 스냅샷을 찍는다.
+
+Scene Graph 생성 이전 단계: 입력이 실제 mesh geometry로 잘 로드되는지,
+바닥/빈 공간 탐지가 잘 되는지를 눈으로 확인하는 용도.
 
 사용:
-  # 씬 목록 (semantic annotation 보유 여부 포함)
-  uv run python tools/load_hm3d_scene.py --list
+  # HM3D 씬 목록 (semantic annotation 보유 여부 포함)
+  uv run python tools/inspect_scene_source.py --list
 
-  # 씬 추출 + 변환 + 로드 + 4-뷰 스냅샷
-  PYBULLET_MODE=DIRECT uv run python tools/load_hm3d_scene.py --scene 00800
+  # 씬 추출 + 변환 + 로드 + 4-뷰 스냅샷 (HM3D scene id 또는 mesh 파일 경로)
+  PYBULLET_MODE=DIRECT uv run python tools/inspect_scene_source.py --source 00800
+  PYBULLET_MODE=DIRECT uv run python tools/inspect_scene_source.py --source my_room.glb
 
   # 로봇 포함, 위치 지정
-  PYBULLET_MODE=DIRECT uv run python tools/load_hm3d_scene.py \
-      --scene 00800 --robot --robot-pos 1.0 0.5
+  PYBULLET_MODE=DIRECT uv run python tools/inspect_scene_source.py \
+      --source 00800 --robot --robot-pos 1.0 0.5
 
-출력: reports/hm3d/<scene_dir>_views.png (+ 개별 뷰 PNG)
+출력: reports/scene3d/<scene_id>_views.png (+ 개별 뷰 PNG)
 """
 from __future__ import annotations
 
@@ -28,11 +32,13 @@ import pybullet as p
 
 
 def parse_args():
-    parser = argparse.ArgumentParser(description="HM3D 씬 PyBullet 로더 + 스냅샷")
-    parser.add_argument("--list", action="store_true", help="씬 목록 출력")
-    parser.add_argument("--scene", default="00800", help="씬 참조 (id/해시/디렉터리명 접두)")
+    parser = argparse.ArgumentParser(description="3D scene 소스 PyBullet 로더 + 스냅샷")
+    parser.add_argument("--list", action="store_true", help="HM3D 씬 목록 출력")
+    parser.add_argument(
+        "--source", default="00800",
+        help="HM3D scene id | mesh 파일 경로(.glb/.obj/.ply)",
+    )
     parser.add_argument("--split", default="minival", choices=["minival", "val", "train"])
-    parser.add_argument("--dataset-dir", default=None, help="HM3D tar 디렉터리")
     parser.add_argument(
         "--no-collision", action="store_true", help="collision shape 생략 (렌더 전용, 빠름)"
     )
@@ -44,7 +50,7 @@ def parse_args():
     parser.add_argument("--force-convert", action="store_true", help="OBJ 캐시 재생성")
     parser.add_argument("--width", type=int, default=960)
     parser.add_argument("--height", type=int, default=720)
-    parser.add_argument("--out-dir", default="reports/hm3d")
+    parser.add_argument("--out-dir", default="reports/scene3d")
     return parser.parse_args()
 
 
@@ -107,20 +113,19 @@ def capture_from_eye(
 def main():
     args = parse_args()
 
-    from hm3d.dataset import HM3DDataset
-    from hm3d.loader import (
+    from scene3d.mesh_loader import (
         convert_glb_to_obj,
         find_free_floor_spots,
-        load_hm3d_static,
+        load_static_scene,
         pick_camera_eye,
         scene_extent_pybullet,
     )
-
-    ds = HM3DDataset(split=args.split, **(
-        {"dataset_dir": args.dataset_dir} if args.dataset_dir else {}
-    ))
+    from scene3d.sources import resolve_source
 
     if args.list:
+        from scene3d.hm3d_dataset import HM3DDataset
+
+        ds = HM3DDataset(split=args.split)
         scenes = ds.list_scenes()
         print(f"[{args.split}] {len(scenes)}개 씬:")
         for e in scenes:
@@ -128,19 +133,23 @@ def main():
             print(f"  {e.scene_dir}  [{sem}]")
         return
 
-    # ── 1. 추출 ─────────────────────────────────────────────────────────
+    # ── 1. 입력 판별/해석 ────────────────────────────────────────────────
     t0 = time.time()
-    extracted = ds.extract(args.scene)
-    entry = extracted.entry
-    print(f"[1/4] 추출 완료: {entry.scene_dir} ({time.time()-t0:.1f}s)")
-    print(f"      glb: {extracted.glb_path}")
-    if extracted.semantic_txt_path:
-        print(f"      semantic: {extracted.semantic_txt_path.name} 있음")
+    try:
+        source = resolve_source(args.source, split=args.split)
+    except Exception as e:
+        print(f"오류: 입력 판별/해석 실패 — {e}")
+        sys.exit(1)
+    print(f"[1/4] 해석 완료: kind={source.kind} scene_id={source.scene_id} "
+          f"({time.time()-t0:.1f}s)")
+    print(f"      glb: {source.glb_path}")
+    if source.semantic_txt_path:
+        print(f"      semantic: {os.path.basename(source.semantic_txt_path)} 있음")
 
     # ── 2. 변환 (캐시) ──────────────────────────────────────────────────
     t0 = time.time()
     converted = convert_glb_to_obj(
-        extracted.glb_path, entry.scene_dir, force=args.force_convert
+        source.glb_path, source.scene_id, force=args.force_convert
     )
     lo, hi = scene_extent_pybullet(converted)
     print(f"[2/4] OBJ 변환/캐시: {len(converted.chunk_objs)} chunks, "
@@ -154,7 +163,7 @@ def main():
     p.setAdditionalSearchPath(pybullet_data.getDataPath(), physicsClientId=cid)
     p.setGravity(0, 0, -9.81, physicsClientId=cid)
 
-    body_ids = load_hm3d_static(converted, cid, collision=not args.no_collision)
+    body_ids = load_static_scene(converted, cid, collision=not args.no_collision)
     print(f"[3/4] PyBullet 로드: {len(body_ids)} static bodies ({time.time()-t0:.1f}s)")
 
     lo, hi = scene_extent_pybullet(converted)
@@ -238,11 +247,11 @@ def main():
     grid = Image.new("RGB", (args.width * cols, args.height * rows), (20, 20, 20))
     for i, (name, frame) in enumerate(frames.items()):
         img = Image.fromarray(frame)
-        ImageDraw.Draw(img).text((12, 10), f"{entry.scene_dir} — {name}", fill=(255, 220, 0))
+        ImageDraw.Draw(img).text((12, 10), f"{source.scene_id} — {name}", fill=(255, 220, 0))
         grid.paste(img, ((i % cols) * args.width, (i // cols) * args.height))
-        img.save(os.path.join(args.out_dir, f"{entry.scene_dir}_{name}.png"))
+        img.save(os.path.join(args.out_dir, f"{source.scene_id}_{name}.png"))
 
-    grid_path = os.path.join(args.out_dir, f"{entry.scene_dir}_views.png")
+    grid_path = os.path.join(args.out_dir, f"{source.scene_id}_views.png")
     grid.save(grid_path)
     print(f"[4/4] 스냅샷 {n}개 저장 ({time.time()-t0:.1f}s): {grid_path}")
 

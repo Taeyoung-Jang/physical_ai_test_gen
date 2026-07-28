@@ -3,7 +3,7 @@
 HM3D 데이터셋(tar)이 없는 환경에서는 전체를 skip한다.
 
 실행:
-  uv run --extra hm3d python tests/test_p14_hm3d_semantics.py
+  uv run --extra scene3d python tests/test_p14_hm3d_semantics.py
 """
 from __future__ import annotations
 
@@ -16,14 +16,14 @@ import numpy as np
 
 
 def main():
-    from hm3d.dataset import DEFAULT_DATASET_DIR, HM3DDataset
-    from hm3d.loader import convert_glb_to_obj, scene_extent_pybullet
-    from hm3d.semantics import (
+    from scene3d.hm3d_dataset import DEFAULT_DATASET_DIR, HM3DDataset
+    from scene3d.hm3d_semantics import (
         build_scene_graph,
         extract_instances,
         parse_semantic_txt,
         select_support_surfaces,
     )
+    from scene3d.mesh_loader import convert_glb_to_obj, scene_extent_pybullet
 
     if not os.path.isdir(DEFAULT_DATASET_DIR):
         print(f"SKIP: HM3D 데이터셋 없음 ({DEFAULT_DATASET_DIR})")

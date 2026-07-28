@@ -1,11 +1,16 @@
-"""hm3d_scene_graph.py — HM3D semantic annotation에서 실측 SceneGraph를 생성한다.
+"""generate_scene_graph.py — Stage 1: 임의의 3D scene 입력에서 SceneGraph를 생성한다.
+
+`--source`는 세 가지를 모두 받는다 (scene3d.sources.detect_source_kind가 판별):
+  - HM3D 데이터셋 scene id (예: "00800")
+  - 임의의 mesh 파일 경로 (.glb/.gltf/.obj/.ply)
+  - 이미 만들어진 SceneGraph JSON 경로 (그대로 다시 저장)
 
 사용:
-  # SceneGraph 생성 + 요약 출력 (data/hm3d_scene_graphs/<scene>.json)
-  uv run python tools/hm3d_scene_graph.py --scene 00800
+  # SceneGraph 생성 + 요약 출력 (data/scene3d_scene_graphs/<scene>.json)
+  uv run python tools/generate_scene_graph.py --source 00800
 
-  # bbox 오버레이 스냅샷으로 정렬 검증 (reports/hm3d/<scene>_semantic.png)
-  uv run python tools/hm3d_scene_graph.py --scene 00800 --overlay
+  # HM3D 소스일 때만: bbox 오버레이 스냅샷으로 정렬 검증
+  uv run python tools/generate_scene_graph.py --source 00800 --overlay
 """
 from __future__ import annotations
 
@@ -13,6 +18,7 @@ import argparse
 import os
 import sys
 import time
+from collections import Counter
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
@@ -21,13 +27,16 @@ import pybullet as p
 
 
 def parse_args():
-    parser = argparse.ArgumentParser(description="HM3D semantic → SceneGraph")
-    parser.add_argument("--scene", default="00800", help="씬 참조 (semantic 보유 씬만 가능)")
+    parser = argparse.ArgumentParser(description="3D scene → SceneGraph 생성 (Stage 1)")
+    parser.add_argument(
+        "--source", default="00800",
+        help="HM3D scene id | mesh 파일 경로(.glb/.obj/.ply) | SceneGraph JSON 경로",
+    )
     parser.add_argument("--split", default="minival", choices=["minival", "val", "train"])
-    parser.add_argument("--dataset-dir", default=None)
-    parser.add_argument("--overlay", action="store_true", help="bbox 오버레이 스냅샷 생성")
-    parser.add_argument("--out-dir", default="data/hm3d_scene_graphs")
-    parser.add_argument("--report-dir", default="reports/hm3d")
+    parser.add_argument("--overlay", action="store_true",
+                        help="bbox 오버레이 스냅샷 생성 (HM3D 소스 전용)")
+    parser.add_argument("--out-dir", default="data/scene3d_scene_graphs")
+    parser.add_argument("--report-dir", default="reports/scene3d")
     parser.add_argument("--top-n", type=int, default=25, help="오버레이할 최대 객체 수")
     return parser.parse_args()
 
@@ -51,70 +60,62 @@ def spawn_bbox_marker(cid: int, center, size, color) -> int:
 def main():
     args = parse_args()
 
-    from hm3d.dataset import HM3DDataset
-    from hm3d.loader import convert_glb_to_obj, load_hm3d_static, scene_extent_pybullet
-    from hm3d.semantics import build_scene_graph, extract_instances, select_support_surfaces
-
-    ds = HM3DDataset(split=args.split, **(
-        {"dataset_dir": args.dataset_dir} if args.dataset_dir else {}
-    ))
-    extracted = ds.extract(args.scene)
-    entry = extracted.entry
-    if extracted.semantic_glb_path is None:
-        print(f"오류: {entry.scene_dir}에는 semantic annotation이 없습니다.")
-        print("      --list로 [semantic O] 씬을 확인하세요.")
-        sys.exit(1)
-
-    # 시각 씬과 동일한 월드 정렬을 위해 loader의 offset 재사용
-    converted = convert_glb_to_obj(extracted.glb_path, entry.scene_dir)
+    from scene3d.mesh_loader import convert_glb_to_obj, load_static_scene, scene_extent_pybullet
+    from scene3d.sources import generate_scene_graph, resolve_source
 
     t0 = time.time()
-    instances = extract_instances(
-        extracted.semantic_glb_path,
-        extracted.semantic_txt_path,
-        offset=converted.offset,
-    )
-    print(f"[1/3] 인스턴스 추출: {len(instances)}개 ({time.time()-t0:.1f}s)")
+    try:
+        source = resolve_source(args.source, split=args.split)
+    except Exception as e:
+        print(f"오류: 입력 판별/해석 실패 — {e}")
+        sys.exit(1)
+    print(f"[0/3] 입력 판별: kind={source.kind} scene_id={source.scene_id} "
+          f"({time.time()-t0:.1f}s)")
 
-    sg = build_scene_graph(instances, scene_id=f"hm3d_{entry.scene_dir}")
-    supports = select_support_surfaces(instances)
+    # 시각 mesh와 동일한 월드 정렬을 위해 mesh_loader의 offset 재사용
+    converted = convert_glb_to_obj(source.glb_path, source.scene_id)
+
+    t0 = time.time()
+    try:
+        sg = generate_scene_graph(source, offset=converted.offset)
+    except ValueError as e:
+        print(f"오류: {e}")
+        sys.exit(1)
+    print(f"[1/3] SceneGraph 생성: 객체 {len(sg.objects)}개, "
+          f"지지면 {len(sg.support_surfaces)}개 ({time.time()-t0:.1f}s)")
 
     os.makedirs(args.out_dir, exist_ok=True)
-    out_path = os.path.join(args.out_dir, f"{entry.scene_dir}.json")
+    out_path = os.path.join(args.out_dir, f"{source.scene_id}.json")
     sg.save(out_path)
 
-    # 요약
-    from collections import Counter
-    cats = Counter(o.extra["category"] for o in sg.objects)
-    n_structural = sum(sg.meta["structural_counts"].values())
+    cats = Counter(o.extra.get("category", "?") for o in sg.objects)
     print(f"[2/3] SceneGraph 저장: {out_path}")
-    print(f"      객체 {len(sg.objects)}개 / 구조물 제외 {n_structural}개")
     print(f"      상위 카테고리: {cats.most_common(10)}")
-    print(f"      지지면 후보 {len(supports)}개:")
-    for s in supports[:8]:
-        print(f"        #{s.instance_id:4d} {s.category:20s} 높이 {s.top_z:.2f}m "
-              f"면적 {s.footprint_area:.2f}m² 중심 {np.round(s.center[:2], 2).tolist()}")
+    print("      지지면 후보:")
+    for s in sg.support_surfaces[:8]:
+        area = (s.bounds["x"][1] - s.bounds["x"][0]) * (s.bounds["y"][1] - s.bounds["y"][0])
+        print(f"        {s.id:28s} 높이 {s.height:.2f}m 면적 {area:.2f}m²")
 
     if not args.overlay:
         print("[3/3] 오버레이 생략 (--overlay로 활성화)")
         return
+    if source.kind != "hm3d":
+        print(f"[3/3] 오버레이는 HM3D 소스 전용입니다 (현재 kind={source.kind})")
+        return
 
-    # ── 오버레이 스냅샷 ─────────────────────────────────────────────────
+    # ── 오버레이 스냅샷 (HM3D 소스: 인스턴스 단위 상세 표시) ──────────────
     cid = p.connect(p.DIRECT)
-    load_hm3d_static(converted, cid, collision=False)
+    load_static_scene(converted, cid, collision=False)
     lo, hi = scene_extent_pybullet(converted)
     extent = hi - lo
     d_max = float(max(extent[0], extent[1]))
 
-    # 지지면 = 초록, 그 외 객체 = 파랑 (큰 것부터 top-n)
-    support_ids = {s.instance_id for s in supports}
+    support_ids = {s.id for s in sg.support_surfaces}
     green = [0.1, 0.9, 0.2, 0.55]
     blue = [0.2, 0.4, 0.95, 0.35]
     shown = 0
-    inst_by_id = {i.instance_id: i for i in instances}
     for obj in sorted(sg.objects, key=lambda o: -float(np.prod(o.size))):
-        inst = inst_by_id[obj.extra["hm3d_instance_id"]]
-        is_support = inst.instance_id in support_ids
+        is_support = obj.id in support_ids
         if not is_support and shown >= args.top_n:
             continue
         spawn_bbox_marker(cid, obj.position, obj.size, green if is_support else blue)
@@ -147,12 +148,12 @@ def main():
         img = Image.fromarray(frame)
         ImageDraw.Draw(img).text(
             (12, 10),
-            f"{entry.scene_dir} — {name} (green=support, blue=object bbox)",
+            f"{source.scene_id} — {name} (green=support, blue=object bbox)",
             fill=(255, 220, 0),
         )
         grid.paste(img, (i * w0, 0))
 
-    out_png = os.path.join(args.report_dir, f"{entry.scene_dir}_semantic.png")
+    out_png = os.path.join(args.report_dir, f"{source.scene_id}_semantic.png")
     grid.save(out_png)
     print(f"[3/3] 오버레이 스냅샷: {out_png}")
     p.disconnect(physicsClientId=cid)

@@ -1,17 +1,18 @@
-"""run_hm3d_case.py — HM3D 실제 씬에서 pick-and-place 케이스를 E2E 실행한다.
+"""run_robot_sim.py — Stage 2: 3D scene 위에서 pick-and-place 케이스를 E2E 실행한다.
 
-흐름: 씬 로드 → 지지면 선택 → 로봇 배치 → target/obstacle/tray spawn
-      → kinematic check + 6-margin oracle → 판정 출력 (+스냅샷/GIF)
+흐름: 입력 판별(Stage 1 sources.resolve_source) → SceneGraph 생성 → 지지면 선택
+      → 로봇 배치 → target/obstacle/tray spawn → kinematic check + 6-margin
+      oracle → 판정 출력 (+스냅샷/GIF)
 
 사용:
   # 판정 + 스냅샷
-  PYBULLET_MODE=DIRECT uv run python tools/run_hm3d_case.py --scene 00800
+  PYBULLET_MODE=DIRECT uv run python tools/run_robot_sim.py --source 00800
 
   # 지지면 선택 + 애니메이션 GIF
-  PYBULLET_MODE=DIRECT uv run python tools/run_hm3d_case.py \
-      --scene 00800 --surface 0 --gif
+  PYBULLET_MODE=DIRECT uv run python tools/run_robot_sim.py \
+      --source 00800 --surface 0 --gif
 
-출력: reports/hm3d/<scene>_case.png, data/hm3d_anim/<scene>_case.gif
+출력: reports/scene3d/<scene>_case.png, data/scene3d_anim/<scene>_case.gif
 """
 from __future__ import annotations
 
@@ -28,18 +29,21 @@ import pybullet as p
 
 
 def parse_args():
-    parser = argparse.ArgumentParser(description="HM3D E2E pick-and-place 케이스")
-    parser.add_argument("--scene", default="00800", help="씬 참조 (semantic 보유 씬)")
+    parser = argparse.ArgumentParser(description="3D scene E2E pick-and-place 케이스")
+    parser.add_argument(
+        "--source", default="00800",
+        help="HM3D scene id | mesh 파일 경로(.glb/.obj/.ply) | SceneGraph JSON 경로",
+    )
     parser.add_argument("--split", default="minival", choices=["minival", "val", "train"])
     parser.add_argument(
         "--surface", type=int, default=-1,
-        help="지지면 후보 인덱스 (면적순). 기본 -1 = 배치 가능한 지지면 자동 선택",
+        help="지지면 후보 인덱스. 기본 -1 = 배치 가능한 지지면 자동 선택",
     )
     parser.add_argument("--gif", action="store_true", help="pick-and-place GIF 생성")
     parser.add_argument("--width", type=int, default=800)
     parser.add_argument("--height", type=int, default=600)
-    parser.add_argument("--report-dir", default="reports/hm3d")
-    parser.add_argument("--anim-dir", default="data/hm3d_anim")
+    parser.add_argument("--report-dir", default="reports/scene3d")
+    parser.add_argument("--anim-dir", default="data/scene3d_anim")
     return parser.parse_args()
 
 
@@ -57,7 +61,7 @@ def render_eye(cid, eye, target, width, height, far=40.0):
 
 def workspace_camera(cid, ws, free_spots, floor_z):
     """작업공간을 바라보는 카메라 eye (LOS 확보 지점, 실패 시 대각 orbit)."""
-    from hm3d.loader import pick_camera_eye
+    from scene3d.mesh_loader import pick_camera_eye
 
     target = [ws.target_pos[0], ws.target_pos[1], ws.surface.top_z + 0.15]
     eye = pick_camera_eye(
@@ -79,46 +83,42 @@ def workspace_camera(cid, ws, free_spots, floor_z):
 def main():
     args = parse_args()
 
-    from hm3d.dataset import HM3DDataset
-    from hm3d.loader import (
+    from physical_oracle import load_thresholds
+    from scene3d.mesh_loader import (
         convert_glb_to_obj,
         find_free_floor_spots,
-        load_hm3d_static,
+        load_static_scene,
         scene_extent_pybullet,
     )
-    from hm3d.semantics import build_scene_graph, extract_instances
-    from hm3d.workspace import run_case, setup_workspace
-    from physical_oracle import load_thresholds
+    from scene3d.robot_workspace import run_case, setup_workspace
+    from scene3d.sources import generate_scene_graph, resolve_source
     from sim_runner import load_robot_config
 
-    ds = HM3DDataset(split=args.split)
-    extracted = ds.extract(args.scene)
-    entry = extracted.entry
-    if extracted.semantic_glb_path is None:
-        print(f"오류: {entry.scene_dir}에는 semantic annotation이 없습니다.")
+    try:
+        source = resolve_source(args.source, split=args.split)
+    except Exception as e:
+        print(f"오류: 입력 판별/해석 실패 — {e}")
         sys.exit(1)
 
     # ── 씬 로드 ─────────────────────────────────────────────────────────
     t0 = time.time()
-    converted = convert_glb_to_obj(extracted.glb_path, entry.scene_dir)
+    converted = convert_glb_to_obj(source.glb_path, source.scene_id)
     cid = p.connect(p.DIRECT)
     import pybullet_data
     p.setAdditionalSearchPath(pybullet_data.getDataPath(), physicsClientId=cid)
     p.setGravity(0, 0, -9.81, physicsClientId=cid)
-    scene_body_ids = load_hm3d_static(converted, cid, collision=True)
+    scene_body_ids = load_static_scene(converted, cid, collision=True)
     lo, hi = scene_extent_pybullet(converted)
     free_spots, floor_z = find_free_floor_spots(cid, lo, hi)
-    print(f"[1/4] 씬 로드: {entry.scene_dir} ({time.time()-t0:.1f}s, "
+    print(f"[1/4] 씬 로드: {source.scene_id} ({time.time()-t0:.1f}s, "
           f"바닥 z={floor_z:.2f})")
 
-    # ── scene graph 생성 (Pipeline A) + 작업공간 구성 (Pipeline B) ───────
-    # setup_workspace는 표준 SceneGraph만 받으므로, 여기서 만드는 대신
-    # data/hm3d_scene_graphs/<scene>.json을 다른 도구로 생성해 로드해도 된다.
-    instances = extract_instances(
-        extracted.semantic_glb_path, extracted.semantic_txt_path,
-        offset=converted.offset,
-    )
-    sg = build_scene_graph(instances, scene_id=entry.scene_dir, include_structural=True)
+    # ── SceneGraph 생성(Stage 1) + 작업공간 구성(Stage 2) ────────────────
+    try:
+        sg = generate_scene_graph(source, offset=converted.offset)
+    except ValueError as e:
+        print(f"오류: {e}")
+        sys.exit(1)
     if not sg.support_surfaces:
         print("오류: 지지면 후보가 없습니다.")
         sys.exit(1)
@@ -176,7 +176,7 @@ def main():
     home_q = [0, -math.pi / 4, 0, -3 * math.pi / 4, 0, math.pi / 2, math.pi / 4]
     sim_runner.set_joint_state(home_q, ws.robot_cfg)
     snap = render_eye(cid, eye, cam_target, args.width, args.height)
-    snap_path = os.path.join(args.report_dir, f"{entry.scene_dir}_case.png")
+    snap_path = os.path.join(args.report_dir, f"{source.scene_id}_case.png")
     Image.fromarray(snap).save(snap_path)
     print(f"[4/4] 스냅샷: {snap_path}")
 
@@ -185,7 +185,7 @@ def main():
         if frames:
             import imageio
             os.makedirs(args.anim_dir, exist_ok=True)
-            gif_path = os.path.join(args.anim_dir, f"{entry.scene_dir}_case.gif")
+            gif_path = os.path.join(args.anim_dir, f"{source.scene_id}_case.gif")
             imageio.mimsave(gif_path, frames, duration=0.08, loop=0)
             # 프레임이 실제로 변하는지 검증
             diffs = [

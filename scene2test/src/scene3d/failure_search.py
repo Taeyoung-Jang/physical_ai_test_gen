@@ -1,18 +1,19 @@
-"""failure_search.py — Active Failure Search를 HM3D 실제 씬에서 실행 (Phase 5).
+"""failure_search.py — Active Failure Search를 로드된 3D scene 위에서 실행.
 
-기존 탐색 엔진(surrogate + acquisition + 라운드 루프)은 그대로 재사용하고,
-평가 경로만 교체한다:
+기존 탐색 엔진(surrogate + acquisition + 라운드 루프, active_failure_search.py)
+은 그대로 재사용하고, 평가 경로만 교체한다:
 
-  Track A: 매 테스트 reset_simulation + 씬 재구성 (가벼운 절차적 씬이라 가능)
-  HM3D  : 씬(chunk 209개, ~11s 로드)을 1회만 로드하고, mutation은 spawn된
-          body들의 teleport로 적용 (테스트당 ~0.1s)
+  절차적 씬(scene_builder): 매 테스트 reset_simulation + 씬 재구성 (가벼워서 가능)
+  로드된 3D scene         : 씬(chunk 수백 개, 로드에 수 초~수십 초)을 1회만
+                           로드하고, mutation은 spawn된 body들의 teleport로
+                           적용 (테스트당 ~0.1s)
 
 좌표계 전략:
-  탐색 엔진(mutation 샘플러, validity, feature extractor)은 Track A 가정
-  — 로봇 베이스 = 원점, 작업 방향 = +x — 을 전제한다. Phase 3 배치의 inward
-  방향은 항상 축정렬(±x/±y)이므로, 하이브리드 SceneGraph를 **로봇-로컬
-  프레임**으로 회전/평행이동해 넘기면 엔진 전체가 무수정으로 동작한다.
-  평가 시에만 mutation 결과 위치를 월드 프레임으로 역변환해 body를 옮긴다.
+  탐색 엔진(mutation 샘플러, validity, feature extractor)은 "로봇 베이스 =
+  원점, 작업 방향 = +x"를 전제한다. robot_workspace의 배치 inward 방향은
+  항상 축정렬(±x/±y)이므로, 하이브리드 SceneGraph를 **로봇-로컬 프레임**으로
+  회전/평행이동해 넘기면 엔진 전체가 무수정으로 동작한다. 평가 시에만
+  mutation 결과 위치를 월드 프레임으로 역변환해 body를 옮긴다.
 """
 from __future__ import annotations
 
@@ -30,7 +31,7 @@ from active_failure_search import ActiveFailureSearch, SearchConfig
 from physical_oracle import OracleResult
 from scene_graph import ObjectNode, Role, SceneGraph, SupportSurface
 
-from .workspace import HM3DWorkspace
+from .robot_workspace import SceneWorkspace
 
 # 미사용 body 주차 위치 (씬 밖 멀리)
 _PARK_POS = [500.0, 500.0, -50.0]
@@ -49,7 +50,7 @@ class LocalFrame:
     theta: float          # 로컬 +x가 가리키는 월드 방향 (rad, 축정렬)
 
     @classmethod
-    def from_workspace(cls, ws: HM3DWorkspace) -> "LocalFrame":
+    def from_workspace(cls, ws: SceneWorkspace) -> "LocalFrame":
         base = np.array(ws.robot_base_pos)
         target = np.array(ws.target_pos)
         inward = target[:2] - base[:2]
@@ -77,7 +78,7 @@ class LocalFrame:
         return list(size)
 
 
-def build_local_scene_graph(ws: HM3DWorkspace, frame: LocalFrame) -> SceneGraph:
+def build_local_scene_graph(ws: SceneWorkspace, frame: LocalFrame) -> SceneGraph:
     """하이브리드 SceneGraph → 로봇-로컬 프레임 + tray 점유용 occupant 노드 추가.
 
     apply_mutation의 tray_occupied는 obstacles()[1]을 tray 위로 옮기므로,
@@ -132,10 +133,10 @@ def build_local_scene_graph(ws: HM3DWorkspace, frame: LocalFrame) -> SceneGraph:
 # ---------------------------------------------------------------------------
 
 @dataclass
-class HM3DSearchSession:
-    """로드 완료된 HM3D 씬 + 탐색에 필요한 body 핸들."""
+class SceneSearchSession:
+    """로드 완료된 3D scene + 탐색에 필요한 body 핸들."""
 
-    ws: HM3DWorkspace
+    ws: SceneWorkspace
     cid: int
     frame: LocalFrame
     local_sg: SceneGraph
@@ -144,7 +145,7 @@ class HM3DSearchSession:
     _initial_pos: dict[int, list[float]] = field(default_factory=dict)
 
     @classmethod
-    def create(cls, ws: HM3DWorkspace, cid: int) -> "HM3DSearchSession":
+    def create(cls, ws: SceneWorkspace, cid: int) -> "SceneSearchSession":
         frame = LocalFrame.from_workspace(ws)
         local_sg = build_local_scene_graph(ws, frame)
 
@@ -245,7 +246,7 @@ def _local_robot_cfg(robot_cfg: dict) -> dict:
     return cfg
 
 
-class HM3DFailureSearch(ActiveFailureSearch):
+class SceneFailureSearch(ActiveFailureSearch):
     """HM3D 씬 위 Active Failure Search.
 
     탐색 측(샘플링/feature/surrogate/acquisition)은 로봇-로컬 SceneGraph로
@@ -255,7 +256,7 @@ class HM3DFailureSearch(ActiveFailureSearch):
 
     def __init__(
         self,
-        session: HM3DSearchSession,
+        session: SceneSearchSession,
         thresholds: dict,
         config: SearchConfig,
         pretrained_surrogate=None,
@@ -294,13 +295,13 @@ class HM3DFailureSearch(ActiveFailureSearch):
 # 비교 실험 (random vs active, 동일 세션)
 # ---------------------------------------------------------------------------
 
-def run_hm3d_comparison(
-    session: HM3DSearchSession,
+def run_scene_comparison(
+    session: SceneSearchSession,
     thresholds: dict,
     rounds: int,
     tests_per_round: int,
     seed: int = 42,
-    log_dir: str = "data/hm3d_search_logs",
+    log_dir: str = "data/scene3d_search_logs",
 ) -> dict:
     """같은 HM3D 씬/작업공간에서 random vs active(cold)를 대조한다.
 
@@ -319,7 +320,7 @@ def run_hm3d_comparison(
             seed=seed,
             log_dir=log_dir,
         )
-        search = HM3DFailureSearch(session, thresholds, cfg)
+        search = SceneFailureSearch(session, thresholds, cfg)
         search.run()
         summary = search.summary()
 
