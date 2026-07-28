@@ -339,6 +339,77 @@ PYBULLET_MODE=DIRECT uv run python tools/gen3d_asset.py --no-model
 
 ---
 
+## v3: 실제 3D Scene 통합 (scene3d)
+
+절차적 씬(테이블+블록) 대신 **실제 스캔된 3D 공간**(예: HM3D) 위에서 로봇 pick-and-place를
+검증합니다. 입력이 HM3D 데이터셋 scene id인지, 사용자가 준 임의의 mesh 파일
+(`.glb`/`.gltf`/`.obj`/`.ply`)인지, 이미 만들어진 SceneGraph JSON인지는 `--source` 하나로
+자동 판별됩니다 — 어느 쪽이든 아래 두 단계로 동일하게 처리됩니다.
+
+```
+3D scene 입력 (HM3D scene id / mesh 파일 / SceneGraph JSON)
+        ↓  scene3d/sources.py: resolve_source() + generate_scene_graph()
+Scene Graph 생성 (Stage 1)          지지면(테이블 등) + 장애물 인스턴스 추출
+        ↓
+로봇 시뮬레이션 (Stage 2)            scene3d/workspace_setup.py: setup_workspace()
+   ├─ 로봇 베이스 배치 (raycast로 빈 바닥 탐색)
+   ├─ target/obstacle/tray spawn
+   └─ 기존 kinematic oracle 재사용 → PASS/FAIL/WARN/BLOCKED
+```
+
+`hm3d_dataset.py`/`hm3d_semantics.py`만 HM3D 형식에 실제로 결합된 백엔드이고,
+나머지(`mesh_loader.py`, `workspace_setup.py`, `perception.py`, `failure_search.py`)는
+어떤 3D scene 소스로 만든 SceneGraph든 동일하게 동작합니다.
+
+### 설치
+```bash
+uv sync --extra scene3d   # trimesh (GLB → OBJ 변환용)
+```
+HM3D 데이터셋을 쓰려면 `HM3D_DATASET_DIR` 환경변수로 tar 압축 파일이 있는 디렉터리를 지정
+(기본값 `~/Documents/Workspace/3d_scene_data/habitat-matterport-3dresearch/dataset`).
+
+### 1. 입력 확인 (스냅샷)
+```bash
+# HM3D 씬 목록 (semantic annotation 보유 여부 포함)
+uv run python tools/inspect_scene_source.py --list
+
+# 로드 + 4-뷰 스냅샷 (HM3D scene id 또는 mesh 파일 경로 모두 가능)
+PYBULLET_MODE=DIRECT uv run python tools/inspect_scene_source.py --source 00800
+```
+
+### 2. Scene Graph 생성 — Stage 1
+```bash
+uv run python tools/generate_scene_graph.py --source 00800
+# → data/scene3d_scene_graphs/00800-*.json
+```
+
+### 3. 로봇 시뮬레이션 — Stage 2
+```bash
+# pick-and-place 케이스 실행 + PASS/FAIL/WARN/BLOCKED 판정 + 스냅샷
+PYBULLET_MODE=DIRECT uv run python tools/run_robot_sim.py --source 00800
+
+# 지지면 지정 + pick-and-place 애니메이션 GIF까지
+PYBULLET_MODE=DIRECT uv run python tools/run_robot_sim.py \
+    --source 00800 --surface 0 --gif
+```
+
+### 4. RGB-D 인식 검증 (HM3D 소스 전용 — semantic GT와 위치/크기 오차 비교)
+```bash
+PYBULLET_MODE=DIRECT uv run python tools/run_perception.py --source 00800
+```
+
+### 5. 이 씬 위에서 Active Failure Search 실행
+```bash
+# random vs active 비교 (같은 씬을 1회만 로드하고 mutation은 teleport로 적용)
+PYBULLET_MODE=DIRECT uv run python tools/run_failure_search.py \
+    --source 00800 --mode compare --rounds 4 --tests-per-round 12
+```
+
+각 CLI의 세부 옵션은 파일 상단 docstring을 참고하세요. 검증:
+`tests/test_p14_hm3d_semantics.py` ~ `test_p18_sources.py`.
+
+---
+
 ## 디렉터리 구조
 
 ```
@@ -371,7 +442,7 @@ physical_ai_test_gen/
     │   ├── vision/rgbd_to_graph.py  RGB-D → Scene Graph (Track B)
     │   ├── policies.py              [v2] ActionModel (RuleLAMProxy, MiniActionModel)
     │   ├── policies_vla.py          [v2] ClosedLoopPolicy (StubReachPolicy, OpenVLAPolicy)
-    │   └── lam_guided/              [v2] LAM-guided failure 루프 패키지
+    │   ├── lam_guided/              [v2] LAM-guided failure 루프 패키지
     │       ├── types.py             RolloutTrace/BehaviorFeatures/VulnerabilityProfile/...
     │       ├── asset_bank.py        GeneratedAssetBank + 씬 시맨틱 주석
     │       ├── case_apply.py        새 객체(asset) 삽입
@@ -386,19 +457,37 @@ physical_ai_test_gen/
     │       ├── closed_loop.py       [v2] VLA closed-loop rollout (RGB→act→IK)
     │       ├── asset_gen.py         [v2] 3D 생성(Shap-E)+default 폴백
     │       └── lam_guided_loop.py   오케스트레이터 [CLI]
+    │   └── scene3d/                 [v3] 실제 3D scene 통합 (HM3D 등)
+    │       ├── sources.py           입력 판별 + 디스패치 (SceneSource, resolve_source)
+    │       ├── hm3d_dataset.py      HM3D 백엔드 — tar 인덱싱 + 씬 추출
+    │       ├── hm3d_semantics.py    HM3D 백엔드 — semantic annotation → SceneGraph
+    │       ├── mesh_loader.py       GLB → OBJ 변환 + PyBullet static 로드 (범용)
+    │       ├── workspace_setup.py   로봇 베이스 배치 + spawn + oracle 연결 (범용)
+    │       ├── perception.py        RGB-D 인식 → SceneGraph + GT 비교 (범용)
+    │       └── failure_search.py    Active Failure Search 세션 (범용)
     ├── tools/
     │   ├── view_scene.py            씬 스냅샷/뷰어
     │   ├── animate_failure.py       pick-and-place 애니메이션 (kinematic/physics)
     │   ├── animate_lam_failure.py   [v2] LAM counterexample GIF (TARGET/PICKED 마커)
     │   ├── run_vla_rollout.py       [v2] closed-loop VLA rollout 데모 (stub/openvla)
-    │   └── gen3d_asset.py           [v2] 3D object 생성 데모 (+default 폴백)
-    ├── tests/                       phase별 검증 (test_p1 ~ test_p10, +test_p11 LAM-guided)
+    │   ├── gen3d_asset.py           [v2] 3D object 생성 데모 (+default 폴백)
+    │   ├── inspect_scene_source.py  [v3] 입력 스냅샷/HM3D 씬 목록
+    │   ├── generate_scene_graph.py  [v3] Scene Graph 생성 (Stage 1) [CLI]
+    │   ├── run_robot_sim.py         [v3] pick-and-place E2E (Stage 2) [CLI]
+    │   ├── run_perception.py        [v3] RGB-D 인식 + GT 비교 [CLI]
+    │   └── run_failure_search.py    [v3] 이 씬 위 Active Failure Search [CLI]
+    ├── tests/                       phase별 검증 (test_p1 ~ test_p10, +test_p11 LAM-guided,
+    │                               +test_p14~p18 scene3d)
     └── data/
         ├── scene_library/          생성된 씬 JSON
         ├── search_logs/            탐색 결과 로그
         ├── failure_anim/           실패/성공 케이스 GIF
         ├── generated_assets/       [v2] procedural asset index.json
-        └── lam_guided_logs/        [v2] LAM-guided 루프 로그 + counterexamples
+        ├── lam_guided_logs/        [v2] LAM-guided 루프 로그 + counterexamples
+        ├── scene3d_raw/            [v3] HM3D tar에서 추출한 원본 GLB/semantic
+        ├── scene3d_cache/          [v3] GLB → OBJ 변환 캐시
+        ├── scene3d_scene_graphs/   [v3] 생성된 SceneGraph JSON
+        └── scene3d_search_logs/    [v3] scene3d Active Failure Search 로그
 ```
 
 ---
