@@ -33,7 +33,7 @@ from vision.rgbd_to_graph import (
 )
 
 from .hm3d_semantics import SemanticInstance
-from .robot_workspace import SceneBox, SceneWorkspace
+from .workspace_setup import SceneBox, SceneWorkspace
 
 # GL 카메라 좌표 → CV 핀홀 좌표 플립
 _GL_TO_CV = np.diag([1.0, -1.0, -1.0, 1.0])

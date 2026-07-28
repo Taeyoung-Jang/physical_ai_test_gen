@@ -80,8 +80,8 @@ def test_hm3d_perception_e2e():
         gt_clutter_on_surface,
         view_to_world_pointcloud,
     )
-    from scene3d.robot_workspace import setup_workspace_auto
     from scene3d.sources import generate_scene_graph, resolve_source
+    from scene3d.workspace_setup import setup_workspace_auto
     from sim_runner import load_robot_config
 
     source = resolve_source("00800", split="minival")

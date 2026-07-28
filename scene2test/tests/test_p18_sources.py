@@ -36,7 +36,7 @@ def test_detect_source_kind():
 def test_mesh_file_end_to_end():
     """임의 mesh 파일 → resolve_source → generate_scene_graph 전체 경로.
 
-    HM3D와 무관한 합성 mesh(trimesh box)로, robot_workspace/mesh_loader가
+    HM3D와 무관한 합성 mesh(trimesh box)로, workspace_setup/mesh_loader가
     실제로 HM3D 없이도 동작한다는 것을 증명한다.
     """
     import trimesh
