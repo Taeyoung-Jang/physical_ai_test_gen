@@ -139,8 +139,8 @@
 ### 4.4 Scene Graph 관련 작업 항목 (우선순위 포함)
 
 - [x] **V-1 (선행)**: `extract_object_pointclouds` 인덱스 매핑 수정 — `depth_to_pointcloud(return_valid_mask=True)` + 픽셀→포인트 역매핑 테이블. 합성 데이터 검증 포함 (tests/test_p16). **완료 2026-07-28**
-- [x] **V-2**: 시뮬레이션 segmentation buffer 활용 — `hm3d/perception.py`의 `capture_rgbd_seg` + `masks_from_segmentation`으로 Mode A 경로 실동작. HM3D 4개 씬에서 spawn 객체 3/3 인식, 위치오차 0.6~4.7cm (tools/run_hm3d_perception.py). **완료 2026-07-28**
-  - 주의: PyBullet view matrix는 OpenGL 관례라 핀홀 역투영(CV 관례)과 조합 시 GL→CV 플립 diag(1,-1,-1) 필요. 기존 `capture_rgbd_from_pybullet`의 extrinsic에는 이 플립이 없음 (test_p10은 Mode B GT라 통과) — 신규 코드는 `hm3d/perception.py`의 `capture_rgbd_seg` 사용 권장.
+- [x] **V-2**: 시뮬레이션 segmentation buffer 활용 — `scene3d/perception.py`의 `capture_rgbd_seg` + `masks_from_segmentation`으로 Mode A 경로 실동작. HM3D 4개 씬에서 spawn 객체 3/3 인식, 위치오차 0.6~4.7cm (tools/run_perception.py). **완료 2026-07-28**
+  - 주의: PyBullet view matrix는 OpenGL 관례라 핀홀 역투영(CV 관례)과 조합 시 GL→CV 플립 diag(1,-1,-1) 필요. 기존 `capture_rgbd_from_pybullet`의 extrinsic에는 이 플립이 없음 (test_p10은 Mode B GT라 통과) — 신규 코드는 `scene3d/perception.py`의 `capture_rgbd_seg` 사용 권장.
   - HM3D 가구는 mesh chunk가 semantic 인스턴스와 1:1이 아니라 seg buffer로 분리 불가 → 지지면 위 클러터는 DBSCAN 클러스터링(class-agnostic)으로 인식하고 semantic GT와 비교 (`compare_with_gt`).
 - [ ] **V-3**: role 추론 규칙 — instruction 키워드 ↔ 추출된 색/형상 매칭으로 target 지정 (현재는 role_map 수동)
 - [ ] **V-4**: 색상 추출 — mask 영역 RGB 히스토그램에서 색상명 추정, `annotate_scene_semantics`의 role 역산 대체

@@ -1,14 +1,16 @@
-"""perception.py — HM3D 씬 안 RGB-D 인식 → point cloud → 인식 SceneGraph (Phase 4).
+"""perception.py — 3D scene 안 RGB-D 인식 → point cloud → 인식 SceneGraph.
 
-Track B("인식 기반 Scene Graph")를 실제로 구동하는 모듈:
+인식 기반 Scene Graph 생성을 실제로 구동하는 모듈(로드된 3D scene이면
+출처 무관하게 동작):
 
-  RGB-D + segmentation 캡처 (PyBullet, 실제 스캔 씬)
+  RGB-D + segmentation 캡처 (PyBullet)
     → depth 역투영 point cloud (V-1 수정된 픽셀↔포인트 매핑)
     → spawn 객체: segmentation buffer GT mask로 분리 (V-2)
     → 지지면 위 클러터: 상면 위 포인트 DBSCAN 클러스터링 (mask 불필요한
-      class-agnostic 인식 — HM3D mesh chunk는 semantic 인스턴스와 1:1이
-      아니므로 seg buffer로 가구를 분리할 수 없다)
-    → 인식 SceneGraph 생성 + semantic GT와 비교 지표
+      class-agnostic 인식 — 스캔 mesh chunk는 semantic 인스턴스와 1:1이
+      아닌 경우가 많아 seg buffer만으로 가구를 분리할 수 없다)
+    → 인식 SceneGraph 생성 + semantic GT와 비교 지표 (GT 비교는 HM3D
+      semantic annotation이 있을 때만 가능 — gt_clutter_on_surface 참고)
 
 좌표계 주의: PyBullet view matrix는 OpenGL 관례(카메라 -z 전방, +y 위)이고
 핀홀 역투영은 CV 관례(+z 전방, +y 아래)다. 세계 좌표 변환 시
@@ -30,8 +32,8 @@ from vision.rgbd_to_graph import (
     extract_object_pointclouds,
 )
 
-from .semantics import SemanticInstance
-from .workspace import HM3DWorkspace
+from .hm3d_semantics import SemanticInstance
+from .robot_workspace import SceneBox, SceneWorkspace
 
 # GL 카메라 좌표 → CV 핀홀 좌표 플립
 _GL_TO_CV = np.diag([1.0, -1.0, -1.0, 1.0])
@@ -147,7 +149,7 @@ def detect_surface_clutter(
     pcd_world,
     valid: np.ndarray,
     seg: np.ndarray,
-    surface: SemanticInstance,
+    surface: SceneBox,
     exclude_body_ids: list[int],
     eps: float = 0.04,
     min_points: int = 30,
@@ -196,7 +198,7 @@ def detect_surface_clutter(
 
 def estimate_surface_height(
     pcd_world,
-    surface: SemanticInstance,
+    surface: SceneBox,
 ) -> Optional[float]:
     """상면 높이를 point cloud에서 실측한다 (semantic GT와 독립 검증용)."""
     pts = np.asarray(pcd_world.points)
@@ -217,7 +219,7 @@ def estimate_surface_height(
 
 def build_perceived_scene_graph(
     scene_id: str,
-    surface: SemanticInstance,
+    surface: SceneBox,
     surface_height_measured: Optional[float],
     detections: list[DetectedObject],
     role_map: dict[str, str],
@@ -233,7 +235,7 @@ def build_perceived_scene_graph(
         else surface.top_z
     )
     surf = SupportSurface(
-        id=f"perceived_{surface.instance_id:04d}",
+        id=f"perceived_{surface.id}",
         type="plane",
         height=height,
         bounds={
@@ -286,7 +288,7 @@ class PerceptionReport:
 
 
 def compare_with_gt(
-    workspace: HM3DWorkspace,
+    workspace: SceneWorkspace,
     detections: list[DetectedObject],
     surface_height_measured: Optional[float],
     gt_clutter: list[SemanticInstance],
@@ -368,20 +370,26 @@ def compare_with_gt(
 
 def gt_clutter_on_surface(
     instances: list[SemanticInstance],
-    surface: SemanticInstance,
+    surface: SceneBox,
     z_band: tuple[float, float] = (0.015, 0.45),
 ) -> list[SemanticInstance]:
     """지지면 위에 '놓인' semantic 인스턴스 (클러터 GT).
 
     벽/커튼처럼 바닥부터 천장까지 이어지는 인스턴스는 xy가 겹쳐도
     상면에 놓인 물체가 아니므로, bbox 바닥이 상면 근처인 것만 취한다.
+
+    surface는 이미 지지면 자체를 선택한 SceneBox(workspace.py 변환 결과)라
+    instances(HM3D 원본 정밀 인스턴스 목록) 중 자기 자신은 xy+높이 bbox가
+    거의 일치하는 항목으로 식별해 제외한다 (두 타입 간 공유 ID 체계 없음).
     """
     top = surface.top_z
     lo, hi = surface.bbox_min, surface.bbox_max
     result = []
     for inst in instances:
-        if inst.instance_id == surface.instance_id:
-            continue
+        if (np.allclose(inst.bbox_min[:2], lo[:2], atol=0.02)
+                and np.allclose(inst.bbox_max[:2], hi[:2], atol=0.02)
+                and abs(inst.top_z - top) < 0.02):
+            continue  # 지지면 자기 자신
         c = inst.center
         if not (lo[0] - 0.05 < c[0] < hi[0] + 0.05
                 and lo[1] - 0.05 < c[1] < hi[1] + 0.05):

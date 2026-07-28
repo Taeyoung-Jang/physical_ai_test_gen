@@ -1,4 +1,8 @@
-"""dataset.py — HM3D tar 아카이브 인덱싱 + 씬 추출.
+"""hm3d_dataset.py — HM3D 데이터셋 백엔드: tar 아카이브 인덱싱 + 씬 추출.
+
+scene3d.sources.resolve_source()가 입력을 HM3D scene id로 판별했을 때만
+사용하는 모듈 — 다른 3D scene 소스(임의 mesh 파일 등)는 이 모듈을 거치지
+않는다.
 
 데이터셋 디렉터리에는 split별 tar 아카이브가 압축 상태로 놓여 있다:
   hm3d-{split}-glb-v0.2.tar              텍스처 포함 whole-house GLB
@@ -6,7 +10,7 @@
   hm3d-{split}-semantic-configs-v0.2.tar habitat 전용 config (미사용)
   hm3d-{split}-habitat-v0.2.tar          basis GLB + navmesh (habitat 전용, 미사용)
 
-tar 전체를 풀지 않고, 씬 단위로 필요한 멤버만 data/hm3d_raw/에 추출한다.
+tar 전체를 풀지 않고, 씬 단위로 필요한 멤버만 data/scene3d_raw/에 추출한다.
 tar 목록은 최초 1회 인덱싱 후 JSON으로 캐시한다.
 """
 from __future__ import annotations
@@ -24,7 +28,7 @@ DEFAULT_DATASET_DIR = os.environ.get(
         "~/Documents/Workspace/3d_scene_data/habitat-matterport-3dresearch/dataset"
     ),
 )
-DEFAULT_RAW_DIR = "data/hm3d_raw"
+DEFAULT_RAW_DIR = "data/scene3d_raw"
 HM3D_VERSION = "v0.2"
 SPLITS = ("minival", "val", "train")
 

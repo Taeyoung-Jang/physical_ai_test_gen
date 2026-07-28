@@ -1,17 +1,21 @@
-"""run_hm3d_perception.py — HM3D 씬에서 RGB-D 인식 SceneGraph 생성 + GT 비교.
+"""run_perception.py — Stage 2: 3D scene에서 RGB-D 인식 SceneGraph 생성 + GT 비교.
 
-흐름: 씬 로드 + 작업공간 구성 (Phase 3 재사용)
+흐름: 입력 판별 → SceneGraph 생성 → 작업공간 구성 (robot_workspace 재사용)
       → RGB-D + segmentation 캡처
       → point cloud → spawn 객체(seg mask) + 클러터(DBSCAN) 인식
-      → 인식 SceneGraph 저장 + semantic GT 대비 오차 리포트 + 오버레이 PNG
+      → 인식 SceneGraph 저장 + GT 대비 오차 리포트 + 오버레이 PNG
+
+GT 비교는 HM3D의 semantic annotation이 있을 때만 가능하다 (다른 소스에서는
+비교 대상이 될 ground truth가 없다) — 이 도구는 `--source`가 HM3D scene id일
+때만 동작한다.
 
 사용:
-  PYBULLET_MODE=DIRECT uv run python tools/run_hm3d_perception.py --scene 00800
+  PYBULLET_MODE=DIRECT uv run python tools/run_perception.py --source 00800
 
 출력:
-  data/hm3d_scene_graphs/<scene>_rgbd.json   인식 SceneGraph
-  reports/hm3d/<scene>_perception.json       비교 지표
-  reports/hm3d/<scene>_perception.png        RGB + bbox 오버레이
+  data/scene3d_scene_graphs/<scene>_rgbd.json   인식 SceneGraph
+  reports/scene3d/<scene>_perception.json       비교 지표
+  reports/scene3d/<scene>_perception.png        RGB + bbox 오버레이
 """
 from __future__ import annotations
 
@@ -28,14 +32,14 @@ import pybullet as p
 
 
 def parse_args():
-    parser = argparse.ArgumentParser(description="HM3D RGB-D 인식 + GT 비교")
-    parser.add_argument("--scene", default="00800", help="씬 참조 (semantic 보유 씬)")
+    parser = argparse.ArgumentParser(description="RGB-D 인식 + GT 비교 (HM3D 소스 전용)")
+    parser.add_argument("--source", default="00800", help="HM3D scene id (semantic 보유 씬)")
     parser.add_argument("--split", default="minival", choices=["minival", "val", "train"])
     parser.add_argument("--surface", type=int, default=-1, help="지지면 인덱스 (-1=자동)")
     parser.add_argument("--width", type=int, default=800)
     parser.add_argument("--height", type=int, default=600)
-    parser.add_argument("--out-dir", default="data/hm3d_scene_graphs")
-    parser.add_argument("--report-dir", default="reports/hm3d")
+    parser.add_argument("--out-dir", default="data/scene3d_scene_graphs")
+    parser.add_argument("--report-dir", default="reports/scene3d")
     return parser.parse_args()
 
 
@@ -56,14 +60,13 @@ def perception_camera(ws) -> tuple[list[float], list[float]]:
 def main():
     args = parse_args()
 
-    from hm3d.dataset import HM3DDataset
-    from hm3d.loader import (
+    from scene3d.mesh_loader import (
         convert_glb_to_obj,
         find_free_floor_spots,
-        load_hm3d_static,
+        load_static_scene,
         scene_extent_pybullet,
     )
-    from hm3d.perception import (
+    from scene3d.perception import (
         build_perceived_scene_graph,
         capture_rgbd_seg,
         compare_with_gt,
@@ -74,39 +77,50 @@ def main():
         project_bbox_to_image,
         view_to_world_pointcloud,
     )
-    from hm3d.semantics import extract_instances, select_support_surfaces
-    from hm3d.workspace import WorkspacePlacementError, setup_workspace
+    from scene3d.robot_workspace import WorkspacePlacementError, setup_workspace
+    from scene3d.sources import generate_scene_graph, resolve_source
     from sim_runner import load_robot_config
 
-    # ── 씬 + 작업공간 (Phase 3 재사용) ──────────────────────────────────
+    # ── 씬 + 작업공간 (robot_workspace 재사용) ──────────────────────────
     t0 = time.time()
-    ds = HM3DDataset(split=args.split)
-    extracted = ds.extract(args.scene)
-    entry = extracted.entry
-    if extracted.semantic_glb_path is None:
-        print(f"오류: {entry.scene_dir}에는 semantic annotation이 없습니다.")
+    try:
+        source = resolve_source(args.source, split=args.split)
+    except Exception as e:
+        print(f"오류: 입력 판별/해석 실패 — {e}")
+        sys.exit(1)
+    if source.kind != "hm3d":
+        print(f"오류: GT 비교는 HM3D 소스 전용입니다 (현재 kind={source.kind})")
         sys.exit(1)
 
-    converted = convert_glb_to_obj(extracted.glb_path, entry.scene_dir)
+    converted = convert_glb_to_obj(source.glb_path, source.scene_id)
     cid = p.connect(p.DIRECT)
     import pybullet_data
     p.setAdditionalSearchPath(pybullet_data.getDataPath(), physicsClientId=cid)
-    scene_ids = load_hm3d_static(converted, cid, collision=True)
+    scene_ids = load_static_scene(converted, cid, collision=True)
     lo, hi = scene_extent_pybullet(converted)
     _, floor_z = find_free_floor_spots(cid, lo, hi)
+
+    try:
+        sg = generate_scene_graph(source, offset=converted.offset)
+    except ValueError as e:
+        print(f"오류: {e}")
+        sys.exit(1)
+    # gt_clutter_on_surface는 SceneGraph보다 정밀한 원본 인스턴스가 필요하다
+    from scene3d.hm3d_semantics import extract_instances
+
     instances = extract_instances(
-        extracted.semantic_glb_path, extracted.semantic_txt_path,
-        offset=converted.offset,
+        source.semantic_glb_path, source.semantic_txt_path, offset=converted.offset,
     )
-    supports = select_support_surfaces(instances)
     robot_cfg = load_robot_config("config/robot_config.yaml")
 
-    candidates = supports if args.surface < 0 else [supports[args.surface]]
+    candidates = (
+        sg.support_surfaces if args.surface < 0 else [sg.support_surfaces[args.surface]]
+    )
     ws = None
-    for surface in candidates:
+    for surf in candidates:
         try:
             ws = setup_workspace(
-                converted, scene_ids, surface, instances, floor_z, robot_cfg, cid
+                converted, scene_ids, sg, surf.id, floor_z, robot_cfg, cid
             )
             break
         except WorkspacePlacementError:
@@ -114,8 +128,8 @@ def main():
     if ws is None:
         print("오류: 로봇 배치 실패")
         sys.exit(1)
-    print(f"[1/4] 작업공간: {entry.scene_dir} #{ws.surface.instance_id} "
-          f"{ws.surface.category} ({time.time()-t0:.1f}s)")
+    print(f"[1/4] 작업공간: {source.scene_id} {ws.surface.id} "
+          f"({time.time()-t0:.1f}s)")
 
     # ── 캡처 + 인식 ─────────────────────────────────────────────────────
     t0 = time.time()
@@ -140,23 +154,23 @@ def main():
 
     # ── 인식 SceneGraph 저장 ────────────────────────────────────────────
     role_map = {o.id: o.role for o in ws.sg.objects}
-    sg = build_perceived_scene_graph(
-        scene_id=f"hm3d_{entry.scene_dir}_rgbd",
+    perceived_sg = build_perceived_scene_graph(
+        scene_id=f"{source.scene_id}_rgbd",
         surface=ws.surface,
         surface_height_measured=height_measured,
         detections=spawned + clutter,
         role_map=role_map,
     )
     os.makedirs(args.out_dir, exist_ok=True)
-    sg_path = os.path.join(args.out_dir, f"{entry.scene_dir}_rgbd.json")
-    sg.save(sg_path)
+    sg_path = os.path.join(args.out_dir, f"{source.scene_id}_rgbd.json")
+    perceived_sg.save(sg_path)
 
     # ── GT 비교 ─────────────────────────────────────────────────────────
     gt_clutter = gt_clutter_on_surface(instances, ws.surface)
     report = compare_with_gt(ws, spawned + clutter, height_measured, gt_clutter)
     os.makedirs(args.report_dir, exist_ok=True)
     report_path = os.path.join(
-        args.report_dir, f"{entry.scene_dir}_perception.json"
+        args.report_dir, f"{source.scene_id}_perception.json"
     )
     with open(report_path, "w") as f:
         json.dump(report.to_dict(), f, indent=2, ensure_ascii=False)
@@ -206,7 +220,7 @@ def main():
             draw.rectangle(bb, outline=(255, 40, 40), width=1)
             draw.text((bb[0] + 2, bb[3] + 2), det.det_id, fill=(255, 40, 40))
 
-    png_path = os.path.join(args.report_dir, f"{entry.scene_dir}_perception.png")
+    png_path = os.path.join(args.report_dir, f"{source.scene_id}_perception.png")
     img.save(png_path)
     print(f"[4/4] 오버레이: {png_path}")
 

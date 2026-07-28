@@ -1,20 +1,32 @@
-"""workspace.py — HM3D 실제 씬 위 조작 작업공간 구성 (Phase 3).
+"""robot_workspace.py — Stage 2: 3D scene 위 로봇 조작 작업공간 구성.
 
-실제 스캔된 지지면(테이블 등) 위에 target/obstacle/tray를 spawn하고
-로봇을 지지면 옆 받침대(pedestal) 위에 배치해, 기존 kinematic check +
-6-margin oracle을 실제 씬에서 실행할 수 있게 한다.
+지지면(테이블 등) 위에 target/obstacle/tray를 spawn하고 로봇을 지지면 옆
+받침대(pedestal) 위에 배치해, 기존 kinematic check + 6-margin oracle을
+실행할 수 있게 한다.
+
+**입력 계약 (어떤 Scene Graph 생성기든 호환)**:
+  이 모듈은 표준 `SceneGraph`(scene_graph.py)만 소비하고 HM3D 관련 모듈을
+  전혀 import하지 않는다. `sources.generate_scene_graph()`가 만든 것이든,
+  저장된 JSON을 다시 읽은 것이든, 장차 다른 오픈소스 파이프라인이 만든
+  SceneGraph든 — 아래 두 조건만 지키면 그대로 넣을 수 있다:
+    1. `SupportSurface.bounds`가 지지면의 실제 xy 경계, `.height`가 상면 z
+    2. `ObjectNode.extra["category"]`에 카테고리 문자열이 있으면 벽/문처럼
+       충돌 proxy에서 제외해야 할 평면 구조물을 더 잘 걸러낸다 (없어도
+       동작은 하되, `_PLANAR_CATEGORIES` 필터가 무력화될 뿐)
+  내부적으로는 SceneGraph의 노드를 `SceneBox`(순수 AABB)로 변환해 쓴다.
 
 배치 전략:
-  - HM3D 테이블 상면은 0.8~1.1m — 바닥에 선 Franka(reach 0.855m)로는 높다.
-    로봇 베이스를 상면보다 base_drop(0.10m) 낮은 받침대 위에 올린다.
+  - 지지면 상면이 로봇 최대 reach보다 높은 경우가 많다(예: HM3D 테이블
+    0.8~1.1m, Franka reach 0.855m) → 로봇 베이스를 상면보다
+    base_drop(0.10m) 낮은 받침대 위에 올린다.
   - 베이스 위치는 지지면 4변 중 "빈 공간이 확보된" 변의 중점 바깥쪽.
     (raycast로 받침대 자리의 수직 clearance 확인)
   - 작업 패치(target 등 spawn 영역)는 로봇 쪽 변에서 안쪽으로 reach 절반
     지점, 지지면 경계에서 margin을 두고 클리핑.
 
 oracle 연결:
-  - obstacle_body_ids = spawn한 obstacle + 작업공간 주변 HM3D chunk
-    (AABB 프리필터) → collision margin이 실제 가구와의 거리로 계산됨.
+  - obstacle_body_ids = spawn한 obstacle + 작업공간 주변 장애물 AABB proxy
+    → collision margin이 실제 가구와의 거리로 계산됨.
   - robot_cfg는 deepcopy 후 base_position을 실제 배치 위치로 교체.
 """
 from __future__ import annotations
@@ -28,8 +40,7 @@ import pybullet as p
 
 from scene_graph import ObjectNode, Role, SceneGraph, SupportSurface
 
-from .loader import ConvertedScene, scene_extent_pybullet
-from .semantics import SemanticInstance
+from .mesh_loader import ConvertedScene, scene_extent_pybullet
 
 # 작업 패치/spawn 기본 파라미터
 EDGE_STANDOFF = 0.26       # 지지면 변에서 로봇 베이스까지 바깥 거리 (m, 최소값)
@@ -45,10 +56,63 @@ class WorkspacePlacementError(RuntimeError):
 
 
 @dataclass
-class HM3DWorkspace:
+class SceneBox:
+    """robot_workspace.py 내부 배치/충돌 계산이 쓰는 최소 AABB 표현.
+
+    SceneGraph의 ObjectNode/SupportSurface에서 변환해 만든다 — 이 타입
+    이후로 robot_workspace.py는 원본 scene graph 생성기가 무엇인지 알지 못한다.
+    """
+
+    id: str
+    category: str
+    bbox_min: np.ndarray
+    bbox_max: np.ndarray
+
+    @property
+    def center(self) -> np.ndarray:
+        return (self.bbox_min + self.bbox_max) / 2.0
+
+    @property
+    def size(self) -> np.ndarray:
+        return self.bbox_max - self.bbox_min
+
+    @property
+    def top_z(self) -> float:
+        return float(self.bbox_max[2])
+
+    @property
+    def footprint_area(self) -> float:
+        s = self.size
+        return float(s[0] * s[1])
+
+
+def _box_from_object(node: ObjectNode) -> SceneBox:
+    pos = np.array(node.position, dtype=float)
+    half = np.array(node.size, dtype=float) / 2.0
+    return SceneBox(
+        id=node.id,
+        category=str(node.extra.get("category", "")),
+        bbox_min=pos - half,
+        bbox_max=pos + half,
+    )
+
+
+def _box_from_support_surface(s: SupportSurface) -> SceneBox:
+    x0, x1 = s.bounds["x"]
+    y0, y1 = s.bounds["y"]
+    return SceneBox(
+        id=s.id,
+        category=str(s.type),
+        bbox_min=np.array([x0, y0, s.height]),
+        bbox_max=np.array([x1, y1, s.height]),
+    )
+
+
+@dataclass
+class SceneWorkspace:
     """구성 완료된 작업공간."""
 
-    surface: SemanticInstance
+    surface: SceneBox
     robot_base_pos: list[float]
     robot_body_id: int
     pedestal_body_id: int
@@ -56,7 +120,7 @@ class HM3DWorkspace:
     sg: SceneGraph                    # 하이브리드 SceneGraph
     robot_cfg: dict                   # base_position 반영된 config
     scene_body_ids: list[int] = field(default_factory=list)
-    obstacle_proxies: dict[int, SemanticInstance] = field(default_factory=dict)
+    obstacle_proxies: dict[int, SceneBox] = field(default_factory=dict)
 
     @property
     def target_pos(self) -> list[float]:
@@ -67,7 +131,7 @@ class HM3DWorkspace:
         return self.sg.destination().position
 
 
-def _edge_candidates(surface: SemanticInstance) -> list[dict]:
+def _edge_candidates(surface: SceneBox) -> list[dict]:
     """지지면 4변 주변의 (베이스 후보 위치, 안쪽 방향 단위벡터) 목록.
 
     식탁처럼 의자가 둘러싼 경우를 위해 변 중점만이 아니라 변을 따라
@@ -148,8 +212,8 @@ def _spot_is_free(
     xy: np.ndarray,
     size: list[float],
     top: float,
-    surface: SemanticInstance,
-    proxy_instances: list[SemanticInstance],
+    surface: SceneBox,
+    proxy_instances: list[SceneBox],
 ) -> bool:
     """지지면 위 (xy)에 size 객체를 놓을 자리가 비어 있는가."""
     lo, hi = surface.bbox_min, surface.bbox_max
@@ -172,8 +236,8 @@ def _spot_is_free(
 def _find_patch_layout(
     base_xy: np.ndarray,
     inward: list[float],
-    surface: SemanticInstance,
-    proxy_instances: list[SemanticInstance],
+    surface: SceneBox,
+    proxy_instances: list[SceneBox],
     grid: float = 0.06,
 ) -> Optional[dict[str, np.ndarray]]:
     """도달 가능 영역을 그리드 탐색해 target/obstacle/tray 자리를 찾는다.
@@ -246,11 +310,11 @@ def _find_patch_layout(
 
 def choose_robot_base(
     cid: int,
-    surface: SemanticInstance,
+    surface: SceneBox,
     floor_z: float,
     lo: np.ndarray,
     hi: np.ndarray,
-    proxy_instances: list[SemanticInstance],
+    proxy_instances: list[SceneBox],
 ) -> dict:
     """베이스 기둥과 작업 패치가 모두 확보되는 배치를 고른다.
 
@@ -306,8 +370,7 @@ def choose_robot_base(
         }
 
     raise WorkspacePlacementError(
-        f"지지면 #{surface.instance_id} ({surface.category}) 배치 실패 — "
-        f"후보 탈락 사유: {fail_counts}"
+        f"지지면 {surface.id!r} 배치 실패 — 후보 탈락 사유: {fail_counts}"
     )
 
 
@@ -330,7 +393,7 @@ def _spawn_pedestal(cid: int, base_pos: list[float], floor_z: float) -> int:
 
 
 def make_workspace_objects(
-    surface: SemanticInstance,
+    surface: SceneBox,
     layout: dict[str, np.ndarray],
 ) -> list[ObjectNode]:
     """_find_patch_layout이 찾은 자리에 target / obstacle / tray를 만든다."""
@@ -371,14 +434,14 @@ _PLANAR_MAX_THIN = 0.60  # 얇은 변이 이보다 크면 복합 세그먼트로
 
 
 def proxy_candidate_instances(
-    instances: list[SemanticInstance],
-    surface: SemanticInstance,
+    instances: list[SceneBox],
+    surface: SceneBox,
     floor_z: float,
     radius: float = CHUNK_FILTER_RADIUS,
-) -> list[SemanticInstance]:
+) -> list[SceneBox]:
     """oracle 거리 쿼리에 쓸 주변 인스턴스를 고른다 (지지면 중심 기준).
 
-    지지면 인스턴스 자체는 제외 (Track A에서 테이블은 충돌 대상이 아님).
+    지지면 자기 자신은 제외 (Track A에서 테이블은 충돌 대상이 아님).
     복합 평면 구조물(L자 벽, ㄷ자 door frame)은 AABB가 실내를 통째로
     덮으므로 제외하고, 얇은 단일 세그먼트(예: 0.14×3.5m 벽)는 유지한다.
     """
@@ -389,7 +452,7 @@ def proxy_candidate_instances(
 
     result = []
     for inst in instances:
-        if inst.instance_id == surface.instance_id:
+        if inst.id == surface.id:
             continue
         if inst.category in PROXY_EXCLUDE_CATEGORIES:
             continue
@@ -409,8 +472,8 @@ def proxy_candidate_instances(
 
 def spawn_obstacle_proxies(
     cid: int,
-    proxy_instances: list[SemanticInstance],
-) -> dict[int, SemanticInstance]:
+    proxy_instances: list[SceneBox],
+) -> dict[int, SceneBox]:
     """인스턴스 AABB를 invisible collision box body로 spawn한다.
 
     이유: PyBullet에서 concave trimesh(GEOM_FORCE_CONCAVE_TRIMESH)에 대한
@@ -419,9 +482,9 @@ def spawn_obstacle_proxies(
     HM3D mesh는 렌더링/raycast 전용으로 남긴다 (계획 D-5).
 
     Returns:
-        {proxy_body_id: SemanticInstance}
+        {proxy_body_id: SceneBox}
     """
-    proxies: dict[int, SemanticInstance] = {}
+    proxies: dict[int, SceneBox] = {}
     for inst in proxy_instances:
         col = p.createCollisionShape(
             p.GEOM_BOX,
@@ -440,14 +503,18 @@ def spawn_obstacle_proxies(
 
 def build_hybrid_scene_graph(
     scene_id: str,
-    surface: SemanticInstance,
+    surface: SceneBox,
     spawned: list[ObjectNode],
-    instances: list[SemanticInstance],
+    boxes: list[SceneBox],
     context_radius: float = 1.5,
 ) -> SceneGraph:
-    """spawn 객체 + 주변 HM3D 인스턴스(컨텍스트)로 하이브리드 SceneGraph 구성."""
+    """spawn 객체 + 주변 인스턴스(컨텍스트)로 하이브리드 SceneGraph 구성.
+
+    context 객체의 id는 원본 SceneGraph의 ObjectNode.id를 그대로 재사용한다
+    (어느 scene graph 생성기가 만들었든 그 id 체계를 그대로 보존).
+    """
     surf_node = SupportSurface(
-        id=f"hm3d_{surface.instance_id:04d}_{surface.category.replace(' ', '_')}",
+        id=surface.id,
         type="plane",
         height=surface.top_z,
         bounds={
@@ -458,14 +525,14 @@ def build_hybrid_scene_graph(
 
     objects = list(spawned)
     center = surface.center[:2]
-    for inst in instances:
-        if inst.instance_id == surface.instance_id:
+    for inst in boxes:
+        if inst.id == surface.id:
             continue
         if float(np.linalg.norm(inst.center[:2] - center)) > context_radius:
             continue
         objects.append(
             ObjectNode(
-                id=f"hm3d_{inst.instance_id:04d}_{inst.category.replace(' ', '_')}",
+                id=inst.id,
                 role=Role.OBSTACLE,
                 position=inst.center.tolist(),
                 size=inst.size.tolist(),
@@ -473,7 +540,6 @@ def build_hybrid_scene_graph(
                 shape="mesh",
                 extra={
                     "category": inst.category,
-                    "hm3d_instance_id": inst.instance_id,
                     "hm3d_context": True,  # PyBullet body 별도 spawn 안 함
                 },
             )
@@ -485,8 +551,7 @@ def build_hybrid_scene_graph(
         objects=objects,
         meta={
             "source": "hm3d_workspace",
-            "surface_instance_id": surface.instance_id,
-            "surface_category": surface.category,
+            "surface_id": surface.id,
         },
     )
 
@@ -494,23 +559,41 @@ def build_hybrid_scene_graph(
 def setup_workspace(
     converted: ConvertedScene,
     scene_body_ids: list[int],
-    surface: SemanticInstance,
-    instances: list[SemanticInstance],
+    sg: SceneGraph,
+    surface_id: str,
     floor_z: float,
     robot_cfg: dict,
     cid: int,
-) -> HM3DWorkspace:
-    """HM3D 씬(로드 완료 상태)에 작업공간을 구성한다.
+) -> SceneWorkspace:
+    """씬(로드 완료 상태) + 표준 SceneGraph로 작업공간을 구성한다.
 
-    호출 전: load_hm3d_static(collision=True) 완료, floor_z 추정 완료.
+    sg는 어떤 도구가 만들었든 상관없다(HM3D 자체 생성, 저장된 JSON 재로드,
+    다른 오픈소스 파이프라인 산출물) — 이 함수가 실제로 쓰는 건
+    sg.support_surfaces(지지면 후보)와 sg.objects(장애물 후보)뿐이다.
+
+    호출 전: load_static_scene(collision=True) 완료, floor_z 추정 완료.
     이후 sim_runner.run_kinematic_check / physical_oracle.evaluate에 바로
     연결할 수 있는 상태를 반환한다.
+
+    Raises:
+        ValueError: sg.support_surfaces에 surface_id가 없음.
+        WorkspacePlacementError: 해당 지지면 주변에 배치 공간 없음.
     """
     import scene_builder
     import sim_runner
 
+    surf_sg = next((s for s in sg.support_surfaces if s.id == surface_id), None)
+    if surf_sg is None:
+        available = [s.id for s in sg.support_surfaces]
+        raise ValueError(
+            f"SceneGraph에 지지면 id={surface_id!r}가 없습니다. "
+            f"사용 가능: {available}"
+        )
+    surface = _box_from_support_surface(surf_sg)
+    all_boxes = [_box_from_object(o) for o in sg.objects]
+
     lo, hi = scene_extent_pybullet(converted)
-    proxy_instances = proxy_candidate_instances(instances, surface, floor_z)
+    proxy_instances = proxy_candidate_instances(all_boxes, surface, floor_z)
     choice = choose_robot_base(cid, surface, floor_z, lo, hi, proxy_instances)
     base_pos = choice["base_pos"]
 
@@ -529,29 +612,63 @@ def setup_workspace(
     for node in spawned_nodes:
         body_map[node.id] = scene_builder._spawn_object(node)
 
-    sg = build_hybrid_scene_graph(
+    hybrid_sg = build_hybrid_scene_graph(
         scene_id=f"hm3d_{converted.scene_dir}",
         surface=surface,
         spawned=spawned_nodes,
-        instances=instances,
+        boxes=all_boxes,
     )
 
     proxies = spawn_obstacle_proxies(cid, proxy_instances)
 
-    return HM3DWorkspace(
+    return SceneWorkspace(
         surface=surface,
         robot_base_pos=base_pos,
         robot_body_id=robot_id,
         pedestal_body_id=pedestal_id,
         body_map=body_map,
-        sg=sg,
+        sg=hybrid_sg,
         robot_cfg=cfg,
         scene_body_ids=scene_body_ids,
         obstacle_proxies=proxies,
     )
 
 
-def run_case(workspace: HM3DWorkspace, thresholds: dict):
+def setup_workspace_auto(
+    converted: ConvertedScene,
+    scene_body_ids: list[int],
+    sg: SceneGraph,
+    floor_z: float,
+    robot_cfg: dict,
+    cid: int,
+    surface_index: int = -1,
+) -> SceneWorkspace:
+    """지지면 후보를 순서대로 시도해 배치 가능한 첫 워크스페이스를 반환한다.
+
+    surface_index >= 0이면 해당 지지면 하나만 시도(강제 지정).
+    -1(기본)이면 sg.support_surfaces 순서대로 모두 시도한다 — Pipeline A가
+    이미 면적 내림차순으로 정렬해 저장하므로 대개 첫 성공이 가장 넓은 지지면.
+    """
+    if not sg.support_surfaces:
+        raise WorkspacePlacementError("SceneGraph에 지지면 후보가 없습니다.")
+    candidates = (
+        sg.support_surfaces if surface_index < 0
+        else [sg.support_surfaces[surface_index]]
+    )
+    last_err: Optional[Exception] = None
+    for surf in candidates:
+        try:
+            return setup_workspace(
+                converted, scene_body_ids, sg, surf.id, floor_z, robot_cfg, cid
+            )
+        except WorkspacePlacementError as e:
+            last_err = e
+    raise WorkspacePlacementError(
+        f"지지면 후보 {len(candidates)}개 모두 배치 실패"
+    ) from last_err
+
+
+def run_case(workspace: SceneWorkspace, thresholds: dict):
     """kinematic check + 6-margin oracle 실행 → OracleResult.
 
     obstacle = spawn한 obstacle_block + 주변 인스턴스 AABB proxy.
