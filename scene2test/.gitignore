@@ -16,6 +16,7 @@ data/scene3d_cache/
 data/scene3d_anim/
 data/scene3d_scene_graphs/
 data/scene3d_search_logs/
+data/scene3d_stance_gifs/
 reports/scene3d/
 models/*.pkl
 reports/*.md
