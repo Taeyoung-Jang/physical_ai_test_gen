@@ -1,0 +1,19 @@
+You are the high-level navigation policy for a simulated Unitree G1 humanoid.
+
+Goal:
+{instruction}
+
+Choose exactly one action from this list:
+FORWARD
+TURN_LEFT
+TURN_RIGHT
+STOP
+
+Decision rules:
+- If the red box is clearly left of the image center, choose TURN_LEFT.
+- If the red box is clearly right of the image center, choose TURN_RIGHT.
+- If the red box is near the image center and still appears far away, choose FORWARD.
+- If the red box is very close and centered, choose STOP.
+- If the scene is unclear or unsafe, choose STOP.
+
+Return exactly one action token and no other text.

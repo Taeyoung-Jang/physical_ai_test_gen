@@ -1,0 +1,21 @@
+diff --git a/src/lerobot/robots/unitree_g1/unitree_g1.py b/src/lerobot/robots/unitree_g1/unitree_g1.py
+index efbfbbe..98442f1 100644
+--- a/src/lerobot/robots/unitree_g1/unitree_g1.py
++++ b/src/lerobot/robots/unitree_g1/unitree_g1.py
+@@ -296,9 +296,15 @@ class UnitreeG1(Robot):
+     def connect(self, calibrate: bool = True) -> None:  # connect to DDS
+         # Initialize DDS channel and simulation environment
+         if self.config.is_simulation:
++            import platform
++
+             from lerobot.envs import make_env
+ 
+-            self._ChannelFactoryInitialize(0, "lo")
++            # g1-local-nav patch: loopback interface is named "lo" on Linux but "lo0" on
++            # macOS/Darwin. Upstream hardcodes "lo", which fails ChannelFactoryInitialize on
++            # Darwin ("lo: does not match an available interface"). See patches/README.md.
++            loopback_iface = "lo0" if platform.system() == "Darwin" else "lo"
++            self._ChannelFactoryInitialize(0, loopback_iface)
+             self._env_wrapper = make_env("lerobot/unitree-g1-mujoco", trust_remote_code=True)
+             # Extract the actual gym env from the dict structure
+             self.sim_env = self._env_wrapper["hub_env"][0].envs[0]
