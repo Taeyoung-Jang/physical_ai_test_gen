@@ -21,7 +21,14 @@ vlm:
 control:
   action_duration_s: 0.30
   stop_settle_s: 0.15
-  heartbeat_timeout_s: 1.0
+  # Must comfortably exceed action_duration_s + stop_settle_s (0.45s) + a real VLM call, not
+  # just vlm.timeout_s in isolation. Measured real SmolVLM2 latency on this Mac: 776-1642ms —
+  # the blueprint's own suggested 1.0s (§15) trips on every single real decision once step
+  # overhead is added in. Confirmed live: ep_real_002 watchdog-tripped after one successful
+  # 776ms decision, purely from this being too tight. 12s gives real VLM calls (up to
+  # vlm.timeout_s=8.0) room to legitimately finish, including step overhead, before the
+  # watchdog assumes something actually hung.
+  heartbeat_timeout_s: 12.0
 
 safety:
   max_abs_roll_rad: 0.70

@@ -3,6 +3,20 @@
 This deviates from the blueprint's conda-first recommendation in a few places. Recorded here so
 nobody re-derives this from scratch or assumes conda exists.
 
+## `action_duration_s: 0.30` (configs/app.yaml default) likely too short to see movement
+
+Milestone 5's fake-VLM closed-loop run (ep_fake_004, 80 steps, `SDL_VIDEODRIVER=dummy`,
+`--settle-s 8`) showed real, changing roll/pitch (±0.06-0.08 rad, safety threshold not
+tripped) but the head-camera view barely differed between step 0 and step 79 — the robot
+wasn't visibly translating. This matches what Milestone 2 already found: scripts/
+run_scripted_motion.py's original 1.0s FORWARD hold produced almost no displacement, and had
+to be widened to 5.0s before the gait visibly covered ground (see that script's SEQUENCE
+comment). The blueprint's own suggested default (§15) is 0.30s per chunked action; that may
+simply be too short for this particular locomotion controller's gait to develop within one
+chunk. Not a bug — a tuning gap, flagged here rather than silently left. If a future episode
+needs to visibly cover distance (e.g., Milestone 6's red-box approach), try increasing
+`control.action_duration_s` first before suspecting the control loop.
+
 ## Safety-critical bug: `obs["imu.rpy.*"]` is broken in simulation mode
 
 `UnitreeG1.get_observation()`'s `imu.rpy.roll`/`.pitch`/`.yaw` fields come from the sim bridge's
