@@ -119,8 +119,16 @@ class SceneWorkspace:
     body_map: dict[str, int]          # spawn 객체 {obj_id: body_id}
     sg: SceneGraph                    # 하이브리드 SceneGraph
     robot_cfg: dict                   # base_position 반영된 config
+    floor_z: float                    # 참고용 컨텍스트 (아래)
+    scene_lo: np.ndarray
+    scene_hi: np.ndarray
     scene_body_ids: list[int] = field(default_factory=list)
     obstacle_proxies: dict[int, SceneBox] = field(default_factory=dict)
+    # 이 지지면에서 유효한 base pose 후보 전부 (받침대 spawn 전에 계산된 것 —
+    # 받침대가 서 있는 지금 다시 raycast하면 그 받침대 자신이 자리를 막아
+    # "무효"로 잘못 판정되므로, setup_workspace가 계산한 이 목록을 재사용해야
+    # 한다. scene3d.failure_search의 base pose 탐색이 이걸 쓴다).
+    base_pose_candidates: list[dict] = field(default_factory=list)
 
     @property
     def target_pos(self) -> list[float]:
@@ -308,31 +316,40 @@ def _find_patch_layout(
     return None
 
 
-def choose_robot_base(
+def list_valid_base_poses(
     cid: int,
     surface: SceneBox,
     floor_z: float,
     lo: np.ndarray,
     hi: np.ndarray,
     proxy_instances: list[SceneBox],
-) -> dict:
-    """베이스 기둥과 작업 패치가 모두 확보되는 배치를 고른다.
+    limit: Optional[int] = None,
+) -> tuple[list[dict], dict[str, int]]:
+    """이 지지면 작업을 위해 로봇이 설 수 있는 유효 base pose 후보를 모은다.
 
-    검사 3종:
+    "base pose"라고 부르는 이유: 지금은 팔 하나 + 고정 받침대 배치 로직뿐이지만,
+    "이 지지면 작업을 위해 로봇이 어디에 서 있어야 하는가"라는 개념 자체는
+    다리로 서는 로봇에도 그대로 적용된다 — 나중에 다른 embodiment를 붙일 때
+    이 함수의 이름/반환 스키마를 그대로 확장할 수 있도록 로봇 종류를 특정하지
+    않는 이름을 썼다.
+
+    검사 3종 (choose_robot_base와 동일):
       1. 기둥 raycast (실제 mesh — 수직 + 수평 십자)
       2. 기둥 box vs 주변 인스턴스 bbox 교차 (proxy와 일관된 기준)
       3. 패치 검증: 도달 거리 유지 + 패치 위(상면~+0.45m)로 솟은 인스턴스 없음
          (예: 테이블 밑에 밀어넣은 의자 등받이가 상면 위로 나온 경우)
-         변 방향 오프셋 5개를 시도해 빈 구역을 찾는다.
+
+    Args:
+        limit: 이 개수만큼 찾으면 중단(성능). None이면 모든 edge candidate를 검사.
 
     Returns:
-        {"base_pos": [x,y,z], "inward": [ix,iy], "patch_xy": ndarray}
-
-    Raises:
-        WorkspacePlacementError: 모든 후보 탈락 (사유 카운트 포함).
+        (candidates, fail_counts) — candidates는 통과한 후보 전부
+        [{"base_pos": [x,y,z], "inward": [ix,iy], "layout": {...}}, ...],
+        fail_counts는 진단용 탈락 사유 카운트.
     """
     base_z = surface.top_z - BASE_DROP
     fail_counts = {"bounds": 0, "raycast": 0, "column_bbox": 0, "patch": 0}
+    results: list[dict] = []
 
     for cand in _edge_candidates(surface):
         x, y = cand["base_xy"]
@@ -363,15 +380,46 @@ def choose_robot_base(
         if layout is None:
             fail_counts["patch"] += 1
             continue
-        return {
+
+        results.append({
             "base_pos": [x, y, base_z],
             "inward": cand["inward"],
             "layout": layout,
-        }
+        })
+        if limit is not None and len(results) >= limit:
+            break
 
-    raise WorkspacePlacementError(
-        f"지지면 {surface.id!r} 배치 실패 — 후보 탈락 사유: {fail_counts}"
+    return results, fail_counts
+
+
+def choose_robot_base(
+    cid: int,
+    surface: SceneBox,
+    floor_z: float,
+    lo: np.ndarray,
+    hi: np.ndarray,
+    proxy_instances: list[SceneBox],
+) -> dict:
+    """베이스 기둥과 작업 패치가 모두 확보되는 배치를 하나 고른다.
+
+    list_valid_base_poses(limit=1)의 첫 결과를 반환하는 얇은 wrapper — 여러
+    후보를 전부 보고 싶다면(예: base pose를 탐색 변수로 쓰는
+    scene3d.failure_search) list_valid_base_poses를 직접 호출한다.
+
+    Returns:
+        {"base_pos": [x,y,z], "inward": [ix,iy], "layout": {...}}
+
+    Raises:
+        WorkspacePlacementError: 후보가 하나도 없음(사유 카운트 포함).
+    """
+    candidates, fail_counts = list_valid_base_poses(
+        cid, surface, floor_z, lo, hi, proxy_instances, limit=1
     )
+    if not candidates:
+        raise WorkspacePlacementError(
+            f"지지면 {surface.id!r} 배치 실패 — 후보 탈락 사유: {fail_counts}"
+        )
+    return candidates[0]
 
 
 def _spawn_pedestal(cid: int, base_pos: list[float], floor_z: float) -> int:
@@ -594,7 +642,17 @@ def setup_workspace(
 
     lo, hi = scene_extent_pybullet(converted)
     proxy_instances = proxy_candidate_instances(all_boxes, surface, floor_z)
-    choice = choose_robot_base(cid, surface, floor_z, lo, hi, proxy_instances)
+    # 전체 후보를 여기서 한 번에 계산한다(받침대 spawn 전!) — spawn 후에 다시
+    # raycast하면 방금 세운 받침대 자신이 그 자리를 막아 "무효"로 잘못 판정된다.
+    # SceneSearchSession은 이 목록을 그대로 재사용해 같은 함정을 피한다.
+    all_candidates, fail_counts = list_valid_base_poses(
+        cid, surface, floor_z, lo, hi, proxy_instances
+    )
+    if not all_candidates:
+        raise WorkspacePlacementError(
+            f"지지면 {surface.id!r} 배치 실패 — 후보 탈락 사유: {fail_counts}"
+        )
+    choice = all_candidates[0]
     base_pos = choice["base_pos"]
 
     pedestal_id = _spawn_pedestal(cid, base_pos, floor_z)
@@ -629,8 +687,12 @@ def setup_workspace(
         body_map=body_map,
         sg=hybrid_sg,
         robot_cfg=cfg,
+        floor_z=floor_z,
+        scene_lo=lo,
+        scene_hi=hi,
         scene_body_ids=scene_body_ids,
         obstacle_proxies=proxies,
+        base_pose_candidates=all_candidates,
     )
 
 

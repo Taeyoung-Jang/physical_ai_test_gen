@@ -1,0 +1,18 @@
+venv/
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+.ruff_cache/
+
+# Not committed: large weights, upstream clones, run artifacts
+third_party/
+runs/*
+!runs/.gitkeep
+
+# Hugging Face / model caches if redirected into the repo
+.hf_cache/
+*.onnx
+*.safetensors
+*.gguf

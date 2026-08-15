@@ -134,7 +134,15 @@ def build_local_scene_graph(ws: SceneWorkspace, frame: LocalFrame) -> SceneGraph
 
 @dataclass
 class SceneSearchSession:
-    """로드 완료된 3D scene + 탐색에 필요한 body 핸들."""
+    """로드 완료된 3D scene + 탐색에 필요한 body 핸들.
+
+    base_pose_candidates: 이 지지면 작업을 위해 로봇이 설 수 있는 유효 위치 전부
+    (workspace_setup.list_valid_base_poses 재사용). "이 로봇이 다른 위치에 있었다면
+    실패했을까"를 탐색하려는 SceneFailureSearch(vary_base_pose=True)가 쓴다 —
+    이름에 특정 embodiment를 박아 넣지 않은 이유는 workspace_setup.py의
+    list_valid_base_poses와 동일하다(다른 embodiment에도 "base pose 후보"라는
+    개념 자체는 재사용 가능하도록).
+    """
 
     ws: SceneWorkspace
     cid: int
@@ -142,7 +150,9 @@ class SceneSearchSession:
     local_sg: SceneGraph
     occupant_body: int
     human_zone_body: int
+    base_pose_candidates: list[dict] = field(default_factory=list)
     _initial_pos: dict[int, list[float]] = field(default_factory=dict)
+    _initial_robot_base_pos: list[float] = field(default_factory=list)
 
     @classmethod
     def create(cls, ws: SceneWorkspace, cid: int) -> "SceneSearchSession":
@@ -164,6 +174,12 @@ class SceneSearchSession:
             bid = ws.body_map[key]
             pos, _ = p.getBasePositionAndOrientation(bid, physicsClientId=cid)
             session._initial_pos[bid] = list(pos)
+        session._initial_robot_base_pos = list(ws.robot_base_pos)
+
+        # ws.base_pose_candidates는 setup_workspace가 받침대를 spawn하기 전에
+        # 계산해 둔 것 — 여기서 다시 raycast하면 이미 서 있는 받침대 자신이
+        # 자리를 막아 "무효"로 잘못 판정되므로 반드시 이 캐시를 재사용한다.
+        session.base_pose_candidates = ws.base_pose_candidates
         return session
 
     # ── body 이동 ────────────────────────────────────────────────────────
@@ -171,6 +187,19 @@ class SceneSearchSession:
     def _move(self, body_id: int, pos_world: list[float]) -> None:
         p.resetBasePositionAndOrientation(
             body_id, pos_world, [0, 0, 0, 1], physicsClientId=self.cid
+        )
+
+    def move_robot_base(self, base_pos: list[float]) -> None:
+        """로봇(+받침대)을 다른 유효 base pose 후보 위치로 teleport (재로드 없음).
+
+        base pose 후보들은 모두 같은 지지면에서 나오므로 z(받침대 높이)는 항상
+        동일하다(workspace_setup.list_valid_base_poses 참고) — x, y만 옮긴다.
+        """
+        self._move(self.ws.robot_body_id, base_pos)
+        pedestal_h = self._initial_robot_base_pos[2] - self.ws.floor_z
+        self._move(
+            self.ws.pedestal_body_id,
+            [base_pos[0], base_pos[1], self.ws.floor_z + pedestal_h / 2],
         )
 
     def apply_mutation_world(self, mutated_local: SceneGraph) -> dict:
@@ -229,11 +258,13 @@ class SceneSearchSession:
         }
 
     def restore(self) -> None:
-        """spawn body들을 초기 레이아웃으로 되돌린다."""
+        """spawn body + 로봇 base를 초기 레이아웃으로 되돌린다."""
         for bid, pos in self._initial_pos.items():
             self._move(bid, pos)
         self._move(self.occupant_body, list(_PARK_POS))
         self._move(self.human_zone_body, list(_PARK_POS))
+        if self._initial_robot_base_pos:
+            self.move_robot_base(self._initial_robot_base_pos)
 
 
 # ---------------------------------------------------------------------------
@@ -252,6 +283,14 @@ class SceneFailureSearch(ActiveFailureSearch):
     탐색 측(샘플링/feature/surrogate/acquisition)은 로봇-로컬 SceneGraph로
     부모 클래스가 그대로 수행하고, _evaluate만 teleport + kinematic check로
     교체한다.
+
+    vary_base_pose=True이면 매 테스트마다 (기존 8차원 mutation과 독립적으로)
+    session.base_pose_candidates 중 하나를 균일 샘플링해 로봇을 그 위치로
+    teleport한 뒤 평가한다 — "로봇이 다른 위치에 서 있었다면 이 task가
+    실패했을까"를 탐색한다. target/obstacle/tray 레이아웃 자체는 항상 기존
+    캐노니컬 프레임(session.frame) 기준으로 mutation되므로, 이 옵션은 "같은
+    작업 배치를 다른 위치에서 시도했을 때"를 순수하게 분리해서 본다.
+    기본 False면 기존 동작과 100% 동일(회귀 없음).
     """
 
     def __init__(
@@ -260,8 +299,11 @@ class SceneFailureSearch(ActiveFailureSearch):
         thresholds: dict,
         config: SearchConfig,
         pretrained_surrogate=None,
+        vary_base_pose: bool = False,
     ):
         self.session = session
+        self.vary_base_pose = vary_base_pose
+        self._base_rng = np.random.default_rng(config.seed + 777)
         super().__init__(
             scene_graph=session.local_sg,
             robot_cfg=_local_robot_cfg(session.ws.robot_cfg),
@@ -275,6 +317,15 @@ class SceneFailureSearch(ActiveFailureSearch):
         mutated_local = scene_builder.apply_mutation(self.sg, params)
         world = sess.apply_mutation_world(mutated_local)
 
+        robot_cfg = sess.ws.robot_cfg  # 월드 base_position 사용 (기본 동작)
+        if self.vary_base_pose and sess.base_pose_candidates:
+            idx = int(self._base_rng.integers(0, len(sess.base_pose_candidates)))
+            cand = sess.base_pose_candidates[idx]
+            sess.move_robot_base(cand["base_pos"])
+            robot_cfg = copy.deepcopy(sess.ws.robot_cfg)
+            robot_cfg["robot"]["base_position"] = cand["base_pos"]
+            params["_base_pose_index"] = idx  # TestRecord.mutation_params에 기록됨
+
         kin = sim_runner.run_kinematic_check(
             target_pos=world["target_pos"],
             destination_pos=world["dest_pos"],
@@ -282,11 +333,11 @@ class SceneFailureSearch(ActiveFailureSearch):
             human_zone_body_ids=world["hz_ids"],
             destination_body_id=sess.ws.body_map["tray"],
             robot_body_id=sess.ws.robot_body_id,
-            robot_cfg=sess.ws.robot_cfg,       # 월드 base_position 사용
+            robot_cfg=robot_cfg,
             occlusion_ratio=world["occ_ratio"],
         )
         return physical_oracle.evaluate(
-            kin, mutated_local, sess.ws.robot_cfg, self.thresholds,
+            kin, mutated_local, robot_cfg, self.thresholds,
             test_id=test_id, mutation_params=params,
         )
 

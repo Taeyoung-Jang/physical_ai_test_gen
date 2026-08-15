@@ -1,0 +1,38 @@
+# NavAction -> LeRobot remote axis command (blueprint §10.2).
+# Values empirically exercised via scripts/run_scripted_motion.py on 2026-08-15 — forward and
+# both turns produced visible movement. Left/right sign has NOT been visually confirmed to
+# match the correct physical direction yet (blueprint §10.2 note: LeRobot's controller applies
+# cmd[2] = -remote.rx internally). If TURN_LEFT/TURN_RIGHT come out swapped, flip the two rx
+# values here — do not change any Python logic for this.
+commands:
+  FORWARD:
+    remote.lx: 0.0
+    remote.ly: 0.30
+    remote.rx: 0.0
+    remote.ry: 0.0
+
+  TURN_LEFT:
+    remote.lx: 0.0
+    remote.ly: 0.0
+    remote.rx: -0.25
+    remote.ry: 0.0
+
+  TURN_RIGHT:
+    remote.lx: 0.0
+    remote.ly: 0.0
+    remote.rx: 0.25
+    remote.ry: 0.0
+
+  STOP:
+    remote.lx: 0.0
+    remote.ly: 0.0
+    remote.rx: 0.0
+    remote.ry: 0.0
+
+# All remote values are clamped to these ranges regardless of what's requested above —
+# a safety floor independent of whatever command values get tuned in.
+limits:
+  remote.lx: [-0.35, 0.35]
+  remote.ly: [-0.40, 0.40]
+  remote.rx: [-0.35, 0.35]
+  remote.ry: [-0.35, 0.35]
