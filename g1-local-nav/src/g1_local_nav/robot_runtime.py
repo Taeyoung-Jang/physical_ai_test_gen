@@ -18,6 +18,7 @@ from dataclasses import dataclass
 from typing import Mapping
 
 import numpy as np
+from scipy.spatial.transform import Rotation
 
 from lerobot.robots.unitree_g1.config_unitree_g1 import UnitreeG1Config
 from lerobot.robots.unitree_g1.unitree_g1 import UnitreeG1
@@ -75,12 +76,27 @@ class G1Runtime:
             # expected in this case, not the bug the epoch-ref path above fixes.
             timestamp_ns = time.time_ns()
 
+        # obs["imu.rpy.*"] comes straight from the sim bridge's own rpy field, which is
+        # confirmed broken in simulation mode: roll stayed exactly 0.0 across 10 reads where
+        # the quaternion clearly showed real, changing rotation (scripts/diag_imu.py output,
+        # 2026-08-16 — quat.x/z moved from ~0.003/-0.0004 to ~0.049/-0.114 while rpy.roll never
+        # left 0.0). This is safety-critical: check_frame_safety() uses roll/pitch to detect
+        # the robot tipping over, so a stuck 0.0 silently disables that check. Computed from
+        # the quaternion instead, which is confirmed live.
+        roll, pitch, yaw = 0.0, 0.0, 0.0
+        qw = obs.get("imu.quat.w")
+        if qw is not None:
+            qx = obs.get("imu.quat.x", 0.0)
+            qy = obs.get("imu.quat.y", 0.0)
+            qz = obs.get("imu.quat.z", 0.0)
+            roll, pitch, yaw = Rotation.from_quat([qx, qy, qz, qw]).as_euler("xyz")
+
         return RobotFrame(
             rgb=rgb if rgb is not None else np.zeros((1, 1, 3), dtype=np.uint8),
             timestamp_ns=timestamp_ns,
-            imu_roll=obs.get("imu.rpy.roll", 0.0),
-            imu_pitch=obs.get("imu.rpy.pitch", 0.0),
-            imu_yaw=obs.get("imu.rpy.yaw", 0.0),
+            imu_roll=float(roll),
+            imu_pitch=float(pitch),
+            imu_yaw=float(yaw),
         )
 
     def send_remote(self, command: Mapping[str, float]) -> None:

@@ -3,6 +3,23 @@
 This deviates from the blueprint's conda-first recommendation in a few places. Recorded here so
 nobody re-derives this from scratch or assumes conda exists.
 
+## Safety-critical bug: `obs["imu.rpy.*"]` is broken in simulation mode
+
+`UnitreeG1.get_observation()`'s `imu.rpy.roll`/`.pitch`/`.yaw` fields come from the sim bridge's
+own rpy computation, which is stuck at exactly `0.0` for roll regardless of actual robot
+orientation — confirmed via `scripts/diag_imu.py`: `imu.quat.*` visibly changed across 10 reads
+(real rotation happening, including the robot toppling over in one test) while `imu.rpy.roll`
+stayed `0.0` every single time. This matters because `safety.check_frame_safety()` uses
+roll/pitch to detect the robot tipping over and force a STOP — a stuck 0.0 means that check
+silently never fires.
+
+**Fix (`src/g1_local_nav/robot_runtime.py`, `G1Runtime.latest_frame()`):** roll/pitch/yaw are
+computed from `obs["imu.quat.*"]` via `scipy.spatial.transform.Rotation`, not read from
+`imu.rpy.*` at all. `G1Runtime` is the only place that should ever read orientation — don't
+add a second `obs["imu.rpy.roll"]` read elsewhere in this codebase without this same fix.
+
+## Known benign noise
+
 ## Machine
 
 - `arm64` native (not Rosetta) — confirmed via `platform.machine()` and `arch`.
@@ -94,6 +111,15 @@ source first. Cross-referencing every `import`/`from` line in that cached snapsh
 was already installed turned up exactly one real gap: `pip install scipy` (matplotlib and
 termcolor were already present as transitive deps of other extras). `rclpy` (ROS2) also appears
 but is behind what looks like a guarded/optional code path — do not install it, not needed here.
+
+## `src/g1_local_nav` isn't pip-installed — `-m` invocation doesn't work
+
+There's no `pyproject.toml`/`setup.py` making `g1_local_nav` an installed package, so
+`mjpython -m g1_local_nav.cli` fails with `ModuleNotFoundError` (Python needs to already find
+the module before any of its own `sys.path` bootstrap code runs). Run CLI/scripts by their file
+path instead — `mjpython src/g1_local_nav/cli.py --policy fake` — which works because each
+entry point inserts `src/` onto `sys.path` itself before importing sibling `g1_local_nav.*`
+modules. `scripts/*.py` already followed this pattern; `cli.py` does too.
 
 ## Known benign noise
 
