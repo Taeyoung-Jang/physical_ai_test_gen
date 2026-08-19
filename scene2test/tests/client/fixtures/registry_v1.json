@@ -1,0 +1,20 @@
+{
+  "schema_version": "1.0",
+  "registry_revision": "sha256:registry-v1",
+  "scenes": [
+    {"id": "scene_001", "revision": "sha256:scene-v1", "status": "READY"}
+  ],
+  "robots": [
+    {"id": "unitree_g1", "revision": "sha256:robot-v1", "status": "READY"}
+  ],
+  "controllers": [
+    {"id": "groot_locomotion", "revision": "sha256:controller-v1", "status": "READY"}
+  ],
+  "policies": [
+    {"id": "scripted_navigation", "revision": "sha256:policy-v1", "status": "READY"}
+  ],
+  "tasks": [
+    {"id": "navigate_to_pose", "revision": "sha256:task-v1", "status": "READY"}
+  ]
+}
+

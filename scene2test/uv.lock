@@ -2374,6 +2374,7 @@ name = "scene2test"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [
+    { name = "httpx" },
     { name = "imageio", extra = ["ffmpeg"] },
     { name = "matplotlib" },
     { name = "numpy" },
@@ -2383,6 +2384,7 @@ dependencies = [
     { name = "pillow" },
     { name = "plotly" },
     { name = "pybullet-arm64" },
+    { name = "pydantic" },
     { name = "pyyaml" },
     { name = "scikit-learn" },
     { name = "scipy" },
@@ -2433,6 +2435,7 @@ requires-dist = [
     { name = "accelerate", marker = "extra == 'vla'", specifier = ">=0.30" },
     { name = "diffusers", marker = "extra == 'gen3d'", specifier = "==0.27.2" },
     { name = "einops", marker = "extra == 'vla'", specifier = ">=0.7" },
+    { name = "httpx", specifier = ">=0.27,<1" },
     { name = "huggingface-hub", marker = "extra == 'gen3d'", specifier = "==0.23.4" },
     { name = "imageio", extras = ["ffmpeg"], specifier = ">=2.9" },
     { name = "matplotlib", specifier = ">=3.7" },
@@ -2442,6 +2445,7 @@ requires-dist = [
     { name = "pillow", specifier = ">=9.0" },
     { name = "plotly", specifier = ">=5.15" },
     { name = "pybullet-arm64", specifier = ">=3.2.5" },
+    { name = "pydantic", specifier = ">=2.8,<3" },
     { name = "pytest", marker = "extra == 'dev'", specifier = ">=7.0" },
     { name = "pyyaml", specifier = ">=6.0" },
     { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.1" },

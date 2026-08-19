@@ -1,0 +1,42 @@
+{
+  "schema_version": "1.0",
+  "registry_revision": "sha256:registry-v1",
+  "contract_versions": ["1.0"],
+  "scene_queries": [
+    {
+      "query_id": "get_clearance",
+      "version": "1.0",
+      "schema": {"type": "object"}
+    }
+  ],
+  "intervention_operations": [
+    {
+      "operation_id": "add_primitive",
+      "version": "1.0",
+      "phase": "PRE_COMPILE",
+      "schema": {"type": "object"},
+      "features": {"shapes": ["box"]}
+    }
+  ],
+  "recording_channels": [
+    {
+      "channel_id": "state_trajectory",
+      "version": "1.0",
+      "fields": ["timestamp_s", "base_pose", "joint_positions"]
+    }
+  ],
+  "artifact_formats": [
+    {"kind": "state_trajectory", "formats": ["parquet"]}
+  ],
+  "render_profiles": [],
+  "robots": [{"id": "unitree_g1"}],
+  "controllers": [{"id": "groot_locomotion"}],
+  "policies": [{"id": "scripted_navigation"}],
+  "tasks": [{"id": "navigate_to_pose"}],
+  "limits": {
+    "maximum_episode_duration_s": 120,
+    "maximum_interventions": 100,
+    "maximum_parallel_jobs": 1
+  }
+}
+
