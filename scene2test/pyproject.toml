@@ -60,6 +60,9 @@ scene3d = [
     "trimesh>=4.0",
 ]
 
+[project.scripts]
+failure-client = "failure_client.cli:main"
+
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"

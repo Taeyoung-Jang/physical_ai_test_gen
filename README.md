@@ -2,6 +2,23 @@
 
 **3D Scene Graph 기반 Active Failure Search를 활용한 Physical AI 행동 회귀 테스트 자동화 시스템**
 
+## RunPod G1 Research Client
+
+외부 RunPod의 NVIDIA GPU/MuJoCo/G1 실행 환경을 제어하는 새 Client control plane은
+`scene2test/src/failure_client/`에 있다. 기존 Panda/PyBullet AFS와 LAM-guided 코드는
+연구 자산으로 보존되며 새 Client가 Server runtime을 대신 구현하지 않는다.
+
+```bash
+cd scene2test
+uv sync
+failure-client health
+failure-client validate config/failure_client_example.yaml
+failure-client run config/failure_client_example.yaml
+```
+
+설계는 [Client Architecture](.blueprint/CLIENT_ARCHITECTURE.md), 설정·실행·복구 방법은
+[Client Implementation Guide](scene2test/docs/CLIENT_IMPLEMENTATION.md)를 참조한다.
+
 > 제조·물류 로봇 자동화 환경에서 3D Vision으로 작업공간을 구조화하고, Active Failure Search를 통해
 > 실패 가능성이 높은 장면 조건을 능동적으로 탐색하여 로봇 행동의 성공·실패·위험 요인을 자동 검증하는 시스템.
 

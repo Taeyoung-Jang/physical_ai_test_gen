@@ -2,7 +2,14 @@
 
 from .artifacts import ArtifactRef, LocalArtifact
 from .base import ContractModel, VersionedContractModel, canonical_json, canonical_sha256
-from .capabilities import CapabilitySnapshot
+from .capabilities import (
+    ArtifactFormatCapability,
+    CapabilityLimits,
+    CapabilitySnapshot,
+    OperationCapability,
+    QueryCapability,
+    RecordingChannelCapability,
+)
 from .errors import (
     ArtifactIntegrityError,
     ContractValidationError,
@@ -25,15 +32,18 @@ from .rollouts import (
     RolloutJobStatus,
     RolloutRequest,
     RolloutResult,
+    StandardEvent,
     TaskSpec,
 )
 from .scene_queries import SceneQueryRequest, SceneQueryResult
 
 __all__ = [
     "ArtifactIntegrityError",
+    "ArtifactFormatCapability",
     "ArtifactRef",
     "CancelResult",
     "CapabilitySnapshot",
+    "CapabilityLimits",
     "ContractModel",
     "ContractValidationError",
     "ErrorEnvelope",
@@ -44,7 +54,10 @@ __all__ = [
     "GatewayHTTPError",
     "InterventionSpec",
     "LocalArtifact",
+    "OperationCapability",
+    "QueryCapability",
     "RecordingSpec",
+    "RecordingChannelCapability",
     "RegistryEntry",
     "RegistrySnapshot",
     "RemoteJobState",
@@ -56,6 +69,7 @@ __all__ = [
     "RolloutJobStatus",
     "RolloutRequest",
     "RolloutResult",
+    "StandardEvent",
     "SceneQueryRequest",
     "SceneQueryResult",
     "SceneSnapshot",

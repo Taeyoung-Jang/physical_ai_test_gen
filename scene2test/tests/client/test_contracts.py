@@ -70,6 +70,14 @@ def test_revision_is_required():
         ResourceRef.model_validate({"id": "scene_001"})
 
 
+def test_unsupported_contract_major_version_fails_fast(load_contract_fixture):
+    payload = load_contract_fixture("capabilities_v1.json")
+    payload["schema_version"] = "2.0"
+
+    with pytest.raises(ValidationError, match="unsupported contract major"):
+        CapabilitySnapshot.model_validate(payload)
+
+
 def test_canonical_request_hash_ignores_mapping_insertion_order():
     first = make_rollout_request({"z": 1, "a": {"y": 2, "x": 3}})
     second = make_rollout_request({"a": {"x": 3, "y": 2}, "z": 1})
@@ -103,4 +111,3 @@ def test_artifact_rejects_malformed_hash():
             size_bytes=1,
             sha256="not-a-hash",
         )
-

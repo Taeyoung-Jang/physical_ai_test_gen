@@ -7,7 +7,7 @@ import json
 from collections.abc import Mapping
 from typing import Any
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
 class ContractModel(BaseModel):
@@ -20,6 +20,13 @@ class VersionedContractModel(ContractModel):
     """Top-level contract envelope."""
 
     schema_version: str = Field(default="1.0", pattern=r"^\d+\.\d+$")
+
+    @field_validator("schema_version")
+    @classmethod
+    def require_supported_contract_major(cls, value: str) -> str:
+        if value.split(".", 1)[0] != "1":
+            raise ValueError(f"unsupported contract major version: {value}")
+        return value
 
 
 def canonical_json(value: BaseModel | Mapping[str, Any]) -> bytes:
@@ -42,4 +49,3 @@ def canonical_sha256(value: BaseModel | Mapping[str, Any]) -> str:
     """Return a prefixed SHA-256 digest of the canonical JSON representation."""
 
     return f"sha256:{hashlib.sha256(canonical_json(value)).hexdigest()}"
-

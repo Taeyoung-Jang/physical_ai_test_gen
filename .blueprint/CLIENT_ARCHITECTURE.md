@@ -1,6 +1,6 @@
 # Failure-Seeking Robot Research Platform — Client Architecture
 
-> **문서 버전:** v0.3
+> **문서 버전:** v0.4
 >
 > **대상:** MacBook 기반 Research Client / Failure-Seeking Control Plane
 >
@@ -12,6 +12,24 @@
 >
 > **설계 전제:** 로봇 실패 사례 탐색 방법론은 아직 확정되지 않았으며, 연구 진행 중 반복적으로 교체·조합·확장될 수 있다.
 > **구현 범위:** 이 저장소는 Client만 구현한다. Server 내부 runtime·GPU worker·MuJoCo 실행기는 구현하지 않는다.
+
+## 구현 상태 — 2026-08-20
+
+`scene2test/src/failure_client/`에 C0-C6 Client vertical slice가 구현되어 있다.
+
+- versioned contract, HTTP/Fake gateway, auth·retry·idempotency·artifact hash 검증
+- revision-preserving registry mirror와 task-conditioned world model
+- generic intervention builder/validator
+- Random, Sobol, Manual method와 checkpoint/resume
+- 기존 AFS/LAM output을 가져오는 비침습 import adapter와 외부 method entry point
+- durable multi-job orchestration, 반복 seed, append-only evaluation, failure archive
+- branch provenance와 confirmed-failure reproduction export
+- synthetic fake gateway에서 100회 연속 rollout acceptance test
+
+구현과 실행법은 `scene2test/docs/CLIENT_IMPLEMENTATION.md`, 예제 protocol은
+`scene2test/config/failure_client_example.yaml`을 기준으로 한다. 실제 RunPod health,
+G1 standing/navigation rollout과 remote artifact 증거 검증은 Server URL·credential·READY
+revision이 있어야 하는 opt-in integration 단계이며 local fake acceptance와 구분한다.
 
 ---
 
