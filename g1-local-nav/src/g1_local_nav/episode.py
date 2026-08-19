@@ -20,9 +20,19 @@ class EpisodeResult:
         return cls(outcome="failure", reason=reason, metadata=metadata)
 
     @classmethod
-    def from_stop_assessment(cls) -> "EpisodeResult":
-        # blueprint §14.3's ground-truth ||robot - target|| success check needs the red-box
-        # scene's target position, which doesn't exist until Milestone 6. Until then a STOP
-        # action can't be assessed as success/failure — reporting it honestly as "no metric to
-        # judge by" rather than guessing.
-        return cls(outcome="failure", reason="stopped_without_target_metric")
+    def from_stop_assessment(cls, target_distance_m: float | None, success_radius_m: float) -> "EpisodeResult":
+        """blueprint §14.3's ground-truth ||robot - target|| check, run when the robot itself
+        decides to STOP. target_distance_m is None whenever ground-truth base position isn't
+        available (e.g. FakeG1Runtime in tests, the default upstream scene without a target, or
+        anything other than the real MuJoCo sim) — reported honestly as "no metric to judge by"
+        rather than guessing.
+        """
+        if target_distance_m is None:
+            return cls(outcome="failure", reason="stopped_without_target_metric")
+        if target_distance_m <= success_radius_m:
+            return cls.success(target_distance_m=round(target_distance_m, 3), success_radius_m=success_radius_m)
+        return cls.failure(
+            "stopped_outside_target_radius",
+            target_distance_m=round(target_distance_m, 3),
+            success_radius_m=success_radius_m,
+        )

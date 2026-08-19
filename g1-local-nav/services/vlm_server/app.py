@@ -53,7 +53,7 @@ async def navigation_action(
     img_bytes = await image.read()
     pil_image = Image.open(io.BytesIO(img_bytes))
 
-    prompt_text = build_prompt(instruction)
+    prompt_text = build_prompt(instruction, previous_action)
     raw_text, latency_ms = _model.infer(pil_image, prompt_text)
     action, parse_ok = parse_action(raw_text)
 

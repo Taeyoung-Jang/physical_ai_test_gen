@@ -38,6 +38,13 @@ def test_forward_has_positive_ly(mapper: ActionMapper) -> None:
     assert command["remote.rx"] == 0.0
 
 
+def test_backward_has_negative_ly(mapper: ActionMapper) -> None:
+    command = mapper.to_remote(NavAction.BACKWARD)
+    assert command["remote.ly"] < 0.0
+    assert command["remote.lx"] == 0.0
+    assert command["remote.rx"] == 0.0
+
+
 def test_turn_left_and_right_are_opposite_sign(mapper: ActionMapper) -> None:
     left = mapper.to_remote(NavAction.TURN_LEFT)
     right = mapper.to_remote(NavAction.TURN_RIGHT)
@@ -51,9 +58,12 @@ def test_clamp_enforced(tmp_path: Path) -> None:
         textwrap.dedent("""
         commands:
           FORWARD: {remote.lx: 0.0, remote.ly: 5.0, remote.rx: 0.0, remote.ry: 0.0}
+          BACKWARD: {remote.lx: 0.0, remote.ly: -5.0, remote.rx: 0.0, remote.ry: 0.0}
           TURN_LEFT: {remote.lx: 0.0, remote.ly: 0.0, remote.rx: -5.0, remote.ry: 0.0}
           TURN_RIGHT: {remote.lx: 0.0, remote.ly: 0.0, remote.rx: 5.0, remote.ry: 0.0}
           STOP: {remote.lx: 0.0, remote.ly: 0.0, remote.rx: 0.0, remote.ry: 0.0}
+          GRASP: {remote.lx: 0.0, remote.ly: 0.0, remote.rx: 0.0, remote.ry: 0.0}
+          RELEASE: {remote.lx: 0.0, remote.ly: 0.0, remote.rx: 0.0, remote.ry: 0.0}
         limits:
           remote.lx: [-0.35, 0.35]
           remote.ly: [-0.40, 0.40]

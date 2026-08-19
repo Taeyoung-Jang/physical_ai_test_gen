@@ -54,6 +54,14 @@ class EpisodeConfig:
 @dataclass(frozen=True)
 class TaskConfig:
     instruction: str
+    # Ground-truth target position (blueprint §14.3) — matches the navigation_target body in
+    # assets/scenes/g1_hub/assets/scene_43dof_with_target.xml (pos="2.0 0.0 0.15"). Defaults
+    # keep every pre-Milestone-6 caller (positional TaskConfig("...") in tests, old configs)
+    # working unchanged. Only meaningful when G1_LOCAL_NAV_SCENE is set — the default upstream
+    # scene has no target, so distance/success against these values is not meaningful there.
+    target_x: float = 2.0
+    target_y: float = 0.0
+    success_radius_m: float = 0.7
 
 
 @dataclass(frozen=True)

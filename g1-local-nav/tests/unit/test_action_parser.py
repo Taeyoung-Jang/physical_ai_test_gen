@@ -10,7 +10,7 @@ import pytest
 from services.vlm_server.parser import parse_action
 
 
-@pytest.mark.parametrize("token", ["FORWARD", "TURN_LEFT", "TURN_RIGHT", "STOP"])
+@pytest.mark.parametrize("token", ["FORWARD", "BACKWARD", "TURN_LEFT", "TURN_RIGHT", "STOP", "GRASP", "RELEASE"])
 def test_exact_match(token: str) -> None:
     action, ok = parse_action(token)
     assert (action, ok) == (token, True)
@@ -28,6 +28,16 @@ def test_whitespace_quotes_and_code_fences_stripped(raw: str) -> None:
 def test_single_token_embedded_in_sentence_extracted() -> None:
     action, ok = parse_action("I think the robot should choose TURN_LEFT here.")
     assert (action, ok) == ("TURN_LEFT", True)
+
+
+def test_grasp_embedded_in_sentence_extracted() -> None:
+    action, ok = parse_action("The box is close and centered, so GRASP now.")
+    assert (action, ok) == ("GRASP", True)
+
+
+def test_release_exact_match() -> None:
+    action, ok = parse_action("RELEASE")
+    assert (action, ok) == ("RELEASE", True)
 
 
 def test_ambiguous_two_tokens_falls_back_to_stop() -> None:

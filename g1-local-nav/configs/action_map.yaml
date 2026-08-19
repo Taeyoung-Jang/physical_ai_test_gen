@@ -11,6 +11,12 @@ commands:
     remote.rx: 0.0
     remote.ry: 0.0
 
+  BACKWARD:
+    remote.lx: 0.0
+    remote.ly: -0.30
+    remote.rx: 0.0
+    remote.ry: 0.0
+
   TURN_LEFT:
     remote.lx: 0.0
     remote.ly: 0.0
@@ -24,6 +30,21 @@ commands:
     remote.ry: 0.0
 
   STOP:
+    remote.lx: 0.0
+    remote.ly: 0.0
+    remote.rx: 0.0
+    remote.ry: 0.0
+
+  # GRASP/RELEASE aren't locomotion — control_loop.py branches on them to drive the arm/weld
+  # instead of sending a remote command at all. Zero-remote here only so ActionMapper's
+  # "every NavAction needs an entry" check passes and logging has something consistent to show.
+  GRASP:
+    remote.lx: 0.0
+    remote.ly: 0.0
+    remote.rx: 0.0
+    remote.ry: 0.0
+
+  RELEASE:
     remote.lx: 0.0
     remote.ly: 0.0
     remote.rx: 0.0

@@ -36,12 +36,33 @@ safety:
   stale_camera_s: 1.0
 
 episode:
-  timeout_s: 60.0
+  # Must comfortably fit max_steps decisions at realistic VLM latency, same reasoning as
+  # control.heartbeat_timeout_s above. 60s was tuned for local SmolVLM2 (~0.7s/decision mean).
+  # --policy gpt (cloud API) measured 0.8-5.7s per decision (mean 1.37s, real network latency
+  # variance) — at 60s, only 33/80 steps fit before episode_timeout cut the episode short, most
+  # of that wall-clock time spent waiting on the API rather than walking (ep_gpt_pickup_002,
+  # see conversation record). 200s gives real cloud-latency runs room to reach max_steps=80
+  # even with occasional multi-second spikes (80 * (1.37 + action_duration_s 0.30 +
+  # stop_settle_s 0.15) ≈ 145s, plus headroom).
+  timeout_s: 200.0
   max_steps: 80
   stop_action_terminates: false
 
 task:
-  instruction: "Move toward the red box and stop near it."
+  # Pick-and-carry extension beyond blueprint §14's navigate-and-stop instruction — GRASP/RELEASE
+  # were added to NavAction once scripts/run_pickup_smoke.py proved the weld-based grasp works
+  # live. Ground-truth success/distance metrics (below) are still xy-only navigation checks;
+  # there's no scripted "did it actually carry the box" metric yet, only the per-step
+  # ever_grasped field in metrics.json.
+  instruction: "Walk to the red box, pick it up, and carry it to a new location."
+  # Ground-truth target (x, y) — matches the navigation_target body's xy in
+  # assets/scenes/g1_hub/assets/scene_43dof_with_target.xml (now on a pedestal at z=0.85 so the
+  # arm can reach it; xy unchanged, and this xy-only distance metric doesn't care about height).
+  # Only meaningful when G1_LOCAL_NAV_SCENE is set for the run — the default upstream scene has
+  # no target there, so distance/success computed against these values isn't meaningful then.
+  target_x: 2.0
+  target_y: 0.0
+  success_radius_m: 0.7
 
 logging:
   root_dir: runs

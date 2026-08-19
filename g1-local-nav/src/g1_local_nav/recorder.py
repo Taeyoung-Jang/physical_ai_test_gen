@@ -37,6 +37,7 @@ class Recorder:
         remote_command: dict[str, float],
         vlm_latency_ms: float,
         frame_before: RobotFrame,
+        target_distance_m: float | None = None,
     ) -> None:
         camera_age_ms = (time.time_ns() - frame_before.timestamp_ns) / 1e6
         record: dict[str, Any] = {
@@ -51,6 +52,7 @@ class Recorder:
             "camera_age_ms": camera_age_ms,
             "roll_rad": frame_before.imu_roll,
             "pitch_rad": frame_before.imu_pitch,
+            "target_distance_m": target_distance_m,
         }
         with self._decisions_path.open("a") as f:
             f.write(json.dumps(record) + "\n")

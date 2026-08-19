@@ -6,6 +6,9 @@ __pycache__/
 .pytest_cache/
 .ruff_cache/
 
+# API keys — never commit
+.env
+
 # Not committed: large weights, upstream clones, run artifacts
 third_party/
 runs/*

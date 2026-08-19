@@ -17,6 +17,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "src"))
 
 import numpy as np
+import pytest
 
 from g1_local_nav.action_mapper import ActionMapper
 from g1_local_nav.config import (
@@ -31,19 +32,29 @@ from g1_local_nav.config import (
 )
 from g1_local_nav.control_loop import run_episode
 from g1_local_nav.recorder import Recorder
-from g1_local_nav.robot_runtime import RobotFrame
+from g1_local_nav.robot_runtime import GRASP_REACH_POSE, GRASP_REST_POSE, RobotFrame
 from g1_local_nav.vlm_client import FakeVlmClient
 
 
 class FakeG1Runtime:
-    """Stands in for G1Runtime — no MuJoCo, no mjpython, just tracks calls."""
+    """Stands in for G1Runtime — no MuJoCo, no mjpython, just tracks calls.
 
-    def __init__(self, roll: float = 0.0, pitch: float = 0.0):
+    grasp_should_succeed controls what try_grasp() returns, so tests can exercise both the
+    "grasp lands" (arm stays extended, is_grasping() True) and "grasp misses" (control_loop.py
+    retracts the arm again) branches without a real simulator.
+    """
+
+    def __init__(self, roll: float = 0.0, pitch: float = 0.0, grasp_should_succeed: bool = True):
         self.stop_calls = 0
         self.reset_calls = 0
         self.sent_commands: list[dict[str, float]] = []
+        self.arm_actions: list[dict[str, float]] = []
+        self.try_grasp_calls = 0
+        self.release_grasp_calls = 0
         self._roll = roll
         self._pitch = pitch
+        self._grasp_should_succeed = grasp_should_succeed
+        self._grasping = False
 
     def latest_frame(self) -> RobotFrame:
         return RobotFrame(
@@ -56,6 +67,25 @@ class FakeG1Runtime:
 
     def send_remote(self, command: dict) -> None:
         self.sent_commands.append(dict(command))
+
+    def send_arm_action(self, arm_positions: dict) -> None:
+        self.arm_actions.append(dict(arm_positions))
+
+    def try_grasp(self, max_distance_m: float = 0.35) -> bool:
+        self.try_grasp_calls += 1
+        self._grasping = self._grasp_should_succeed
+        return self._grasping
+
+    def release_grasp(self) -> bool:
+        self.release_grasp_calls += 1
+        self._grasping = False
+        return True
+
+    def is_grasping(self) -> bool:
+        return self._grasping
+
+    def object_xyz(self, body_name: str = "navigation_target"):
+        return None
 
     def stop(self) -> None:
         self.stop_calls += 1
@@ -138,6 +168,53 @@ def test_stop_action_terminates_when_configured(tmp_path: Path) -> None:
     assert result.outcome == "failure"
     assert result.reason == "stopped_without_target_metric"
     assert len(runtime.sent_commands) == 3  # FORWARD, FORWARD, STOP — then terminated
+
+
+def test_grasp_success_leaves_arm_extended_and_no_remote_sent(tmp_path: Path) -> None:
+    # max_steps=1 (exactly matching the 1-action script) so FakeVlmClient's index-modulo
+    # cycling can't wrap around and re-trigger GRASP a second time.
+    runtime = FakeG1Runtime(grasp_should_succeed=True)
+    vlm = FakeVlmClient(script=["GRASP"])
+    config = _make_config(episode=EpisodeConfig(timeout_s=30.0, max_steps=1, stop_action_terminates=False))
+    mapper = ActionMapper()
+    recorder = Recorder(tmp_path, "test_ep_grasp_ok", save_all_frames=False)
+
+    asyncio.run(run_episode(runtime, vlm, config, mapper, recorder))
+
+    assert runtime.try_grasp_calls == 1
+    assert runtime.is_grasping() is True
+    assert len(runtime.sent_commands) == 0  # GRASP never calls send_remote
+    # Ramped there and NOT ramped back down (success keeps the arm extended for carrying).
+    assert runtime.arm_actions[-1] == pytest.approx(GRASP_REACH_POSE)
+
+
+def test_grasp_failure_retracts_arm(tmp_path: Path) -> None:
+    runtime = FakeG1Runtime(grasp_should_succeed=False)
+    vlm = FakeVlmClient(script=["GRASP"])
+    config = _make_config(episode=EpisodeConfig(timeout_s=30.0, max_steps=1, stop_action_terminates=False))
+    mapper = ActionMapper()
+    recorder = Recorder(tmp_path, "test_ep_grasp_fail", save_all_frames=False)
+
+    asyncio.run(run_episode(runtime, vlm, config, mapper, recorder))
+
+    assert runtime.try_grasp_calls == 1
+    assert runtime.is_grasping() is False
+    # Ramped up to reach, then back down to rest since the grasp missed.
+    assert runtime.arm_actions[-1] == pytest.approx(GRASP_REST_POSE)
+
+
+def test_release_calls_release_grasp_and_retracts_arm(tmp_path: Path) -> None:
+    runtime = FakeG1Runtime(grasp_should_succeed=True)
+    vlm = FakeVlmClient(script=["GRASP", "RELEASE"])
+    config = _make_config(episode=EpisodeConfig(timeout_s=30.0, max_steps=2, stop_action_terminates=False))
+    mapper = ActionMapper()
+    recorder = Recorder(tmp_path, "test_ep_release", save_all_frames=False)
+
+    asyncio.run(run_episode(runtime, vlm, config, mapper, recorder))
+
+    assert runtime.release_grasp_calls == 1
+    assert runtime.is_grasping() is False
+    assert runtime.arm_actions[-1] == pytest.approx(GRASP_REST_POSE)
 
 
 def test_metrics_and_decisions_log_written(tmp_path: Path) -> None:
