@@ -1,0 +1,14 @@
+{
+  "schema_version": "1.0",
+  "scene_id": "scene_001",
+  "scene_revision": "sha256:scene-v1",
+  "coordinate_system": {"up_axis": "Z", "unit": "meter"},
+  "bounds": {"minimum_m": [-5, -5, 0], "maximum_m": [5, 5, 3]},
+  "objects": [],
+  "regions": [],
+  "spawn_points": [{"id": "spawn_001", "position_m": [0, 0, 0]}],
+  "cameras": [],
+  "query_capabilities": ["get_clearance"],
+  "intervention_capabilities": ["add_primitive"]
+}
+
