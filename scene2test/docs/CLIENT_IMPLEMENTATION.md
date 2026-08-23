@@ -1,5 +1,8 @@
 # Failure Client implementation guide
 
+Server와 함께 실행하는 순서, 현재 server와 호환되는 smoke protocol, 원격 연결 및
+troubleshooting은 [Client / Server 실행 및 테스트 가이드](CLIENT_SERVER_RUNBOOK.md)를 참고한다.
+
 이 package는 MacBook에서 연구 실험을 제어하고 외부 RunPod Simulation Server에
 rollout을 요청하는 Client control plane이다. MuJoCo/G1 runtime이나 GPU worker는 이
 저장소에서 실행하지 않는다.

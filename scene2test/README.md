@@ -38,6 +38,20 @@ uv sync
 | open3d | RGB-D 포인트 클라우드 처리 |
 | streamlit + plotly | 분석 대시보드 |
 
+### GR00T MuJoCo Simulation Server
+
+RunPod에서 Failure Client 요청을 실행하는 Server vertical slice는 별도 extra를 사용한다.
+
+```bash
+uv sync --extra server
+uv run simulation-server
+```
+
+현재 구현 범위, Client 계약, GR00T backend, 가상 물체와 point-cloud 기반 실제 3D scene의
+확장 설계는 [Simulation Execution Server 문서](docs/SIMULATION_SERVER.md)를 참고한다.
+실제 Server 기동, Client 연결, end-to-end rollout, artifact 확인과 자동 테스트 절차는
+[Client / Server 실행 및 테스트 가이드](docs/CLIENT_SERVER_RUNBOOK.md)를 따른다.
+
 ---
 
 ## 빠른 시작
