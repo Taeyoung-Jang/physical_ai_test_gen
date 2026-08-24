@@ -197,9 +197,14 @@ def _validate_rollout(
             "TASK_NOT_SUPPORTED", "only stand@1.0 is supported by this vertical slice", 422
         )
     for operation in request.interventions:
-        if operation.operation_id != "set_robot_spawn" or operation.kind != "robot_initial_state":
+        canonical_spawn = operation.kind == "robot_initial_state.set_spawn"
+        legacy_spawn = (
+            operation.operation_id == "set_robot_spawn"
+            and operation.kind == "robot_initial_state"
+        )
+        if not (canonical_spawn or legacy_spawn):
             raise JobError(
-                "UNSUPPORTED_INTERVENTION", f"unsupported operation: {operation.operation_id}", 422
+                "UNSUPPORTED_INTERVENTION", f"unsupported intervention kind: {operation.kind}", 422
             )
         position = operation.parameters.get("position_m")
         quaternion = operation.parameters.get("quaternion_wxyz")

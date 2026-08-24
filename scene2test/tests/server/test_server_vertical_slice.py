@@ -6,6 +6,7 @@ from fastapi.testclient import TestClient
 
 from failure_client.contracts import (
     ExecutionSpec,
+    InterventionSpec,
     ResearchContext,
     ResourceRef,
     ResourceSelection,
@@ -40,6 +41,16 @@ def _request(client: TestClient) -> RolloutRequest:
             policy=ResourceRef(id="hold_pose", revision="builtin:hold-pose-v1"),
         ),
         task=TaskSpec(schema="stand@1.0"),
+        interventions=[
+            InterventionSpec(
+                operation_id="op_000",
+                kind="robot_initial_state.set_spawn",
+                parameters={
+                    "position_m": [0.0, 0.0, 0.8],
+                    "quaternion_wxyz": [1.0, 0.0, 0.0, 0.0],
+                },
+            )
+        ],
         execution=ExecutionSpec(seed=42, maximum_duration_s=0.02),
     )
 

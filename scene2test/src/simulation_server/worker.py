@@ -41,7 +41,10 @@ def run_groot(request: RolloutRequest, output: Path, groot_root: Path) -> Rollou
     if model.nkey:
         mujoco.mj_resetDataKeyframe(model, data, 0)
     for operation in request.interventions:
-        if operation.operation_id == "set_robot_spawn":
+        if operation.kind == "robot_initial_state.set_spawn" or (
+            operation.operation_id == "set_robot_spawn"
+            and operation.kind == "robot_initial_state"
+        ):
             position = operation.parameters.get("position_m")
             quaternion = operation.parameters.get("quaternion_wxyz")
             if position is not None:

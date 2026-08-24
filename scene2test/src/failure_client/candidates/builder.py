@@ -18,6 +18,14 @@ _OPERATION_KIND = {
 }
 
 
+_KIND_OPERATION = {kind: operation for operation, kind in _OPERATION_KIND.items()}
+
+
+def capability_id_for_kind(kind: str) -> str:
+    """Return the advertised Server operation ID for a canonical intervention kind."""
+    return _KIND_OPERATION.get(kind, kind.rsplit(".", 1)[-1])
+
+
 class InterventionBuilder:
     def build(self, proposal: CandidateProposal) -> BuiltCandidate:
         intent = proposal.intervention_intent

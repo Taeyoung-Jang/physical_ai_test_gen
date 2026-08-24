@@ -177,6 +177,26 @@ def test_candidate_build_is_canonical_and_capability_validated(load_contract_fix
     assert built.interventions[0].kind == "scene.add_primitive"
     assert CandidateValidator().validate(built, capabilities).valid is True
 
+    spawn_capabilities = capabilities.model_copy(
+        update={
+            "intervention_operations": [
+                capabilities.intervention_operations[0].model_copy(
+                    update={"operation_id": "set_robot_spawn"}
+                )
+            ]
+        }
+    )
+    spawn = builder.build(
+        CandidateProposal(
+            candidate_id="cand_spawn",
+            method_instance_id="manual_001",
+            intervention_intent={"operation": "set_robot_spawn"},
+        )
+    )
+    assert spawn.interventions[0].operation_id == "op_000"
+    assert spawn.interventions[0].kind == "robot_initial_state.set_spawn"
+    assert CandidateValidator().validate(spawn, spawn_capabilities).valid is True
+
 
 def test_candidate_validator_rejects_dependency_cycle(load_contract_fixture):
     capabilities = CapabilitySnapshot.model_validate(load_contract_fixture("capabilities_v1.json"))
