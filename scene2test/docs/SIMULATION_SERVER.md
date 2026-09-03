@@ -83,7 +83,8 @@ cancellation과 Server 재시작 시 unfinished job의 `INTERRUPTED` 전환을 �
 
 ### 현재 지원 intervention
 
-현재 authoritative하게 검증하고 적용하는 intervention은 `set_robot_spawn` 하나다.
+현재 authoritative하게 검증하고 적용하는 intervention은 `set_robot_spawn`,
+`set_friction`, `apply_external_force`다.
 
 ```json
 {
@@ -98,6 +99,8 @@ cancellation과 Server 재시작 시 unfinished job의 `INTERRUPTED` 전환을 �
 ```
 
 위치와 quaternion의 길이, finite number 여부 및 quaternion의 nonzero norm을 검사한다.
+마찰계수는 [0, 2], 외력은 각 성분 ±1000 N 범위로 검증한다. 외력은 대상 body,
+시작 시간과 양의 duration을 지정하며 실제 적용값은 reproduction manifest에 기록된다.
 
 ### 생성되는 evidence
 

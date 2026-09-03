@@ -80,7 +80,19 @@ def create_app(config: ServerConfig | None = None) -> FastAPI:
                     version="1.0",
                     phase="PRE_RESET",
                     schema={"type": "object"},
-                )
+                ),
+                OperationCapability(
+                    operation_id="set_friction",
+                    version="1.0",
+                    phase="PRE_RESET",
+                    schema={"type": "object"},
+                ),
+                OperationCapability(
+                    operation_id="apply_external_force",
+                    version="1.0",
+                    phase="DURING_ROLLOUT",
+                    schema={"type": "object"},
+                ),
             ],
             recording_channels=[
                 RecordingChannelCapability(
@@ -241,10 +253,52 @@ def _validate_rollout(
         legacy_spawn = (
             operation.operation_id == "set_robot_spawn" and operation.kind == "robot_initial_state"
         )
-        if not (canonical_spawn or legacy_spawn):
+        canonical_friction = operation.kind == "dynamics.set_friction"
+        canonical_force = operation.kind == "dynamics.apply_external_force"
+        if not (canonical_spawn or legacy_spawn or canonical_friction or canonical_force):
             raise JobError(
                 "UNSUPPORTED_INTERVENTION", f"unsupported intervention kind: {operation.kind}", 422
             )
+        if canonical_friction:
+            coefficient = operation.parameters.get("coefficient")
+            if (
+                not isinstance(coefficient, (int, float))
+                or isinstance(coefficient, bool)
+                or not math.isfinite(float(coefficient))
+                or not 0.0 <= float(coefficient) <= 2.0
+            ):
+                raise JobError(
+                    "INVALID_INTERVENTION_PARAMETER",
+                    "friction coefficient must be finite and within [0, 2]",
+                    422,
+                )
+            continue
+        if canonical_force:
+            force = operation.parameters.get("force_n")
+            start = operation.parameters.get("start_time_s", 0.0)
+            force_duration = operation.parameters.get("duration_s")
+            if not _finite_vector(force, 3) or any(abs(float(value)) > 1000 for value in force):
+                raise JobError(
+                    "INVALID_INTERVENTION_PARAMETER",
+                    "force_n must contain three finite values within [-1000, 1000] N",
+                    422,
+                )
+            if (
+                not isinstance(start, (int, float))
+                or isinstance(start, bool)
+                or not math.isfinite(float(start))
+                or float(start) < 0
+                or not isinstance(force_duration, (int, float))
+                or isinstance(force_duration, bool)
+                or not math.isfinite(float(force_duration))
+                or float(force_duration) <= 0
+            ):
+                raise JobError(
+                    "INVALID_INTERVENTION_PARAMETER",
+                    "force start must be nonnegative and duration must be positive",
+                    422,
+                )
+            continue
         position = operation.parameters.get("position_m")
         quaternion = operation.parameters.get("quaternion_wxyz")
         if position is not None and not _finite_vector(position, 3):

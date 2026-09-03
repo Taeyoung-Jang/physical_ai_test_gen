@@ -14,6 +14,7 @@ _OPERATION_KIND = {
     "set_robot_spawn": "robot_initial_state.set_spawn",
     "set_target_pose": "task.set_target_pose",
     "set_friction": "dynamics.set_friction",
+    "apply_external_force": "dynamics.apply_external_force",
     "camera_occlusion": "sensor.camera_occlusion",
 }
 
@@ -62,4 +63,3 @@ class InterventionBuilder:
             interventions=interventions,
             canonical_sha256=digest,
         )
-

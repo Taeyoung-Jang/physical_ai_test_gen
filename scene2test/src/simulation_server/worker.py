@@ -5,6 +5,7 @@ import hashlib
 import json
 import os
 import platform
+from dataclasses import dataclass, field
 from pathlib import Path
 
 from failure_client.contracts import (
@@ -35,6 +36,124 @@ def _render_settings() -> tuple[int, int, int]:
     if width <= 0 or height <= 0 or fps <= 0:
         raise ValueError("render width, height, and FPS must be positive")
     return width, height, fps
+
+
+def _quaternion_rpy(quaternion) -> tuple[float, float, float]:
+    """Return intrinsic roll, pitch, yaw for a MuJoCo wxyz quaternion."""
+    import numpy as np
+
+    w, x, y, z = quaternion
+    roll = np.arctan2(2.0 * (w * x + y * z), 1.0 - 2.0 * (x * x + y * y))
+    pitch = np.arcsin(np.clip(2.0 * (w * y - z * x), -1.0, 1.0))
+    yaw = np.arctan2(2.0 * (w * z + x * y), 1.0 - 2.0 * (y * y + z * z))
+    return float(roll), float(pitch), float(yaw)
+
+
+@dataclass
+class LocomotionMetrics:
+    """Online stability, tracking, effort, and contact-slip measurements."""
+
+    command: object
+    timestep_s: float
+    warmup_s: float = 1.0
+    sample_count: int = 0
+    velocity_error_sq: object = field(default=None)
+    velocity_sum: object = field(default=None)
+    max_abs_roll_rad: float = 0.0
+    max_abs_pitch_rad: float = 0.0
+    torque_sq_sum: float = 0.0
+    torque_sample_count: int = 0
+    effort_sample_count: int = 0
+    max_abs_torque_nm: float = 0.0
+    mechanical_power_sum_w: float = 0.0
+    minimum_base_height_m: float = float("inf")
+    foot_slip_sq_sum: float = 0.0
+    foot_slip_sample_count: int = 0
+    max_foot_slip_speed_mps: float = 0.0
+    previous_foot_positions: dict[int, object] = field(default_factory=dict)
+
+    def __post_init__(self) -> None:
+        import numpy as np
+
+        self.velocity_error_sq = np.zeros(3, dtype=float)
+        self.velocity_sum = np.zeros(3, dtype=float)
+
+    def update(self, model, data) -> None:
+        import mujoco
+        import numpy as np
+
+        roll, pitch, _ = _quaternion_rpy(data.qpos[3:7])
+        self.max_abs_roll_rad = max(self.max_abs_roll_rad, abs(roll))
+        self.max_abs_pitch_rad = max(self.max_abs_pitch_rad, abs(pitch))
+        self.minimum_base_height_m = min(self.minimum_base_height_m, float(data.qpos[2]))
+
+        torque = np.asarray(data.ctrl, dtype=float)
+        joint_velocity = np.asarray(data.qvel[6 : 6 + model.nu], dtype=float)
+        self.torque_sq_sum += float(np.dot(torque, torque))
+        self.torque_sample_count += torque.size
+        self.effort_sample_count += 1
+        self.max_abs_torque_nm = max(self.max_abs_torque_nm, float(np.max(np.abs(torque))))
+        self.mechanical_power_sum_w += float(np.sum(np.abs(torque * joint_velocity)))
+
+        if data.time >= self.warmup_s:
+            rotation = np.empty(9, dtype=float)
+            mujoco.mju_quat2Mat(rotation, data.qpos[3:7])
+            body_velocity = rotation.reshape(3, 3).T @ np.asarray(data.qvel[:3])
+            body_angular_velocity = rotation.reshape(3, 3).T @ np.asarray(data.qvel[3:6])
+            measured = np.asarray([body_velocity[0], body_velocity[1], body_angular_velocity[2]])
+            error = measured - self.command
+            self.velocity_error_sq += error * error
+            self.velocity_sum += measured
+            self.sample_count += 1
+
+        contacting_feet: set[int] = set()
+        for index in range(data.ncon):
+            contact = data.contact[index]
+            for geom_id in (int(contact.geom1), int(contact.geom2)):
+                if geom_id == 0:
+                    continue
+                body_id = int(model.geom_bodyid[geom_id])
+                name = mujoco.mj_id2name(model, mujoco.mjtObj.mjOBJ_BODY, body_id) or ""
+                if "ankle_roll" in name:
+                    contacting_feet.add(body_id)
+        for body_id in contacting_feet:
+            position = np.asarray(data.xpos[body_id, :2], dtype=float).copy()
+            previous = self.previous_foot_positions.get(body_id)
+            if previous is not None:
+                speed = float(np.linalg.norm(position - previous) / self.timestep_s)
+                self.foot_slip_sq_sum += speed * speed
+                self.foot_slip_sample_count += 1
+                self.max_foot_slip_speed_mps = max(self.max_foot_slip_speed_mps, speed)
+            self.previous_foot_positions[body_id] = position
+        for body_id in set(self.previous_foot_positions) - contacting_feet:
+            del self.previous_foot_positions[body_id]
+
+    def result(self) -> dict[str, float]:
+        import numpy as np
+
+        divisor = max(self.sample_count, 1)
+        velocity_rmse = np.sqrt(self.velocity_error_sq / divisor)
+        velocity_mean = self.velocity_sum / divisor
+        return {
+            "minimum_base_height_m": self.minimum_base_height_m,
+            "maximum_abs_roll_rad": self.max_abs_roll_rad,
+            "maximum_abs_pitch_rad": self.max_abs_pitch_rad,
+            "mean_forward_velocity_mps": float(velocity_mean[0]),
+            "mean_lateral_velocity_mps": float(velocity_mean[1]),
+            "mean_yaw_rate_radps": float(velocity_mean[2]),
+            "forward_velocity_rmse_mps": float(velocity_rmse[0]),
+            "lateral_velocity_rmse_mps": float(velocity_rmse[1]),
+            "yaw_rate_rmse_radps": float(velocity_rmse[2]),
+            "joint_torque_rms_nm": ((self.torque_sq_sum / max(self.torque_sample_count, 1)) ** 0.5),
+            "maximum_abs_joint_torque_nm": self.max_abs_torque_nm,
+            "mean_absolute_mechanical_power_w": self.mechanical_power_sum_w
+            / max(self.effort_sample_count, 1),
+            "foot_contact_slip_rms_mps": (
+                self.foot_slip_sq_sum / max(self.foot_slip_sample_count, 1)
+            )
+            ** 0.5,
+            "maximum_foot_contact_slip_mps": self.max_foot_slip_speed_mps,
+        }
 
 
 class RolloutRecorder:
@@ -130,7 +249,36 @@ def run_groot(request: RolloutRequest, output: Path, groot_root: Path) -> Rollou
         model.opt.timestep = request.execution.physics_timestep_s or float(config["SIMULATE_DT"])
         if model.nkey:
             mujoco.mj_resetDataKeyframe(model, data, 0)
+    external_forces = []
+    applied_dynamics = []
     for operation in request.interventions:
+        if operation.kind == "dynamics.set_friction":
+            coefficient = float(operation.parameters["coefficient"])
+            model.geom_friction[:, 0] = coefficient
+            applied_dynamics.append({"kind": operation.kind, "coefficient": coefficient})
+            mujoco.mj_forward(model, data)
+            continue
+        if operation.kind == "dynamics.apply_external_force":
+            body_name = str(operation.parameters.get("body_name", "pelvis"))
+            body_id = mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_BODY, body_name)
+            if body_id < 0:
+                raise ValueError(f"unknown external-force body: {body_name}")
+            specification = {
+                "kind": operation.kind,
+                "body_name": body_name,
+                "body_id": body_id,
+                "force_n": np.asarray(operation.parameters["force_n"], dtype=float),
+                "start_time_s": float(operation.parameters.get("start_time_s", 0.0)),
+                "duration_s": float(operation.parameters["duration_s"]),
+            }
+            external_forces.append(specification)
+            applied_dynamics.append(
+                {
+                    **specification,
+                    "force_n": specification["force_n"].tolist(),
+                }
+            )
+            continue
         if operation.kind == "robot_initial_state.set_spawn" or (
             operation.operation_id == "set_robot_spawn" and operation.kind == "robot_initial_state"
         ):
@@ -142,6 +290,7 @@ def run_groot(request: RolloutRequest, output: Path, groot_root: Path) -> Rollou
                 data.qpos[3:7] = np.asarray(quaternion, dtype=float)
             mujoco.mj_forward(model, data)
     initial_position = data.qpos[:3].copy()
+    initial_rpy = _quaternion_rpy(data.qpos[3:7])
     if policy_controller is None:
         target = data.qpos[7 : 7 + model.nu].copy()
         kp = np.asarray(config["MOTOR_KP"], dtype=float)
@@ -160,6 +309,14 @@ def run_groot(request: RolloutRequest, output: Path, groot_root: Path) -> Rollou
         RolloutRecorder(model, output, duration) if request.recording.video != "never" else None
     )
     fallen = False
+    termination_reason = "MAX_DURATION"
+    completed_steps = 0
+    maximum_steps = max(1, int(np.ceil(duration / model.opt.timestep)))
+    locomotion_metrics = (
+        LocomotionMetrics(policy_controller.command, model.opt.timestep)
+        if policy_controller is not None
+        else None
+    )
     try:
         with (
             state_path.open("w") as states,
@@ -168,7 +325,13 @@ def run_groot(request: RolloutRequest, output: Path, groot_root: Path) -> Rollou
         ):
             if recorder:
                 recorder.capture(data, force=True)
-            while data.time < duration:
+            for _ in range(maximum_steps):
+                previous_time = float(data.time)
+                data.xfrc_applied[:] = 0.0
+                for force in external_forces:
+                    force_end = force["start_time_s"] + force["duration_s"]
+                    if force["start_time_s"] <= data.time < force_end:
+                        data.xfrc_applied[force["body_id"], :3] += force["force_n"]
                 if policy_controller:
                     policy_controller.step()
                 else:
@@ -176,6 +339,28 @@ def run_groot(request: RolloutRequest, output: Path, groot_root: Path) -> Rollou
                     dq = data.qvel[6 : 6 + model.nu]
                     data.ctrl[:] = kp[: model.nu] * (target - q) - kd[: model.nu] * dq
                     mujoco.mj_step(model, data)
+                completed_steps += 1
+                finite_state = bool(
+                    np.all(np.isfinite(data.qpos))
+                    and np.all(np.isfinite(data.qvel))
+                    and np.all(np.isfinite(data.ctrl))
+                )
+                time_advanced = float(data.time) > previous_time
+                if not finite_state or not time_advanced:
+                    fallen = True
+                    termination_reason = "NUMERICAL_INSTABILITY"
+                    events.append(
+                        StandardEvent(
+                            event_type="NUMERICAL_INSTABILITY",
+                            timestamp_s=previous_time,
+                            measurements={
+                                "finite_state": finite_state,
+                                "time_advanced": time_advanced,
+                                "step_index": completed_steps,
+                            },
+                        )
+                    )
+                    break
                 states.write(
                     json.dumps(
                         {
@@ -210,6 +395,8 @@ def run_groot(request: RolloutRequest, output: Path, groot_root: Path) -> Rollou
                             measurements={"base_height_m": base_height, "threshold_m": 0.45},
                         )
                     )
+                if locomotion_metrics:
+                    locomotion_metrics.update(model, data)
                 if recorder:
                     recorder.capture(data)
     finally:
@@ -227,6 +414,7 @@ def run_groot(request: RolloutRequest, output: Path, groot_root: Path) -> Rollou
         },
         "randomness": {"master_seed": request.execution.seed},
         "execution": {"physics_timestep_s": model.opt.timestep, "duration_s": duration},
+        "applied_dynamics": applied_dynamics,
         "controller": {
             "id": request.resources.controller.id,
             "mode": controller_mode or "legacy_hold_pose",
@@ -263,12 +451,24 @@ def run_groot(request: RolloutRequest, output: Path, groot_root: Path) -> Rollou
     elif recorder:
         for path in (recorder.mp4_path, recorder.gif_path, recorder.thumbnail_path):
             path.unlink(missing_ok=True)
+    measured_metrics = locomotion_metrics.result() if locomotion_metrics else {}
+    final_rpy = _quaternion_rpy(data.qpos[3:7])
+    tracking_tolerance = float(request.task.parameters.get("velocity_rmse_tolerance", 0.35))
+    command_tracking_success = bool(
+        measured_metrics
+        and max(
+            measured_metrics["forward_velocity_rmse_mps"],
+            measured_metrics["lateral_velocity_rmse_mps"],
+            measured_metrics["yaw_rate_rmse_radps"],
+        )
+        <= tracking_tolerance
+    )
     return RolloutResult(
         job_id=job_id,
         execution=ExecutionSummary(
             valid=True,
             status=RemoteJobState.SUCCEEDED,
-            termination_reason="MAX_DURATION",
+            termination_reason=termination_reason,
             determinism_level="BEST_EFFORT",
         ),
         task_facts={
@@ -276,18 +476,26 @@ def run_groot(request: RolloutRequest, output: Path, groot_root: Path) -> Rollou
             "final_base_height_m": float(data.qpos[2]),
             "forward_distance_m": float(data.qpos[0] - initial_position[0]),
             "lateral_distance_m": float(data.qpos[1] - initial_position[1]),
+            "final_roll_rad": final_rpy[0],
+            "final_pitch_rad": final_rpy[1],
+            "final_yaw_rad": final_rpy[2],
+            "heading_change_rad": final_rpy[2] - initial_rpy[2],
             "walked_forward": (
                 controller_mode == "walk"
                 and not fallen
                 and float(data.qpos[0] - initial_position[0])
                 >= float(request.task.parameters.get("minimum_forward_distance_m", 0.2))
             ),
+            "command_tracking_success": command_tracking_success,
+            "velocity_rmse_tolerance": tracking_tolerance,
+            **measured_metrics,
         },
         standard_events=events,
         summary_metrics={
-            "simulation_steps": int(data.time / model.opt.timestep),
+            "simulation_steps": completed_steps,
             "contact_samples": sum(1 for _ in contact_path.open(encoding="utf-8")),
             "rendered_frames": recorder.frame_count if recorder else 0,
+            **measured_metrics,
         },
         artifacts=artifacts,
         reproduction=reproduction,

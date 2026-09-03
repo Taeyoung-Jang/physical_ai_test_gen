@@ -16,3 +16,4 @@
 |---|---|---|
 | 2026-09-03 | Server/Client 연동, 산출물 영상화, GR00T-WBC GPU 보행 통합 | [2026-09-03_server_client_gpu_locomotion.md](2026-09-03_server_client_gpu_locomotion.md) |
 
+| 2026-09-03 | 20회 기준선, 명령 sweep, 보행 지표 및 dynamics failure sweep | [2026-09-03_locomotion_research_baseline.md](2026-09-03_locomotion_research_baseline.md) |

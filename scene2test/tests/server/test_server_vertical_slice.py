@@ -78,6 +78,30 @@ def test_health_capabilities_and_registry(tmp_path):
         assert capabilities["registry_revision"] == registry["registry_revision"]
         assert registry["scenes"][0]["id"] == "g1_ground"
 
+        operation_ids = {item["operation_id"] for item in capabilities["intervention_operations"]}
+        assert {"set_robot_spawn", "set_friction", "apply_external_force"} <= operation_ids
+
+
+def test_invalid_dynamics_interventions_are_rejected(tmp_path):
+    with TestClient(_app(tmp_path)) as client:
+        request = _request(client)
+        payload = request.model_dump(mode="json", by_alias=True, exclude_none=True)
+        payload["interventions"] = [
+            {
+                "operation_id": "op_000",
+                "kind": "dynamics.set_friction",
+                "operation_version": "1.0",
+                "coordinate_frame": "scene",
+                "parameters": {"coefficient": -0.1},
+                "depends_on": [],
+            }
+        ]
+        response = client.post(
+            "/api/v1/rollouts", json=payload, headers={"Idempotency-Key": "bad-friction"}
+        )
+        assert response.status_code == 422
+        assert response.json()["error"]["code"] == "INVALID_INTERVENTION_PARAMETER"
+
 
 def test_rollout_is_idempotent_and_produces_reproduction_artifact(tmp_path):
     with TestClient(_app(tmp_path)) as client:

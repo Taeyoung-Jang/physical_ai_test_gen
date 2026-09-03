@@ -9,7 +9,7 @@
 - scene: `g1_ground`, `g1_locomotion_ground`
 - robot: `unitree_g1` (`43dof`), `unitree_g1_locomotion` (`29dof`)
 - controller/policy: legacy `mock_standing` / `hold_pose`, learned `groot_balance` / `groot_balance_policy`, learned `groot_locomotion` / `groot_walk_policy`
-- intervention: `set_robot_spawn`
+- intervention: `set_robot_spawn`, `set_friction`, `apply_external_force`
 - backend: 실제 `groot_mujoco` 또는 연결 점검용 `probe`
 
 `config/failure_client_example.yaml`의 obstacle/navigation 예제는 향후 기능을 설명하는 설계
@@ -65,6 +65,10 @@ uv run uvicorn simulation_server.main:create_app \
 | `SIM_SERVER_RENDER_WIDTH` | `640` | offscreen 영상 너비 |
 | `SIM_SERVER_RENDER_HEIGHT` | `480` | offscreen 영상 높이 |
 | `SIM_SERVER_RENDER_FPS` | `20` | MP4/GIF 렌더링 FPS |
+
+연구 기준선 설정은 `failure_client_locomotion_baseline_20.yaml`, `locomotion_command_sweep.yaml`,
+`failure_client_friction_sweep.yaml`, `failure_client_push_sweep.yaml`이며 보고서는
+`/workspace/g1_failure/runtime/reports`에 저장된다.
 
 외부에 노출하는 Server에는 API key와 TLS를 사용한다. secret은 protocol이나 Git에 넣지 않는다.
 
