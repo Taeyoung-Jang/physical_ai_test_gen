@@ -96,7 +96,11 @@ def create_app(config: ServerConfig | None = None) -> FastAPI:
             artifact_formats=[
                 {"kind": "state_trajectory", "formats": ["jsonl"]},
                 {"kind": "reproduction_manifest", "formats": ["json"]},
+                {"kind": "rollout_video", "formats": ["mp4"]},
+                {"kind": "rollout_preview", "formats": ["gif"]},
+                {"kind": "rollout_thumbnail", "formats": ["png"]},
             ],
+            render_profiles=[{"id": "default", "width": 640, "height": 480, "fps": 20}],
             robots=[{"id": entry.id, "revision": entry.revision} for entry in snapshot.robots],
             controllers=[
                 {"id": entry.id, "revision": entry.revision} for entry in snapshot.controllers
@@ -192,15 +196,50 @@ def _validate_rollout(
     registry.resolve("controllers", resources.controller.id, resources.controller.revision)
     if resources.policy:
         registry.resolve("policies", resources.policy.id, resources.policy.revision)
-    if request.task.schema_id.split("@", 1)[0] != "stand":
+    task_id = request.task.schema_id.split("@", 1)[0]
+    if task_id not in {"stand", "locomotion"}:
         raise JobError(
-            "TASK_NOT_SUPPORTED", "only stand@1.0 is supported by this vertical slice", 422
+            "TASK_NOT_SUPPORTED", "supported tasks are stand@1.0 and locomotion@1.0", 422
         )
+    controller_id = resources.controller.id
+    policy_id = resources.policy.id if resources.policy else None
+    if task_id == "locomotion" and (
+        controller_id != "groot_locomotion" or policy_id != "groot_walk_policy"
+    ):
+        raise JobError(
+            "RESOURCE_TASK_MISMATCH",
+            "locomotion@1.0 requires groot_locomotion and groot_walk_policy",
+            422,
+        )
+    if controller_id == "groot_balance" and policy_id != "groot_balance_policy":
+        raise JobError(
+            "RESOURCE_TASK_MISMATCH",
+            "groot_balance requires groot_balance_policy",
+            422,
+        )
+    if task_id == "locomotion":
+        limits = {
+            "linear_velocity_x": 1.0,
+            "linear_velocity_y": 1.0,
+            "yaw_rate": 2.0,
+        }
+        for name, limit in limits.items():
+            value = request.task.parameters.get(name, 0.0)
+            if (
+                not isinstance(value, (int, float))
+                or isinstance(value, bool)
+                or not math.isfinite(float(value))
+                or abs(float(value)) > limit
+            ):
+                raise JobError(
+                    "INVALID_TASK_PARAMETER",
+                    f"{name} must be finite and within [-{limit}, {limit}]",
+                    422,
+                )
     for operation in request.interventions:
         canonical_spawn = operation.kind == "robot_initial_state.set_spawn"
         legacy_spawn = (
-            operation.operation_id == "set_robot_spawn"
-            and operation.kind == "robot_initial_state"
+            operation.operation_id == "set_robot_spawn" and operation.kind == "robot_initial_state"
         )
         if not (canonical_spawn or legacy_spawn):
             raise JobError(

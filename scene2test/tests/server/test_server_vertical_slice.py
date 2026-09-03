@@ -20,6 +20,12 @@ from simulation_server.main import create_app
 GROOT_ROOT = Path(__file__).resolve().parents[4] / "GR00T-WholeBodyControl"
 
 
+def test_server_config_defaults_to_persistent_runtime(monkeypatch):
+    monkeypatch.delenv("SIM_SERVER_DATA_ROOT", raising=False)
+
+    assert ServerConfig.from_env().data_root == Path("/workspace/g1_failure/runtime/server")
+
+
 def _app(tmp_path: Path):
     return create_app(
         ServerConfig(data_root=tmp_path, groot_root=GROOT_ROOT, execution_backend="probe")
@@ -60,6 +66,15 @@ def test_health_capabilities_and_registry(tmp_path):
         assert client.get("/api/v1/health").json()["status"] == "ok"
         capabilities = client.get("/api/v1/capabilities").json()
         registry = client.get("/api/v1/registry/snapshot").json()
+        artifact_formats = {
+            item["kind"]: item["formats"] for item in capabilities["artifact_formats"]
+        }
+        assert artifact_formats["rollout_video"] == ["mp4"]
+        assert artifact_formats["rollout_preview"] == ["gif"]
+        assert artifact_formats["rollout_thumbnail"] == ["png"]
+        assert capabilities["render_profiles"] == [
+            {"id": "default", "width": 640, "height": 480, "fps": 20}
+        ]
         assert capabilities["registry_revision"] == registry["registry_revision"]
         assert registry["scenes"][0]["id"] == "g1_ground"
 

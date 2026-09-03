@@ -37,6 +37,7 @@ src/simulation_server/
 ├── registry.py   # immutable manifest registry 및 snapshot
 ├── jobs.py       # SQLite job/idempotency, subprocess, timeout/cancel
 ├── worker.py     # 실제 bounded MuJoCo rollout과 evidence 기록
+├── groot_locomotion.py # GPU ONNX balance/walk controller
 └── cli.py        # simulation-server 실행 명령
 ```
 
@@ -71,10 +72,14 @@ cancellation과 Server 재시작 시 unfinished job의 `INTERRUPTED` 전환을 �
 | Controller | `mock_standing` | `builtin:pd-standing-v1` |
 | Policy | `hold_pose` | `builtin:hold-pose-v1` |
 | Task | `stand@1.0` | `schema:stand@1.0` |
+| Scene/Robot | `g1_locomotion_ground` / `unitree_g1_locomotion` (`29dof`) | native WBC MJCF SHA-256 |
+| Controller/Policy | `groot_balance` / `groot_balance_policy` | Balance ONNX SHA-256 |
+| Controller/Policy | `groot_locomotion` / `groot_walk_policy` | Walk ONNX SHA-256 |
+| Task | `locomotion@1.0` | `schema:locomotion@1.0` |
 
-현재 controller는 학습된 SONIC/WBC checkpoint가 아니라 MJCF keyframe을 유지하는
-deterministic PD standing controller다. 실제 GR00T asset과 MuJoCo physics를 사용하지만
-learned controller 검증으로 해석해서는 안 된다.
+`mock_standing`은 호환성 확인용 deterministic PD controller이며 장시간 안정 자세 기준선이 아니다.
+실제 standing/walking에는 GR00T-WBC 저장소의 Balance/Walk ONNX 정책을 사용한다. 기본 provider는
+`CUDAExecutionProvider`이며 CUDA 초기화 실패 시 조용히 CPU로 폴백하지 않고 작업을 실패시킨다.
 
 ### 현재 지원 intervention
 
@@ -97,7 +102,7 @@ learned controller 검증으로 해석해서는 안 된다.
 ### 생성되는 evidence
 
 ```text
-/workspace/runtime/outputs/jobs/<job_id>/
+/workspace/g1_failure/runtime/server/outputs/jobs/<job_id>/
 ├── request.json
 ├── execution_result.json
 ├── state_trajectory.jsonl
@@ -127,12 +132,17 @@ task failure와 구분된다.
 cd /workspace/g1_failure/src/physical_ai_test_gen/scene2test
 uv sync --extra server
 
-export SIM_SERVER_DATA_ROOT=/workspace/runtime
+export SIM_SERVER_DATA_ROOT=/workspace/g1_failure/runtime/server
 export GROOT_WBC_ROOT=/workspace/g1_failure/src/GR00T-WholeBodyControl
 export SIM_SERVER_API_KEY=replace-me
 
 uv run simulation-server
 ```
+
+영상 요청(`video: always` 또는 event가 발생한 `on_standard_event`)은 Linux에서 EGL
+headless rendering을 사용한다. 기본 profile은 640x480, 20 FPS이며 `SIM_SERVER_RENDER_WIDTH`,
+`SIM_SERVER_RENDER_HEIGHT`, `SIM_SERVER_RENDER_FPS`로 변경한다. Server는 전체 `rollout.mp4`,
+최대 120-frame `rollout.gif` preview, `thumbnail.png`를 artifact로 등록한다.
 
 기본 worker는 API와 같은 Python environment를 사용한다. 별도 interpreter가 필요하면
 `GROOT_WBC_PYTHON`을 설정할 수 있지만, 해당 환경에는 이 프로젝트와 `mujoco`, `numpy`,
@@ -153,8 +163,9 @@ Client가 위험할 것으로 예상한 spawn pose 생성
 → Client가 자체 failure definition으로 판정
 ```
 
-장애물, 마찰, 외력, sensor noise 또는 locomotion task는 아직 실행할 수 없다. 따라서
-현재 상태를 일반적인 failure-seeking simulation platform의 완성본으로 표현해서는 안 된다.
+`locomotion@1.0`은 전진·횡방향 속도와 yaw rate 명령을 실행하고 standing 및 이동 거리를 반환한다.
+장애물, 마찰, 외력, sensor noise intervention은 아직 실행할 수 없으므로 일반적인
+failure-seeking simulation platform의 완성본으로 표현해서는 안 된다.
 
 ## 6. 가상 물체 배치 확장 설계
 
@@ -274,9 +285,9 @@ GR00T G1 robot MJCF
 4. OBJ/GLB scene package ingestion 및 validation CLI
 5. visual/collision asset 분리와 point-cloud preprocessing
 6. object pose/AABB/clearance/raycast query
-7. `navigate_to_pose@1.0`과 scripted locomotion
-8. SONIC/GR00T learned controller adapter와 별도 policy trace
-9. offscreen camera/video artifact
+7. `navigate_to_pose@1.0`과 목표 기반 locomotion
+8. 별도 policy trace와 추가 learned controller adapter
+9. 다중 offscreen camera/video artifact
 10. worker crash recovery와 100-rollout soak test
 
 ## 9. 검증 현황
@@ -288,4 +299,5 @@ GR00T G1 robot MJCF
 - state/action/contact/reproduction artifact 생성 확인
 
 위 smoke test는 실행 경로의 유효성을 확인한 것이며 장시간 standing 안정성, learned WBC,
-locomotion 성능 또는 실제 point-cloud scene의 안정성을 입증하지 않는다.
+실제 point-cloud scene의 안정성을 입증하지 않는다. 별도 5초 GPU 보행 E2E에서는
+최저 base height `0.737 m`, 전진 거리 `1.173 m`, CUDA provider 및 MP4/GIF 생성을 확인했다.

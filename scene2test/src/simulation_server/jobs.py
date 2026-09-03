@@ -126,7 +126,10 @@ class JobStore:
                     env=environment,
                 )
                 self._set_process(job_id, process.pid, RemoteJobState.RUNNING)
-                timeout = json.loads(row[3])["execution"]["maximum_duration_s"] + 30
+                timeout = (
+                    json.loads(row[3])["execution"]["maximum_duration_s"]
+                    + self.config.worker_startup_grace_s
+                )
                 return_code = process.wait(timeout=timeout)
             if return_code != 0:
                 self._fail(job_id, "WORKER_EXIT_NONZERO", return_code)
@@ -175,6 +178,9 @@ class JobStore:
             "contacts.jsonl",
             "reproduction.json",
             "worker.log",
+            "rollout.mp4",
+            "rollout.gif",
+            "thumbnail.png",
         }
         if name not in allowed:
             raise JobError("ARTIFACT_NOT_FOUND", "artifact was not found", 404)

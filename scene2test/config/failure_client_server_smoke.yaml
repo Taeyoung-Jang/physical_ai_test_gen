@@ -54,5 +54,5 @@ execution:
 artifacts:
   trajectory: "always"
   events: "always"
-  video: "never"
+  video: "always"
   policy_trace: "never"

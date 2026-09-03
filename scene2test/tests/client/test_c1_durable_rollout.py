@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import hashlib
+from pathlib import Path
 
 import pytest
 
@@ -99,10 +100,14 @@ def test_settings_do_not_expose_token(tmp_path):
     assert settings.gateway_config().bearer_token == "super-secret"
 
 
+def test_settings_default_to_persistent_runtime():
+    settings = ClientSettings.from_env({"FAILURE_CLIENT_SERVER_URL": "http://127.0.0.1:8000"})
+
+    assert settings.workspace_dir == Path("/workspace/g1_failure/runtime/client")
+
+
 def test_protocol_lock_is_content_addressed_and_immutable(tmp_path, load_contract_fixture):
-    capabilities = CapabilitySnapshot.model_validate(
-        load_contract_fixture("capabilities_v1.json")
-    )
+    capabilities = CapabilitySnapshot.model_validate(load_contract_fixture("capabilities_v1.json"))
     first = build_protocol_lock(make_protocol(), capabilities)
     second = build_protocol_lock(make_protocol(), capabilities)
     lock_path = tmp_path / "protocol.lock.yaml"
@@ -112,11 +117,7 @@ def test_protocol_lock_is_content_addressed_and_immutable(tmp_path, load_contrac
 
     assert written.lock_sha256 == existing.lock_sha256
     different_protocol = make_protocol().model_copy(
-        update={
-            "execution": make_protocol().execution.model_copy(
-                update={"candidate_budget": 2}
-            )
-        }
+        update={"execution": make_protocol().execution.model_copy(update={"candidate_budget": 2})}
     )
     different = build_protocol_lock(different_protocol, capabilities)
     with pytest.raises(ValueError, match="immutable protocol lock"):
@@ -235,9 +236,7 @@ def test_artifact_checksum_failure_is_retried_without_losing_result(
                 return persist_verified_artifact(ref, b"corrupt", self.artifact_dir)
             return super().download_artifact(ref)
 
-    capabilities = CapabilitySnapshot.model_validate(
-        load_contract_fixture("capabilities_v1.json")
-    )
+    capabilities = CapabilitySnapshot.model_validate(load_contract_fixture("capabilities_v1.json"))
     gateway = CorruptOnceGateway(
         capabilities=capabilities,
         registry=RegistrySnapshot.model_validate(load_contract_fixture("registry_v1.json")),

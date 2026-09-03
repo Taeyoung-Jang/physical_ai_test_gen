@@ -33,6 +33,7 @@ dependencies = [
 [project.optional-dependencies]
 server = [
     "mujoco>=3,<4",
+    "onnxruntime-gpu==1.22.0",
 ]
 dev = [
     "pytest>=7.0",

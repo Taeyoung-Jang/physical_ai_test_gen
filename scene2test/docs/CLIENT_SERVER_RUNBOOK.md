@@ -5,16 +5,17 @@
 
 현재 server vertical slice의 실제 지원 범위는 다음과 같다.
 
-- task: `stand@1.0`
-- scene: `g1_ground`
-- robot: `unitree_g1`, profile `43dof`
-- controller/policy: `mock_standing` / `hold_pose`
+- task: `stand@1.0`, `locomotion@1.0`
+- scene: `g1_ground`, `g1_locomotion_ground`
+- robot: `unitree_g1` (`43dof`), `unitree_g1_locomotion` (`29dof`)
+- controller/policy: legacy `mock_standing` / `hold_pose`, learned `groot_balance` / `groot_balance_policy`, learned `groot_locomotion` / `groot_walk_policy`
 - intervention: `set_robot_spawn`
 - backend: 실제 `groot_mujoco` 또는 연결 점검용 `probe`
 
 `config/failure_client_example.yaml`의 obstacle/navigation 예제는 향후 기능을 설명하는 설계
 예제이며 현재 server에서는 실행되지 않는다. 현재 end-to-end 검증에는
-`config/failure_client_server_smoke.yaml`을 사용한다.
+`config/failure_client_server_smoke.yaml`을 사용한다. 실제 안정 보행 검증에는
+`config/failure_client_locomotion_smoke.yaml`을 사용한다.
 
 ## 1. 설치
 
@@ -38,7 +39,7 @@ Server 터미널에서 실행한다.
 
 ```bash
 cd /workspace/g1_failure/src/physical_ai_test_gen/scene2test
-export SIM_SERVER_DATA_ROOT=/workspace/runtime
+export SIM_SERVER_DATA_ROOT=/workspace/g1_failure/runtime/server
 export GROOT_WBC_ROOT=/workspace/g1_failure/src/GR00T-WholeBodyControl
 export SIM_SERVER_API_KEY=replace-with-a-long-random-token
 export SIM_SERVER_BACKEND=groot_mujoco
@@ -54,11 +55,16 @@ uv run uvicorn simulation_server.main:create_app \
 
 | 변수 | 기본값 | 설명 |
 |---|---|---|
-| `SIM_SERVER_DATA_ROOT` | `./runtime` | registry, SQLite, job output 위치 |
+| `SIM_SERVER_DATA_ROOT` | `/workspace/g1_failure/runtime/server` | registry, SQLite, job output 위치 |
 | `GROOT_WBC_ROOT` | workspace의 GR00T 경로 | GR00T 저장소 root |
 | `GROOT_WBC_PYTHON` | 현재 Python | worker subprocess interpreter |
 | `SIM_SERVER_API_KEY` | 없음 | 설정 시 Bearer 인증 활성화 |
 | `SIM_SERVER_BACKEND` | `groot_mujoco` | `groot_mujoco` 또는 `probe` |
+| `SIM_SERVER_ONNX_PROVIDER` | `cuda` | learned balance/walk ONNX 실행 provider (`cuda` 또는 `cpu`) |
+| `SIM_SERVER_WORKER_STARTUP_GRACE_S` | `120` | 모델 초기화·렌더링을 위한 worker 제한시간 여유 |
+| `SIM_SERVER_RENDER_WIDTH` | `640` | offscreen 영상 너비 |
+| `SIM_SERVER_RENDER_HEIGHT` | `480` | offscreen 영상 높이 |
+| `SIM_SERVER_RENDER_FPS` | `20` | MP4/GIF 렌더링 FPS |
 
 외부에 노출하는 Server에는 API key와 TLS를 사용한다. secret은 protocol이나 Git에 넣지 않는다.
 
@@ -104,7 +110,7 @@ Client 터미널에서 실행한다.
 cd /workspace/g1_failure/src/physical_ai_test_gen/scene2test
 export FAILURE_CLIENT_SERVER_URL=http://127.0.0.1:8000
 export FAILURE_CLIENT_TOKEN=replace-with-a-long-random-token
-export FAILURE_CLIENT_WORKSPACE=/tmp/scene2test-client
+export FAILURE_CLIENT_WORKSPACE=/workspace/g1_failure/runtime/client
 export FAILURE_CLIENT_TIMEOUT_S=30
 export FAILURE_CLIENT_MAX_ATTEMPTS=3
 uv run failure-client health
@@ -177,7 +183,7 @@ find "$SIM_SERVER_DATA_ROOT/outputs/jobs" -maxdepth 2 -type f -print
 ```
 
 실제 rollout job에는 `request.json`, `execution_result.json`, state/action/contact JSONL,
-`reproduction.json`, `worker.log`가 생성된다. 확정 failure를 export한다.
+`reproduction.json`, `worker.log`가 생성된다. `artifacts.video: always`이면 `rollout.mp4`, `rollout.gif`, `thumbnail.png`도 생성되고 Client artifact store로 내려받는다. `on_standard_event`이면 standard event가 발생한 rollout에만 영상 파일을 보존한다. 확정 failure를 export한다.
 
 ```bash
 uv run failure-client export exp_g1_stand_smoke_001
