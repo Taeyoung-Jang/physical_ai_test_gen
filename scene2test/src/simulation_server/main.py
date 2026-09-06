@@ -248,6 +248,34 @@ def _validate_rollout(
                     f"{name} must be finite and within [-{limit}, {limit}]",
                     422,
                 )
+    for key in (
+        "velocity_rmse_tolerance",
+        "linear_velocity_rmse_tolerance_mps",
+        "yaw_rate_rmse_tolerance_radps",
+    ):
+        if key in request.task.parameters:
+            value = request.task.parameters[key]
+            if (
+                isinstance(value, bool)
+                or not isinstance(value, (int, float))
+                or not math.isfinite(value)
+                or value <= 0
+            ):
+                raise JobError("INVALID_TASK_PARAMETER", f"{key} must be positive and finite", 422)
+    if "path_hold" in request.task.parameters:
+        enabled = request.task.parameters["path_hold"]
+        if not isinstance(enabled, bool) or (
+            enabled
+            and (
+                task_id != "locomotion"
+                or float(request.task.parameters.get("linear_velocity_x", 0)) <= 0
+                or float(request.task.parameters.get("linear_velocity_y", 0)) != 0
+                or float(request.task.parameters.get("yaw_rate", 0)) != 0
+            )
+        ):
+            raise JobError(
+                "INVALID_TASK_PARAMETER", "path_hold requires forward-only locomotion", 422
+            )
     for operation in request.interventions:
         canonical_spawn = operation.kind == "robot_initial_state.set_spawn"
         legacy_spawn = (

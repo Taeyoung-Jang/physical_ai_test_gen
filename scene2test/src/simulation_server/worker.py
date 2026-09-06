@@ -70,7 +70,6 @@ class LocomotionMetrics:
     foot_slip_sq_sum: float = 0.0
     foot_slip_sample_count: int = 0
     max_foot_slip_speed_mps: float = 0.0
-    previous_foot_positions: dict[int, object] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
         import numpy as np
@@ -99,43 +98,32 @@ class LocomotionMetrics:
             rotation = np.empty(9, dtype=float)
             mujoco.mju_quat2Mat(rotation, data.qpos[3:7])
             body_velocity = rotation.reshape(3, 3).T @ np.asarray(data.qvel[:3])
-            body_angular_velocity = rotation.reshape(3, 3).T @ np.asarray(data.qvel[3:6])
+            body_angular_velocity = np.asarray(data.qvel[3:6])
             measured = np.asarray([body_velocity[0], body_velocity[1], body_angular_velocity[2]])
             error = measured - self.command
             self.velocity_error_sq += error * error
             self.velocity_sum += measured
             self.sample_count += 1
 
-        contacting_feet: set[int] = set()
-        for index in range(data.ncon):
-            contact = data.contact[index]
-            for geom_id in (int(contact.geom1), int(contact.geom2)):
-                if geom_id == 0:
-                    continue
-                body_id = int(model.geom_bodyid[geom_id])
-                name = mujoco.mj_id2name(model, mujoco.mjtObj.mjOBJ_BODY, body_id) or ""
-                if "ankle_roll" in name:
-                    contacting_feet.add(body_id)
-        for body_id in contacting_feet:
-            position = np.asarray(data.xpos[body_id, :2], dtype=float).copy()
-            previous = self.previous_foot_positions.get(body_id)
-            if previous is not None:
-                speed = float(np.linalg.norm(position - previous) / self.timestep_s)
-                self.foot_slip_sq_sum += speed * speed
-                self.foot_slip_sample_count += 1
-                self.max_foot_slip_speed_mps = max(self.max_foot_slip_speed_mps, speed)
-            self.previous_foot_positions[body_id] = position
-        for body_id in set(self.previous_foot_positions) - contacting_feet:
-            del self.previous_foot_positions[body_id]
+        from .path_tracking import contact_slip_speeds
 
-    def result(self) -> dict[str, float]:
+        for speed in contact_slip_speeds(model, data):
+            self.foot_slip_sq_sum += speed * speed
+            self.foot_slip_sample_count += 1
+            self.max_foot_slip_speed_mps = max(self.max_foot_slip_speed_mps, speed)
+
+    def result(self) -> dict[str, float | None]:
         import numpy as np
 
         divisor = max(self.sample_count, 1)
         velocity_rmse = np.sqrt(self.velocity_error_sq / divisor)
         velocity_mean = self.velocity_sum / divisor
         return {
-            "minimum_base_height_m": self.minimum_base_height_m,
+            "tracking_sample_count": self.sample_count,
+            "foot_contact_sample_count": self.foot_slip_sample_count,
+            "minimum_base_height_m": self.minimum_base_height_m
+            if self.effort_sample_count
+            else None,
             "maximum_abs_roll_rad": self.max_abs_roll_rad,
             "maximum_abs_pitch_rad": self.max_abs_pitch_rad,
             "mean_forward_velocity_mps": float(velocity_mean[0]),
@@ -195,6 +183,7 @@ class RolloutRecorder:
     def capture(self, data, *, force: bool = False) -> None:
         if not force and data.time + 1e-12 < self.next_frame_time:
             return
+        self.camera.lookat[:2] = data.qpos[:2]
         self.renderer.update_scene(data, camera=self.camera)
         frame = self.renderer.render().copy()
         self.writer.append_data(frame)
@@ -291,6 +280,11 @@ def run_groot(request: RolloutRequest, output: Path, groot_root: Path) -> Rollou
             mujoco.mj_forward(model, data)
     initial_position = data.qpos[:3].copy()
     initial_rpy = _quaternion_rpy(data.qpos[3:7])
+    from .path_tracking import path_errors, supervised_command
+
+    nominal_command = policy_controller.command.copy() if policy_controller else None
+    path_hold = request.task.parameters.get("path_hold", False)
+    maximum_cross_track = maximum_heading_error = 0.0
     if policy_controller is None:
         target = data.qpos[7 : 7 + model.nu].copy()
         kp = np.asarray(config["MOTOR_KP"], dtype=float)
@@ -333,6 +327,13 @@ def run_groot(request: RolloutRequest, output: Path, groot_root: Path) -> Rollou
                     if force["start_time_s"] <= data.time < force_end:
                         data.xfrc_applied[force["body_id"], :3] += force["force_n"]
                 if policy_controller:
+                    if path_hold:
+                        cross_track, heading_error = path_errors(
+                            data.qpos[:3], data.qpos[3:7], initial_position, initial_rpy[2]
+                        )
+                        policy_controller.command = supervised_command(
+                            nominal_command, cross_track, heading_error
+                        )
                     policy_controller.step()
                 else:
                     q = data.qpos[7 : 7 + model.nu]
@@ -347,7 +348,6 @@ def run_groot(request: RolloutRequest, output: Path, groot_root: Path) -> Rollou
                 )
                 time_advanced = float(data.time) > previous_time
                 if not finite_state or not time_advanced:
-                    fallen = True
                     termination_reason = "NUMERICAL_INSTABILITY"
                     events.append(
                         StandardEvent(
@@ -371,7 +371,18 @@ def run_groot(request: RolloutRequest, output: Path, groot_root: Path) -> Rollou
                     )
                     + "\n"
                 )
-                actions.write(json.dumps({"time_s": data.time, "ctrl": data.ctrl.tolist()}) + "\n")
+                actions.write(
+                    json.dumps(
+                        {
+                            "time_s": data.time,
+                            "ctrl": data.ctrl.tolist(),
+                            "command": policy_controller.command.tolist()
+                            if policy_controller
+                            else None,
+                        }
+                    )
+                    + "\n"
+                )
                 for index in range(data.ncon):
                     contact = data.contact[index]
                     contacts.write(
@@ -396,7 +407,15 @@ def run_groot(request: RolloutRequest, output: Path, groot_root: Path) -> Rollou
                         )
                     )
                 if locomotion_metrics:
+                    # Synchronize kinematics with the integrated state for contact-point metrics.
+                    mujoco.mj_forward(model, data)
+                    locomotion_metrics.command = policy_controller.command.copy()
                     locomotion_metrics.update(model, data)
+                cross_track, heading_error = path_errors(
+                    data.qpos[:3], data.qpos[3:7], initial_position, initial_rpy[2]
+                )
+                maximum_cross_track = max(maximum_cross_track, abs(cross_track))
+                maximum_heading_error = max(maximum_heading_error, abs(heading_error))
                 if recorder:
                     recorder.capture(data)
     finally:
@@ -415,10 +434,15 @@ def run_groot(request: RolloutRequest, output: Path, groot_root: Path) -> Rollou
         "randomness": {"master_seed": request.execution.seed},
         "execution": {"physics_timestep_s": model.opt.timestep, "duration_s": duration},
         "applied_dynamics": applied_dynamics,
+        "metrics_version": "2.0",
+        "supervisor": {
+            "id": "straight-path-v1" if path_hold else "none",
+            "nominal_command": nominal_command.tolist() if policy_controller else None,
+        },
         "controller": {
             "id": request.resources.controller.id,
             "mode": controller_mode or "legacy_hold_pose",
-            "command": policy_controller.command.tolist() if policy_controller else None,
+            "command": nominal_command.tolist() if policy_controller else None,
             "execution_provider": (
                 policy_controller.execution_provider if policy_controller else None
             ),
@@ -430,6 +454,7 @@ def run_groot(request: RolloutRequest, output: Path, groot_root: Path) -> Rollou
             "height": recorder.height,
             "fps": recorder.fps,
             "frame_count": recorder.frame_count,
+            "camera_mode": "follow_base_xy",
         }
     reproduction_path = output / "reproduction.json"
     reproduction_path.write_text(json.dumps(reproduction, indent=2, sort_keys=True))
@@ -454,25 +479,52 @@ def run_groot(request: RolloutRequest, output: Path, groot_root: Path) -> Rollou
     measured_metrics = locomotion_metrics.result() if locomotion_metrics else {}
     final_rpy = _quaternion_rpy(data.qpos[3:7])
     tracking_tolerance = float(request.task.parameters.get("velocity_rmse_tolerance", 0.35))
+    linear_tolerance = float(
+        request.task.parameters.get("linear_velocity_rmse_tolerance_mps", tracking_tolerance)
+    )
+    angular_tolerance = float(
+        request.task.parameters.get("yaw_rate_rmse_tolerance_radps", tracking_tolerance)
+    )
     command_tracking_success = bool(
         measured_metrics
+        and termination_reason != "NUMERICAL_INSTABILITY"
+        and measured_metrics["tracking_sample_count"] > 0
         and max(
             measured_metrics["forward_velocity_rmse_mps"],
             measured_metrics["lateral_velocity_rmse_mps"],
-            measured_metrics["yaw_rate_rmse_radps"],
         )
-        <= tracking_tolerance
+        <= linear_tolerance
+        and measured_metrics["yaw_rate_rmse_radps"] <= angular_tolerance
+    )
+    path_applicable = bool(
+        policy_controller
+        and abs(float(nominal_command[1])) < 1e-8
+        and abs(float(nominal_command[2])) < 1e-8
+    )
+    path_success = bool(
+        path_applicable
+        and not fallen
+        and termination_reason == "MAX_DURATION"
+        and maximum_cross_track <= 0.2
+        and maximum_heading_error <= 0.2
     )
     return RolloutResult(
         job_id=job_id,
         execution=ExecutionSummary(
-            valid=True,
+            valid=termination_reason != "NUMERICAL_INSTABILITY",
             status=RemoteJobState.SUCCEEDED,
             termination_reason=termination_reason,
             determinism_level="BEST_EFFORT",
         ),
         task_facts={
-            "standing_at_end": not fallen,
+            "standing_at_end": not fallen if termination_reason == "MAX_DURATION" else None,
+            "fall_observed": fallen,
+            "straight_path_applicable": path_applicable,
+            "straight_path_success": path_success,
+            "maximum_cross_track_m": maximum_cross_track,
+            "maximum_heading_error_rad": maximum_heading_error,
+            "cross_track_tolerance_m": 0.2,
+            "heading_tolerance_rad": 0.2,
             "final_base_height_m": float(data.qpos[2]),
             "forward_distance_m": float(data.qpos[0] - initial_position[0]),
             "lateral_distance_m": float(data.qpos[1] - initial_position[1]),
@@ -488,6 +540,8 @@ def run_groot(request: RolloutRequest, output: Path, groot_root: Path) -> Rollou
             ),
             "command_tracking_success": command_tracking_success,
             "velocity_rmse_tolerance": tracking_tolerance,
+            "linear_velocity_rmse_tolerance_mps": linear_tolerance,
+            "yaw_rate_rmse_tolerance_radps": angular_tolerance,
             **measured_metrics,
         },
         standard_events=events,

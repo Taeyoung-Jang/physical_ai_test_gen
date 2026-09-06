@@ -1,5 +1,8 @@
 # Blueprint 대비 구현 갭 분석 및 작업 백로그
 
+> 아래는 기존 AFS/LAM의 역사적 감사입니다. 현재 Client/Server 포함 상태는
+> [통합 감사](PROJECT_INTEGRATION_AUDIT.md), 우선순위는 [로드맵](PROJECT_ROADMAP.md)을 참조하세요.
+
 - 작성일: 2026-06-29
 - 기준 문서: `.blueprint/00_blueprint.md` (기본 파이프라인), `.blueprint/01_blueprint.md` (LAM-Guided 확장)
 - 목적: 미구현/축소 구현 항목을 문서화하여 추후 작업의 기준으로 삼는다.

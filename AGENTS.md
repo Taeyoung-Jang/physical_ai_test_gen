@@ -1,6 +1,21 @@
 # Scene2Test workspace memory
 
-Last refreshed: 2026-07-13 (Asia/Seoul).
+Last refreshed: 2026-09-06 (UTC).
+
+## Current scope update (supersedes historical scope and priorities below)
+
+scene2test now also contains a G1/MuJoCo simulation_server and failure_client.
+Client orchestration, recovery and exports exist, but built-in methods do not
+implement adaptive G1 search; legacy adapters import precomputed candidates.
+Legacy Panda AFS/LAM and local mesh-backed scene3d remain distinct execution paths.
+G1 CUDA locomotion has saved validation evidence. Optional path_hold is a separate
+controller condition, not proof of general navigation or VLA capability.
+app.py remains local-AFS oriented. g1-local-nav is independent: obey its AGENTS.md
+and do not merge it with scene2test. Record work in .workhistory.
+Read scene2test/docs/PROJECT_INTEGRATION_AUDIT.md and PROJECT_ROADMAP.md for current
+scope and priorities: valid-rollout budgets/provenance, adaptive search and fair
+baselines, service/scene extensions, reporting. The one-project statement and
+priority backlog below describe historical Panda work, not the whole repository.
 
 ## What this repository is
 

@@ -291,3 +291,17 @@ git rev-parse HEAD
 
 Server는 `Ctrl-C`로 종료한다. runtime과 Client workspace에는 재현 및 resume 정보가 있으므로
 필요한 artifact와 SQLite backup을 확인하기 전에 삭제하지 않는다.
+
+
+## 보행 평가 v2와 직선 경로 유지 (2026-09-06)
+
+`config/failure_client_path_hold_30s.yaml`은 30초 전진 경로 유지 검증이다.
+`path_hold: true`가 yaw 보정 supervisor를 명시적으로 켠다. 원본 정책 기본 동작은 유지한다.
+실행: `FAILURE_CLIENT_SERVER_URL=http://127.0.0.1:8000 uv run failure-client run config/failure_client_path_hold_30s.yaml`
+
+최대 횡편차 0.2 m와 heading 오차 0.2 rad를 모두 만족해야 `straight_path_success=true`다.
+직진 성공 판정을 원하는 Client protocol은 이 항목을 success predicate에 포함해야 한다.
+선속도와 각속도 허용값은 `linear_velocity_rmse_tolerance_mps`, `yaw_rate_rmse_tolerance_radps`다.
+`NUMERICAL_INSTABILITY`는 무효 실행이므로 연구 낙상률의 유효 분모에서 제외한다.
+새 접촉점 slip 및 yaw 지표는 reproduction의 metrics_version=2.0으로 구분한다.
+기존 보고서 수치는 자동 덮어쓰기 하지 않는다.
