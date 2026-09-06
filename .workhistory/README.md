@@ -24,3 +24,5 @@
 - 2026-09-06: [프로젝트 통합 감사 및 로드맵](2026-09-06_project_integration_audit.md)
 
 - 2026-09-06: [랜덤 환경·SceneGraph·이동 지도 구현](2026-09-06_procedural_world_implementation.md)
+
+- 2026-09-06: [G1 환경 연결·내비게이션·GPU 주행 검증](2026-09-06_g1_navigation_integration.md)

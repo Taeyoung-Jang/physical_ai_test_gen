@@ -21,6 +21,8 @@ class G1OnnxController:
         groot_root: Path,
         mode: Literal["balance", "walk"],
         command: np.ndarray | None = None,
+        *,
+        model=None,
     ) -> None:
         resource_root = groot_root / "decoupled_wbc/sim2mujoco/resources/robots/g1"
         config = yaml.safe_load((resource_root / "g1_gear_wbc.yaml").read_text())
@@ -33,7 +35,11 @@ class G1OnnxController:
         )
         self.mode = mode
         self.config = config
-        self.model = mujoco.MjModel.from_xml_path(str(resource_root / "g1_gear_wbc.xml"))
+        self.model = (
+            model
+            if model is not None
+            else mujoco.MjModel.from_xml_path(str(resource_root / "g1_gear_wbc.xml"))
+        )
         self.data = mujoco.MjData(self.model)
         requested_provider = os.getenv("SIM_SERVER_ONNX_PROVIDER", "cuda").lower()
         available = ort.get_available_providers()

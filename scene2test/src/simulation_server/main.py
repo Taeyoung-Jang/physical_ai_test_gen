@@ -209,6 +209,57 @@ def _validate_rollout(
     if resources.policy:
         registry.resolve("policies", resources.policy.id, resources.policy.revision)
     task_id = request.task.schema_id.split("@", 1)[0]
+    if task_id == "navigation":
+        if request.task.schema_id != "navigation@1.0":
+            raise JobError("TASK_NOT_SUPPORTED", "only navigation@1.0 is supported", 422)
+        if (
+            resources.robot.id != "unitree_g1_locomotion"
+            or resources.robot.profile_id != "29dof"
+            or resources.controller.id != "groot_locomotion"
+            or resources.policy is None
+            or resources.policy.id != "groot_walk_policy"
+        ):
+            raise JobError(
+                "RESOURCE_TASK_MISMATCH", "navigation requires G1 29dof and GR00T walk", 422
+            )
+        if request.interventions:
+            raise JobError(
+                "UNSUPPORTED_INTERVENTION", "navigation v1 uses immutable scene spawn/geometry", 422
+            )
+        if request.execution.physics_timestep_s not in (None, 0.005):
+            raise JobError(
+                "INVALID_TASK_PARAMETER", "navigation uses fixed .005s physics timestep", 422
+            )
+        if request.execution.control_hz not in (None, 50):
+            raise JobError("INVALID_TASK_PARAMETER", "navigation uses native 50Hz policy", 422)
+        allowed = {
+            "speed_mps": (0.05, 0.4),
+            "goal_tolerance_m": (0.1, 0.35),
+            "stuck_timeout_s": (5.0, 60.0),
+        }
+        if set(request.task.parameters) - allowed.keys():
+            raise JobError("INVALID_TASK_PARAMETER", "unknown navigation parameter", 422)
+        for key, value in request.task.parameters.items():
+            lo, hi = allowed[key]
+            if (
+                isinstance(value, bool)
+                or not isinstance(value, (int, float))
+                or not math.isfinite(value)
+                or not lo <= value <= hi
+            ):
+                raise JobError(
+                    "INVALID_TASK_PARAMETER", f"{key} must be finite in [{lo}, {hi}]", 422
+                )
+        from .worlds import resolve_world
+
+        try:
+            resolve_world(registry, resources.scene)
+        except (ValueError, OSError, KeyError) as exc:
+            raise JobError("INVALID_SCENE_BUNDLE", str(exc), 422) from exc
+        return
+    scene_manifest = registry.resolve("scenes", resources.scene.id, resources.scene.revision)
+    if scene_manifest.get("backend", {}).get("kind") == "procedural_world_v1":
+        raise JobError("RESOURCE_TASK_MISMATCH", "procedural worlds require navigation@1.0", 422)
     if task_id not in {"stand", "locomotion"}:
         raise JobError(
             "TASK_NOT_SUPPORTED", "supported tasks are stand@1.0 and locomotion@1.0", 422

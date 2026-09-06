@@ -2,7 +2,19 @@
 
 Last refreshed: 2026-09-06 (UTC).
 
-## Procedural world update
+## G1 navigation integration update
+
+simulation_server now supports navigation@1.0 for registered procedural-world bundles.
+Trusted local ingestion verifies artifacts and derived graph/map, then the worker composes
+static geometry with the G1 XML while checking joint/actuator order and geometry identity.
+The gt-waypoint-v2 baseline uses ground-truth pose/map, lookahead tracking and static
+clearance checks over the existing CUDA GR00T gait. Five staged fixtures/worlds have
+recorded GPU goal-reaching evidence; this is not a general random-world success rate.
+See scene2test/docs/G1_NAVIGATION.md. Keep legacy stand/locomotion separate. No LLM,
+sensor navigation, dynamic obstacle avoidance or AFS integration is implied. Preserve
+all initial failures and final artifacts. Runtime scene changes require new revisions.
+
+## Procedural world update (historical standalone generator scope)
 
 scene2test/src/procedural_world now generates seeded static maze/room environments,
 legacy-schema SceneGraphs, conservative circular-footprint navigation maps and

@@ -584,11 +584,19 @@ def main() -> None:
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--groot-root", type=Path, required=True)
     parser.add_argument("--backend", choices=("groot_mujoco", "probe"), required=True)
+    parser.add_argument("--registry-root", type=Path)
     args = parser.parse_args()
     request = RolloutRequest.model_validate_json(args.request.read_text())
-    result = (run_groot if args.backend == "groot_mujoco" else run_probe)(
-        request, args.output, args.groot_root
-    )
+    if request.task.schema_id == "navigation@1.0" and args.backend == "groot_mujoco":
+        from .navigation_worker import run_navigation
+
+        if args.registry_root is None:
+            raise ValueError("navigation requires registry root")
+        result = run_navigation(request, args.output, args.groot_root, args.registry_root)
+    else:
+        result = (run_groot if args.backend == "groot_mujoco" else run_probe)(
+            request, args.output, args.groot_root
+        )
     (args.output / "execution_result.json").write_text(
         result.model_dump_json(by_alias=True, indent=2)
     )

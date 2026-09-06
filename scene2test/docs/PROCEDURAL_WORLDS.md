@@ -1,5 +1,7 @@
 # 랜덤 실내 환경 · SceneGraph · 이동 지도
 
+후속 G1 서버 연결·주행은 [G1_NAVIGATION.md](G1_NAVIGATION.md)를 참조한다. 아래는 standalone 생성기의 범위와 사용법이다.
+
 2026-09-06. 첫 구현은 **단층 정적 환경 생성**이다. G1 내비게이션, LLM 편집, 서버 scene registry 등록은 아직 포함하지 않는다.
 
 ## 실행
