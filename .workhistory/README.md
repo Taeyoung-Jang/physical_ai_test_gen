@@ -22,3 +22,5 @@
 - 2026-09-06: [평가 수정 및 경로 유지 검증](2026-09-06_heading_fixes.md)
 
 - 2026-09-06: [프로젝트 통합 감사 및 로드맵](2026-09-06_project_integration_audit.md)
+
+- 2026-09-06: [랜덤 환경·SceneGraph·이동 지도 구현](2026-09-06_procedural_world_implementation.md)

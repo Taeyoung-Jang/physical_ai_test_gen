@@ -2,6 +2,18 @@
 
 Last refreshed: 2026-09-06 (UTC).
 
+## Procedural world update
+
+scene2test/src/procedural_world now generates seeded static maze/room environments,
+legacy-schema SceneGraphs, conservative circular-footprint navigation maps and
+standalone robot-free MuJoCo XML from one SceneSpec. See docs/PROCEDURAL_WORLDS.md
+inside scene2test. This is not Server scene registration, G1 navigation, sensor
+perception or adaptive AFS integration. Default footprint values are assumptions.
+Maintain shared object IDs/world-meter coordinates/revisions across outputs. Preserve
+the separate legacy Panda path. Next integration is scene loading with G1 assets,
+then navigation/path following and scene-based AFS. Do not postpone scene integration
+behind unrelated dynamics-only search or infer full-body feasibility from a 2D path.
+
 ## Current scope update (supersedes historical scope and priorities below)
 
 scene2test now also contains a G1/MuJoCo simulation_server and failure_client.

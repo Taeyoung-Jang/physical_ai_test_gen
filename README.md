@@ -1,5 +1,8 @@
 # Scene2Test
 
+랜덤 미로·여러 방 환경, SceneGraph, 이동 지도 생성: [실행 가이드](scene2test/docs/PROCEDURAL_WORLDS.md).
+현재는 정적 장면 생성·검증 단계이며 G1 내비게이션 연결은 후속 작업입니다.
+
 ## 현재 프로젝트 범위 (2026-09-06)
 
 G1/MuJoCo Client/Server와 기존 Panda AFS/LAM이 함께 존재합니다. 기존 AFS와 G1의
