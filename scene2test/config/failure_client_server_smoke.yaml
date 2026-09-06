@@ -1,0 +1,58 @@
+schema_version: "1.0"
+experiment:
+  experiment_id: "exp_g1_stand_smoke_001"
+  title: "G1 standing server smoke test"
+  research_question: "Does the current G1 standing rollout complete from the nominal spawn?"
+  hypothesis: "The nominal spawn remains standing for the short smoke duration."
+resources:
+  scene:
+    id: "g1_ground"
+    revision: "REPLACE_WITH_REGISTRY_REVISION"
+  robot:
+    id: "unitree_g1"
+    profile_id: "43dof"
+    revision: "REPLACE_WITH_REGISTRY_REVISION"
+  controller:
+    id: "mock_standing"
+    revision: "builtin:pd-standing-v1"
+  policy:
+    id: "hold_pose"
+    revision: "builtin:hold-pose-v1"
+task:
+  schema: "stand@1.0"
+  parameters: {}
+method:
+  plugin_id: "manual"
+  plugin_version: "1.0.0"
+  config:
+    candidates:
+      - operation: "set_robot_spawn"
+        operation_version: "1.0"
+        coordinate_frame: "scene"
+        parameters:
+          position_m: [0.0, 0.0, 0.8]
+          quaternion_wxyz: [1.0, 0.0, 0.0, 0.0]
+failure_definition:
+  id: "g1_standing_failure"
+  version: "1.0"
+  config:
+    failure_events:
+      - rule_id: "base_height_threshold_crossed"
+        event_type: "BASE_HEIGHT_THRESHOLD_CROSSED"
+    success_predicates:
+      - rule_id: "standing_at_end"
+        source: "task_facts"
+        path: "standing_at_end"
+        operator: "truthy"
+execution:
+  candidate_budget: 1
+  repeats_per_candidate: 1
+  master_seed: 42
+  seed_policy: "sha256-v1"
+  maximum_parallel_jobs: 1
+  maximum_duration_s: 0.02
+artifacts:
+  trajectory: "always"
+  events: "always"
+  video: "always"
+  policy_trace: "never"

@@ -9,6 +9,8 @@ from pathlib import Path
 
 from .api.http_gateway import HttpGatewayConfig
 
+DEFAULT_CLIENT_WORKSPACE = Path("/workspace/g1_failure/runtime/client")
+
 
 @dataclass(frozen=True, slots=True)
 class ClientSettings:
@@ -24,7 +26,9 @@ class ClientSettings:
         server_url = values.get("FAILURE_CLIENT_SERVER_URL", "").strip()
         if not server_url:
             raise ValueError("FAILURE_CLIENT_SERVER_URL is required")
-        workspace = Path(values.get("FAILURE_CLIENT_WORKSPACE", "workspace")).expanduser()
+        workspace = Path(
+            values.get("FAILURE_CLIENT_WORKSPACE", str(DEFAULT_CLIENT_WORKSPACE))
+        ).expanduser()
         token = values.get("FAILURE_CLIENT_TOKEN") or None
         return cls(
             server_url=server_url,
@@ -58,4 +62,3 @@ class ClientSettings:
             f"bearer_token={'***' if self.bearer_token else None}, "
             f"timeout_s={self.timeout_s!r}, max_attempts={self.max_attempts!r})"
         )
-

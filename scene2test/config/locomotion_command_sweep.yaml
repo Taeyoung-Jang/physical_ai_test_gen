@@ -1,0 +1,44 @@
+schema_version: "1.0"
+experiment_prefix: "exp_g1_command_sweep_20260903"
+base_protocol: "config/failure_client_locomotion_baseline_20.yaml"
+repeats_per_command: 3
+velocity_rmse_tolerance: 0.35
+video: "always"
+commands:
+  - id: "standstill"
+    linear_velocity_x: 0.0
+    linear_velocity_y: 0.0
+    yaw_rate: 0.0
+  - id: "forward_slow"
+    linear_velocity_x: 0.1
+    linear_velocity_y: 0.0
+    yaw_rate: 0.0
+  - id: "forward_nominal"
+    linear_velocity_x: 0.3
+    linear_velocity_y: 0.0
+    yaw_rate: 0.0
+  - id: "forward_fast"
+    linear_velocity_x: 0.6
+    linear_velocity_y: 0.0
+    yaw_rate: 0.0
+  - id: "backward"
+    linear_velocity_x: -0.2
+    linear_velocity_y: 0.0
+    yaw_rate: 0.0
+  - id: "left"
+    linear_velocity_x: 0.0
+    linear_velocity_y: 0.2
+    yaw_rate: 0.0
+  - id: "right"
+    linear_velocity_x: 0.0
+    linear_velocity_y: -0.2
+    yaw_rate: 0.0
+  - id: "turn_left"
+    linear_velocity_x: 0.0
+    linear_velocity_y: 0.0
+    yaw_rate: 0.5
+  - id: "turn_right"
+    linear_velocity_x: 0.0
+    linear_velocity_y: 0.0
+    yaw_rate: -0.5
+

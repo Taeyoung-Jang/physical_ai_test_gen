@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from failure_client.contracts import CapabilitySnapshot
 
+from .builder import capability_id_for_kind
 from .models import BuiltCandidate, CandidateIssue, CandidateValidationResult
 
 
@@ -49,7 +50,7 @@ class CandidateValidator:
         known_ids = set(operation_ids)
         dependency_graph: dict[str, list[str]] = {}
         for operation in candidate.interventions:
-            capability_id = operation.kind.rsplit(".", 1)[-1]
+            capability_id = capability_id_for_kind(operation.kind)
             capability = available.get(capability_id)
             if capability is None:
                 issues.append(

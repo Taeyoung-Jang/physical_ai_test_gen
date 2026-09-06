@@ -1,0 +1,67 @@
+schema_version: "1.0"
+experiment:
+  experiment_id: "exp_g1_locomotion_baseline_20_20260903"
+  title: "G1 GR00T-WBC 20-run GPU locomotion baseline"
+  research_question: "How repeatable is five-second forward locomotion on flat ground?"
+  hypothesis: "At least 95% of runs remain upright and travel at least 0.5 m forward."
+resources:
+  scene:
+    id: "g1_locomotion_ground"
+    revision: "sha256:3b0b5a1c8299fda85cf328cc2a8df53ccc765ce37f20030175295049947b1a19"
+  robot:
+    id: "unitree_g1_locomotion"
+    profile_id: "29dof"
+    revision: "sha256:3b0b5a1c8299fda85cf328cc2a8df53ccc765ce37f20030175295049947b1a19"
+  controller:
+    id: "groot_locomotion"
+    revision: "sha256:7c82255b6905ffcc4468fa7f8ddcf7b70db168cf1042107ccab887cb6a8e5407"
+  policy:
+    id: "groot_walk_policy"
+    revision: "sha256:7c82255b6905ffcc4468fa7f8ddcf7b70db168cf1042107ccab887cb6a8e5407"
+task:
+  schema: "locomotion@1.0"
+  parameters:
+    linear_velocity_x: 0.3
+    linear_velocity_y: 0.0
+    yaw_rate: 0.0
+    minimum_forward_distance_m: 0.5
+method:
+  plugin_id: "manual"
+  plugin_version: "1.0.0"
+  config:
+    candidates:
+      - operation: "set_robot_spawn"
+        operation_version: "1.0"
+        coordinate_frame: "scene"
+        parameters:
+          position_m: [0.0, 0.0, 0.8]
+          quaternion_wxyz: [1.0, 0.0, 0.0, 0.0]
+failure_definition:
+  id: "g1_locomotion_baseline_failure"
+  version: "1.0"
+  config:
+    failure_events:
+      - rule_id: "base_height_threshold_crossed"
+        event_type: "BASE_HEIGHT_THRESHOLD_CROSSED"
+    success_predicates:
+      - rule_id: "standing_at_end"
+        source: "task_facts"
+        path: "standing_at_end"
+        operator: "truthy"
+      - rule_id: "walked_forward"
+        source: "task_facts"
+        path: "walked_forward"
+        operator: "truthy"
+execution:
+  candidate_budget: 1
+  repeats_per_candidate: 20
+  master_seed: 20260903
+  seed_policy: "sha256-v1"
+  maximum_parallel_jobs: 4
+  maximum_duration_s: 5.0
+artifacts:
+  trajectory: "always"
+  events: "always"
+  video: "always"
+  policy_trace: "never"
+

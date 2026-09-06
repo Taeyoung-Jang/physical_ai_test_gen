@@ -26,9 +26,15 @@ dependencies = [
     "sentencepiece==0.1.99",
     "pydantic>=2.8,<3",
     "httpx>=0.27,<1",
+    "fastapi>=0.115,<1",
+    "uvicorn>=0.30,<1",
 ]
 
 [project.optional-dependencies]
+server = [
+    "mujoco>=3,<4",
+    "onnxruntime-gpu==1.22.0",
+]
 dev = [
     "pytest>=7.0",
     "ruff>=0.1",
@@ -62,6 +68,7 @@ scene3d = [
 
 [project.scripts]
 failure-client = "failure_client.cli:main"
+simulation-server = "simulation_server.cli:main"
 
 [build-system]
 requires = ["hatchling"]

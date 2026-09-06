@@ -28,9 +28,7 @@ from .test_c1_durable_rollout import make_protocol
 
 
 def make_gateway(tmp_path, load_contract_fixture) -> FakeSimulationGateway:
-    capability = CapabilitySnapshot.model_validate(
-        load_contract_fixture("capabilities_v1.json")
-    )
+    capability = CapabilitySnapshot.model_validate(load_contract_fixture("capabilities_v1.json"))
     registry = RegistrySnapshot.model_validate(load_contract_fixture("registry_v1.json"))
     scene = SceneSnapshot.model_validate(load_contract_fixture("scene_snapshot_v1.json"))
     return FakeSimulationGateway(
@@ -106,9 +104,7 @@ def test_world_model_projects_only_task_relevant_objects(load_contract_fixture):
         {"id": "chair_01", "category": "chair", "aabb": {}},
     ]
     scene = SceneSnapshot.model_validate(scene_payload)
-    task = protocol.task.model_copy(
-        update={"parameters": {"target_object_id": "target_01"}}
-    )
+    task = protocol.task.model_copy(update={"parameters": {"target_object_id": "target_01"}})
     capabilities = CapabilitySnapshot.model_validate(load_contract_fixture("capabilities_v1.json"))
 
     world = WorldModelProjector().project(
@@ -176,6 +172,46 @@ def test_candidate_build_is_canonical_and_capability_validated(load_contract_fix
     assert builder.build(second).canonical_sha256 == built.canonical_sha256
     assert built.interventions[0].kind == "scene.add_primitive"
     assert CandidateValidator().validate(built, capabilities).valid is True
+
+    spawn_capabilities = capabilities.model_copy(
+        update={
+            "intervention_operations": [
+                capabilities.intervention_operations[0].model_copy(
+                    update={"operation_id": "set_robot_spawn"}
+                )
+            ]
+        }
+    )
+    spawn = builder.build(
+        CandidateProposal(
+            candidate_id="cand_spawn",
+            method_instance_id="manual_001",
+            intervention_intent={"operation": "set_robot_spawn"},
+        )
+    )
+    assert spawn.interventions[0].operation_id == "op_000"
+    assert spawn.interventions[0].kind == "robot_initial_state.set_spawn"
+    assert CandidateValidator().validate(spawn, spawn_capabilities).valid is True
+
+    dynamics = builder.build(
+        CandidateProposal(
+            candidate_id="cand_dynamics",
+            method_instance_id="manual_001",
+            intervention_intent={
+                "operations": [
+                    {"operation": "set_friction", "parameters": {"coefficient": 0.2}},
+                    {
+                        "operation": "apply_external_force",
+                        "parameters": {"force_n": [0.0, 100.0, 0.0], "duration_s": 0.2},
+                    },
+                ]
+            },
+        )
+    )
+    assert [item.kind for item in dynamics.interventions] == [
+        "dynamics.set_friction",
+        "dynamics.apply_external_force",
+    ]
 
 
 def test_candidate_validator_rejects_dependency_cycle(load_contract_fixture):

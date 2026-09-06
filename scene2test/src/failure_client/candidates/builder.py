@@ -14,8 +14,17 @@ _OPERATION_KIND = {
     "set_robot_spawn": "robot_initial_state.set_spawn",
     "set_target_pose": "task.set_target_pose",
     "set_friction": "dynamics.set_friction",
+    "apply_external_force": "dynamics.apply_external_force",
     "camera_occlusion": "sensor.camera_occlusion",
 }
+
+
+_KIND_OPERATION = {kind: operation for operation, kind in _OPERATION_KIND.items()}
+
+
+def capability_id_for_kind(kind: str) -> str:
+    """Return the advertised Server operation ID for a canonical intervention kind."""
+    return _KIND_OPERATION.get(kind, kind.rsplit(".", 1)[-1])
 
 
 class InterventionBuilder:
@@ -54,4 +63,3 @@ class InterventionBuilder:
             interventions=interventions,
             canonical_sha256=digest,
         )
-

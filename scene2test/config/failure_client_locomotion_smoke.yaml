@@ -1,0 +1,66 @@
+schema_version: "1.0"
+experiment:
+  experiment_id: "exp_g1_locomotion_smoke_001"
+  title: "G1 GR00T-WBC locomotion smoke test"
+  research_question: "Does the released walking policy move forward while remaining upright?"
+  hypothesis: "The G1 walks forward at 0.3 m/s and remains standing for five seconds."
+resources:
+  scene:
+    id: "g1_locomotion_ground"
+    revision: "REPLACE_WITH_LOCOMOTION_SCENE_REVISION"
+  robot:
+    id: "unitree_g1_locomotion"
+    profile_id: "29dof"
+    revision: "REPLACE_WITH_LOCOMOTION_ROBOT_REVISION"
+  controller:
+    id: "groot_locomotion"
+    revision: "REPLACE_WITH_WALK_POLICY_REVISION"
+  policy:
+    id: "groot_walk_policy"
+    revision: "REPLACE_WITH_WALK_POLICY_REVISION"
+task:
+  schema: "locomotion@1.0"
+  parameters:
+    linear_velocity_x: 0.3
+    linear_velocity_y: 0.0
+    yaw_rate: 0.0
+    minimum_forward_distance_m: 0.5
+method:
+  plugin_id: "manual"
+  plugin_version: "1.0.0"
+  config:
+    candidates:
+      - operation: "set_robot_spawn"
+        operation_version: "1.0"
+        coordinate_frame: "scene"
+        parameters:
+          position_m: [0.0, 0.0, 0.8]
+          quaternion_wxyz: [1.0, 0.0, 0.0, 0.0]
+failure_definition:
+  id: "g1_locomotion_failure"
+  version: "1.0"
+  config:
+    failure_events:
+      - rule_id: "base_height_threshold_crossed"
+        event_type: "BASE_HEIGHT_THRESHOLD_CROSSED"
+    success_predicates:
+      - rule_id: "standing_at_end"
+        source: "task_facts"
+        path: "standing_at_end"
+        operator: "truthy"
+      - rule_id: "walked_forward"
+        source: "task_facts"
+        path: "walked_forward"
+        operator: "truthy"
+execution:
+  candidate_budget: 1
+  repeats_per_candidate: 1
+  master_seed: 42
+  seed_policy: "sha256-v1"
+  maximum_parallel_jobs: 1
+  maximum_duration_s: 5.0
+artifacts:
+  trajectory: "always"
+  events: "always"
+  video: "always"
+  policy_trace: "never"

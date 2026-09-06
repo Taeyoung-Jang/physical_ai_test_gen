@@ -1,5 +1,12 @@
 # Scene2Test
 
+## 현재 프로젝트 범위 (2026-09-06)
+
+G1/MuJoCo Client/Server와 기존 Panda AFS/LAM이 함께 존재합니다. 기존 AFS와 G1의
+적응형 탐색 연결은 미완성이며, g1-local-nav는 별도 프로젝트입니다.
+최신 상태는 [통합 감사](scene2test/docs/PROJECT_INTEGRATION_AUDIT.md),
+후속 작업은 [로드맵](scene2test/docs/PROJECT_ROADMAP.md)을 참조하세요.
+
 **3D Scene Graph 기반 Active Failure Search를 활용한 Physical AI 행동 회귀 테스트 자동화 시스템**
 
 ## RunPod G1 Research Client

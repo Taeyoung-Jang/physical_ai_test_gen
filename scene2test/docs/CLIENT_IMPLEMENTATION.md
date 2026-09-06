@@ -1,5 +1,8 @@
 # Failure Client implementation guide
 
+Server와 함께 실행하는 순서, 현재 server와 호환되는 smoke protocol, 원격 연결 및
+troubleshooting은 [Client / Server 실행 및 테스트 가이드](CLIENT_SERVER_RUNBOOK.md)를 참고한다.
+
 이 package는 MacBook에서 연구 실험을 제어하고 외부 RunPod Simulation Server에
 rollout을 요청하는 Client control plane이다. MuJoCo/G1 runtime이나 GPU worker는 이
 저장소에서 실행하지 않는다.
@@ -12,7 +15,7 @@ uv sync
 
 export FAILURE_CLIENT_SERVER_URL="https://your-runpod-server.example"
 export FAILURE_CLIENT_TOKEN="..."              # Server가 요구할 때만
-export FAILURE_CLIENT_WORKSPACE="./workspace"
+export FAILURE_CLIENT_WORKSPACE="/workspace/g1_failure/runtime/client"
 ```
 
 Token은 protocol, lock, SQLite, export에 저장되지 않는다. 모든 실험 resource는
@@ -38,11 +41,11 @@ remote job을 회수한다.
 
 ## 저장 결과
 
-- `workspace/client.sqlite`: registry revision, candidate, request/result hash, evaluation,
+- `/workspace/g1_failure/runtime/client/client.sqlite`: registry revision, candidate, request/result hash, evaluation,
   archive, method checkpoint
-- `workspace/artifacts/`: SHA-256 content-addressed artifact
-- `workspace/experiments/<id>/protocol.lock.yaml`: immutable protocol/capability provenance
-- `workspace/experiments/<id>/exports/`: confirmed failure reproduction manifest
+- `/workspace/g1_failure/runtime/client/artifacts/`: SHA-256 content-addressed artifact
+- `/workspace/g1_failure/runtime/client/experiments/<id>/protocol.lock.yaml`: immutable protocol/capability provenance
+- `/workspace/g1_failure/runtime/client/experiments/<id>/exports/`: confirmed failure reproduction manifest
 
 Raw `RolloutResult`와 Client의 `ResearchEvaluation`은 별도 레코드다. 동일한 raw result는
 새 `FailureDefinition`으로 append-only 재평가할 수 있고, invalid execution과

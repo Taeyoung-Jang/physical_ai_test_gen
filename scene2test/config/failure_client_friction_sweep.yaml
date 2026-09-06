@@ -1,0 +1,67 @@
+schema_version: "1.0"
+experiment:
+  experiment_id: "exp_g1_friction_sweep_20260903"
+  title: "G1 GPU locomotion friction sweep"
+  research_question: "At what ground-friction level does forward locomotion fail?"
+  hypothesis: "Stability or tracking degrades as sliding friction approaches zero."
+resources:
+  scene: {id: "g1_locomotion_ground", revision: "sha256:3b0b5a1c8299fda85cf328cc2a8df53ccc765ce37f20030175295049947b1a19"}
+  robot: {id: "unitree_g1_locomotion", profile_id: "29dof", revision: "sha256:3b0b5a1c8299fda85cf328cc2a8df53ccc765ce37f20030175295049947b1a19"}
+  controller: {id: "groot_locomotion", revision: "sha256:7c82255b6905ffcc4468fa7f8ddcf7b70db168cf1042107ccab887cb6a8e5407"}
+  policy: {id: "groot_walk_policy", revision: "sha256:7c82255b6905ffcc4468fa7f8ddcf7b70db168cf1042107ccab887cb6a8e5407"}
+task:
+  schema: "locomotion@1.0"
+  parameters:
+    linear_velocity_x: 0.3
+    linear_velocity_y: 0.0
+    yaw_rate: 0.0
+    minimum_forward_distance_m: 0.5
+    velocity_rmse_tolerance: 0.35
+method:
+  plugin_id: "manual"
+  plugin_version: "1.0.0"
+  config:
+    candidates:
+      - &friction
+        operations:
+          - {operation: "set_robot_spawn", parameters: {position_m: [0.0, 0.0, 0.8], quaternion_wxyz: [1.0, 0.0, 0.0, 0.0]}}
+          - {operation: "set_friction", parameters: {coefficient: 1.0}}
+      - operations:
+          - {operation: "set_robot_spawn", parameters: {position_m: [0.0, 0.0, 0.8], quaternion_wxyz: [1.0, 0.0, 0.0, 0.0]}}
+          - {operation: "set_friction", parameters: {coefficient: 0.8}}
+      - operations:
+          - {operation: "set_robot_spawn", parameters: {position_m: [0.0, 0.0, 0.8], quaternion_wxyz: [1.0, 0.0, 0.0, 0.0]}}
+          - {operation: "set_friction", parameters: {coefficient: 0.6}}
+      - operations:
+          - {operation: "set_robot_spawn", parameters: {position_m: [0.0, 0.0, 0.8], quaternion_wxyz: [1.0, 0.0, 0.0, 0.0]}}
+          - {operation: "set_friction", parameters: {coefficient: 0.4}}
+      - operations:
+          - {operation: "set_robot_spawn", parameters: {position_m: [0.0, 0.0, 0.8], quaternion_wxyz: [1.0, 0.0, 0.0, 0.0]}}
+          - {operation: "set_friction", parameters: {coefficient: 0.2}}
+      - operations:
+          - {operation: "set_robot_spawn", parameters: {position_m: [0.0, 0.0, 0.8], quaternion_wxyz: [1.0, 0.0, 0.0, 0.0]}}
+          - {operation: "set_friction", parameters: {coefficient: 0.1}}
+      - operations:
+          - {operation: "set_robot_spawn", parameters: {position_m: [0.0, 0.0, 0.8], quaternion_wxyz: [1.0, 0.0, 0.0, 0.0]}}
+          - {operation: "set_friction", parameters: {coefficient: 0.05}}
+      - operations:
+          - {operation: "set_robot_spawn", parameters: {position_m: [0.0, 0.0, 0.8], quaternion_wxyz: [1.0, 0.0, 0.0, 0.0]}}
+          - {operation: "set_friction", parameters: {coefficient: 0.0}}
+failure_definition: &failure
+  id: "g1_locomotion_dynamics_failure"
+  version: "1.0"
+  config:
+    failure_events: [{rule_id: "fall", event_type: "BASE_HEIGHT_THRESHOLD_CROSSED"}]
+    success_predicates:
+      - {rule_id: "standing", source: "task_facts", path: "standing_at_end", operator: "truthy"}
+      - {rule_id: "forward", source: "task_facts", path: "walked_forward", operator: "truthy"}
+      - {rule_id: "tracking", source: "task_facts", path: "command_tracking_success", operator: "truthy"}
+execution:
+  candidate_budget: 8
+  repeats_per_candidate: 1
+  master_seed: 20260903
+  seed_policy: "sha256-v1"
+  maximum_parallel_jobs: 1
+  maximum_duration_s: 5.0
+artifacts: {trajectory: "always", events: "always", video: "always", policy_trace: "never"}
+
