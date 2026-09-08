@@ -26,3 +26,5 @@
 - 2026-09-06: [랜덤 환경·SceneGraph·이동 지도 구현](2026-09-06_procedural_world_implementation.md)
 
 - 2026-09-06: [G1 환경 연결·내비게이션·GPU 주행 검증](2026-09-06_g1_navigation_integration.md)
+
+- 2026-09-06: [SceneGraph 변형·Random/Sobol·적응형 AFS 파일럿](2026-09-06_scene_search_pilot.md)

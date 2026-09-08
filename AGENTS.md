@@ -2,6 +2,16 @@
 
 Last refreshed: 2026-09-06 (UTC).
 
+
+## G1 scene-search pilot update
+
+`procedural_world/search.py` and `tools/run_scene_search.py` implement a separate trusted
+local scene-bundle search pilot: bounded obstacle translation, graph/map/XML regeneration,
+Random/Sobol and feedback-driven ExtraTrees AFS, equal valid-rollout budgets and resumable
+HTTP submission. This does not add an adaptive plugin to failure_client's general method
+registry or a remote scene-mutation API. See scene2test/docs/G1_SCENE_SEARCH.md for protocol
+and claim boundaries. A small single-seed experiment cannot establish AFS superiority.
+
 ## G1 navigation integration update
 
 simulation_server now supports navigation@1.0 for registered procedural-world bundles.
