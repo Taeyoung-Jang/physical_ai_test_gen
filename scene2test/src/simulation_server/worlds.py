@@ -31,6 +31,17 @@ def load_spec(path: Path) -> SceneSpec:
         tuple(d["goal_xy"]),
         d["generator_version"],
     )
+    if "surfaces" in d:
+        from procedural_world.terrain import Surface, TerrainSpec, validate
+
+        spec = TerrainSpec(
+            **spec.__dict__,
+            surfaces=tuple(Surface(**s) for s in d["surfaces"]),
+            floor_friction=d["floor_friction"],
+            planning_max_slope_deg=d["planning_max_slope_deg"],
+            planning_max_step_m=d["planning_max_step_m"],
+        )
+        validate(spec)
     ids = set()
     for b in spec.boxes:
         if not re.fullmatch(r"[A-Za-z0-9_]+", b.id) or b.id in ids:
@@ -122,6 +133,26 @@ def register_world(bundle: Path, data_root: Path) -> dict:
             ],
         },
     }
+    if hasattr(spec, "surfaces"):
+        from procedural_world.core import scene_graph
+
+        graph = scene_graph(spec)
+        manifest["snapshot"]["terrain"] = graph.meta
+        manifest["snapshot"]["objects"].extend(
+            {
+                "id": o.id,
+                "category": "traversable_surface",
+                "pose": {"position_m": o.position},
+                "aabb": {
+                    "minimum_m": [p - s / 2 for p, s in zip(o.position, o.size)],
+                    "maximum_m": [p + s / 2 for p, s in zip(o.position, o.size)],
+                },
+                "collision_geom": o.extra["collision_geom"],
+                "surface": o.extra,
+            }
+            for o in graph.objects
+            if o.role == "traversable_surface"
+        )
     folder = data_root / "registries" / "scenes"
     folder.mkdir(parents=True, exist_ok=True)
     path = folder / f"{spec.scene_id}.json"
@@ -192,6 +223,10 @@ def compose_model(spec: SceneSpec, groot_root: Path, output: Path):
             size=".25 .01",
             rgba=rgba,
         )
+    if hasattr(spec, "surfaces"):
+        from procedural_world.terrain import add_geometry
+
+        add_geometry(root, wb, spec, prefix="world_")
     model_path = output / "composed_scene.xml"
     ET.indent(root)
     model_path.write_text(ET.tostring(root, encoding="unicode"))
@@ -213,7 +248,11 @@ def compose_model(spec: SceneSpec, groot_root: Path, output: Path):
         source.with_suffix(".yaml"),
         source.parent / "policy/GR00T-WholeBodyControl-Walk.onnx",
     ]
-    resource_paths += [meshdir / mesh.attrib["file"] for mesh in root.findall("asset/mesh")]
+    resource_paths += [
+        meshdir / mesh.attrib["file"]
+        for mesh in root.findall("asset/mesh")
+        if "file" in mesh.attrib
+    ]
     provenance = {
         str(p.relative_to(groot_root)): hashlib.sha256(p.read_bytes()).hexdigest()
         for p in resource_paths

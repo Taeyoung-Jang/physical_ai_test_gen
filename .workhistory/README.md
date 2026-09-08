@@ -28,3 +28,5 @@
 - 2026-09-06: [G1 환경 연결·내비게이션·GPU 주행 검증](2026-09-06_g1_navigation_integration.md)
 
 - 2026-09-06: [SceneGraph 변형·Random/Sobol·적응형 AFS 파일럿](2026-09-06_scene_search_pilot.md)
+
+- 2026-09-08: [다양한 지형 환경 생성 및 독립 GPU 검증 — 서버 연결 승인 대기](2026-09-08_terrain_scene_setup.md)

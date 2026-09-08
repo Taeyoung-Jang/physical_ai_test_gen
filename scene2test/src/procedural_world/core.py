@@ -126,6 +126,10 @@ def navigation_map(spec: SceneSpec):
     cell, not only its center, is conservatively safe relative to static boxes.
     Four-connected path segments stay inside the union of these cells.
     """
+    if hasattr(spec, "surfaces"):
+        from .terrain import navigation_map as terrain_map
+
+        return terrain_map(spec)
     cfg = spec.config
     resolution = cfg.cell_size_m / cfg.subdivisions
     w, h = cfg.width * cfg.subdivisions, cfg.height * cfg.subdivisions
@@ -304,6 +308,22 @@ def generate(config: Config) -> SceneSpec:
 
 
 def scene_graph(spec: SceneSpec) -> SceneGraph:
+    if hasattr(spec, "surfaces"):
+        from .terrain import extend_graph
+
+        base = SceneSpec(
+            spec.config,
+            spec.boxes,
+            spec.regions,
+            spec.connections,
+            spec.spawn_xy,
+            spec.goal_xy,
+            spec.generator_version,
+        )
+        graph = scene_graph(base)
+        graph.scene_id = spec.scene_id
+        graph.meta["scene_revision"] = spec.revision
+        return extend_graph(graph, spec)
     cfg = spec.config
     objects = [
         ObjectNode(

@@ -1,6 +1,6 @@
 # Scene2Test workspace memory
 
-Last refreshed: 2026-09-06 (UTC).
+Last refreshed: 2026-09-08 (UTC).
 
 
 ## G1 scene-search pilot update
@@ -200,3 +200,16 @@ MPS float32 with float64-buffer patching. Do not revert or overwrite that work.
 
 Refresh this memory when architecture, validated capabilities, or the gap backlog materially
 changes; avoid recording transient run IDs or machine-specific generated paths here.
+
+
+## Terrain course work in progress
+
+New procedural_world/terrain*.py, config/terrain_course.yaml and setup_terrain_scenes.py
+provide composable slopes/stairs/friction/roughness/bottlenecks/variable-size boxes with
+2.5D maps and traversable_surface graph nodes. Isolated run_terrain_validation.py and
+simulation_server/terrain_worker.py test CUDA gait with ground-relative height and support
+contact metrics. Generation is not proof of G1 traversability; planning limits are assumptions.
+Legacy common worker/navigation_worker are unchanged. IMPORTANT: common-server terrain
+registration guards/integration are incomplete pending approval of shared worlds.py changes.
+Do not register terrain bundles in the legacy navigation server. Use the isolated runner.
+See scene2test/docs/TERRAIN_SCENES.md and .workhistory/2026-09-08_terrain_scene_setup.md.

@@ -60,6 +60,10 @@ def mujoco_xml(spec: SceneSpec) -> str:
             size="0.2 0.01",
             rgba=color,
         )
+    if hasattr(spec, "surfaces"):
+        from .terrain import add_geometry
+
+        add_geometry(root, body, spec)
     ET.indent(root)
     return ET.tostring(root, encoding="unicode")
 
@@ -144,6 +148,10 @@ def export_bundle(spec: SceneSpec, output_root: Path, *, render: bool = False) -
         (target / name).write_text(json.dumps(value, indent=2, allow_nan=False) + "\n")
     (target / "scene.xml").write_text(mujoco_xml(spec) + "\n")
     preview(spec, nav, target / "preview.png")
+    if hasattr(spec, "surfaces"):
+        from .terrain_visualization import plot_terrain
+
+        plot_terrain(spec, nav, target / "terrain_map.png")
     if render:
         render_3d(spec, target / "scene_3d.png")
     manifest = {
