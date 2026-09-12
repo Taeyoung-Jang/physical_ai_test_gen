@@ -87,6 +87,11 @@ def validate_bundle(bundle: Path, expected_revision: str | None = None) -> Scene
 
 def register_world(bundle: Path, data_root: Path) -> dict:
     spec = validate_bundle(bundle)
+    if hasattr(spec, "surfaces"):
+        raise ValueError(
+            "terrain scenes require tools/run_terrain_validation.py; "
+            "legacy navigation server registration is not supported"
+        )
     destination = data_root / "assets" / "worlds" / spec.scene_id
     if not destination.exists():
         destination.parent.mkdir(parents=True, exist_ok=True)
@@ -169,8 +174,14 @@ def resolve_world(registry: ManifestRegistry, scene) -> SceneSpec:
     manifest = registry.resolve("scenes", scene.id, scene.revision)
     if manifest.get("backend", {}).get("kind") != "procedural_world_v1":
         raise ValueError("navigation requires a registered procedural world")
-    return validate_bundle(Path(manifest["backend"]["bundle"]), scene.revision)
 
+    spec = validate_bundle(Path(manifest["backend"]["bundle"]), scene.revision)
+    if hasattr(spec, "surfaces"):
+        raise ValueError(
+            "terrain scenes require tools/run_terrain_validation.py; "
+            "legacy navigation server execution is not supported"
+        )
+    return spec
 
 def compose_model(spec: SceneSpec, groot_root: Path, output: Path):
     import mujoco
