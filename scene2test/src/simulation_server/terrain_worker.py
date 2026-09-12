@@ -155,6 +155,13 @@ def run_terrain(request, output: Path, groot_root: Path, bundle: Path):
                                     "geom2": mujoco.mj_id2name(
                                         model, mujoco.mjtObj.mjOBJ_GEOM, c.geom2
                                     ),
+                                    "geom1_id": int(c.geom1),
+                                    "geom2_id": int(c.geom2),
+                                    "body1_id": int(model.geom_bodyid[c.geom1]),
+                                    "body2_id": int(model.geom_bodyid[c.geom2]),
+                                    "body1": model.body(int(model.geom_bodyid[c.geom1])).name,
+                                    "body2": model.body(int(model.geom_bodyid[c.geom2])).name,
+                                    "normal_geom1_to_geom2": c.frame[:3].tolist(),
                                     "position_m": c.pos.tolist(),
                                     "distance_m": float(c.dist),
                                 }
