@@ -96,6 +96,11 @@ def bootstrap_groot_registry(config: ServerConfig) -> None:
         },
         "tasks/stand.json": {"id": "stand", "revision": "schema:stand@1.0", "status": "READY"},
     }
+    resources["tasks/navigation.json"] = {
+        "id": "navigation",
+        "revision": "schema:navigation@1.0",
+        "status": "READY",
+    }
     for relative, payload in resources.items():
         path = config.data_root / "registries" / relative
         if path.exists():

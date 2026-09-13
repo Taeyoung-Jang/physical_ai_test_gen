@@ -20,7 +20,7 @@ def supervised_command(command, cross_track, heading_error):
     return result
 
 
-def contact_slip_speeds(model, data):
+def contact_slip_speeds(model, data, support_geom_ids=None):
     """Tangential relative velocity at ankle/plane contact points, in m/s."""
     import mujoco
 
@@ -29,7 +29,12 @@ def contact_slip_speeds(model, data):
         if contact.dist > 0:
             continue
         geoms = (int(contact.geom1), int(contact.geom2))
-        if not any(model.geom_type[g] == mujoco.mjtGeom.mjGEOM_PLANE for g in geoms):
+        if not any(
+            (g in support_geom_ids)
+            if support_geom_ids is not None
+            else (model.geom_type[g] == mujoco.mjtGeom.mjGEOM_PLANE)
+            for g in geoms
+        ):
             continue
         bodies = [int(model.geom_bodyid[g]) for g in geoms]
         if not any(

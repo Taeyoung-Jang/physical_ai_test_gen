@@ -1,6 +1,40 @@
 # Scene2Test workspace memory
 
-Last refreshed: 2026-09-06 (UTC).
+Last refreshed: 2026-09-08 (UTC).
+
+
+## G1 scene-search pilot update
+
+`procedural_world/search.py` and `tools/run_scene_search.py` implement a separate trusted
+local scene-bundle search pilot: bounded obstacle translation, graph/map/XML regeneration,
+Random/Sobol and feedback-driven ExtraTrees AFS, equal valid-rollout budgets and resumable
+HTTP submission. This does not add an adaptive plugin to failure_client's general method
+registry or a remote scene-mutation API. See scene2test/docs/G1_SCENE_SEARCH.md for protocol
+and claim boundaries. A small single-seed experiment cannot establish AFS superiority.
+
+## G1 navigation integration update
+
+simulation_server now supports navigation@1.0 for registered procedural-world bundles.
+Trusted local ingestion verifies artifacts and derived graph/map, then the worker composes
+static geometry with the G1 XML while checking joint/actuator order and geometry identity.
+The gt-waypoint-v2 baseline uses ground-truth pose/map, lookahead tracking and static
+clearance checks over the existing CUDA GR00T gait. Five staged fixtures/worlds have
+recorded GPU goal-reaching evidence; this is not a general random-world success rate.
+See scene2test/docs/G1_NAVIGATION.md. Keep legacy stand/locomotion separate. No LLM,
+sensor navigation, dynamic obstacle avoidance or AFS integration is implied. Preserve
+all initial failures and final artifacts. Runtime scene changes require new revisions.
+
+## Procedural world update (historical standalone generator scope)
+
+scene2test/src/procedural_world now generates seeded static maze/room environments,
+legacy-schema SceneGraphs, conservative circular-footprint navigation maps and
+standalone robot-free MuJoCo XML from one SceneSpec. See docs/PROCEDURAL_WORLDS.md
+inside scene2test. This is not Server scene registration, G1 navigation, sensor
+perception or adaptive AFS integration. Default footprint values are assumptions.
+Maintain shared object IDs/world-meter coordinates/revisions across outputs. Preserve
+the separate legacy Panda path. Next integration is scene loading with G1 assets,
+then navigation/path following and scene-based AFS. Do not postpone scene integration
+behind unrelated dynamics-only search or infer full-body feasibility from a 2D path.
 
 ## Current scope update (supersedes historical scope and priorities below)
 
@@ -166,3 +200,16 @@ MPS float32 with float64-buffer patching. Do not revert or overwrite that work.
 
 Refresh this memory when architecture, validated capabilities, or the gap backlog materially
 changes; avoid recording transient run IDs or machine-specific generated paths here.
+
+
+## Terrain course work in progress
+
+New procedural_world/terrain*.py, config/terrain_course.yaml and setup_terrain_scenes.py
+provide composable slopes/stairs/friction/roughness/bottlenecks/variable-size boxes with
+2.5D maps and traversable_surface graph nodes. Isolated run_terrain_validation.py and
+simulation_server/terrain_worker.py test CUDA gait with ground-relative height and support
+contact metrics. Generation is not proof of G1 traversability; planning limits are assumptions.
+Legacy common worker/navigation_worker are unchanged. IMPORTANT: common-server terrain
+registration guards/integration are incomplete pending approval of shared worlds.py changes.
+Do not register terrain bundles in the legacy navigation server. Use the isolated runner.
+See scene2test/docs/TERRAIN_SCENES.md and .workhistory/2026-09-08_terrain_scene_setup.md.

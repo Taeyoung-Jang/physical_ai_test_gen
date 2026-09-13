@@ -104,6 +104,8 @@ class JobStore:
             str(job_dir),
             "--groot-root",
             str(self.config.groot_root),
+            "--registry-root",
+            str(self.config.data_root / "registries"),
             "--backend",
             self.config.execution_backend,
         ]
@@ -181,6 +183,12 @@ class JobStore:
             "rollout.mp4",
             "rollout.gif",
             "thumbnail.png",
+            "scene_spec.json",
+            "scene_graph.json",
+            "navigation_map.json",
+            "navigation_path.json",
+            "composed_scene.xml",
+            "trajectory.png",
         }
         if name not in allowed:
             raise JobError("ARTIFACT_NOT_FOUND", "artifact was not found", 404)

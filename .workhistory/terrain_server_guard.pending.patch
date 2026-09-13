@@ -1,0 +1,20 @@
+*** Begin Patch
+*** Update File: /workspace/g1_failure/src/physical_ai_test_gen/scene2test/src/simulation_server/worlds.py
+@@
+ def register_world(bundle: Path, data_root: Path) -> dict:
+     spec = validate_bundle(bundle)
++    if hasattr(spec, "surfaces"):
++        raise ValueError(
++            "terrain scenes require tools/run_terrain_validation.py; "
++            "legacy navigation server registration is not supported"
++        )
+@@
+-    return validate_bundle(Path(manifest["backend"]["bundle"]), scene.revision)
++    spec = validate_bundle(Path(manifest["backend"]["bundle"]), scene.revision)
++    if hasattr(spec, "surfaces"):
++        raise ValueError(
++            "terrain scenes require tools/run_terrain_validation.py; "
++            "legacy navigation server execution is not supported"
++        )
++    return spec
+*** End Patch

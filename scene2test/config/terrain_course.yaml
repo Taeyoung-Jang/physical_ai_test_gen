@@ -1,0 +1,40 @@
+# Mix and reorder sections. All dimensions are meters; ramp angle is degrees.
+course:
+  seed: 0
+  width_m: 3.0
+  friction: 0.8
+  planning_max_slope_deg: 25.0  # experiment assumption, NOT a certified robot limit
+  planning_max_step_m: 0.22
+  segments:
+    - kind: ramp
+      length_m: 2.0
+      angle_deg: 5.0
+      landing_m: 1.0
+    - kind: stairs
+      count: 3
+      step_height_m: 0.04
+      tread_m: 0.6
+      landing_m: 1.0
+    - kind: friction
+      length_m: 3.0
+      friction: 0.2
+    - kind: bottleneck
+      length_m: 3.0
+      gap_m: 1.8
+    - kind: rough
+      length_m: 3.0
+      amplitude_m: 0.04
+      cell_length_m: 0.5
+    - kind: obstacles
+      length_m: 5.0
+      count: 3
+      pattern: slalom
+      size_min_m: [0.2, 0.2, 0.2]
+      size_max_m: [0.7, 0.7, 1.4]
+# Optional sampling domains. Remove parameters for a fixed recipe.
+parameters:
+  segments.0.angle_deg: {type: float, low: 2.0, high: 15.0}
+  segments.1.step_height_m: {type: float, low: 0.02, high: 0.15}
+  segments.2.friction: {type: float, low: 0.08, high: 0.8}
+  segments.3.gap_m: {type: float, low: 1.4, high: 2.4}
+  segments.4.amplitude_m: {type: float, low: 0.01, high: 0.10}

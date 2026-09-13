@@ -32,9 +32,7 @@ class ServerConfig:
             worker_python=os.getenv("GROOT_WBC_PYTHON", sys.executable),
             api_key=os.getenv("SIM_SERVER_API_KEY") or None,
             execution_backend=os.getenv("SIM_SERVER_BACKEND", "groot_mujoco"),
-            worker_startup_grace_s=float(
-                os.getenv("SIM_SERVER_WORKER_STARTUP_GRACE_S", "120")
-            ),
+            worker_startup_grace_s=float(os.getenv("SIM_SERVER_WORKER_STARTUP_GRACE_S", "120")),
         )
 
     def prepare(self) -> None:

@@ -1,5 +1,11 @@
 # Scene2Test
 
+생성 환경에서 G1 경로 추종·단계별 GPU 검증: [G1 Navigation 가이드](scene2test/docs/G1_NAVIGATION.md).
+정확한 지도·위치를 사용하는 정적 환경 기준선이며 LLM/센서 기반 자율주행과 구분합니다.
+
+랜덤 미로·여러 방 환경, SceneGraph, 이동 지도 생성: [실행 가이드](scene2test/docs/PROCEDURAL_WORLDS.md).
+생성기 자체는 정적 장면을 출력하며, G1 실행 연결은 위 Navigation 가이드를 참조하세요.
+
 ## 현재 프로젝트 범위 (2026-09-06)
 
 G1/MuJoCo Client/Server와 기존 Panda AFS/LAM이 함께 존재합니다. 기존 AFS와 G1의
