@@ -1,0 +1,88 @@
+# Explicit opt-in to variable-length task instances, NOT a fixed endpoint comparison.
+schema_version: expanded-afs-config-v2
+endpoint_policy: generated_course_end
+condition:
+  course:
+    seed: 0
+    width_m: 3.0
+    friction: 0.8
+    segments: [{kind: flat, length_m: 3.0}]
+  domains: [{path: width_m, low: 3.0, high: 3.0}]
+  robot_spec: {id: unitree_g1_locomotion, collision_model: g1_gear_wbc.xml}
+  policy_spec:
+    policy_id: groot_walk_policy
+    upper_level: gt-waypoint-terrain-v1
+    robot_vlm_enabled: false
+  observation_spec:
+    map: full_ground_truth_navigation_map
+    localization: simulator_ground_truth_pose
+    camera_to_policy: false
+  task_spec:
+    schema: navigation@1.0
+    goal: reach the end of the selected generated course
+    success: reach goal without fall or collision under existing terrain evaluator
+    speed_mps: 0.25
+    maximum_duration_s: 120.0
+    physics_timestep_s: 0.005
+    settling_duration_s: 1.0
+layouts:
+  - name: ramp_then_obstacles
+    course: &forward
+      seed: 0
+      width_m: 3.0
+      friction: 0.8
+      planning_max_slope_deg: 25.0
+      planning_max_step_m: 0.22
+      segments:
+        - &ramp {kind: ramp, length_m: 1.5, angle_deg: 3.0, landing_m: 0.5, friction: 0.8}
+        - &obstacles
+          kind: obstacles
+          length_m: 4.0
+          count: 2
+          pattern: slalom
+          size_min_m: [0.15, 0.15, 0.15]
+          size_max_m: [0.3, 0.3, 0.4]
+    domains:
+      - &seed {path: seed, kind: int, low: 0.0, high: 65535.0, choices: []}
+      - {path: segments.0.angle_deg, kind: float, low: 0.0, high: 12.0, choices: []}
+      - {path: segments.0.friction, kind: float, low: 0.15, high: 0.8, choices: []}
+      - {path: segments.1.count, kind: int, low: 0.0, high: 4.0, choices: []}
+      - {path: segments.1.pattern, kind: choice, low: null, high: null, choices: [slalom, random]}
+      - {path: segments.1.size_max_m.0, kind: float, low: 0.2, high: 0.7, choices: []}
+      - {path: segments.1.size_max_m.1, kind: float, low: 0.2, high: 0.7, choices: []}
+      - {path: segments.1.size_max_m.2, kind: float, low: 0.2, high: 0.8, choices: []}
+  - name: obstacles_then_ramp
+    course:
+      <<: *forward
+      segments: [*obstacles, *ramp]
+    domains:
+      - *seed
+      - {path: segments.0.count, kind: int, low: 0.0, high: 4.0, choices: []}
+      - {path: segments.0.pattern, kind: choice, low: null, high: null, choices: [slalom, random]}
+      - {path: segments.1.angle_deg, kind: float, low: 0.0, high: 12.0, choices: []}
+      - {path: segments.1.friction, kind: float, low: 0.15, high: 0.8, choices: []}
+  - name: stairs_then_bottleneck
+    course:
+      <<: *forward
+      segments:
+        - {kind: stairs, count: 2, step_height_m: 0.04, tread_m: 0.5, landing_m: 0.5}
+        - {kind: bottleneck, length_m: 2.0, gap_m: 1.5, friction: 0.8}
+    domains:
+      - *seed
+      - {path: segments.0.count, kind: int, low: 1.0, high: 4.0, choices: []}
+      - {path: segments.0.step_height_m, kind: float, low: 0.02, high: 0.18, choices: []}
+      - {path: segments.0.tread_m, kind: float, low: 0.3, high: 0.7, choices: []}
+      - {path: segments.1.gap_m, kind: float, low: 1.1, high: 2.0, choices: []}
+      - {path: segments.1.friction, kind: float, low: 0.15, high: 0.8, choices: []}
+  - name: rough_then_friction
+    course:
+      <<: *forward
+      segments:
+        - {kind: rough, length_m: 3.0, amplitude_m: 0.02, cell_length_m: 0.5}
+        - {kind: friction, length_m: 3.0, friction: 0.3}
+    domains:
+      - *seed
+      - {path: width_m, kind: float, low: 1.4, high: 3.0, choices: []}
+      - {path: segments.0.amplitude_m, kind: float, low: 0.0, high: 0.12, choices: []}
+      - {path: segments.0.cell_length_m, kind: float, low: 0.3, high: 1.0, choices: []}
+      - {path: segments.1.friction, kind: float, low: 0.1, high: 0.8, choices: []}
