@@ -1,0 +1,42 @@
+# No secret values here. OPENAI_API_KEY is read only with explicit --live.
+# Initial narrow domain; this is NOT a measured G1 capability limit.
+course:
+  seed: 0
+  width_m: 3.0
+  friction: 0.8
+  planning_max_slope_deg: 25.0
+  planning_max_step_m: 0.22
+  segments:
+    - kind: ramp
+      length_m: 2.0
+      angle_deg: 5.0
+      landing_m: 1.0
+      friction: 0.8
+domains:
+  - {path: segments.0.angle_deg, low: 0.0, high: 12.0}
+  - {path: segments.0.friction, low: 0.15, high: 0.8}
+  - {path: width_m, low: 1.4, high: 3.0}
+robot_spec:
+  id: unitree_g1_locomotion
+  actuated_joints: 29
+  collision_model: g1_gear_wbc.xml
+  certified_slope_limit: unknown
+policy_spec:
+  policy_id: groot_walk_policy
+  low_level_model: GR00T-WholeBodyControl-Walk.onnx
+  model_outputs: 15
+  upper_level: gt-waypoint-terrain-v1
+  robot_vlm_enabled: false
+observation_spec:
+  map: full_ground_truth_navigation_map
+  localization: simulator_ground_truth_pose
+  camera_to_policy: false
+  low_level: proprioception_and_velocity_command
+task_spec:
+  schema: navigation@1.0
+  goal: reach fixed generated goal from fixed generated spawn
+  success: reach goal without fall or collision under existing terrain evaluator
+  speed_mps: 0.25
+  maximum_duration_s: 120.0
+  physics_timestep_s: 0.005
+  settling_duration_s: 1.0
