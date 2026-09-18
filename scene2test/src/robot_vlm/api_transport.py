@@ -23,13 +23,15 @@ class DiagnosticError(PolicyError):
 def call(body, parse, *, transport=None):
     started = time.monotonic()
     journal = CURRENT.get()
+    read_timeout = journal.read_timeout_s if journal else 30.0
     client_id = journal.client_request_id if journal else str(uuid4())
     key = os.getenv("OPENAI_API_KEY")
     info = {
         "stage": "credentials",
         "retry_attempted": False,
         "client_request_id": client_id,
-        "http_timeout_s": 30,
+        "http_timeout_s": read_timeout,
+        "http_timeouts_s": {"read": read_timeout, "connect": 10, "write": 10, "pool": 5},
     }
 
     def emit(event, **fields):
@@ -55,13 +57,15 @@ def call(body, parse, *, transport=None):
     emit(
         "api_started",
         model=body.get("model"),
-        timeout_s=30,
+        timeout_s=read_timeout,
         reasoning=body.get("reasoning"),
         max_output_tokens=body.get("max_output_tokens"),
     )
 
     def trace(event, details):
         info["last_transport_event"] = event
+        if event.endswith(".failed"):
+            info["failed_transport_event"] = event
         emit("transport", transport_event=event)
 
     def received(response):
@@ -73,7 +77,7 @@ def call(body, parse, *, transport=None):
 
     try:
         with httpx.Client(
-            timeout=30,
+            timeout=httpx.Timeout(read_timeout, connect=10, write=10, pool=5),
             transport=transport,
             follow_redirects=False,
             event_hooks={"response": [received]},
@@ -228,4 +232,3 @@ def call(body, parse, *, transport=None):
         "origin": "openai_api",
         "diagnostic": info,
     }
-

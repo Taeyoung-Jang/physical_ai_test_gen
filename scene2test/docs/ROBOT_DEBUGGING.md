@@ -1,3 +1,8 @@
+Current timeout update: the goal agent now defaults to HTTP read 90s and runner
+wall deadline 120s, configurable with `--response-timeout`. See
+[ROBOT_REQUEST_TIMING.md](ROBOT_REQUEST_TIMING.md). Earlier 30s settings below describe
+the historical runs, not the current goal-agent default.
+
 # Robot goal-agent diagnostics
 
 The normal `tools/run_robot_goal_agent.py` command now enables per-call diagnostics automatically. No debug flag or new API key setting is required. This change does not raise timeouts, retry requests, change GPT decisions or alter the scene.

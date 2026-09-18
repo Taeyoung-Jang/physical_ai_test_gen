@@ -21,6 +21,7 @@ from . import navigation_tools
 from .api_transport import DiagnosticError
 from .debug_log import Journal, exception_detail
 from .policy import Geometry, Observation, PolicyError, validate_fresh
+from .timing import RequestTiming
 
 
 def write(path, value):
@@ -33,16 +34,36 @@ def yaw(data):
     return float(math.atan2(2 * (w * z + x * y), 1 - 2 * (y * y + z * z)))
 
 
-def run(root, groot_root, policy, *, max_calls=10, max_seconds=120.0):
+def run(
+    root,
+    groot_root,
+    policy,
+    *,
+    max_calls=10,
+    max_seconds=120.0,
+    enable_push=False,
+    response_timeout=90.0,
+):
     if not 1 <= max_calls <= 20 or not 3 <= max_seconds <= 120:
         raise ValueError("bounded call and simulation budgets required")
+    timing = RequestTiming(response_timeout)
     config = Fixture()
     source = groot_root / "decoupled_wbc/sim2mujoco/resources/robots/g1/g1_gear_wbc.xml"
     xml = fixture.world_xml(config, source)
     (root / "scene.xml").write_text(xml)
     model = mujoco.MjModel.from_xml_string(xml)
     write(root / "robot_audit.json", audit.inspect(source, model))
-    controller = G1OnnxController(groot_root, "walk", np.zeros(3), model=model)
+    if enable_push:
+        from clear_path.push_probe import ArmGaitController
+
+        from . import push_execution
+        from .push_policy import PushPolicy
+
+        if not isinstance(policy, PushPolicy):
+            raise ValueError("push-enabled execution requires matching capability policy")
+        controller = ArmGaitController(groot_root, model)
+    else:
+        controller = G1OnnxController(groot_root, "walk", np.zeros(3), model=model)
     if controller.execution_provider != "CUDAExecutionProvider":
         raise RuntimeError("CUDA required")
     controller.data = audit.initial_data(model, source)
@@ -53,27 +74,59 @@ def run(root, groot_root, policy, *, max_calls=10, max_seconds=120.0):
         g for g in range(model.ngeom) if "ankle_roll" in model.body(int(model.geom_bodyid[g])).name
     }
     floor = model.geom("clear_floor").id
+    selected_geom = model.geom("clear_box_geom").id
+    hands = push_execution.hand_geoms(model) if enable_push else set()
+    active_push = None
     origin = "openai_api" if not isinstance(policy, policy_module.GoalMock) else "mock"
     write(
         root / "protocol.json",
         {
-            "schema_version": "robot-goal-agent-v2.1",
+            "schema_version": "robot-goal-agent-push-v3"
+            if enable_push
+            else "robot-goal-agent-v2.1",
             "policy_origin": origin,
             "model": getattr(policy, "model", None),
-            "prompt_version": policy_module.PROMPT_VERSION,
+            "prompt_version": "goal-agent-push-v3" if enable_push else policy_module.PROMPT_VERSION,
             "max_calls": max_calls,
             "max_simulation_s": max_seconds,
             "max_output_tokens_per_call": 4096,
-            "response_deadline_wall_s": 30,
+            "response_deadline_wall_s": timing.deadline_s,
+            "http_read_timeout_s": timing.read_s,
+            "timing_contract": "goal-request-timing-v1; inference counts toward simulation budget",
             "debug_logging": "per-call api_call_NNN.jsonl; UTC and wall elapsed",
             "inference_wait": "robot-internal GT base/yaw hold; stale pose rejected",
             "observation": "RGB + full geometry + GT pose",
             "reference_path_provided": False,
             "robot_internal_planner": "BFS radius 0.40m; GPT chooses target",
-            "manipulation_available": False,
+            "manipulation_available": enable_push,
+            "push_enabled": enable_push,
+            "manipulation_scope": "short near-contact push only" if enable_push else "none",
+            "initial_robot_xy_m": data.qpos[:2].tolist(),
+            "controller_condition": "arm_ik_gait_push_v3" if enable_push else "original_gait",
             "scene_revision": fixture.identity(config),
             "execution_provider": controller.execution_provider,
             "source_hashes": {
+                **(
+                    {
+                        name: audit.sha256(Path(__file__).with_name(name + ".py"))
+                        for name in ("push_skill", "push_policy", "push_execution")
+                    }
+                    if enable_push
+                    else {}
+                ),
+                **(
+                    {
+                        "arm_controller": audit.sha256(
+                            Path(__file__).parents[1] / "clear_path/push_probe.py"
+                        ),
+                        "contact_control": audit.sha256(
+                            Path(__file__).parents[1] / "clear_path/contact_control.py"
+                        ),
+                    }
+                    if enable_push
+                    else {}
+                ),
+                "timing": audit.sha256(Path(__file__).with_name("timing.py")),
                 "debug_log": audit.sha256(Path(__file__).with_name("debug_log.py")),
                 "api_transport": audit.sha256(Path(__file__).with_name("api_transport.py")),
                 "wire_contract": audit.sha256(Path(__file__).with_name("wire_contract.py")),
@@ -105,10 +158,15 @@ def run(root, groot_root, policy, *, max_calls=10, max_seconds=120.0):
             imageio.get_writer(root / "rollout.mp4", fps=12, macro_block_size=2) as video,
             (root / "states.jsonl").open("x") as states,
             (root / "decisions.jsonl").open("x") as decisions,
+            (root / "contacts.jsonl").open("x") as contacts,
         ):
 
             def step(command):
                 nonlocal next_frame, next_log, reason, failed, valid, reached_since
+                if enable_push and active_push is None:
+                    controller.upper_target += np.clip(
+                        -controller.upper_target, -0.8 * dt, 0.8 * dt
+                    )
                 controller.command[:] = command
                 controller.step()
                 mujoco.mj_forward(model, data)
@@ -129,13 +187,41 @@ def run(root, groot_root, policy, *, max_calls=10, max_seconds=120.0):
                     return
                 if np.any(data.xfrc_applied) or np.any(data.qfrc_applied):
                     reason, failed, valid = "EXTERNAL_FORCE_ERROR", True, False
-                for c in data.contact:
+                hand_contact, peak_force = False, 0.0
+                for ci, c in enumerate(data.contact):
                     a, b = int(c.geom1), int(c.geom2)
                     if c.dist > 0 or ((a in world) == (b in world)):
                         continue
                     wg, rg = (a, b) if a in world else (b, a)
-                    if wg != floor or rg not in foot:
+                    allowed = wg == floor and rg in foot
+                    skill_contact = enable_push and push_execution.permitted(
+                        active_push, rg, wg, hands, selected_geom
+                    )
+                    if skill_contact:
+                        force = np.zeros(6)
+                        mujoco.mj_contactForce(model, data, ci, force)
+                        normal = abs(float(force[0]))
+                        hand_contact, peak_force, allowed = True, max(peak_force, normal), True
+                        if normal > 120:
+                            reason, failed = "CONTACT_FORCE_LIMIT", True
+                    if wg != floor:
+                        contacts.write(
+                            json.dumps(
+                                {
+                                    "time_s": float(data.time),
+                                    "phase": phase,
+                                    "robot_geom": rg,
+                                    "world_geom": wg,
+                                    "allowed": bool(allowed),
+                                    "normal_force_n": normal if skill_contact else None,
+                                }
+                            )
+                            + "\n"
+                        )
+                    if not allowed:
                         reason, failed = "FORBIDDEN_CONTACT", True
+                if active_push is not None:
+                    active_push.observe_contact(hand_contact, peak_force, dt)
                 if data.qpos[2] < 0.5 or data.body("pelvis").xmat.reshape(3, 3)[2, 2] < 0.7:
                     reason, failed = "FALL", True
                 distance = np.linalg.norm(data.qpos[:2] - fixture.GOAL)
@@ -222,7 +308,11 @@ def run(root, groot_root, policy, *, max_calls=10, max_seconds=120.0):
                 )
                 decisions.flush()
                 consumed = False
-                journal = Journal(root / f"api_call_{calls:03}.jsonl", obs.state_version)
+                journal = Journal(
+                    root / f"api_call_{calls:03}.jsonl",
+                    obs.state_version,
+                    read_timeout_s=timing.read_s,
+                )
                 future = executor.submit(journal.decide, policy, obs, png)
                 calls += 1
                 while not future.done() and not failed and data.time < max_seconds:
@@ -230,10 +320,10 @@ def run(root, groot_root, policy, *, max_calls=10, max_seconds=120.0):
                     step(
                         navigation_tools.hold_command(data.qpos[:3], yaw(data), anchor, anchor_yaw)
                     )
-                    if time.monotonic() - began > 30:
+                    if time.monotonic() - began > timing.deadline_s:
                         diagnostic = {
                             "stage": "runner",
-                            "limit_wall_s": 30,
+                            "limit_wall_s": timing.deadline_s,
                             "elapsed_wall_s": time.monotonic() - began,
                             "simulation_time_s": float(data.time),
                             "observation_version": obs.state_version,
@@ -270,6 +360,69 @@ def run(root, groot_root, policy, *, max_calls=10, max_seconds=120.0):
                 if action.action == "stop":
                     reason = "POLICY_STOP"
                     break
+                if action.action == "push_object":
+                    if not enable_push:
+                        raise PolicyError("push_executor_disabled")
+                    active_push, feedback = push_execution.prepare(
+                        model, data, action, obs, max_seconds - float(data.time)
+                    )
+                    if active_push is not None:
+                        began_push = float(data.time)
+                        phase = "push_object"
+                        while data.time - began_push < 18 and not failed:
+                            goals, cmd = active_push.command(
+                                float(data.time) - began_push,
+                                data.qpos[:3].copy(),
+                                yaw(data),
+                                data.geom_xpos[selected_geom].copy(),
+                                {
+                                    side: data.site(f"{side}_push_site").xpos.copy()
+                                    for side in ("left", "right")
+                                },
+                            )
+                            if goals and controller.counter % 10 == 0:
+                                controller.arm_targets(goals)
+                            step(cmd)
+                        feedback = active_push.result(
+                            data.geom_xpos[selected_geom].tolist(),
+                            valid=valid,
+                            reason=reason if failed else "DURATION_REACHED",
+                        )
+                        if not failed and not active_push.control.released:
+                            reason, failed = "SKILL_RELEASE_FAILURE", True
+                        active_push = None
+                        # Rate-limited neutral arms under gait/pose hold, no contact exemption.
+                        phase = "push_handoff"
+                        anchor, anchor_yaw = data.qpos[:3].copy(), yaw(data)
+                        until = min(float(data.time) + 3, max_seconds)
+                        while data.time < until and not failed:
+                            step(
+                                navigation_tools.hold_command(
+                                    data.qpos[:3], yaw(data), anchor, anchor_yaw
+                                )
+                            )
+                        if failed:
+                            feedback.update(success=False, status="failed", reason=reason)
+                        feedback["handoff_complete"] = not failed
+                        feedback["actual_box_xyz_m"] = data.geom_xpos[selected_geom].tolist()
+                    feedback["terminal_reason"] = reason if failed else None
+                    feedback["actual_base_xyz_m"] = data.qpos[:3].tolist()
+                    feedback["simulation_time_s"] = float(data.time)
+                    write(root / f"skill_{obs.state_version:03}.json", feedback)
+                    policy.feedback(action, feedback)
+                    decisions.write(
+                        json.dumps(
+                            {
+                                "event": "tool_result",
+                                "observation_version": obs.state_version,
+                                "result": feedback,
+                            }
+                        )
+                        + "\n"
+                    )
+                    decisions.flush()
+                    previous = "executed"
+                    continue
                 phase = action.action
                 tool_result = {"status": "executed"}
                 path = []

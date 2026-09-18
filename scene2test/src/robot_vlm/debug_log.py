@@ -40,8 +40,9 @@ def exception_detail(exc):
 
 
 class Journal:
-    def __init__(self, path, version):
+    def __init__(self, path, version, *, read_timeout_s=30.0):
         self.path, self.version = path, version
+        self.read_timeout_s = read_timeout_s
         self.client_request_id = str(uuid4())
         self.started = time.monotonic()
 
