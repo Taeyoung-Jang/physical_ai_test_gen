@@ -12,7 +12,12 @@ def main():
     p.add_argument("--enable-push", action="store_true", help="experimental short physical push")
     p.add_argument("--model", default="gpt-6-astra")
     p.add_argument("--max-calls", type=int, default=10)
-    p.add_argument("--max-seconds", type=float, default=120)
+    p.add_argument(
+        "--max-seconds",
+        type=float,
+        default=None,
+        help="optional simulation limit >=3 seconds; default: unlimited",
+    )
     p.add_argument(
         "--response-timeout",
         type=float,
@@ -26,8 +31,15 @@ def main():
         "--output-root", type=Path, default=Path("/workspace/g1_failure/runtime/robot_goal_agent")
     )
     args = p.parse_args()
-    if not 1 <= args.max_calls <= 20 or not 3 <= args.max_seconds <= 120:
-        p.error("max-calls 1..20 and max-seconds 3..120 required")
+    if not 1 <= args.max_calls <= 20:
+        p.error("max-calls 1..20 required")
+    from robot_vlm.budget import simulation_limit
+
+    try:
+        simulation_limit(args.max_seconds)
+    except ValueError as exc:
+        p.error(str(exc))
+    simulation_label = "unlimited" if args.max_seconds is None else f"{args.max_seconds}s"
     from robot_vlm.timing import RequestTiming
 
     try:
@@ -36,7 +48,7 @@ def main():
         p.error(str(exc))
     print(
         f"TIMING: HTTP read={timing.read_s}s; runner deadline={timing.deadline_s}s; "
-        f"simulation={args.max_seconds}s (includes inference waits); automatic retries=0",
+        f"simulation={simulation_label} (includes inference waits); automatic retries=0",
         flush=True,
     )
     if args.live and not os.getenv("OPENAI_API_KEY"):
@@ -81,7 +93,7 @@ def main():
         ) from None
     print(
         f"DEBUG_LOGS={root / 'api_call_*.jsonl'}; per-call wall deadline={timing.deadline_s}s; "
-        f"simulation budget={args.max_seconds}s",
+        f"simulation budget={simulation_label}",
         flush=True,
     )
     print(f"REPORT={root / 'report.html'}; reason={result['reason']}", flush=True)

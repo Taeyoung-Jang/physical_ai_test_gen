@@ -19,6 +19,7 @@ from simulation_server.groot_locomotion import G1OnnxController
 from . import goal_policy as policy_module
 from . import navigation_tools
 from .api_transport import DiagnosticError
+from .budget import simulation_limit
 from .debug_log import Journal, exception_detail
 from .policy import Geometry, Observation, PolicyError, validate_fresh
 from .timing import RequestTiming
@@ -40,12 +41,14 @@ def run(
     policy,
     *,
     max_calls=10,
-    max_seconds=120.0,
+    max_seconds=None,
     enable_push=False,
     response_timeout=90.0,
 ):
-    if not 1 <= max_calls <= 20 or not 3 <= max_seconds <= 120:
-        raise ValueError("bounded call and simulation budgets required")
+    if not 1 <= max_calls <= 20:
+        raise ValueError("bounded call budget 1..20 required")
+    requested_max_seconds = max_seconds
+    max_seconds = simulation_limit(max_seconds)
     timing = RequestTiming(response_timeout)
     config = Fixture()
     source = groot_root / "decoupled_wbc/sim2mujoco/resources/robots/g1/g1_gear_wbc.xml"
@@ -88,7 +91,8 @@ def run(
             "model": getattr(policy, "model", None),
             "prompt_version": "goal-agent-push-v3" if enable_push else policy_module.PROMPT_VERSION,
             "max_calls": max_calls,
-            "max_simulation_s": max_seconds,
+            "max_simulation_s": requested_max_seconds,
+            "simulation_time_unlimited": requested_max_seconds is None,
             "max_output_tokens_per_call": 4096,
             "response_deadline_wall_s": timing.deadline_s,
             "http_read_timeout_s": timing.read_s,
@@ -126,6 +130,7 @@ def run(
                     if enable_push
                     else {}
                 ),
+                "budget": audit.sha256(Path(__file__).with_name("budget.py")),
                 "timing": audit.sha256(Path(__file__).with_name("timing.py")),
                 "debug_log": audit.sha256(Path(__file__).with_name("debug_log.py")),
                 "api_transport": audit.sha256(Path(__file__).with_name("api_transport.py")),
