@@ -9,7 +9,7 @@ from .goal_policy import GoalMock, GoalPolicy
 from .policy import Strict
 from .wire_contract import Move, Navigate, Passive, Skill, schema
 
-PROMPT_VERSION = "goal-agent-push-v3"
+PROMPT_VERSION = "goal-agent-push-v4"
 
 
 class PushAction(Strict):
@@ -35,7 +35,9 @@ class PushPolicy(GoalPolicy):
         body["text"]["format"]["schema"] = schema(PushEnvelope)
         body["instructions"] += """
 An experimental push_object executor is installed. Choose whether to use it and
-select the object target yourself. It does not autonomously approach or rotate.
+select the object target yourself. It does not plan an approach from afar.
+Small near-contact alignment errors may be corrected internally before pushing,
+with unchanged contact guards and bounded time/motion. Read numeric readiness feedback.
 Observe the documented preconditions; unsupported requests return measured feedback.
 Only designated hand/object contact during this skill is permitted. Grasp, carry,
 jump and arbitrary-direction pushing remain unavailable. Do not assume moving an
@@ -49,6 +51,16 @@ object clears a route: query the internal planner again using the updated observ
             "target": "desired object center XY in world meters, not robot destination",
             "duration_s": 18,
             "additional_handoff_s": 3,
+            "alignment": {
+                "max_seconds": 8,
+                "max_travel_m": 0.20,
+                "entry_forward_gap_m": [0.72, 0.98],
+                "entry_lateral_abs_m": 0.14,
+                "entry_heading_abs_rad": 0.20,
+                "max_yaw_change_rad": 0.25,
+                "stable_hold_s": 0.25,
+                "physical_validation": "pending",
+            },
             "preconditions": {
                 "box_size_m": [0.8, 1.1, 0.7],
                 "forward_displacement_m": [0.075, 0.20],
@@ -81,4 +93,3 @@ class PushMock(PushPolicy, GoalMock):
     """Default mock retains navigation-only fixture; no claim of push autonomy."""
 
     decide = GoalMock.decide
-

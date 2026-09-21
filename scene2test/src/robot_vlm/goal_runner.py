@@ -84,12 +84,12 @@ def run(
     write(
         root / "protocol.json",
         {
-            "schema_version": "robot-goal-agent-push-v3"
+            "schema_version": "robot-goal-agent-push-v4"
             if enable_push
             else "robot-goal-agent-v2.1",
             "policy_origin": origin,
             "model": getattr(policy, "model", None),
-            "prompt_version": "goal-agent-push-v3" if enable_push else policy_module.PROMPT_VERSION,
+            "prompt_version": "goal-agent-push-v4" if enable_push else policy_module.PROMPT_VERSION,
             "max_calls": max_calls,
             "max_simulation_s": requested_max_seconds,
             "simulation_time_unlimited": requested_max_seconds is None,
@@ -106,14 +106,19 @@ def run(
             "push_enabled": enable_push,
             "manipulation_scope": "short near-contact push only" if enable_push else "none",
             "initial_robot_xy_m": data.qpos[:2].tolist(),
-            "controller_condition": "arm_ik_gait_push_v3" if enable_push else "original_gait",
+            "controller_condition": "arm_ik_gait_push_align_v4" if enable_push else "original_gait",
             "scene_revision": fixture.identity(config),
             "execution_provider": controller.execution_provider,
             "source_hashes": {
                 **(
                     {
                         name: audit.sha256(Path(__file__).with_name(name + ".py"))
-                        for name in ("push_skill", "push_policy", "push_execution")
+                        for name in (
+                            "push_skill",
+                            "push_policy",
+                            "push_execution",
+                            "push_alignment",
+                        )
                     }
                     if enable_push
                     else {}
@@ -371,6 +376,29 @@ def run(
                     active_push, feedback = push_execution.prepare(
                         model, data, action, obs, max_seconds - float(data.time)
                     )
+                    alignment = {"attempted": False, "status": "not_needed"}
+                    initial_readiness = push_execution.measure(model, data, action)
+                    if feedback and feedback["reason"] in {
+                        "near_aligned_approach_required",
+                        "approach_heading_required",
+                    }:
+                        phase = "push_alignment"
+                        with (root / f"alignment_{obs.state_version:03}.jsonl").open("x") as trace:
+
+                            def record_alignment(row):
+                                trace.write(json.dumps(row) + "\n")
+                                trace.flush()
+
+                            active_push, feedback, alignment = push_execution.align(
+                                model,
+                                data,
+                                action,
+                                obs,
+                                max_seconds,
+                                step,
+                                lambda: failed,
+                                record_alignment,
+                            )
                     if active_push is not None:
                         began_push = float(data.time)
                         phase = "push_object"
@@ -410,6 +438,9 @@ def run(
                             feedback.update(success=False, status="failed", reason=reason)
                         feedback["handoff_complete"] = not failed
                         feedback["actual_box_xyz_m"] = data.geom_xpos[selected_geom].tolist()
+                    feedback["alignment"] = alignment
+                    feedback["readiness_before"] = initial_readiness
+                    feedback["readiness_after"] = push_execution.measure(model, data, action)
                     feedback["terminal_reason"] = reason if failed else None
                     feedback["actual_base_xyz_m"] = data.qpos[:3].tolist()
                     feedback["simulation_time_s"] = float(data.time)
