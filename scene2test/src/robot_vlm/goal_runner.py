@@ -13,7 +13,6 @@ import numpy as np
 from PIL import Image, ImageDraw
 
 from clear_path import audit, fixture
-from clear_path.contracts import Fixture
 from simulation_server.groot_locomotion import G1OnnxController
 
 from . import goal_policy as policy_module
@@ -22,6 +21,7 @@ from .api_transport import DiagnosticError
 from .budget import simulation_limit
 from .debug_log import Journal, exception_detail
 from .policy import Geometry, Observation, PolicyError, validate_fresh
+from .scene_config import validate_scene
 from .timing import RequestTiming
 
 
@@ -44,13 +44,14 @@ def run(
     max_seconds=None,
     enable_push=False,
     response_timeout=90.0,
+    scene_config=None,
 ):
     if not 1 <= max_calls <= 20:
         raise ValueError("bounded call budget 1..20 required")
     requested_max_seconds = max_seconds
     max_seconds = simulation_limit(max_seconds)
     timing = RequestTiming(response_timeout)
-    config = Fixture()
+    config = validate_scene(scene_config)
     source = groot_root / "decoupled_wbc/sim2mujoco/resources/robots/g1/g1_gear_wbc.xml"
     xml = fixture.world_xml(config, source)
     (root / "scene.xml").write_text(xml)
@@ -108,6 +109,7 @@ def run(
             "initial_robot_xy_m": data.qpos[:2].tolist(),
             "controller_condition": "arm_ik_gait_push_align_v4" if enable_push else "original_gait",
             "scene_revision": fixture.identity(config),
+            "scene_config": config.model_dump(),
             "execution_provider": controller.execution_provider,
             "source_hashes": {
                 **(

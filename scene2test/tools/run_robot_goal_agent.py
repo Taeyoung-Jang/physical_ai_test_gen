@@ -9,6 +9,7 @@ from pathlib import Path
 def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--live", action="store_true")
+    p.add_argument("--scene-config", type=Path, help="AFS scene JSON; environment fields only")
     p.add_argument("--enable-push", action="store_true", help="experimental short physical push")
     p.add_argument("--model", default="gpt-6-astra")
     p.add_argument("--max-calls", type=int, default=10)
@@ -31,6 +32,13 @@ def main():
         "--output-root", type=Path, default=Path("/workspace/g1_failure/runtime/robot_goal_agent")
     )
     args = p.parse_args()
+    import json
+
+    from robot_vlm.scene_config import validate_scene
+
+    config = validate_scene(
+        json.loads(args.scene_config.read_text()) if args.scene_config else None
+    )
     if not 1 <= args.max_calls <= 20:
         p.error("max-calls 1..20 required")
     from robot_vlm.budget import simulation_limit
@@ -77,6 +85,7 @@ def main():
             max_seconds=args.max_seconds,
             enable_push=args.enable_push,
             response_timeout=timing.read_s,
+            scene_config=config.model_dump(),
         )
     except Exception as exc:
         write(
