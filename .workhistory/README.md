@@ -30,3 +30,7 @@
 - 2026-09-06: [SceneGraph 변형·Random/Sobol·적응형 AFS 파일럿](2026-09-06_scene_search_pilot.md)
 
 - 2026-09-08: [다양한 지형 환경 생성 및 독립 GPU 검증 — 서버 연결 승인 대기](2026-09-08_terrain_scene_setup.md)
+
+- 2026-09-26: [Failure Case 평가 지표·AFS 우선 탐색·행동 회귀 자산화 구현 계획](2026-09-26_failure_case_measurement_plan.md)
+
+- 2026-09-26: [P0 실패 발견 측정기·최소 행동 reader 구현 및 136개 회귀 테스트](2026-09-26_failure_discovery_measures_p0.md)

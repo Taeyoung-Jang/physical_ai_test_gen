@@ -1,5 +1,24 @@
 # Scene2Test workspace memory
 
+## Failure-discovery measurement priority (2026-09-26; initial P0 implemented)
+
+Follow `scene2test/docs/FAILURE_CASE_MEASUREMENT_PLAN.md` for the user-requested focus on
+AFS prioritization and behavior validation/regression assets from `.blueprint/Failure_Case_Goal.md`.
+Targets: FDR >=30%, relative gain over Random >=20%, evidence-backed coverage >=4 of 6 types.
+These are research targets, not achieved results. `tools/measure_failure_discovery.py` now imports
+goal-agent-v5 archives offline and writes separate JSON/CSV/HTML measurements. See
+`scene2test/docs/FAILURE_DISCOVERY_MEASURES.md`. Manifest/contract checks, duplicate exclusions,
+FDR/Gain and a detector-gated six-family coverage calculator are implemented. The importer has
+no family detectors, so real coverage remains unmeasured. Imported method/domain labels are
+declarations, not proof of a prospective fair benchmark. Campaign/regression tools remain planned.
+Keep goal outcome separate from contact/safety/behavior events;
+unknown/unsupported measurements are not zero. Compare equal valid rollout budgets including
+cold start and repeats, disclose invalid attempts/cost, and do not count legacy guard stops or
+incomplete archives as goal failures. Current behavior-AFS goal-agent supports only three
+physical scene axes; expanded generator support is not goal-agent backend support. Reuse client
+contracts/storage/archive via adapters without making server rewrites or robot skill development
+prerequisites. Next implementation: P1 time-resolved behavior evidence and failure-memory assets.
+
 ## Goal-outcome AFS implementation (2026-09-26)
 
 User defines failure as the evaluated robot system not achieving its original goal
