@@ -112,6 +112,10 @@ def run(
             "scene_config": config.model_dump(),
             "execution_provider": controller.execution_provider,
             "source_hashes": {
+                "scene_config": audit.sha256(Path(__file__).with_name("scene_config.py")),
+                "fixture_contracts": audit.sha256(
+                    Path(__file__).parents[1] / "clear_path/contracts.py"
+                ),
                 **(
                     {
                         name: audit.sha256(Path(__file__).with_name(name + ".py"))
