@@ -64,8 +64,9 @@ API 접근·비용은 키 소유자 환경에
 의존한다. 키를 로그/CLI 인자로 남기지 않는다. 이 구현 검증에서는 실제 호출 0회.
 모든 도구 질의도 모델 호출 예산을 사용한다. 10회가 10개 이동 행동을 보장하지 않는다.
 
-산출물: `/workspace/g1_failure/runtime/robot_goal_agent/<UTC>/`의 실제 영상/GIF,
+산출물: `/workspace/g1_failure/runtime/robot_goal_agent/<UTC>/`의 MP4 영상,
 카메라 이미지, 관측, 계획/행동/도구결과, physics states, protocol 및 hashes.
+GIF 저장과 GIF용 프레임 누적은 2026-09-26 사용자 요청으로 비활성화했다.
 tool_NNN.json은 계획 당시 route 결과, decisions.jsonl의 tool_result는 실행 후 결과다.
 최종 성공 여부는 GPT 주장이 아닌 독립 측정이다. 기존 scene은 상자로 막혀 있어
 이동 전용 로봇의 no_path/지원 부족/정지 또는 실패가 정상적인 실험 결과일 수 있다.

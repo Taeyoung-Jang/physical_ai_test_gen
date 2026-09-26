@@ -92,7 +92,8 @@ uv run python tools/run_behavior_afs.py --run /absolute/new-robot-run \
 context/request/proposal/response(실제 호출 시)/suite/후보 JSON/status 또는 error 보존.
 후보 JSON은 `--scene-config`로 실제 robot runner에 연결된다. geometry/task/planner는
 고정되며 footprint/clearance를 바꾸는 입력은 거부한다. 후보는 로봇 자체를 바꾸지
-않는다. 각 실제 로봇 실행이 기존 report/MP4/GIF/manifest를 별도로 남긴다.
+않는다. 각 실제 로봇 실행이 report/MP4/manifest를 별도로 남긴다.
+goal runner의 GIF 저장과 전체 프레임 누적은 2026-09-26 사용자 요청으로 비활성화했다.
 suite의 원본 candidate_000부터 동일한 CLI/코드 조건으로 실행해 비교 기준을 만든다.
 CLI의 모델/예산을 바꾸지 말 것: 달라지면 feedback signature가 달라 경계 결합 대상이 아니다.
 이번 scene adapter 추가로 runner source hash가 바뀌므로 과거 실험은 가설 근거로만

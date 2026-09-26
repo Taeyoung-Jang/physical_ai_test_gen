@@ -44,7 +44,9 @@
 - events: geom pair/phase별 접촉 시작·끝, 최대 per-contact force와 합산 force의 적분,
   낙상 자세 시작·끝/직립 복귀, 기술 실패. tick마다 별도 실패를 세지 않는다.
 - states: 원래 qpos/qvel/ctrl 외에 목표 거리와 dwell 시간.
-- 기존 report.html, rollout.mp4/GIF, 로봇 카메라 이미지, 요청 진단 파일은 유지한다.
+- report.html, rollout.mp4, 로봇 카메라 이미지, 요청 진단 파일은 유지한다.
+  2026-09-26 사용자 요청으로 GIF 저장과 전체 RGB 프레임 누적은 주석 처리했다.
+  MP4는 프레임별로 저장하며, 결과 저장 전에 GIF를 변환하지 않는다.
   report에 목표 판정과 이벤트 요약을 분리해 표시하고 mock/live 고정 문구 오류를 수정했다.
 
 로봇 GPT는 목표 계약, 최근 이벤트 최대 24개와 현재 활성 상태 최대 32개를 이미지/지도/
@@ -80,7 +82,7 @@ GT pose/최근 행동 결과와 함께 받는다. AFS의 가설이나 추천 전
 복사하기 쉬운 한 줄 명령은 [실행 문서](BEHAVIOR_AFS_RUN_COMMANDS_KO.md)에 있다.
 기존 robot CLI는 그대로 사용할 수 있으며 새 평가가 기본값이다. 새 기준선을 실행한 뒤
 그 run을 AFS `--run`에 지정한다. AFS 출력 자체에는 로봇 영상이 없고 실제 robot 실행이
-별도 MP4/GIF를 만든다. 결과 기본 위치는 모두 `/workspace/g1_failure/runtime` 아래다.
+별도 MP4를 만든다(GIF는 비활성화). 결과 기본 위치는 모두 `/workspace/g1_failure/runtime` 아래다.
 
 CPU MuJoCo + 가짜 정책/제어기 통합 테스트로 접촉 뒤 도착, 낙상 자세 뒤 복귀/도착,
 밀기 해제 실패 뒤 다음 판단/도착, 예산 소진, 수치/API 이상 분류를 확인한다.

@@ -16,6 +16,8 @@ reserves repeats/exploration and requires new-profile PASS/FAIL anchors. Preserv
 outcomes; never relabel interrupted old traces as completed goal-only trials.
 Tests exercise CPU MuJoCo with scripted state/controller doubles, not new GPU/VLM
 success evidence. Auto-campaign/resume, new geometry and image-based AFS remain open.
+The isolated goal runner records MP4 only: GIF encoding and full-frame accumulation
+are disabled by user request after a suspected GIF-finalization OOM. Preserve old artifacts.
 Do not restore the removed default120s limit. Static no_path does not prove a scene
 unsolvable when manipulation is available. Robot capability development remains
 separate from AFS evaluation/search work.

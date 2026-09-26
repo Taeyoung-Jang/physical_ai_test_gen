@@ -124,7 +124,8 @@ uv run python tools/run_robot_goal_agent.py --live --model gpt-6-astra --max-cal
 
 이 실행의 `ROBOT_GOAL_AGENT_RUN` 경로도 기록합니다. 결과는
 `/workspace/g1_failure/runtime/robot_goal_agent/` 아래에 저장됩니다.
-각 실행에는 report.html, rollout.mp4, rollout.gif 및 상세 로그가 생성됩니다.
+각 실행에는 report.html, rollout.mp4 및 상세 로그가 생성됩니다.
+2026-09-26부터 GIF 저장과 GIF용 전체 프레임 메모리 누적은 비활성화했습니다.
 초기 실행 오류가 발생한 경우에는 영상이 없을 수 있으므로 error.json을 확인합니다.
 
 ## 결과 전달

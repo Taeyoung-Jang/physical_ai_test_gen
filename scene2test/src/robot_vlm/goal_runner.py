@@ -178,13 +178,21 @@ def run(
                 ),
             },
             "self_collision_classification": "not_implemented",
+            "recording": {
+                "video": "rollout.mp4",
+                "video_fps": 12,
+                "gif_enabled": False,
+                "retain_frame_history": False,
+            },
         },
     )
     protocol = json.loads((root / "protocol.json").read_text())
     condition_sha256 = digest(
         {k: v for k, v in protocol.items() if k not in {"scene_revision", "scene_config"}}
     )
-    frames, calls, accepted = [], 0, 0
+    calls, accepted = 0, 0
+    # GIF disabled: retaining full-resolution frames grows RAM with episode duration.
+    # frames = []
     reason, previous, phase = "BUDGET_EXHAUSTED", "none", "settle"
     terminated, valid = False, True
     next_frame, next_log = 0.0, 0.0
@@ -334,7 +342,7 @@ def run(
                     )
                     arr = np.asarray(frame).copy()
                     video.append_data(arr)
-                    frames.append(arr)
+                    # frames.append(arr)  # GIF disabled; MP4 is streamed to disk.
                     next_frame += 1 / 12
 
             anchor, anchor_yaw = data.qpos[:3].copy(), yaw(data)
@@ -679,8 +687,9 @@ def run(
                 },
             )
 
-    if frames:
-        imageio.mimsave(root / "rollout.gif", frames, duration=1000 / 12, loop=0)
+    # GIF disabled by request; do not buffer frames or delay result saving for conversion.
+    # if frames:
+    #     imageio.mimsave(root / "rollout.gif", frames, duration=1000 / 12, loop=0)
     result = {
         **evaluator.result(reason, valid),
         "robot_condition_sha256": condition_sha256,
@@ -710,7 +719,7 @@ def run(
 <p>Goal distance: {result["goal_distance_m"]} m; calls: {calls}/{max_calls}.</p>
 <details><summary>Behavior events (not task verdicts)</summary>
 <pre>{escape(json.dumps(result["events_summary"], indent=2))}</pre></details>
-<video controls width='960' src='rollout.mp4'></video><p><a href='rollout.gif'>GIF</a></p>
+<video controls width='960' src='rollout.mp4'></video><p>MP4 recording only; GIF disabled.</p>
 <p><a href='camera_000.png'>Robot camera input</a> ·
 <a href='api_call_000.jsonl'>API call 0 debug log</a> ·
 <a href='decisions.jsonl'>Decisions</a> · <a href='events.jsonl'>Behavior events</a> ·

@@ -5,6 +5,7 @@ No network, ONNX loading, graphics context or external runtime writes.
 """
 
 import json
+import weakref
 import xml.etree.ElementTree as ET
 from concurrent.futures import Future
 from types import SimpleNamespace
@@ -117,7 +118,11 @@ def setup_loop(monkeypatch, scenario):
 
     monkeypatch.setattr(runner.mujoco, "Renderer", Renderer)
     monkeypatch.setattr(runner.imageio, "get_writer", Writer)
-    monkeypatch.setattr(runner.imageio, "mimsave", lambda *args, **kwargs: None)
+
+    def unexpected_gif(*args, **kwargs):
+        pytest.fail("GIF writing must remain disabled")
+
+    monkeypatch.setattr(runner.imageio, "mimsave", unexpected_gif)
     monkeypatch.setattr(runner.time, "sleep", lambda *args: None)
 
     class Executor:
@@ -194,6 +199,10 @@ def test_real_runner_goal_semantics(monkeypatch, tmp_path, scenario, expected):
         max_seconds=3 if scenario == "inference_budget" else None,
     )
     assert result["task_outcome"] == expected, result
+    assert json.loads((tmp_path / "result.json").read_text()) == result
+    assert (tmp_path / "manifest.json").exists()
+    assert not (tmp_path / "rollout.gif").exists()
+    assert "href='rollout.gif'" not in (tmp_path / "report.html").read_text()
     if scenario == "contact_goal":
         contacts = [
             json.loads(line) for line in (tmp_path / "contacts.jsonl").read_text().splitlines()
@@ -238,3 +247,47 @@ def test_explicit_simulation_budget_stops_action(monkeypatch, tmp_path):
     result = runner.run(tmp_path, tmp_path, policy, max_calls=1, max_seconds=3)
     assert result["task_outcome"] == "FAIL" and result["reason"] == "SIMULATION_BUDGET"
     assert result["duration_s"] == pytest.approx(3)
+
+
+def test_real_mp4_stream_does_not_retain_frame_history(monkeypatch, tmp_path):
+    # Exercise the installed ffmpeg writer, unlike the physics-only tests above.
+    original_writer = runner.imageio.get_writer
+    policy = setup_loop(monkeypatch, "budget")
+    frame_refs = []
+
+    class StreamingWriter:
+        def __init__(self, *args, **kwargs):
+            self.writer = original_writer(*args, **kwargs)
+
+        def __enter__(self):
+            self.writer.__enter__()
+            return self
+
+        def __exit__(self, *args):
+            return self.writer.__exit__(*args)
+
+        def append_data(self, frame):
+            frame_refs.append(weakref.ref(frame))
+            self.writer.append_data(frame)
+            # A small encoder working set is fine; an episode-wide list is not.
+            assert sum(ref() is not None for ref in frame_refs) <= 3
+
+        def close(self):
+            self.writer.close()
+
+    monkeypatch.setattr(runner.imageio, "get_writer", StreamingWriter)
+    result = runner.run(tmp_path, tmp_path, policy, max_calls=1, max_seconds=3)
+    assert result["reason"] == "SIMULATION_BUDGET", result
+    assert len(frame_refs) >= 30
+    assert all(ref() is None for ref in frame_refs)
+    assert (tmp_path / "rollout.mp4").stat().st_size > 0
+    with runner.imageio.get_reader(tmp_path / "rollout.mp4") as video:
+        assert video.get_meta_data()["fps"] == 12
+        assert video.get_data(0).shape[:2] == (32, 32)
+    assert not (tmp_path / "rollout.gif").exists()
+    protocol = json.loads((tmp_path / "protocol.json").read_text())
+    assert protocol["recording"]["gif_enabled"] is False
+    assert protocol["recording"]["retain_frame_history"] is False
+    assert json.loads((tmp_path / "result.json").read_text()) == result
+    artifacts = json.loads((tmp_path / "manifest.json").read_text())["artifacts"]
+    assert {"result.json", "report.html", "rollout.mp4"} <= {r["path"] for r in artifacts}
