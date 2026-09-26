@@ -41,3 +41,31 @@ def test_scene_parameters_reach_mujoco_model(tmp_path):
         assert model.body_mass[model.geom_bodyid[box]] == pytest.approx(config.box_mass_kg)
         assert model.geom_friction[box, 0] == pytest.approx(config.box_friction)
         assert model.geom_friction[floor, 0] == pytest.approx(config.floor_friction)
+        data = mj.MjData(model)
+        mj.mj_forward(model, data)
+        contact = next(c for c in data.contact if {int(c.geom1), int(c.geom2)} == {box, floor})
+        assert contact.friction[0] == pytest.approx(row["nominal_physics"]["box_floor_sliding_mu"])
+
+
+def test_legacy_live_rejected_before_network_call(tmp_path):
+    run = archive(tmp_path / "legacy", legacy=True)
+    tool = Path(__file__).parents[1] / "tools/run_behavior_afs.py"
+    result = subprocess.run(
+        [
+            sys.executable,
+            str(tool),
+            "--run",
+            str(run),
+            "--live",
+            "--output-root",
+            str(tmp_path / "out"),
+        ],
+        env={**os.environ, "OPENAI_API_KEY": "invalid-test-key-not-used"},
+        capture_output=True,
+        text=True,
+        timeout=30,
+    )
+    assert result.returncode != 0
+    output = next((tmp_path / "out").iterdir())
+    assert "rerun the scene" in b.read(output / "error.json")["message"]
+    assert not (output / "response.json").exists()

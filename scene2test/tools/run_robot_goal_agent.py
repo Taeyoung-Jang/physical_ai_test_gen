@@ -14,6 +14,12 @@ def main():
     p.add_argument("--model", default="gpt-6-astra")
     p.add_argument("--max-calls", type=int, default=10)
     p.add_argument(
+        "--evaluation-profile",
+        choices=["goal_outcome_v1", "legacy_guarded"],
+        default="goal_outcome_v1",
+        help="default: evaluate only the original goal",
+    )
+    p.add_argument(
         "--max-seconds",
         type=float,
         default=None,
@@ -86,6 +92,7 @@ def main():
             enable_push=args.enable_push,
             response_timeout=timing.read_s,
             scene_config=config.model_dump(),
+            evaluation_profile=args.evaluation_profile,
         )
     except Exception as exc:
         write(
@@ -94,6 +101,8 @@ def main():
                 "type": type(exc).__name__,
                 "stage": "robot_loop",
                 "valid_execution": False,
+                "task_outcome": "INCONCLUSIVE",
+                "evaluation_profile": args.evaluation_profile,
                 "exception_chain": exception_detail(exc),
             },
         )
@@ -105,7 +114,11 @@ def main():
         f"simulation budget={simulation_label}",
         flush=True,
     )
-    print(f"REPORT={root / 'report.html'}; reason={result['reason']}", flush=True)
+    print(
+        f"REPORT={root / 'report.html'}; outcome={result['task_outcome']}; "
+        f"reason={result['reason']}",
+        flush=True,
+    )
 
 
 if __name__ == "__main__":

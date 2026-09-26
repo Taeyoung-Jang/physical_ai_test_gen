@@ -9,7 +9,7 @@ from .goal_policy import GoalMock, GoalPolicy
 from .policy import Strict
 from .wire_contract import Move, Navigate, Passive, Skill, schema
 
-PROMPT_VERSION = "goal-agent-push-v4"
+PROMPT_VERSION = "goal-agent-push-v5"
 
 
 class PushAction(Strict):
@@ -37,10 +37,9 @@ class PushPolicy(GoalPolicy):
 An experimental push_object executor is installed. Choose whether to use it and
 select the object target yourself. It does not plan an approach from afar.
 Small near-contact alignment errors may be corrected internally before pushing,
-with unchanged contact guards and bounded time/motion. Read numeric readiness feedback.
+with bounded time/motion. Read numeric readiness and behavioral feedback.
 Observe the documented preconditions; unsupported requests return measured feedback.
-Only designated hand/object contact during this skill is permitted. Grasp, carry,
-jump and arbitrary-direction pushing remain unavailable. Do not assume moving an
+Grasp, carry, jump and arbitrary-direction pushing remain unavailable. Do not assume moving an
 object clears a route: query the internal planner again using the updated observation.
 """
         text = body["input"][0]["content"][0]
@@ -72,10 +71,14 @@ object clears a route: query the internal planner again using the updated observ
             },
             "limitations": "near aligned approach required; short forward push only",
         }
-        context["constraints"] = (
-            "No falls or forbidden contacts. Only hands with selected box during push are allowed; "
-            "per-contact force <=120N. No grasp/carry/jump. No guarantee of clearing the path."
+        context["capabilities"]["push_object"]["contact_control"] = (
+            "Existing force-throttled push and arm retraction remain robot-local; "
+            "release/target errors return skill feedback, not a goal verdict."
         )
+        if self.task_contract["evaluation_profile"] == "legacy_guarded":
+            context["constraints"] += (
+                "; only hand/selected-box contact during the skill is exempt, <=120N"
+            )
         text["text"] = json.dumps(context, allow_nan=False)
         return body
 

@@ -1,6 +1,26 @@
 # Scene2Test workspace memory
 
-Last refreshed: 2026-09-08 (UTC).
+## Goal-outcome AFS implementation (2026-09-26)
+
+User defines failure as the evaluated robot system not achieving its original goal
+using any method available to it, under a declared fixed episode budget. Follow
+`scene2test/docs/GOAL_OUTCOME_AFS_DESIGN.md` for the design and
+`scene2test/docs/GOAL_OUTCOME_AFS_IMPLEMENTATION.md` for implemented scope.
+It specifies independent goal evaluation, recoverable contact/fall/skill events,
+and behavior-informed success-side/boundary/contrast/novelty/repeat exploration.
+The isolated goal runner defaults to goal_outcome_v1: contacts/falls/skill errors
+are recoverable observations; valid noncompletion at budget/robot stop is FAIL,
+infrastructure interruptions are INCONCLUSIVE. legacy_guarded is opt-in and is not
+bitwise reproduction of old code. Behavior AFS v2 accepts 1–4 one-sided/paired spaces,
+reserves repeats/exploration and requires new-profile PASS/FAIL anchors. Preserve old
+outcomes; never relabel interrupted old traces as completed goal-only trials.
+Tests exercise CPU MuJoCo with scripted state/controller doubles, not new GPU/VLM
+success evidence. Auto-campaign/resume, new geometry and image-based AFS remain open.
+Do not restore the removed default120s limit. Static no_path does not prove a scene
+unsolvable when manipulation is available. Robot capability development remains
+separate from AFS evaluation/search work.
+
+Last refreshed: 2026-09-26 (UTC); earlier capability notes retain their historical scope.
 
 
 ## G1 scene-search pilot update

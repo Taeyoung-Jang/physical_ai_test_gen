@@ -8,7 +8,7 @@ from pydantic import Field, model_validator
 from .policy import MODEL, OpenAIPolicy, Strict
 from .policy import request_body as camera_request
 
-PROMPT_VERSION = "goal-agent-v2.1"
+PROMPT_VERSION = "goal-agent-v3-goal-outcome"
 INSTRUCTIONS = """You are the robot's goal-directed decision maker.
 The final goal is fixed; choose and revise intermediate goals, strategy and actions yourself.
 Use current RGB, GT geometry/pose, your previous plan and measured execution feedback.
@@ -20,7 +20,11 @@ request_skill can express any other desired skill, but unimplemented skills retu
 unsupported and cannot alter the world. Only installed executors physically act.
 Do not assume a planned route or a skill request succeeded. Revise plans from feedback.
 Briefly state your current plan (not hidden reasoning). Never output executable code.
-Return exact current state_version. Safety/contact limits remain part of this robot.
+Return exact current state_version. Follow the supplied task_contract evaluation profile.
+In goal_outcome_v1, contacts, falls and unsuccessful subgoals are observations, not
+automatic task failures. You may revise strategy or try to recover using installed tools.
+Only measured arrival held for the specified dwell time completes the goal. A stop
+before arrival is task noncompletion. No box placement or prescribed route is required.
 """
 
 
@@ -58,6 +62,9 @@ class GoalPolicy(OpenAIPolicy):
     def __init__(self, *, model=MODEL, transport=None):
         super().__init__(model=model, transport=transport)
         self.memory = []
+        from .task_outcome import task_contract
+
+        self.task_contract = task_contract([7.0, 0.0], 10, None)
 
     def feedback(self, action, result):
         self.memory.append({"action": action.model_dump(), "execution": result})
@@ -74,6 +81,7 @@ class GoalPolicy(OpenAIPolicy):
         context = {
             "observation": observation.model_dump(),
             "goal": "Reach goal_xy_m",
+            "task_contract": self.task_contract,
             "history": self.memory,
             "frame": "world_m; body vx forward, vy left",
             "capabilities": {
@@ -84,7 +92,12 @@ class GoalPolicy(OpenAIPolicy):
                 "stop": "end episode",
                 "request_skill": "returns unsupported; no executor",
             },
-            "constraints": "No forbidden body/obstacle contacts or falls",
+            "constraints": (
+                "Legacy evaluator stops on falls or forbidden contacts"
+                if self.task_contract["evaluation_profile"] == "legacy_guarded"
+                else "Goal-only evaluation. Physics and installed tool bounds still apply; "
+                "contacts or failed skills do not terminate the task. Recovery is not guaranteed."
+            ),
             "camera_convention": "camera local -Z forward, +Y up",
         }
         body["input"][0]["content"][0]["text"] = json.dumps(context, allow_nan=False)

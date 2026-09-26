@@ -1,0 +1,240 @@
+"""Run the actual orchestration loop with real CPU MuJoCo contacts and test doubles.
+
+The scripted state changes below are test inputs, NOT simulated G1 ability/GPU evidence.
+No network, ONNX loading, graphics context or external runtime writes.
+"""
+
+import json
+import xml.etree.ElementTree as ET
+from concurrent.futures import Future
+from types import SimpleNamespace
+
+import mujoco
+import numpy as np
+import pytest
+
+from clear_path import fixture
+from robot_vlm import goal_runner as runner
+from robot_vlm.goal_policy import GoalAction
+from robot_vlm.policy import PolicyError
+from robot_vlm.push_policy import PushAction, PushMock
+
+
+def setup_loop(monkeypatch, scenario):
+    original_xml = fixture.world_xml
+
+    def xml(config, source):
+        root = ET.fromstring(original_xml(config))
+        root.find("option").set("timestep", ".05")
+        body = ET.fromstring("""<body name="pelvis" pos="3.2 0 .74">
+          <freejoint/><geom name="test_hand" type="sphere" size=".1" mass="1"/>
+          <camera name="clear_robot_camera" pos="0 0 .3"/>
+          <site name="left_push_site"/><site name="right_push_site"/>
+        </body>""")
+        root.find("worldbody").insert(0, body)
+        return ET.tostring(root, encoding="unicode")
+
+    monkeypatch.setattr(fixture, "world_xml", xml)
+    monkeypatch.setattr(runner.audit, "inspect", lambda *args: {"test_double": True})
+    monkeypatch.setattr(runner.audit, "initial_data", lambda model, source: mujoco.MjData(model))
+
+    class Controller:
+        execution_provider = "CUDAExecutionProvider"  # bypass loader only; not real CUDA evidence
+        counter = 0
+        command = np.zeros(3)
+        upper_target = np.zeros(1)
+
+        def __init__(self, *args, **kwargs):
+            pass
+
+        def arm_targets(self, goals):
+            pass
+
+        def step(self):
+            self.counter += 1
+            self.data.time = round(self.data.time + 0.05, 8)
+            t = self.data.time
+            if scenario == "numerical" and t > 2:
+                self.data.qpos[0] = float("nan")
+            elif scenario == "fall_recover" and 2 < t < 2.4:
+                self.data.qpos[2] = 0.3
+            elif scenario.startswith("contact") and 2 < t < 2.4:
+                self.data.qpos[0] = 4.0
+            elif scenario in {"fall_recover", "contact_goal"} and t >= 2.4:
+                self.data.qpos[:3] = [7, 0, 0.74]
+            elif scenario == "push_handoff_goal" and 20 < t < 20.3:
+                self.data.qpos[0] = 4.0
+            elif scenario == "push_handoff_goal" and 20.3 <= t < 23.1:
+                self.data.qpos[0] = 3.2
+            elif scenario == "push_goal_early" and t >= 3.1:
+                self.data.qpos[:3] = [7, 0, 0.74]
+            elif scenario.startswith("push_") and t >= 23.1:
+                self.data.qpos[:3] = [7, 0, 0.74]
+
+    monkeypatch.setattr(runner, "G1OnnxController", Controller)
+    from clear_path import push_probe
+    from robot_vlm import push_execution
+
+    monkeypatch.setattr(push_probe, "ArmGaitController", Controller)
+
+    class PushSession:
+        control = SimpleNamespace(released=scenario != "push_failure_goal", phase="push")
+
+        def command(self, *args):
+            return {}, np.zeros(3)
+
+        def observe_contact(self, *args):
+            pass
+
+        def result(self, *args, **kwargs):
+            return {"success": False, "status": "failed", "reason": "target_not_reached"}
+
+    monkeypatch.setattr(push_execution, "prepare", lambda *args: (PushSession(), None))
+    monkeypatch.setattr(push_execution, "measure", lambda *args: {"test_double": True})
+
+    class Renderer:
+        def __init__(self, *args, **kwargs):
+            pass
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *args):
+            pass
+
+        def update_scene(self, *args, **kwargs):
+            pass
+
+        def render(self):
+            return np.zeros((32, 32, 3), dtype=np.uint8)
+
+    class Writer(Renderer):
+        def append_data(self, *args):
+            pass
+
+        def close(self):
+            pass
+
+    monkeypatch.setattr(runner.mujoco, "Renderer", Renderer)
+    monkeypatch.setattr(runner.imageio, "get_writer", Writer)
+    monkeypatch.setattr(runner.imageio, "mimsave", lambda *args, **kwargs: None)
+    monkeypatch.setattr(runner.time, "sleep", lambda *args: None)
+
+    class Executor:
+        def __init__(self, *args, **kwargs):
+            pass
+
+        def submit(self, fn, *args):
+            future = Future()
+            if scenario != "inference_budget":
+                try:
+                    future.set_result(fn(*args))
+                except Exception as exc:
+                    future.set_exception(exc)
+            return future
+
+        def shutdown(self, **kwargs):
+            pass
+
+    monkeypatch.setattr(runner, "ThreadPoolExecutor", Executor)
+
+    class Script(PushMock):
+        observations = []
+
+        def decide(self, obs, png):
+            self.observations.append(obs)
+            if scenario == "api_error":
+                raise PolicyError("transport_error")
+            value = dict(
+                state_version=obs.state_version,
+                plan_summary="test only",
+                action="observe",
+                target_xy_m=None,
+                skill_request=None,
+                vx_mps=0.0,
+                vy_mps=0.0,
+                yaw_rate_rps=0.0,
+                duration_s=2.0,
+            )
+            if scenario.startswith("push_") and obs.state_version == 0:
+                value.update(
+                    action="push_object",
+                    object_id="clear_box_geom",
+                    target_xy_m=[4.08, 0.0],
+                    duration_s=18.0,
+                )
+                return PushAction(**value), {"origin": "mock"}
+            return GoalAction(**value), {"origin": "mock"}
+
+    return Script()
+
+
+@pytest.mark.parametrize(
+    "scenario,expected",
+    [
+        ("contact_goal", "PASS"),
+        ("fall_recover", "PASS"),
+        ("contact_budget", "FAIL"),
+        ("push_failure_goal", "PASS"),
+        ("push_handoff_goal", "PASS"),
+        ("push_goal_early", "PASS"),
+        ("numerical", "INCONCLUSIVE"),
+        ("api_error", "INCONCLUSIVE"),
+        ("inference_budget", "FAIL"),
+    ],
+)
+def test_real_runner_goal_semantics(monkeypatch, tmp_path, scenario, expected):
+    policy = setup_loop(monkeypatch, scenario)
+    result = runner.run(
+        tmp_path,
+        tmp_path,
+        policy,
+        max_calls=2 if scenario.startswith("push_") else 1,
+        enable_push=scenario.startswith("push_"),
+        max_seconds=3 if scenario == "inference_budget" else None,
+    )
+    assert result["task_outcome"] == expected, result
+    if scenario == "contact_goal":
+        contacts = [
+            json.loads(line) for line in (tmp_path / "contacts.jsonl").read_text().splitlines()
+        ]
+        unexpected = [c for c in contacts if not c["legacy_allowed"]]
+        assert unexpected and all(c["normal_force_n"] is not None for c in unexpected)
+        assert all("effective_friction" in c for c in unexpected)
+    if scenario == "fall_recover":
+        assert result["events_summary"]["counts"]["upright_recovered"] == 1
+    if scenario == "push_handoff_goal":
+        contacts = [
+            json.loads(line) for line in (tmp_path / "contacts.jsonl").read_text().splitlines()
+        ]
+        assert any(c["phase"] == "push_handoff" and not c["legacy_allowed"] for c in contacts)
+        skill = json.loads((tmp_path / "skill_000.json").read_text())
+        assert skill["handoff_complete"] and result["calls_attempted"] == 2
+    if scenario == "push_failure_goal":
+        skill = json.loads((tmp_path / "skill_000.json").read_text())
+        assert skill["reason"] == "SKILL_RELEASE_FAILURE" and skill["handoff_complete"]
+        assert result["calls_attempted"] == 2
+        assert policy.observations[1].behavior_feedback["summary"]["counts"]["skill_failure"] == 1
+    if scenario == "push_goal_early":
+        assert result["calls_attempted"] == 1
+        assert result["events_summary"]["counts"]["skill_interrupted"] == 1
+        assert result["events_summary"]["counts"].get("skill_failure", 0) == 0
+    if scenario == "inference_budget":
+        assert result["reason"] == "INFERENCE_SIM_BUDGET" and result["valid_execution"]
+
+
+def test_legacy_guard_truncates_and_is_not_new_goal_failure(monkeypatch, tmp_path):
+    policy = setup_loop(monkeypatch, "contact_goal")
+    result = runner.run(
+        tmp_path, tmp_path, policy, max_calls=1, evaluation_profile="legacy_guarded"
+    )
+    assert result["reason"] == "FORBIDDEN_CONTACT"
+    assert result["task_outcome"] == "INCONCLUSIVE"
+    assert result["termination"]["actor"] == "legacy_guard"
+
+
+def test_explicit_simulation_budget_stops_action(monkeypatch, tmp_path):
+    policy = setup_loop(monkeypatch, "budget")
+    result = runner.run(tmp_path, tmp_path, policy, max_calls=1, max_seconds=3)
+    assert result["task_outcome"] == "FAIL" and result["reason"] == "SIMULATION_BUDGET"
+    assert result["duration_s"] == pytest.approx(3)

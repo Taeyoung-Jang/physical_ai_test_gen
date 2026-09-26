@@ -39,13 +39,34 @@ if [ -n "$OPENAI_API_KEY" ]; then echo "API 키 설정됨"; else echo "API 키 �
 새 터미널을 열면 다시 설정해야 할 수 있습니다. 키를 문서, 채팅, Git에 저장하거나
 `echo "$OPENAI_API_KEY"`로 출력하지 마세요.
 
-## 3. 직전 실험을 분석해 AFS 후보 생성
+## 3. 새 목표 평가 기준으로 기준선 실행 후 AFS 후보 생성
 
-아래 명령은 GPT를 한 번 호출해 새 환경 후보를 생성합니다. **로봇은 아직 실행하지
-않습니다.** 기존 실험 폴더가 현재 환경에 있어야 합니다.
+2026-09-26부터 기본 평가는 `goal_outcome_v1`입니다. 과거 접촉 즉시 중단 run을
+새 FAIL 근거로 재사용하지 않습니다. 먼저 현재 코드로 기준선을 한 번 실행하세요.
+이 명령은 **GPU와 로봇 GPT를 사용하며 최대 10회 호출**합니다.
 
 ```bash
-uv run python tools/run_behavior_afs.py --run /workspace/g1_failure/runtime/robot_goal_agent/20260921T155205_243359Z --live --model gpt-6-astra
+uv run python tools/run_robot_goal_agent.py --live --model gpt-6-astra --max-calls 10 --enable-push --response-timeout 300 --evaluation-profile goal_outcome_v1
+```
+
+출력된 `ROBOT_GOAL_AGENT_RUN`의 경로만 입력합니다. 같은 평가·코드·예산의 새 결과가
+이미 있다면 기준선을 다시 실행하지 않고 그 경로를 입력해도 됩니다.
+
+```bash
+read -rp "ROBOT_GOAL_AGENT_RUN 경로: " ROBOT_RUN
+```
+
+`result.json`의 task_outcome이 PASS 또는 FAIL인지 확인합니다. INCONCLUSIVE면
+API/실행 오류를 먼저 해결하세요. 접촉이나 넘어짐 자체가 최종 실패 사유는 아닙니다.
+
+```bash
+uv run python -m json.tool "$ROBOT_RUN/result.json"
+```
+
+다음은 **AFS GPT 한 번만 호출**해 환경 후보를 생성하며 로봇을 실행하지 않습니다.
+
+```bash
+uv run python tools/run_behavior_afs.py --run "$ROBOT_RUN" --live --model gpt-6-astra
 ```
 
 정상 완료 시 `BEHAVIOR_AFS_RUN=...` 및 `SUITE=...; ready=...; origin=openai_api`가
@@ -79,6 +100,8 @@ uv run python -m json.tool "$AFS_RUN/suite.json"
 
 ## 5. 원본 환경에서 비교 기준 실행
 
+기본 `candidate_000.json`과 `candidate_001.json`은 명시적인 반복 슬롯입니다.
+반대 성공/실패 이력이 있으면 001은 반대쪽 조건을 반복할 수 있습니다.
 `candidate_000.json`은 원본 환경의 반복 실행입니다. GPU와 로봇용 GPT 호출을
 사용합니다. 먼저 이 명령이 완료될 때까지 기다리세요.
 
@@ -90,11 +113,13 @@ uv run python tools/run_robot_goal_agent.py --live --model gpt-6-astra --max-cal
 
 ## 6. 첫 번째 변경 환경 실행
 
-앞의 로봇 실행이 종료된 뒤 실행합니다. 모델과 호출 예산 등 다른 조건은 동일하게
+suite에서 READY와 strategy를 확인한 뒤 변경 조건을 선택하세요. 기본 반복 2개일 때
+첫 probe는 보통 `candidate_002.json`입니다. 중복/쿨다운으로 파일이 없으면 다른
+READY probe를 선택합니다. 앞의 로봇 실행이 종료된 뒤 모델과 예산 등 다른 조건은 동일하게
 유지합니다. 여러 로봇 실험을 동시에 실행하지 마세요.
 
 ```bash
-uv run python tools/run_robot_goal_agent.py --live --model gpt-6-astra --max-calls 10 --enable-push --response-timeout 300 --scene-config "$AFS_RUN/candidate_001.json"
+uv run python tools/run_robot_goal_agent.py --live --model gpt-6-astra --max-calls 10 --enable-push --response-timeout 300 --scene-config "$AFS_RUN/candidate_002.json"
 ```
 
 이 실행의 `ROBOT_GOAL_AGENT_RUN` 경로도 기록합니다. 결과는
@@ -115,3 +140,31 @@ uv run python tools/run_robot_goal_agent.py --live --model gpt-6-astra --max-cal
 수행되지만 GPT 호출 수와 개별 응답 대기 제한은 유지됩니다.
 
 설계와 한계는 [BEHAVIOR_AFS.md](BEHAVIOR_AFS.md)를 참고하세요.
+
+## 과거 기록: 2026-09-26 stale proposal context 오류 복구
+
+**아래는 v1 당시의 복구 이력입니다. 현재 v2의 실행 순서는 위 3–6번을 따릅니다.**
+평가 의미와 context 버전이 달라졌으므로 과거 response를 새 context로 재바인딩하지 않습니다.
+과거 후보 JSON은 환경 설정으로는 읽을 수 있지만 새 목표 판정 증거로 간주하지 않습니다.
+
+API 키 오류가 아니라 요청에서 검증용 해시를 전달하지 않았던 코드 오류였습니다.
+정확한 해시를 입력에 전달하고 응답 schema에서 해당 값만 허용하도록 수정했습니다.
+기존 응답은 추가 API 호출 없이 복구했으며, 원본 오류 폴더는 그대로 보존했습니다.
+
+당시 추가 유료 호출 없이 복구했던 결과의 위치:
+
+```bash
+AFS_RUN=/workspace/g1_failure/runtime/behavior_afs/20260926T121235_780634Z
+```
+
+복구 후보: 원본 반복, 상자 무게 1.0/2.2kg, 바닥 마찰 0.6/1.0, 독립 탐색 2개.
+후보들은 미실행 상태이며 아직 새 실패 발견 결과가 아닙니다.
+
+다음은 당시 v1 코드에서 사용했던 재현 명령이며 현재 v2에서는 legacy anchor로 거부됩니다.
+
+```bash
+uv run python tools/run_behavior_afs.py --run /workspace/g1_failure/runtime/robot_goal_agent/20260921T155205_243359Z --recover-run /workspace/g1_failure/runtime/behavior_afs/20260926T120758_764897Z
+```
+
+일반 `--proposal` 입력의 해시 불일치는 계속 거부합니다. 이 복구 옵션은 원본
+request/context/response/proposal의 대응 관계를 검사하며, 평가/문맥 버전 변경은 복구 대상이 아닙니다.

@@ -131,6 +131,8 @@ def test_memory_capabilities_and_model_transport(monkeypatch):
     assert "no path planner" not in json.dumps(seen[0])
     assert seen[0]["reasoning"]["effort"] == "high"
     assert "afs" not in context
+    assert context["task_contract"]["evaluation_profile"] == "goal_outcome_v1"
+    assert "No forbidden body/obstacle contacts or falls" not in json.dumps(seen[0])
 
 
 def test_unsupported_skill_can_be_expressed_without_fake_execution():

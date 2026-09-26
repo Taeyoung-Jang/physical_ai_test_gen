@@ -58,6 +58,7 @@ class Observation(Strict):
     camera_fovy_deg: float
     camera_xyz_m: list[float] = Field(min_length=3, max_length=3)
     camera_rotation_matrix: list[float] = Field(min_length=9, max_length=9)
+    behavior_feedback: dict = Field(default_factory=dict)
 
 
 class Policy(Protocol):
