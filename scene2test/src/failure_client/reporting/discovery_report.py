@@ -9,7 +9,9 @@ from html import escape
 from pathlib import Path
 
 
-def write_discovery_report(output: Path, campaign_id, records, metrics):
+def write_discovery_report(
+    output: Path, campaign_id, records, metrics, *, memory=None, include_video=False
+):
     output = output.resolve()
     if any(output.is_relative_to(Path(r.source.path).resolve()) for r in records):
         raise ValueError("output must not be inside a source run")
@@ -51,6 +53,12 @@ def write_discovery_report(output: Path, campaign_id, records, metrics):
     )
     comparison = escape(json.dumps(metrics["comparison"], indent=2, ensure_ascii=False))
     notes = "".join(f"<li>{escape(note)}</li>" for note in metrics["limitations"])
+    memory_link = ""
+    if memory is not None:
+        from failure_client.archive.regression_cases import export_failure_memory
+
+        export_failure_memory(output / "memory", memory, include_video=include_video)
+        memory_link = '<p><a href="memory/index.html">행동 구간·실패 메모리·관측 경계</a></p>'
     page = f"""<!doctype html><html lang="ko"><meta charset="utf-8">
 <title>Failure discovery measures</title>
 <style>body{{font:16px system-ui;margin:2rem}}td,th{{padding:.4rem;border:1px solid #ccc}}
@@ -63,6 +71,7 @@ table{{border-collapse:collapse}}pre{{white-space:pre-wrap}}</style>
 <table><tr>{"".join(f"<th>{escape(c)}</th>" for c in columns)}</tr>{rows}</table>
 <h2>Random 대비 비교</h2><pre>{comparison}</pre>
 <h2>제외 기록</h2><ul>{exclusions}</ul>
+{memory_link}
 <h2>해석 범위</h2><ul>{notes}</ul>
 <p><a href="metrics.json">전체 지표·곡선</a> · <a href="metrics.csv">CSV</a> ·
 <a href="episodes.jsonl">실행별 측정·증거·제외 사유</a></p></html>"""
@@ -70,10 +79,19 @@ table{{border-collapse:collapse}}pre{{white-space:pre-wrap}}</style>
     manifest = {
         "schema_version": "measurement-report-v1",
         "artifacts": [
-            {"path": p.name, "sha256": hashlib.sha256(p.read_bytes()).hexdigest()}
-            for p in sorted(output.iterdir())
+            {"path": str(p.relative_to(output)), "sha256": _stream_hash(p)}
+            for p in sorted(output.rglob("*"))
             if p.is_file()
         ],
     }
     (output / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
     return output / "report.html"
+
+
+def _stream_hash(path):
+    # A copied MP4 may be large; never buffer an entire video to build the manifest.
+    h = hashlib.sha256()
+    with path.open("rb") as stream:
+        for chunk in iter(lambda: stream.read(1024 * 1024), b""):
+            h.update(chunk)
+    return h.hexdigest()

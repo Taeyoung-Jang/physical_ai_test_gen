@@ -20,7 +20,15 @@ def main(argv=None):
         "--input", type=Path, help="versioned measurement-input JSON; no robot launch"
     )
     parser.add_argument("--output-dir", type=Path, help="new directory; refuses overwrites")
+    parser.add_argument(
+        "--with-memory", action="store_true", help="P1 time evidence and case export"
+    )
+    parser.add_argument(
+        "--bundle-video", action="store_true", help="copy MP4; requires --with-memory"
+    )
     args = parser.parse_args(argv)
+    if args.bundle_video and not args.with_memory:
+        parser.error("--bundle-video requires --with-memory")
     stamp = datetime.now(UTC).strftime("%Y%m%dT%H%M%S_%fZ")
     try:
         if args.input:
@@ -36,8 +44,20 @@ def main(argv=None):
             )
         records = [read_goal_run(r) for r in config.runs]
         metrics = calculate_discovery_metrics(records, config.design)
+        memory = None
+        if args.with_memory:
+            from failure_client.archive.regression_cases import build_failure_memory
+
+            memory = build_failure_memory(records)
         output = args.output_dir or Path("/workspace/g1_failure/runtime/failure_measures") / stamp
-        report = write_discovery_report(output, config.campaign_id, records, metrics)
+        report = write_discovery_report(
+            output,
+            config.campaign_id,
+            records,
+            metrics,
+            memory=memory,
+            include_video=args.bundle_video,
+        )
     except (ValueError, OSError, TypeError, KeyError) as exc:
         parser.exit(2, f"Measurement stopped: {type(exc).__name__}: {exc}\n")
     valid = sum(g["valid_rollouts"] for g in metrics["groups"])
@@ -45,6 +65,11 @@ def main(argv=None):
     print(f"FAILURE_MEASURES={report.parent}")
     print(f"REPORT={report}; valid={valid}; excluded={excluded}")
     print(f"COMPARISON={metrics['comparison']['status']}; family detectors=not implemented")
+    if memory is not None:
+        print(
+            f"MEMORY={report.parent / 'memory/index.html'}; cases={len(memory['cases'])}; "
+            f"brackets={len(memory['brackets'])}"
+        )
 
 
 if __name__ == "__main__":

@@ -34,3 +34,5 @@
 - 2026-09-26: [Failure Case 평가 지표·AFS 우선 탐색·행동 회귀 자산화 구현 계획](2026-09-26_failure_case_measurement_plan.md)
 
 - 2026-09-26: [P0 실패 발견 측정기·최소 행동 reader 구현 및 136개 회귀 테스트](2026-09-26_failure_discovery_measures_p0.md)
+
+- 2026-09-27: [P1 행동 시간선·failure memory·관측 경계 자산화 및 170개 테스트](2026-09-27_behavior_failure_memory_p1.md)

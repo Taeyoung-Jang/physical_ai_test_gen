@@ -1,7 +1,9 @@
 # 실패 발견·행동 검증·회귀 자산화 구현 계획
 
-2026-09-26 UTC. 상태: **P0 측정기와 최소 trace reader 첫 구현 반영; campaign/유형 detector/회귀 실행은 미구현**.
-구현 범위와 실행법은 [실패 발견 측정기](FAILURE_DISCOVERY_MEASURES.md)를 참고한다.
+2026-09-27 UTC 갱신. 상태: **P0 측정기와 P1 시간별 행동 근거·failure memory 첫 구현 반영;
+campaign/유형 detector/회귀 실행은 미구현**.
+구현 범위와 실행법은 [실패 발견 측정기](FAILURE_DISCOVERY_MEASURES.md)와
+[행동 시간선·failure memory](BEHAVIOR_FAILURE_MEMORY.md)를 참고한다.
 
 기준 문서: [Failure_Case_Goal.md](../../.blueprint/Failure_Case_Goal.md).
 평가 의미는 사용자의 최신 원칙과 [목표 중심 평가 구현](GOAL_OUTCOME_AFS_IMPLEMENTATION.md)을 따른다.
@@ -286,10 +288,14 @@ P2의 작은 3축 pilot과 P3의 확장 실험을 구분하며, P4는 지원 범
 
 첫 구현에 `research_records.py`, `goal_run_reader.py`, `discovery_metrics.py`,
 `discovery_report.py`, `tools/measure_failure_discovery.py`가 추가되었다.
-아래 중 `behavior_measures.py`, regression/campaign/AFS adapter와 해당 실행 CLI는 여전히 계획이다.
+P1 첫 구현에 `behavior_measures.py`, `regression_cases.py`, `behavior_report.py`와
+측정 CLI의 `--with-memory`/`--bundle-video` 옵션이 추가되었다.
+phase/contact/fall/action 구간, 감사된 상자 변위, 성공/실패/혼합 반복, 단일 축 관측 bracket과
+선택 증거 bundle을 지원한다. 유형 귀속은 UNKNOWN이며 자동 실행·외부 자원 재현 검증은 하지 않는다.
+아래 campaign/AFS adapter와 비교·회귀 실행 CLI는 여전히 계획이다.
 
 - `failure_client/evaluation/research_records.py`: backend 독립 episode·측정·귀속 계약.
-- `failure_client/evaluation/behavior_measures.py`: 단위·시간창을 가진 행동 측정과 taxonomy 규칙.
+- `failure_client/evaluation/behavior_measures.py`: 단위·시간창을 가진 행동 측정. taxonomy 규칙은 후속 범위.
 - `failure_client/reporting/discovery_metrics.py`: 순수 집계 함수, 예산별 curve와 비교 상태.
 - `failure_client/archive/regression_cases.py`: 증거/장면 bundle, 반복·bracket·회귀 manifest.
 - `failure_client/experiments/research_campaign.py`: 기존 저장/복구 부품을 쓰는 local-runner 경계.

@@ -4,6 +4,9 @@
 기존 goal-agent 기록을 읽는 **오프라인 도구**다. 로봇/GPU/유료 API를 실행하지 않으며 원본을 수정하지 않는다.
 자동 AFS campaign, 6종 실패 원인 detector, 회귀 실행기는 아직 구현하지 않았다.
 
+2026-09-27: `--with-memory`로 [P1 행동 시간선·failure memory](BEHAVIOR_FAILURE_MEMORY.md)를
+추가할 수 있다. 원본 근거/재실행 조건과 성공·실패 반복을 보관하며, 기본 P0 측정 의미는 바꾸지 않는다.
+
 ## 실행 명령
 
 `scene2test` 디렉터리에서 실행한다. API key는 필요 없다. 이미 설치된 환경에서는
@@ -104,7 +107,13 @@ condition ID는 `episodes.jsonl`의 값을 사용한다. 경로는 입력 JSON �
 이 입력은 사후 선언이며 실제 Random 생성 분포나 사전 등록 사실까지 인증하지 않는다.
 따라서 현재 출력은 **사후 기술 통계**다. 공정한 prospective 비교를 입증하는 ledger/자동 실행은 P2 범위다.
 
-## 다음 구현
+## P1 추가 출력과 다음 구현
 
-P1에서는 행동 사건의 시간 구간·기술 실행 결과·물체 변위·증거 참조를 보강하고,
-검증된 유형 규칙과 failure memory/회귀 case를 연결한다. 로봇 행동이나 goal 판정은 바꾸지 않는다.
+`--with-memory`를 지정하면 `memory/index.html`, 실행별 행동 시간선, case별 장면/재현 조건과
+선택 증거 bundle을 생성한다. MP4는 기본 원본 참조이며 `--bundle-video`로 복사할 수 있다.
+GIF와 API 전송 원문은 복사하지 않는다. 성공 대조·혼합 반복도 보관하고 동일 조건의 단일 축
+관측 bracket만 추출한다. [해석과 제한](BEHAVIOR_FAILURE_MEMORY.md)을 참고한다.
+
+실패 유형 detector는 아직 없어 이 출력도 공식 coverage를 늘리지 않는다.
+다음은 P2의 LLM 행동 근거 피드백·동일 유효 예산 AFS/Random campaign이며,
+자동 회귀 실행과 추가 유형 계측은 후속 범위다. 로봇 행동이나 goal 판정은 바꾸지 않는다.

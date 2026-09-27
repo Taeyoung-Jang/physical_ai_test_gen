@@ -12,7 +12,7 @@ from failure_client.evaluation.research_records import (
 )
 
 
-def _deduplicate(records):
+def deduplicate_records(records):
     seen, paths, unique, duplicates = {}, {}, [], []
     for record in records:
         identity = record.evidence_id or "path:" + record.source.path
@@ -161,7 +161,7 @@ def calculate_discovery_metrics(
         design = ComparisonDesign.model_validate(design.model_dump())
     # Revalidate even when a caller used pydantic.model_copy(update=...) without validation.
     records = [EpisodeRecord.model_validate(r.model_dump()) for r in records]
-    records, duplicates = _deduplicate(records)
+    records, duplicates = deduplicate_records(records)
     buckets = defaultdict(list)
     for r in records:
         buckets[r.source.method, r.source.seed].append(r)

@@ -1,6 +1,6 @@
 # 프로젝트 다음 단계와 완료 기준
 
-## 2026-09-26 우선순위 갱신 — 설계 단계
+## 2026-09-27 우선순위 갱신 — P0/P1 첫 구현
 
 사용자가 지정한 [Failure Case 평가 목표](../../.blueprint/Failure_Case_Goal.md)에 맞춰
 AFS 탐색 효과와 행동 검증·회귀 자산화에 집중한다. 최신 실행 순서와 measure 계약은
@@ -9,6 +9,9 @@ AFS 탐색 효과와 행동 검증·회귀 자산화에 집중한다. 최신 실
 목표-only 평가를 유지하고, 계측 → 행동 근거/메모리 → 동일 유효 예산의 AFS/Random 폐루프
 → 필요한 유형/회귀 범위 → 동결 비교 순으로 진행한다.
 P0 [오프라인 측정기](FAILURE_DISCOVERY_MEASURES.md)와 최소 trace reader의 첫 구현을 반영했다.
+P1 [시간별 행동 근거·failure memory](BEHAVIOR_FAILURE_MEMORY.md)도 추가했다.
+성공 대조/실패/혼합 반복, 단일 축 관측 bracket, 선택 증거 bundle과 MP4 구간 참조를 제공한다.
+다음은 P2의 LLM 피드백 및 동일 유효 예산 AFS/Random 폐루프다.
 자동 campaign, 실패 유형 detector, 회귀 실행기는 아직 미구현이다.
 
 아래는 2026-09-06의 역사적 단계이며 현재 우선순위를 대체하지 않는다.

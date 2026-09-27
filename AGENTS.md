@@ -1,6 +1,6 @@
 # Scene2Test workspace memory
 
-## Failure-discovery measurement priority (2026-09-26; initial P0 implemented)
+## Failure-discovery measurement priority (2026-09-27; initial P0/P1 implemented)
 
 Follow `scene2test/docs/FAILURE_CASE_MEASUREMENT_PLAN.md` for the user-requested focus on
 AFS prioritization and behavior validation/regression assets from `.blueprint/Failure_Case_Goal.md`.
@@ -10,14 +10,22 @@ goal-agent-v5 archives offline and writes separate JSON/CSV/HTML measurements. S
 `scene2test/docs/FAILURE_DISCOVERY_MEASURES.md`. Manifest/contract checks, duplicate exclusions,
 FDR/Gain and a detector-gated six-family coverage calculator are implemented. The importer has
 no family detectors, so real coverage remains unmeasured. Imported method/domain labels are
-declarations, not proof of a prospective fair benchmark. Campaign/regression tools remain planned.
+declarations, not proof of a prospective fair benchmark. Campaign/regression execution remains planned.
+P1 `--with-memory` adds time-resolved phase/contact/fall/action evidence, audited box motion,
+success/failure/mixed repeat cases, same-condition single-axis observed brackets, and selective
+hashed evidence bundles/reproduction templates. See `docs/BEHAVIOR_FAILURE_MEMORY.md` inside scene2test.
+Observation windows include inference, not an invented exact action start. Missing measurements
+remain unsupported/unknown; events do not assign failure families or causal labels.
+MP4 is referenced by default, optionally copied with `--bundle-video`; GIF/API transcripts are excluded.
+External robot code/assets are listed but not bundled/verified; this is not an executed regression suite.
 Keep goal outcome separate from contact/safety/behavior events;
 unknown/unsupported measurements are not zero. Compare equal valid rollout budgets including
 cold start and repeats, disclose invalid attempts/cost, and do not count legacy guard stops or
 incomplete archives as goal failures. Current behavior-AFS goal-agent supports only three
 physical scene axes; expanded generator support is not goal-agent backend support. Reuse client
 contracts/storage/archive via adapters without making server rewrites or robot skill development
-prerequisites. Next implementation: P1 time-resolved behavior evidence and failure-memory assets.
+prerequisites. Next implementation: P2 behavior-evidence feedback and equal-valid-budget AFS/Random
+campaign/resume. Family detectors and additional geometry/behavior measures remain open.
 
 ## Goal-outcome AFS implementation (2026-09-26)
 
@@ -41,7 +49,7 @@ Do not restore the removed default120s limit. Static no_path does not prove a sc
 unsolvable when manipulation is available. Robot capability development remains
 separate from AFS evaluation/search work.
 
-Last refreshed: 2026-09-26 (UTC); earlier capability notes retain their historical scope.
+Last refreshed: 2026-09-27 (UTC); earlier capability notes retain their historical scope.
 
 
 ## G1 scene-search pilot update
