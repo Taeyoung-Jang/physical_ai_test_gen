@@ -118,7 +118,7 @@ def feedback_context(memory, *, history_limit, remaining):
 
 
 def proposal_request(ctx, model):
-    return request(ctx, model)
+    return request(ctx, model, selection_policy="campaign_single_endpoint")
 
 
 def choose_probe(raw, ctx, memory):

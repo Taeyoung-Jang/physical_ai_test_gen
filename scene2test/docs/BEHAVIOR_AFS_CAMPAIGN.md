@@ -120,7 +120,12 @@ Random은 AFS가 좁힌 구간이 아니라 사전에 고정한 전체 3축 doma
 AFS는 기본적으로 다음 4개 slot을 순환한다. cold start/반복/경계/독립 탐색 모두 유효 예산에 포함한다.
 
 1. `llm`: 최신 행동 근거로 기존 behavior-AFS schema의 1–4개 탐색 공간을 요청한다.
-   호스트가 context hash, 증거 ID, 허용 축/범위/형식을 검증하고 새 endpoint를 고른다.
+   호스트가 context hash, 증거 ID, 허용 축/범위/형식을 검증하고, 모든 공간의 low/high 후보를
+   모아 **다음 rollout에 사용할 endpoint 하나만** 고른다. 공간당 하나나 양 끝점 동시 실행이 아니다.
+   각 후보는 지정된 한 축만 바꾸며 나머지 축은 최신 장면 값으로 고정한다.
+   중복/cooldown 제외 후, 기존 관측 장면까지의 최소 정규화 거리가 가장 큰 후보를 선택한다.
+   거리는 각 축의 전체 허용 범위로 정규화한 차이 중 최댓값이며, 동점이면 제안 순서
+   (공간 순서, low 먼저)를 유지한다. 실패 확률 예측 점수가 아니라 신규성 휴리스틱이다.
 2. `boundary`: P1이 확인한 동일 조건·단일 축의 반대 결과 bracket에서 미측정 중점을 선택한다.
    bracket이 없으면 LLM에 새 probe를 요청한다. 이것은 미리 선언한 정책이며 몰래 Random으로 바꾸는 fallback이 아니다.
 3. `exploration`: 전체 domain에서 독립 uniform 탐색을 한다.
@@ -141,6 +146,27 @@ LLM 입력에는 로봇/목표 조건, SceneGraph, 허용 축, 남은 유효 예
 자동으로 다른 모델·Random으로 대체하지 않고 요청·응답·오류를 보존한 뒤 멈춘다.
 LLM의 `boundary_probe` 이름만으로 확정 경계를 만들지 않는다.
 
+### 실행 경로별 프롬프트 계약
+
+`behavior_request.request()`는 공통 연구 원칙에 아래 선택 정책 중 하나만 붙인다.
+선택 정책과 context schema가 다르면 API 요청 생성 전에 거부한다. context hash, 엄격한
+출력 schema, 증거 ID 검증은 그대로 유지한다. 정책 식별자는 저장되는 `request.json`의
+`instructions`에서도 확인할 수 있다.
+
+- P2 `run_afs_benchmark.py`: `campaign-single-endpoint-v1`.
+  제안당 최대 한 후보를 선택한다고 명시한다. 경계 중점·독립 탐색·반복은 별도 host slot이며
+  LLM 제안 하나에 부가 실행되는 실험이 아니다. LLM의 `boundary_probe`도 이 요청에서는
+  low/high 후보를 제공할 뿐, 그 자체로 중점 선택을 지시하지 않는다.
+- 단독 `run_behavior_afs.py`: `standalone-suite-v1`.
+  기본적으로 양 끝점 장면 파일을 생성한다. 같은 축의 관측 bracket이 있는 `boundary_probe`는
+  제안 구간이 아니라 관측 bracket의 중점으로 대체한다. 반복/독립 탐색도 생성하되
+  중복/cooldown으로 일부 후보가 제외될 수 있다. **장면 생성이지 로봇 실행 완료가 아니다.**
+
+2026-09-27 수정 전에는 공통 프롬프트가 양 끝점을 실행한다고 설명해 P2 구현과 달랐다.
+이번 수정은 그 설명을 경로별 실제 동작에 맞춘 것이며, 후보 선택 알고리즘·로봇 행동·평가 기준은
+변경하지 않았다. 프롬프트 명확성과 테스트 원칙은
+[OpenAI Prompt engineering 문서](https://developers.openai.com/api/docs/guides/prompt-engineering)를 참고했다.
+
 API는 기존 Responses 호출기를 재사용한다. strict JSON Schema와 context hash 고정,
 host 의미 검증을 함께 유지한다. 거절/미완료 응답은 실험 후보가 아니다.
 schema의 required/additionalProperties 규칙은 [OpenAI Structured Outputs 공식 문서](https://developers.openai.com/api/docs/guides/structured-outputs)를 확인했다.
@@ -151,6 +177,10 @@ schema의 required/additionalProperties 규칙은 [OpenAI Structured Outputs 공
 SQLite에 외부 호출 **직전 intent**를 먼저 기록한다. source code/의존 패키지 버전/로봇 자원 파일은
 init 및 재개·각 실행 전후에 확인한다. 달라졌다면 새 실험 조건이므로 기존 캠페인에 섞지 않는다.
 원격 모델 가중치 자체를 동결할 수는 없으며, 기록된 반환 모델/로봇 조건이 바뀌면 비교를 중단한다.
+
+이번 프롬프트 수정도 frozen source hash를 바꾼다. 수정 전 코드로 init한 캠페인은 기존
+프로토콜을 수정해 억지로 이어가지 말고, 위 `init` 명령으로 **새 캠페인 폴더**를 만든다.
+과거 폴더와 실험 증거는 그대로 보존한다. 아직 rollout이 없는 기존 폴더도 같은 원칙을 따른다.
 
 - robot archive가 완결됐고 child가 종료됐으면 재실행 없이 수집한다.
 - API 응답 파일만 저장된 채 중단됐다면 그 응답을 다시 검증하고 후보를 이어서 실행한다.

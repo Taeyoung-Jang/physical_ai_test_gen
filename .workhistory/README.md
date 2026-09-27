@@ -38,3 +38,5 @@
 - 2026-09-27: [P1 행동 시간선·failure memory·관측 경계 자산화 및 170개 테스트](2026-09-27_behavior_failure_memory_p1.md)
 
 - 2026-09-27: [P2 행동 근거 AFS/Random 로컬 캠페인·동일 예산·중단 재개](2026-09-27_behavior_afs_campaign_p2.md)
+
+- 2026-09-27: [AFS 프롬프트와 실제 후보 선택 방식 정합성 수정](2026-09-27_afs_selection_prompt_alignment.md)

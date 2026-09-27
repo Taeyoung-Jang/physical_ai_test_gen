@@ -406,6 +406,9 @@ def test_feedback_uses_only_own_arm_and_has_time_evidence(tmp_path):
         assert ctx["history_selection"]["other_arm_data_used"] is False
         assert all("intervals" in e and "object_motion" in e for e in evidence)
         request = row["request"]
+        assert "Selection policy: campaign-single-endpoint-v1." in request["instructions"]
+        assert "standalone-suite" not in request["instructions"]
+        assert "Host runs each endpoint" not in request["instructions"]
         assert request["store"] is False
         fmt = request["text"]["format"]
         assert fmt["strict"] is True
@@ -443,6 +446,32 @@ def test_llm_space_changes_selected_environment_and_schema_is_strict(tmp_path):
     raw["spaces"][0]["evidence_refs"] = ["invented"]
     with pytest.raises(ValueError, match="unknown evidence"):
         choose_probe(raw, ctx, memory)
+
+
+def test_campaign_prompt_matches_single_max_min_endpoint_selection(tmp_path):
+    memory = build_failure_memory([load(fixture(tmp_path / "anchor"))])
+    ctx = feedback_context(memory, history_limit=2, remaining=6)
+    original = copy.deepcopy(ctx)
+    body = proposal_request(ctx, "gpt-6-astra")
+    assert ctx == original
+    assert json.loads(body["input"][0]["content"])["context_sha256"] == digest(ctx)
+    assert body["model"] == "gpt-6-astra"
+    instructions = body["instructions"]
+    assert "at most ONE endpoint per" in instructions
+    assert "not one endpoint per space" in instructions
+    assert "minimum distance to previously observed scenes is largest" in instructions
+    assert "separate host strategy slots" in instructions
+    assert "boundary_probe label alone does not trigger midpoint selection" in instructions
+    assert "Host runs each endpoint" not in instructions
+    assert "standalone-suite" not in instructions
+    response = FakeProposer()(body)
+    raw = json.loads(response["output"][0]["content"][0]["text"])
+    raw["spaces"].append({**raw["spaces"][0], "axis": "floor_friction", "low": 0.06, "high": 1.4})
+    # Anchor mass=2.0, floor=0.8: normalized distances to the four endpoints
+    # are 1.7/9.8, 7.7/9.8, 0.74/1.45, 0.6/1.45. Only mass=9.7 wins.
+    candidate = choose_probe(raw, ctx, memory)
+    assert candidate["parameters"] == {**ctx["latest"]["parameters"], "box_mass_kg": 9.7}
+    assert candidate["boundary_confirmed"] is False
 
 
 def test_request_cap_is_bounded_and_not_a_random_fallback(tmp_path):

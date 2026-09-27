@@ -17,6 +17,44 @@ def test_hash_is_supplied_and_constrained():
     assert body["text"]["format"]["schema"]["properties"]["context_sha256"]["enum"] == [
         b.digest(ctx)
     ]
+    assert body["model"] == "gpt-6-astra"
+    assert body["store"] is False
+
+
+def test_standalone_prompt_matches_suite_compiler(tmp_path):
+    ctx = b.context(observation())
+    instructions = request(ctx, "gpt-6-astra")["instructions"]
+    assert "Selection policy: standalone-suite-v1." in instructions
+    assert "generates both low and high endpoints" in instructions
+    assert "not robot executions" in instructions
+    assert "bracket's midpoint" in instructions
+    assert "campaign-single-endpoint" not in instructions
+    assert "Host runs each endpoint" not in instructions
+    spaces = proposal(ctx)
+    suite = b.compile_suite(ctx, spaces, tmp_path)
+    for space in spaces.spaces:
+        rows = [r for r in suite["candidates"] if r["axis"] == space.axis]
+        assert [r["parameters"][space.axis] for r in rows] == [space.low, space.high]
+
+
+@pytest.mark.parametrize(
+    ("selection_policy", "schema"),
+    [
+        ("standalone_suite", "behavior-campaign-feedback-v1"),
+        ("campaign_single_endpoint", "behavior-afs-context-v2"),
+        ("standalone_suite", "unknown-context"),
+        ("campaign_single_endpoint", "unknown-context"),
+    ],
+)
+def test_selection_policy_rejects_mismatched_context(selection_policy, schema):
+    ctx = {**b.context(observation()), "schema_version": schema}
+    with pytest.raises(ValueError, match="selection policy does not match context schema"):
+        request(ctx, "gpt-6-astra", selection_policy=selection_policy)
+
+
+def test_unknown_selection_policy_rejected():
+    with pytest.raises(ValueError, match="unknown behavior AFS selection policy"):
+        request(b.context(observation()), "gpt-6-astra", selection_policy="unknown")
 
 
 def legacy(root, ctx):

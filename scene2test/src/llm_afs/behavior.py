@@ -25,8 +25,7 @@ Return one to four spaces: success_probe (plausibly easier), boundary_probe or
 cross_mechanism (competing explanation). A range MAY be entirely on one side of the
 latest value, including near a domain edge. Axes may repeat for distinct questions.
 Prefer success-side probes when no comparable PASS exists; do not call all-FAIL ranges
-a boundary. Host runs each endpoint with other axes fixed, plus independent exploration
-and explicit repeats. Lower friction/mass is NOT assumed monotonically easier.
+a boundary. Lower friction/mass is NOT assumed monotonically easier.
 Explain evidence, an alternative explanation,
 and the measurement that would falsify your hypothesis. Evidence refs must be provided IDs.
 Do not claim heavy mass caused short push, or near-fall from tilt alone. Contact friction
