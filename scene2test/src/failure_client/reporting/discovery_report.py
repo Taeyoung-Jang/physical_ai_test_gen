@@ -53,6 +53,13 @@ def write_discovery_report(
     )
     comparison = escape(json.dumps(metrics["comparison"], indent=2, ensure_ascii=False))
     notes = "".join(f"<li>{escape(note)}</li>" for note in metrics["limitations"])
+    campaign_section = ""
+    if "campaign_execution" in metrics:
+        campaign_section = (
+            "<h2>Campaign 진행·시도·비용</h2><pre>"
+            + escape(json.dumps(metrics["campaign_execution"], indent=2, ensure_ascii=False))
+            + "</pre>"
+        )
     memory_link = ""
     if memory is not None:
         from failure_client.archive.regression_cases import export_failure_memory
@@ -70,6 +77,7 @@ table{{border-collapse:collapse}}pre{{white-space:pre-wrap}}</style>
 원본을 변경하거나 로봇을 실행하지 않은 사후 보고서입니다.</p>
 <table><tr>{"".join(f"<th>{escape(c)}</th>" for c in columns)}</tr>{rows}</table>
 <h2>Random 대비 비교</h2><pre>{comparison}</pre>
+{campaign_section}
 <h2>제외 기록</h2><ul>{exclusions}</ul>
 {memory_link}
 <h2>해석 범위</h2><ul>{notes}</ul>

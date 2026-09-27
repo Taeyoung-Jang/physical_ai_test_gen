@@ -2,7 +2,8 @@
 
 2026-09-26 UTC. [전체 계획](FAILURE_CASE_MEASUREMENT_PLAN.md)의 P0 측정 모듈과 최소 trace reader.
 기존 goal-agent 기록을 읽는 **오프라인 도구**다. 로봇/GPU/유료 API를 실행하지 않으며 원본을 수정하지 않는다.
-자동 AFS campaign, 6종 실패 원인 detector, 회귀 실행기는 아직 구현하지 않았다.
+6종 실패 원인 detector와 회귀 실행기는 아직 구현하지 않았다.
+후속 [P2 로컬 3축 캠페인](BEHAVIOR_AFS_CAMPAIGN.md)의 첫 구현은 별도 opt-in CLI다.
 
 2026-09-27: `--with-memory`로 [P1 행동 시간선·failure memory](BEHAVIOR_FAILURE_MEMORY.md)를
 추가할 수 있다. 원본 근거/재실행 조건과 성공·실패 반복을 보관하며, 기본 P0 측정 의미는 바꾸지 않는다.
@@ -115,5 +116,5 @@ GIF와 API 전송 원문은 복사하지 않는다. 성공 대조·혼합 반복
 관측 bracket만 추출한다. [해석과 제한](BEHAVIOR_FAILURE_MEMORY.md)을 참고한다.
 
 실패 유형 detector는 아직 없어 이 출력도 공식 coverage를 늘리지 않는다.
-다음은 P2의 LLM 행동 근거 피드백·동일 유효 예산 AFS/Random campaign이며,
-자동 회귀 실행과 추가 유형 계측은 후속 범위다. 로봇 행동이나 goal 판정은 바꾸지 않는다.
+P2의 LLM 행동 근거 피드백·동일 유효 예산 AFS/Random campaign은 별도 CLI에 첫 구현했다.
+실제 live 비교, 자동 회귀 실행과 추가 유형 계측은 후속 범위다. 로봇 행동이나 goal 판정은 바꾸지 않는다.

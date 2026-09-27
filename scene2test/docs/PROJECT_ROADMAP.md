@@ -1,6 +1,6 @@
 # 프로젝트 다음 단계와 완료 기준
 
-## 2026-09-27 우선순위 갱신 — P0/P1 첫 구현
+## 2026-09-27 우선순위 갱신 — P0/P1·P2 로컬 pilot 첫 구현
 
 사용자가 지정한 [Failure Case 평가 목표](../../.blueprint/Failure_Case_Goal.md)에 맞춰
 AFS 탐색 효과와 행동 검증·회귀 자산화에 집중한다. 최신 실행 순서와 measure 계약은
@@ -11,8 +11,10 @@ AFS 탐색 효과와 행동 검증·회귀 자산화에 집중한다. 최신 실
 P0 [오프라인 측정기](FAILURE_DISCOVERY_MEASURES.md)와 최소 trace reader의 첫 구현을 반영했다.
 P1 [시간별 행동 근거·failure memory](BEHAVIOR_FAILURE_MEMORY.md)도 추가했다.
 성공 대조/실패/혼합 반복, 단일 축 관측 bracket, 선택 증거 bundle과 MP4 구간 참조를 제공한다.
-다음은 P2의 LLM 피드백 및 동일 유효 예산 AFS/Random 폐루프다.
-자동 campaign, 실패 유형 detector, 회귀 실행기는 아직 미구현이다.
+P2 [로컬 AFS/Random 캠페인](BEHAVIOR_AFS_CAMPAIGN.md)의 첫 구현도 반영했다.
+유효 예산·자기 seed의 행동 피드백·중단 재개는 합성 archive로 검증했으며 실제 GPU/API 비교는 아직 실행하지 않았다.
+다음은 예산을 확인한 live pilot 및 P3 유형/회귀 범위다. 실패 유형 detector, 회귀 실행기,
+core/media manifest 분리·최종화 순서 개선은 아직 미구현이다.
 
 아래는 2026-09-06의 역사적 단계이며 현재 우선순위를 대체하지 않는다.
 

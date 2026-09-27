@@ -1,9 +1,11 @@
 # 실패 발견·행동 검증·회귀 자산화 구현 계획
 
-2026-09-27 UTC 갱신. 상태: **P0 측정기와 P1 시간별 행동 근거·failure memory 첫 구현 반영;
-campaign/유형 detector/회귀 실행은 미구현**.
+2026-09-27 UTC 갱신. 상태: **P0 측정기, P1 시간별 행동 근거·failure memory,
+P2 로컬 3축 AFS/Random campaign 첫 구현 반영; 유형 detector/회귀 실행은 미구현**.
 구현 범위와 실행법은 [실패 발견 측정기](FAILURE_DISCOVERY_MEASURES.md)와
 [행동 시간선·failure memory](BEHAVIOR_FAILURE_MEMORY.md)를 참고한다.
+P2 실행·예산·재개 범위는 [행동 AFS 캠페인](BEHAVIOR_AFS_CAMPAIGN.md)을 참고한다.
+실제 유료/GPU pilot 및 core/media manifest 분리는 아직 검증/구현하지 않았다.
 
 기준 문서: [Failure_Case_Goal.md](../../.blueprint/Failure_Case_Goal.md).
 평가 의미는 사용자의 최신 원칙과 [목표 중심 평가 구현](GOAL_OUTCOME_AFS_IMPLEMENTATION.md)을 따른다.
@@ -292,7 +294,10 @@ P1 첫 구현에 `behavior_measures.py`, `regression_cases.py`, `behavior_report
 측정 CLI의 `--with-memory`/`--bundle-video` 옵션이 추가되었다.
 phase/contact/fall/action 구간, 감사된 상자 변위, 성공/실패/혼합 반복, 단일 축 관측 bracket과
 선택 증거 bundle을 지원한다. 유형 귀속은 UNKNOWN이며 자동 실행·외부 자원 재현 검증은 하지 않는다.
-아래 campaign/AFS adapter와 비교·회귀 실행 CLI는 여전히 계획이다.
+P2 첫 구현에 `research_campaign.py`, `research_protocol.py`, `local_goal_adapter.py`,
+`storage/research_store.py`, `methods/behavior_feedback.py`, `tools/run_afs_benchmark.py`가 추가되었다.
+P0/P1·기존 transaction/observation 계약을 재사용하는 로컬 adapter이며 HTTP method registry plugin은 아니다.
+동일 유효 예산/자기 seed의 행동 피드백/중단 재개를 합성 기록으로 검증했다. 실제 비교 성능은 미검증이다.
 
 - `failure_client/evaluation/research_records.py`: backend 독립 episode·측정·귀속 계약.
 - `failure_client/evaluation/behavior_measures.py`: 단위·시간창을 가진 행동 측정. taxonomy 규칙은 후속 범위.
@@ -301,7 +306,7 @@ phase/contact/fall/action 구간, 감사된 상자 변위, 성공/실패/혼합 
 - `failure_client/experiments/research_campaign.py`: 기존 저장/복구 부품을 쓰는 local-runner 경계.
 - `failure_client/methods/` 아래 behavior-AFS adapter: 기존 인터페이스 활용; registry/backend 호환은 명시적으로 구현.
 - `tools/measure_failure_discovery.py`, `tools/run_afs_benchmark.py`, `tools/run_failure_regression.py`:
-  각각 읽기/집계, 실행 비교, 회귀 검증용 CLI. **현재 첫 측정 CLI만 실행 가능하다**.
+  각각 읽기/집계, 실행 비교, 회귀 검증용 CLI. **현재 측정과 로컬 캠페인 CLI가 구현됐으며 회귀 CLI는 계획이다**.
 
 기존 protocol의 version/consumer를 깨지 않도록 opt-in 모듈과 adapter부터 넣는다.
 Panda-only trace 필드를 G1의 실제 측정값처럼 채우거나 기존 archive를 재분류하지 않는다.
@@ -334,5 +339,5 @@ failure/regression manifest 및 원본 실행 링크를 제공한다. 대용량 
 - 실패/성공 경계, 반복 결과, 회귀/개선 내역.
 - 무효·미완료·제외 건수, 로봇/AFS 호출·토큰·시간, 전체 실행 목록.
 
-**첫 구현에 P0 계산기와 최소 trace adapter를 반영했다.** 나머지 P1 행동 근거/메모리를
-보강하고 P2의 자동 탐색 실행으로 진행한다. 계획의 모든 계측·판정기가 구현된 것은 아니다.
+**P0/P1 및 3축 P2 로컬 캠페인의 첫 구현을 반영했다.** 실제 live pilot, 추가 계측/유형 detector,
+core/media 최종화 개선과 회귀 실행은 남아 있다. 계획의 모든 계측·판정기가 구현된 것은 아니다.

@@ -1,6 +1,6 @@
 # Scene2Test workspace memory
 
-## Failure-discovery measurement priority (2026-09-27; initial P0/P1 implemented)
+## Failure-discovery measurement priority (2026-09-27; initial P0/P1 and local P2 implemented)
 
 Follow `scene2test/docs/FAILURE_CASE_MEASUREMENT_PLAN.md` for the user-requested focus on
 AFS prioritization and behavior validation/regression assets from `.blueprint/Failure_Case_Goal.md`.
@@ -10,7 +10,7 @@ goal-agent-v5 archives offline and writes separate JSON/CSV/HTML measurements. S
 `scene2test/docs/FAILURE_DISCOVERY_MEASURES.md`. Manifest/contract checks, duplicate exclusions,
 FDR/Gain and a detector-gated six-family coverage calculator are implemented. The importer has
 no family detectors, so real coverage remains unmeasured. Imported method/domain labels are
-declarations, not proof of a prospective fair benchmark. Campaign/regression execution remains planned.
+declarations, not proof of a prospective fair benchmark. Automated regression execution remains planned.
 P1 `--with-memory` adds time-resolved phase/contact/fall/action evidence, audited box motion,
 success/failure/mixed repeat cases, same-condition single-axis observed brackets, and selective
 hashed evidence bundles/reproduction templates. See `docs/BEHAVIOR_FAILURE_MEMORY.md` inside scene2test.
@@ -24,8 +24,17 @@ cold start and repeats, disclose invalid attempts/cost, and do not count legacy 
 incomplete archives as goal failures. Current behavior-AFS goal-agent supports only three
 physical scene axes; expanded generator support is not goal-agent backend support. Reuse client
 contracts/storage/archive via adapters without making server rewrites or robot skill development
-prerequisites. Next implementation: P2 behavior-evidence feedback and equal-valid-budget AFS/Random
-campaign/resume. Family detectors and additional geometry/behavior measures remain open.
+prerequisites. P2 `tools/run_afs_benchmark.py` now provides opt-in local campaign init/run/status/report/resolve
+with frozen config/code/resources, per-method/seed valid budgets, P1 feedback into the existing LLM
+proposal schema, full-domain Random, separately charged paired cold start, exploration/repeat/boundary slots,
+SQLite intent + atomic observe checkpoints, and conservative ambiguous-call recovery (no automatic resend).
+See `scene2test/docs/BEHAVIOR_AFS_CAMPAIGN.md`. Reuses ClientRepository transactions and observation contracts;
+this local scene adapter is NOT an HTTP registry plugin. Interrupted/legacy/incomplete records remain excluded.
+Only synthetic archive/fault-injection tests and real-resource initialization were run; no new GPU/API pilot.
+Example config is 8 valid rollouts per arm, max 12 attempts per arm, up to 240 robot calls + 8 AFS requests;
+live execution requires explicit --live and a locally set API key. No implicit paid launch from init/report.
+Next: budget-reviewed live pilot, then taxonomy/geometry and regression execution. Core/media manifest
+separation/finalization improvements, family detectors and additional behavior measures remain open.
 
 ## Goal-outcome AFS implementation (2026-09-26)
 
@@ -42,7 +51,8 @@ bitwise reproduction of old code. Behavior AFS v2 accepts 1–4 one-sided/paired
 reserves repeats/exploration and requires new-profile PASS/FAIL anchors. Preserve old
 outcomes; never relabel interrupted old traces as completed goal-only trials.
 Tests exercise CPU MuJoCo with scripted state/controller doubles, not new GPU/VLM
-success evidence. Auto-campaign/resume, new geometry and image-based AFS remain open.
+success evidence. Local three-axis auto-campaign/resume now has an initial P2 implementation;
+new geometry and image-based AFS remain open.
 The isolated goal runner records MP4 only: GIF encoding and full-frame accumulation
 are disabled by user request after a suspected GIF-finalization OOM. Preserve old artifacts.
 Do not restore the removed default120s limit. Static no_path does not prove a scene

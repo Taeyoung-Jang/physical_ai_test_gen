@@ -37,6 +37,9 @@ def main():
     p.add_argument(
         "--output-root", type=Path, default=Path("/workspace/g1_failure/runtime/robot_goal_agent")
     )
+    p.add_argument(
+        "--run-dir", type=Path, help="exact NEW output directory for durable campaign attempts"
+    )
     args = p.parse_args()
     import json
 
@@ -73,7 +76,9 @@ def main():
     from robot_vlm.goal_policy import GoalMock, GoalPolicy
     from robot_vlm.goal_runner import run, write
 
-    root = args.output_root / datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S_%fZ")
+    root = args.run_dir or (
+        args.output_root / datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S_%fZ")
+    )
     root.mkdir(parents=True, exist_ok=False)
     print(f"ROBOT_GOAL_AGENT_RUN={root}", flush=True)
     if args.enable_push:

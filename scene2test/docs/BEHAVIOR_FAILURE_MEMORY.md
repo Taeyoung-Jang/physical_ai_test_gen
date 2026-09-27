@@ -131,7 +131,7 @@ CPU 합성 fixture에서 시간 구간, 접촉 후 PASS 보존, 반복 중복/�
 단일 축 bracket, 변경된 증거 거부, 선택 복사·MP4 경로 이동·비밀키 제외를 검증했다.
 이는 새 GPU/VLM 실행이나 실제 실패 유형 발견 증거가 아니다.
 
-다음 P2에서는 이 근거를 **LLM의 다음 후보 선택/observe**에 연결하고,
-동일 유효 rollout 예산의 AFS/Random campaign·중단 재개를 구현한다.
-현재 P1은 수집·분석·보관이며 `llm_afs/behavior.py`를 자동으로 갱신하지 않는다.
+후속 [P2 로컬 캠페인](BEHAVIOR_AFS_CAMPAIGN.md)의 첫 구현에서 이 근거를
+**LLM의 다음 후보 선택/observe**와 동일 유효 예산 AFS/Random·중단 재개에 연결했다.
+이 P1 오프라인 측정 명령 자체는 여전히 수집·분석·보관이며 로봇/LLM을 호출하지 않는다.
 6종 detector, clearance/goal occupancy, 계획 추종/사람 안전 계측, 자동 회귀 실행은 후속 범위다.
