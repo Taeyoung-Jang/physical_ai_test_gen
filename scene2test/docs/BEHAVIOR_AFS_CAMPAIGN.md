@@ -184,9 +184,17 @@ init 및 재개·각 실행 전후에 확인한다. 달라졌다면 새 실험 �
 
 - robot archive가 완결됐고 child가 종료됐으면 재실행 없이 수집한다.
 - API 응답 파일만 저장된 채 중단됐다면 그 응답을 다시 검증하고 후보를 이어서 실행한다.
+- 이미 `READY`인 제안도 재개 시 원본 행동 근거와 context를 다시 검증한다.
+  응답 대기 중 근거가 달라지면 후보를 실행하지 않으며, 코드/자원도 후보 선택 후 실행 직전에
+  다시 확인한다. 실행 후에만 변경을 발견해 다른 조건의 로봇을 한 번 더 실행하는 것을 방지한다.
 - episode 수집·observe checkpoint는 한 DB transaction으로 저장해 중복 소비를 막는다.
+- 조건/반환 모델 변경에 따른 `INCOMPLETE` 중단 상태도 해당 episode와 같은 transaction에 저장한다.
+  저장 직후 crash나 진행 알림 오류가 나도 중단 조건을 잃고 실험을 이어가지 않는다.
 - 요청이 실제 발송/완료됐는지 알 수 없으면 다시 보내지 않는다. 자동 재시도 0회다.
 - watchdog/Ctrl+C의 외부 중단은 INCONCLUSIVE이며 이번 명령을 멈춘다. 목표 FAIL이 아니다.
+- 자식 프로세스 시작 후 PID 기록/대기에 오류가 나면 시작한 프로세스 그룹을 종료·회수한 뒤
+  가능한 경우 receipt를 남기고 원래 오류를 전달한다. 신호를 보내는 순간 자식이 먼저 종료된
+  경우도 정상적으로 회수한다. 호스트 전체 종료/강제 kill까지 처리한다는 보장은 아니다.
 - 필수 결과/manifest 누락은 기존 P0 규칙대로 제외한다. core/media manifest 분리 및 runner 최종화 순서 개선은 아직 후속 작업이다.
 
 `NEEDS_ATTENTION`이면 먼저 `last_error.json`, `proposals/<id>/error.json`, `process.log`,
@@ -201,6 +209,8 @@ uv run --no-sync python tools/run_afs_benchmark.py resolve --campaign CAMPAIGN_D
 ```
 
 완료 archive 또는 검증된 proposal이 있으면 버리기를 거부하고 정상 재개를 요구한다.
+응답 파일은 저장됐지만 아직 `READY`로 기록되지 않은 경우에도 후보로 사용 가능한 응답이면
+버리기를 거부한다. 거절/형식 오류/유효 후보 없음은 명시적으로 해소할 수 있지만 자동 재요청은 하지 않는다.
 PID가 살아 있으면 자동 종료하지 않고 거부한다. PID 재사용도 보수적으로 실행 중으로 판단할 수 있다.
 버린 시도의 비용/전체 시도 횟수는 사라지지 않으며 goal 실패로 재분류되지 않는다.
 다음 `run`은 새 attempt/request를 만든다. 과거 API 과금 취소를 보장하지 않는다.

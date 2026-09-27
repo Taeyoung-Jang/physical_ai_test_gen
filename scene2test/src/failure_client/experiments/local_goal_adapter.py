@@ -61,6 +61,22 @@ def command(config, scene, run_dir):
     return args
 
 
+def _stop_child(proc):
+    """Reap only the child/session we launched; exit during signalling is harmless."""
+    try:
+        os.killpg(proc.pid, signal.SIGTERM)
+    except ProcessLookupError:
+        pass
+    try:
+        proc.wait(timeout=10)
+    except subprocess.TimeoutExpired:
+        try:
+            os.killpg(proc.pid, signal.SIGKILL)
+        except ProcessLookupError:
+            pass
+        proc.wait()
+
+
 class LocalGoalRunner:
     def __call__(self, config, attempt_dir, parameters):
         attempt_dir = Path(attempt_dir)
@@ -75,26 +91,28 @@ class LocalGoalRunner:
         atomic_json(attempt_dir / "command.json", {"argv": args, "automatic_retries": 0})
         start = time.monotonic()
         interrupted = None
+        unexpected = None
         with (attempt_dir / "process.log").open("x") as stream:
             proc = subprocess.Popen(
                 args, cwd=PROJECT, stdout=stream, stderr=subprocess.STDOUT, start_new_session=True
             )
-            atomic_json(attempt_dir / "process.json", {"pid": proc.pid})
             try:
+                atomic_json(attempt_dir / "process.json", {"pid": proc.pid})
                 code = proc.wait(timeout=config.robot.watchdog_wall_s)
-            except (subprocess.TimeoutExpired, KeyboardInterrupt) as exc:
+            except BaseException as exc:
+                # Includes metadata-write failures after spawn. Leaving an untracked
+                # child running could keep spending GPU/API resources after we stop.
                 interrupted = type(exc).__name__
-                os.killpg(proc.pid, signal.SIGTERM)
-                try:
-                    proc.wait(timeout=10)
-                except subprocess.TimeoutExpired:
-                    os.killpg(proc.pid, signal.SIGKILL)
-                    proc.wait()
+                _stop_child(proc)
                 code = proc.returncode
+                if not isinstance(exc, (subprocess.TimeoutExpired, KeyboardInterrupt)):
+                    unexpected = exc
         receipt = {
             "returncode": code,
             "wall_s": time.monotonic() - start,
             "interrupted": interrupted,
         }
         atomic_json(attempt_dir / "receipt.json", receipt)
+        if unexpected is not None:
+            raise unexpected
         return receipt

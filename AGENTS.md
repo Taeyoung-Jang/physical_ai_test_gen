@@ -31,6 +31,10 @@ SQLite intent + atomic observe checkpoints, and conservative ambiguous-call reco
 See `scene2test/docs/BEHAVIOR_AFS_CAMPAIGN.md`. Reuses ClientRepository transactions and observation contracts;
 this local scene adapter is NOT an HTTP registry plugin. Interrupted/legacy/incomplete records remain excluded.
 Only synthetic archive/fault-injection tests and real-resource initialization were run; no new GPU/API pilot.
+P2 now revalidates pending proposal evidence/context on resume and after inference, and checks frozen
+code/resources again before launch. Condition-drift stops commit atomically with observations; usable
+saved responses cannot be abandoned before validation. Spawned children are reaped on metadata/wait
+errors. P0 excludes recorded API/policy call counts exceeding the declared episode budget.
 Example config is 8 valid rollouts per arm, max 12 attempts per arm, up to 240 robot calls + 8 AFS requests;
 live execution requires explicit --live and a locally set API key. No implicit paid launch from init/report.
 Next: budget-reviewed live pilot, then taxonomy/geometry and regression execution. Core/media manifest

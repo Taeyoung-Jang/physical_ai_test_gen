@@ -237,7 +237,7 @@ class ResearchCampaign:
             response = self.proposer(body, timeout=self.config.afs_timeout_s)
             atomic_json(directory / "response.json", response)
             row["wall_s"] = time.monotonic() - started
-            return self._finish_proposal(row, memory)
+            return self._finish_proposal(row)
         except Exception as exc:
             row.update(error_type=type(exc).__name__, wall_s=time.monotonic() - started)
             atomic_json(directory / "error.json", {"exception_chain": exception_detail(exc)})
@@ -246,7 +246,20 @@ class ResearchCampaign:
                 f"{pid}: proposal failed; inspect saved evidence, no retry"
             ) from None
 
-    def _finish_proposal(self, row, memory):
+    def _proposal_memory(self, row):
+        # The model call or a crash may have separated selection from execution.
+        # Never reuse a READY proposal without rechecking the evidence it used.
+        memory = self._memory(row["seed"])
+        current = feedback_context(
+            memory,
+            history_limit=self.config.history_limit,
+            remaining=self.config.valid_budget_per_seed - self._valid("afs", row["seed"]),
+        )
+        if digest(current) != digest(row["context"]):
+            raise NeedsAttention("saved proposal context differs from current verified evidence")
+        return memory
+
+    def _finish_proposal(self, row):
         response = read_json(self.root / "proposals" / row["id"] / "response.json")
         row.update(
             response_received=True,
@@ -255,7 +268,9 @@ class ResearchCampaign:
             response_id=response.get("id"),
         )
         self._save("proposal_response", {"id": row["id"]})
-        candidate = choose_probe(provider.extract_proposal(response), row["context"], memory)
+        candidate = choose_probe(
+            provider.extract_proposal(response), row["context"], self._proposal_memory(row)
+        )
         candidate["proposal_id"] = row["id"]
         row.update(status="READY", candidate=candidate)
         self._save("proposal_validated", {"id": row["id"]})
@@ -336,12 +351,17 @@ class ResearchCampaign:
         )
         self.state["checkpoints"][key] = method.state_dict()
         self.state["pending"] = None
+        condition_changed = (
+            record.status == "VALID" and record.condition_id != self.state["condition_id"]
+        )
+        if condition_changed:
+            # Stop and observation must survive the same transaction/crash boundary.
+            self.state.update(status="INCOMPLETE", reason="condition_or_returned_model_changed")
         self._save(
             "observed_and_checkpointed",
             {"id": a["id"], "status": record.status, "outcome": record.task_outcome},
         )
-        if record.status == "VALID" and record.condition_id != self.state["condition_id"]:
-            self.state.update(status="INCOMPLETE", reason="condition_or_returned_model_changed")
+        if condition_changed:
             self._save("condition_mismatch", {"id": a["id"]})
 
     def _recover(self):
@@ -369,10 +389,11 @@ class ResearchCampaign:
             return None
         p = next(p for p in self.state["proposals"] if p["id"] == pending["id"])
         if p["status"] == "READY":
+            self._proposal_memory(p)
             return pending["arm"], p["candidate"]
         if not (self.root / "proposals" / p["id"] / "response.json").exists():
             raise NeedsAttention(f"{p['id']}: API completion unknown; will not resend")
-        return pending["arm"], self._finish_proposal(p, self._memory(p["seed"]))
+        return pending["arm"], self._finish_proposal(p)
 
     def run(self, *, max_new_attempts=None):
         if max_new_attempts is not None and max_new_attempts < 0:
@@ -400,6 +421,9 @@ class ResearchCampaign:
                         if arm is None:
                             break
                         candidate = self._candidate(arm)
+                    # Selection may include a long external inference wait. Recheck
+                    # frozen code/resources before launching, not only afterwards.
+                    self._fresh()
                     a, directory = self._prepare_attempt(arm, candidate)
                     launched += 1
                     receipt = self.runner(self.config, directory, candidate["parameters"])
@@ -421,10 +445,13 @@ class ResearchCampaign:
                         self.state.update(status="COMPLETE", reason=None)
                     self._save("invocation_finished")
             except Exception as exc:
-                self.state.update(
-                    status="INCOMPLETE" if isinstance(exc, CampaignLimit) else "NEEDS_ATTENTION",
-                    reason=type(exc).__name__,
-                )
+                if self.state["status"] != "INCOMPLETE":
+                    self.state.update(
+                        status="INCOMPLETE"
+                        if isinstance(exc, CampaignLimit)
+                        else "NEEDS_ATTENTION",
+                        reason=type(exc).__name__,
+                    )
                 atomic_json(
                     self.root / "last_error.json", {"exception_chain": exception_detail(exc)}
                 )
@@ -439,6 +466,7 @@ class ResearchCampaign:
         note = clean(note)
         with self.store.exclusive():
             self.state, self.revision = self.store.load()
+            self._verify_lock()
             pending = self.state["pending"]
             if pending is None or pending["id"] != identifier:
                 raise ValueError("not the pending operation")
@@ -462,6 +490,18 @@ class ResearchCampaign:
                 p = next(p for p in self.state["proposals"] if p["id"] == identifier)
                 if p["status"] == "READY":
                     raise ValueError("validated proposal exists; resume it")
+                response_path = self.root / "proposals" / identifier / "response.json"
+                if response_path.exists():
+                    memory = self._proposal_memory(p)
+                    try:
+                        response = read_json(response_path)
+                        choose_probe(provider.extract_proposal(response), p["context"], memory)
+                    except (ValueError, KeyError, TypeError, AttributeError):
+                        # A malformed/refused/non-actionable response can be explicitly
+                        # abandoned, but a usable saved response must first be resumed.
+                        pass
+                    else:
+                        raise ValueError("usable saved proposal exists; resume to validate it")
                 p.update(status="ABANDONED", resolution_note=note)
                 self.state["pending"] = None
             self.state.update(status="READY", reason="explicit_resolution")

@@ -60,6 +60,11 @@ uv run --no-sync python tools/measure_failure_discovery.py --run /workspace/g1_f
 `robot-goal-agent-v5` + `goal_outcome_v1`만 공식 목표 표본으로 수용한다.
 manifest의 모든 선언 파일 해시/경로를 검증하고 protocol/result/scene/states/decisions를 요구한다.
 목표 계약, robot condition, scene revision, 종료 주체/이유, valid/goal/success 플래그 일치를 검사한다.
+기록된 API 호출 수와 (존재하면) 전체 정책 호출 수가 선언된 `max_calls`를 초과하면
+`INVALID / episode_call_budget_exceeded`로 제외한다. API 호출 수가 전체 정책 호출 수보다
+많은 경우도 `inconsistent_policy_call_counts`로 제외한다. 원본의 목표 달성 여부는 수정하지 않으며,
+예산 위반 결과를 정상 PASS/FAIL 표본으로 세지 않는다. 전체 정책 호출 수 필드가 없는 기록에서는
+그 값을 0으로 만들거나 추정하지 않고, 확인 가능한 API 호출 수 상한만 검사한다.
 잘못된 JSON, 중복 JSON key, NaN/Inf, 역행 시간, 빈 상태열 등은 INVALID로 남긴다.
 구형 guard 결과는 UNSUPPORTED, API/수치 중단은 INCONCLUSIVE, 파일 누락은 INCOMPLETE다.
 manifest는 trusted-local 무결성 확인이지 외부 작성자의 진위를 인증하는 서명이 아니다.

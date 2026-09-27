@@ -246,6 +246,13 @@ def read_goal_run(source: RunInput) -> EpisodeRecord:
             robot_api_calls=_count(result["api_calls_attempted"]),
             scene_id=digest({"revision": protocol["scene_revision"], "xml": hashes["scene.xml"]}),
         )
+        policy_calls = _count(result["calls_attempted"]) if "calls_attempted" in result else None
+        if base["robot_api_calls"] > protocol["max_calls"] or (
+            policy_calls is not None and policy_calls > protocol["max_calls"]
+        ):
+            raise EvidenceError("episode_call_budget_exceeded")
+        if policy_calls is not None and base["robot_api_calls"] > policy_calls:
+            raise EvidenceError("inconsistent_policy_call_counts")
         if result["task_outcome"] == "INCONCLUSIVE":
             raise EvidenceError("inconclusive_execution", "INCONCLUSIVE")
         measures, models, usage = _trace(root, hashes, contract)
