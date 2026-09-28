@@ -1,10 +1,10 @@
 """Scene-only adapter: never accept planner, task or robot changes from AFS."""
 
-from clear_path.contracts import Fixture
+from clear_path.contracts import Fixture, parse_fixture
 
 
 def validate_scene(value=None):
-    config = Fixture() if value is None else Fixture.model_validate(value)
+    config = parse_fixture(value)
     baseline = Fixture()
     for key in ("footprint_radius_m", "clearance_m"):
         if getattr(config, key) != getattr(baseline, key):

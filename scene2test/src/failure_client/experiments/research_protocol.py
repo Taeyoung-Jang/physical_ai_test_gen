@@ -1,4 +1,4 @@
-"""Frozen three-axis pilot contract; no simulator or network imports."""
+"""Frozen versioned scene-domain contract; no simulator or network imports."""
 
 from __future__ import annotations
 
@@ -10,9 +10,10 @@ from typing import Literal
 
 from pydantic import Field, model_validator
 
+from clear_path.scene_space import axes_for_schema, scene_from_parameters
 from failure_client.evaluation.goal_run_reader import _hash_file
 from failure_client.evaluation.research_records import StrictRecord
-from llm_afs.behavior import AXES, digest
+from llm_afs.behavior import digest
 
 PROJECT = Path(__file__).resolve().parents[3]
 
@@ -29,6 +30,9 @@ class RobotSettings(StrictRecord):
 
 class CampaignConfig(StrictRecord):
     schema_version: Literal["behavior-afs-campaign-v1"] = "behavior-afs-campaign-v1"
+    scene_schema: Literal["clear-path-fixture-v1", "clear-path-corridor-v2"] = (
+        "clear-path-fixture-v1"
+    )
     seeds: list[int] = Field(default_factory=lambda: [17], min_length=1, max_length=20)
     valid_budget_per_seed: int = Field(default=8, ge=2, le=128)
     max_attempts_per_arm: int = Field(default=12, ge=2, le=256)
@@ -37,6 +41,7 @@ class CampaignConfig(StrictRecord):
     afs_model: str = Field(default="gpt-6-astra", min_length=1)
     afs_timeout_s: float = Field(default=300.0, ge=1, le=600)
     history_limit: int = Field(default=8, ge=2, le=16)
+    selection_policy: Literal["novelty-v1", "hypothesis-v2"] = "hypothesis-v2"
     # A fixed pilot allocation, not ratios tuned after seeing the evaluation seed.
     strategy_cycle: list[Literal["llm", "boundary", "exploration", "repeat"]] = Field(
         default_factory=lambda: ["llm", "boundary", "exploration", "repeat"]
@@ -58,12 +63,19 @@ class CampaignConfig(StrictRecord):
         return self
 
     def design(self):
+        axes = axes_for_schema(self.scene_schema)
         return {
-            "domain_id": digest({"axes": AXES, "fixture": "clear-path-fixture-v1"}),
-            "axes": AXES,
-            "sampling_distribution": "independent-uniform-full-three-axis-domain-v1",
+            "domain_id": digest({"axes": axes, "fixture": self.scene_schema}),
+            "axes": axes,
+            "sampling_distribution": (
+                "independent-uniform-full-three-axis-domain-v1"
+                if self.scene_schema == "clear-path-fixture-v1"
+                else "independent-uniform-full-five-axis-corridor-v2"
+            ),
             "cold_start": "paired scene draws, separately executed and charged to each arm",
             "strategy_cycle": self.strategy_cycle,
+            "selection_policy": self.selection_policy,
+            "behavior_feedback": "behavior-search-evidence-v2: full actions + selected details",
             "fallback_policy": "stop; no silent Random substitution",
             "history_policy": "AFS arm's own seed only; no external warm history",
             "robot_repeat_seed": "not configurable in current runner; no determinism claim",
@@ -73,6 +85,9 @@ class CampaignConfig(StrictRecord):
             ),
             "afs_request_upper_bound": len(self.seeds) * self.max_proposals_per_seed,
         }
+
+    def scene(self, parameters):
+        return scene_from_parameters(parameters, self.scene_schema)
 
 
 def environment_fingerprint(config: CampaignConfig):

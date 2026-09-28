@@ -8,9 +8,11 @@ from __future__ import annotations
 
 import random
 
-from clear_path.contracts import Fixture
+from clear_path.contracts import parse_fixture
 from clear_path.fixture import graph
+from clear_path.scene_space import axes_for_parameters, axes_for_schema
 from failure_client.methods.base import CandidateObservation
+from failure_client.methods.search_evidence import behavior_signature, compact_evidence
 from llm_afs import behavior as b
 from llm_afs.behavior_request import request
 
@@ -19,23 +21,63 @@ def seeded(seed, *parts):
     return random.Random(int(b.digest([seed, *parts]), 16))
 
 
-def uniform_scene(seed, *parts):
+def uniform_scene(seed, *parts, schema="clear-path-fixture-v1"):
     rng = seeded(seed, *parts)
-    return {k: rng.uniform(*bounds) for k, bounds in b.AXES.items()}
+    return {k: rng.uniform(*bounds) for k, bounds in axes_for_schema(schema).items()}
 
 
 def parameters(case):
-    return {k: case["parameters"][k] for k in b.AXES}
+    return {k: case["parameters"][k] for k in axes_for_parameters(case["parameters"])}
 
 
-def distance(a, c):
-    return max(abs(a[k] - c[k]) / (hi - lo) for k, (lo, hi) in b.AXES.items())
+def distance(a, c, axes=None):
+    axes = axes or b.AXES
+    if set(a) != set(axes) or set(c) != set(axes):
+        raise ValueError("distance requires the same complete scene domain")
+    return max(abs(a[k] - c[k]) / (hi - lo) for k, (lo, hi) in axes.items())
 
 
-def feedback_context(memory, *, history_limit, remaining):
+def search_state(memory):
+    cases = memory["cases"]
+    if any(c["role"] == "mixed_outcomes" for c in cases):
+        return "mixed_outcomes"
+    if not any(c["pass_count"] for c in cases):
+        return "no_success_control"
+    if memory["brackets"]:
+        return "observed_bracket"
+    return "seek_alternative"
+
+
+def similar_failures(memory, base, axes):
+    latest = next(reversed(memory["episodes"].values()))
+    pattern = behavior_signature(latest)
+    if latest["record"]["task_outcome"] != "FAIL" or pattern["id"] is None:
+        return 0
+    return sum(
+        entry["record"]["task_outcome"] == "FAIL"
+        and behavior_signature(entry)["id"] == pattern["id"]
+        for c in memory["cases"]
+        if distance(parameters(c), base, axes) <= 0.05
+        for entry in (memory["episodes"][eid] for eid in c["episodes"])
+    )
+
+
+def feedback_context(
+    memory,
+    *,
+    history_limit,
+    remaining,
+    scene_schema="clear-path-fixture-v1",
+    selection_policy="hypothesis-v2",
+):
+    if selection_policy not in ("novelty-v1", "hypothesis-v2"):
+        raise ValueError("unknown campaign selection policy")
     cases = memory["cases"]
     if not cases or any(c["parameters"] is None for c in cases):
-        raise ValueError("verified three-axis scene evidence required")
+        raise ValueError("verified scene evidence required")
+    axes = axes_for_schema(scene_schema)
+    if any(c["parameters"].get("schema_version") != scene_schema for c in cases):
+        raise ValueError("feedback must use the frozen scene schema")
     episodes = list(memory["episodes"].values())
     if len({c["condition_id"] for c in cases}) != 1:
         raise ValueError("feedback must use one robot/task/budget condition")
@@ -54,7 +96,6 @@ def feedback_context(memory, *, history_limit, remaining):
     evidence = []
     for entry in selected[:history_limit]:
         record, behavior = entry["record"], entry["behavior"]
-        intervals = [i for i in behavior["intervals"] if not i["details"].get("support_contact")]
         evidence.append(
             {
                 "id": record["evidence_id"],
@@ -63,9 +104,8 @@ def feedback_context(memory, *, history_limit, remaining):
                 "measures": record["measures"],
                 "components": behavior["components"],
                 "object_motion": behavior["object_motion"],
-                "intervals": intervals[:12],
-                "interval_count": len(intervals),
-                "display_limit": 12,
+                **compact_evidence(entry),
+                "behavior_pattern": behavior_signature(entry),
                 "warnings": behavior["warnings"],
             }
         )
@@ -92,13 +132,36 @@ def feedback_context(memory, *, history_limit, remaining):
         ]
     )
     latest_case = next(c for c in cases if latest["record"]["evidence_id"] in c["episodes"])
+    state = search_state(memory)
+    stagnant = similar_failures(memory, parameters(latest_case), axes)
+    modes = (
+        ["success_probe", "cross_mechanism", "boundary_probe"]
+        if state == "no_success_control"
+        else ["cross_mechanism", "success_probe", "boundary_probe"]
+    )
+    if stagnant >= 3:
+        modes = ["cross_mechanism", "success_probe", "boundary_probe"]
     return {
         "schema_version": "behavior-campaign-feedback-v1",
         "latest": {"parameters": parameters(latest_case), "evidence": evidence},
-        "scene_graph": graph(Fixture(**parameters(latest_case))),
+        "scene_graph": graph(parse_fixture(latest_case["parameters"])),
         "task_contract": latest_case["task_contract"],
         "robot_condition": latest_case["reproduction"],
-        "allowed_axes": b.AXES,
+        "allowed_axes": axes,
+        "search_selection": {
+            "policy": selection_policy,
+            "state": state,
+            "anchor_case_id": latest_case["case_id"],
+            "anchor_evidence_id": latest["record"]["evidence_id"],
+            "mode_priority": modes,
+            "similar_nearby_failures": stagnant,
+            "cooldown_threshold": 3,
+            "cooldown_normalized_distance": 0.05,
+            "ranking": "purpose, proposal order, endpoint novelty"
+            if selection_policy == "hypothesis-v2"
+            else "endpoint novelty",
+            "claim": "Heuristic priority, not calibrated failure probability or causal attribution",
+        },
         "remaining_valid_budget": remaining,
         "history_selection": {
             "total": len(episodes),
@@ -118,39 +181,36 @@ def feedback_context(memory, *, history_limit, remaining):
 
 
 def proposal_request(ctx, model):
-    return request(ctx, model, selection_policy="campaign_single_endpoint")
+    policy = ctx.get("search_selection", {}).get("policy", "novelty-v1")
+    return request(
+        ctx,
+        model,
+        selection_policy=(
+            "campaign_hypothesis_endpoint"
+            if policy == "hypothesis-v2"
+            else "campaign_single_endpoint"
+        ),
+    )
 
 
 def choose_probe(raw, ctx, memory):
     proposal = b.Proposal.model_validate(raw)
     b.validate(proposal, ctx)
+    axes = b.context_axes(ctx)
     base = ctx["latest"]["parameters"]
     seen = [parameters(c) for c in memory["cases"]]
-    # Three nearby failures with the same recorded action/event summary trigger cooldown.
-    episodes = list(memory["episodes"].values())
-    latest = episodes[-1]["record"]
-
-    def signature(record):
-        m = record["measures"] or {}
-        return b.digest(
-            [record["termination_reason"], m.get("action_counts"), m.get("event_counts")]
-        )
-
-    stagnant = 0
-    for case in memory["cases"]:
-        if distance(parameters(case), base) <= 0.05:
-            stagnant += sum(
-                memory["episodes"][eid]["record"]["task_outcome"] == "FAIL"
-                and signature(memory["episodes"][eid]["record"]) == signature(latest)
-                for eid in case["episodes"]
-            )
-    options = []
-    for space in proposal.spaces:
+    stagnant = similar_failures(memory, base, axes)
+    options, rejected = [], []
+    for index, space in enumerate(proposal.spaces):
         for value in (space.low, space.high):
             params = {**base, space.axis: value}
-            if any(distance(params, old) < 1e-8 for old in seen):
+            if any(distance(params, old, axes) < 1e-8 for old in seen):
+                rejected.append({"space": index, "value": value, "reason": "already_observed"})
                 continue
-            if stagnant >= 3 and distance(params, base) <= 0.05:
+            if stagnant >= 3 and distance(params, base, axes) <= 0.05:
+                rejected.append(
+                    {"space": index, "value": value, "reason": "similar_failure_cooldown"}
+                )
                 continue
             options.append(
                 {
@@ -159,20 +219,64 @@ def choose_probe(raw, ctx, memory):
                     "stage": "discovery",
                     "evidence": space.model_dump(),
                     "boundary_confirmed": False,
+                    "space_index": index,
+                    "novelty": min(distance(params, old, axes) for old in seen),
                 }
             )
     if not options:
         raise ValueError("proposal has no novel non-cooled-down endpoint; no automatic fallback")
-    return max(options, key=lambda c: min(distance(c["parameters"], old) for old in seen))
+    selection = ctx.get("search_selection", {})
+    policy = selection.get("policy", "novelty-v1")
+    if policy == "hypothesis-v2":
+        modes = selection["mode_priority"]
+        chosen = max(
+            options, key=lambda c: (-modes.index(c["strategy"]), -c["space_index"], c["novelty"])
+        )
+    elif policy == "novelty-v1":
+        chosen = max(options, key=lambda c: c["novelty"])
+    else:
+        raise ValueError("unknown campaign selection policy")
+    chosen["selection_audit"] = {
+        **selection,
+        "rejected": rejected,
+        "eligible": [
+            {k: c[k] for k in ("space_index", "strategy", "parameters", "novelty")} for c in options
+        ],
+        "hypothesis_id": b.digest([ctx, chosen["space_index"], chosen["evidence"]]),
+        "selected_mode": chosen["strategy"],
+        "modes_without_eligible_candidate": [
+            mode
+            for mode in selection.get("mode_priority", [])
+            if not any(c["strategy"] == mode for c in options)
+        ],
+        "interpretation": "Untested endpoints and causal claims remain unconfirmed",
+    }
+    return chosen
+
+
+def repeat_candidate(memory, *, desired="observed_failure", mixed_only=False):
+    mixed = [c for c in memory["cases"] if c["role"] == "mixed_outcomes"]
+    choices = mixed or ([] if mixed_only else [c for c in memory["cases"] if c["role"] == desired])
+    if mixed_only and not choices:
+        return None
+    case = min(choices or memory["cases"], key=lambda c: len(c["episodes"]))
+    return {
+        "parameters": parameters(case),
+        "strategy": "mixed_outcome_repeat" if mixed else "control_repeat",
+        "stage": "repeat",
+        "evidence": {"case_id": case["case_id"]},
+    }
 
 
 def boundary_candidate(memory):
     lookup = {c["case_id"]: c for c in memory["cases"]}
     seen = [parameters(c) for c in memory["cases"]]
     for bracket in sorted(memory["brackets"], key=lambda b: b["normalized_width"]):
-        base = parameters(lookup[bracket["low"]["case_ids"][0]])
+        case = lookup[bracket["low"]["case_ids"][0]]
+        axes = axes_for_parameters(case["parameters"])
+        base = parameters(case)
         params = {**base, bracket["axis"]: bracket["midpoint_probe"]}
-        if not any(distance(params, old) < 1e-8 for old in seen):
+        if not any(distance(params, old, axes) < 1e-8 for old in seen):
             return {
                 "parameters": params,
                 "strategy": "observed_boundary_midpoint",

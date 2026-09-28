@@ -5,10 +5,11 @@ import json
 
 import numpy as np
 
-from .fixture import BOX_SIZE, BOX_TARGET, GOAL, SPAWN, WALLS
+from .contracts import CorridorFixture
+from .fixture import BOX_SIZE, BOX_TARGET, GOAL, SPAWN, WALLS, walls
 
 
-def plot_map(nav, path):
+def plot_map(nav, path, config=None):
     import matplotlib
 
     matplotlib.use("Agg")
@@ -16,16 +17,23 @@ def plot_map(nav, path):
     from matplotlib.patches import Rectangle
 
     fig, ax = plt.subplots(figsize=(12, 5))
+    x0, y0 = nav["origin_xy_m"]
+    resolution = nav["resolution_m"]
     ax.imshow(
         nav["blocked"],
         origin="lower",
-        extent=[-0.1, 8.1, -1, 2.7],
+        extent=[
+            x0,
+            x0 + len(nav["blocked"][0]) * resolution,
+            y0,
+            y0 + len(nav["blocked"]) * resolution,
+        ],
         cmap="Greys",
         alpha=0.35,
         vmin=0,
         vmax=1,
     )
-    for a, b, c, d in WALLS.values():
+    for a, b, c, d in (walls(config) if config is not None else WALLS).values():
         ax.add_patch(Rectangle((a, c), b - a, d - c, color="#334155"))
     bx, by = nav["box_xy_m"]
     ax.add_patch(
@@ -33,17 +41,18 @@ def plot_map(nav, path):
             (bx - 0.4, by - 0.55), BOX_SIZE[0], BOX_SIZE[1], color="#fb923c", label="Movable box"
         )
     )
-    ax.add_patch(
-        Rectangle(
-            (BOX_TARGET[0] - 0.4, BOX_TARGET[1] - 0.55),
-            0.8,
-            1.1,
-            fill=False,
-            edgecolor="green",
-            linestyle="--",
-            label="Proposed box destination",
+    if not isinstance(config, CorridorFixture):
+        ax.add_patch(
+            Rectangle(
+                (BOX_TARGET[0] - 0.4, BOX_TARGET[1] - 0.55),
+                0.8,
+                1.1,
+                fill=False,
+                edgecolor="green",
+                linestyle="--",
+                label="Proposed box destination",
+            )
         )
-    )
     ax.scatter(*SPAWN, color="green", label="Robot start")
     ax.scatter(*GOAL, color="blue", label="Robot goal")
     if nav["path_xy_m"]:

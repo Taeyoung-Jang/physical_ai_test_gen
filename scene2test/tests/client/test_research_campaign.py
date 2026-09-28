@@ -406,7 +406,7 @@ def test_feedback_uses_only_own_arm_and_has_time_evidence(tmp_path):
         assert ctx["history_selection"]["other_arm_data_used"] is False
         assert all("intervals" in e and "object_motion" in e for e in evidence)
         request = row["request"]
-        assert "Selection policy: campaign-single-endpoint-v1." in request["instructions"]
+        assert "Selection policy: campaign-hypothesis-endpoint-v2." in request["instructions"]
         assert "standalone-suite" not in request["instructions"]
         assert "Host runs each endpoint" not in request["instructions"]
         assert request["store"] is False
@@ -450,7 +450,7 @@ def test_llm_space_changes_selected_environment_and_schema_is_strict(tmp_path):
 
 def test_campaign_prompt_matches_single_max_min_endpoint_selection(tmp_path):
     memory = build_failure_memory([load(fixture(tmp_path / "anchor"))])
-    ctx = feedback_context(memory, history_limit=2, remaining=6)
+    ctx = feedback_context(memory, history_limit=2, remaining=6, selection_policy="novelty-v1")
     original = copy.deepcopy(ctx)
     body = proposal_request(ctx, "gpt-6-astra")
     assert ctx == original

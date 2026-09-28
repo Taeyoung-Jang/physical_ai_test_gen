@@ -83,7 +83,10 @@ def run(
     controller.data = audit.initial_data(model, source)
     data = controller.data
     dt = model.opt.timestep
-    world = {model.geom(n).id for n in [*fixture.WALLS, "clear_floor", "clear_box_geom"]}
+    world = {model.geom(n).id for n in [*fixture.walls(config), "clear_floor", "clear_box_geom"]}
+    # Evaluation artifacts only; no reference path is supplied to the policy.
+    write(root / "scene_graph.json", fixture.graph(config))
+    write(root / "navigation_map.json", fixture.navigation_map(config))
     foot = {
         g for g in range(model.ngeom) if "ankle_roll" in model.body(int(model.geom_bodyid[g])).name
     }

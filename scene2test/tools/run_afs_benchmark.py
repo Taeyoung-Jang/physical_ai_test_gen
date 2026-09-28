@@ -7,6 +7,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 from failure_client.evaluation.goal_run_reader import read_json
+from failure_client.experiments.proposal_recovery import recover_campaign
 from failure_client.experiments.research_campaign import ResearchCampaign
 from failure_client.experiments.research_protocol import CampaignConfig
 from robot_vlm.debug_log import clean
@@ -18,6 +19,14 @@ def main(argv=None):
     init = commands.add_parser("init", help="freeze config/code/assets; no API or robot launch")
     init.add_argument("--config", type=Path, required=True)
     init.add_argument("--output-dir", type=Path)
+    recovery = commands.add_parser(
+        "recover-evidence-refs", help="offline explicit recovery fork; dry run by default"
+    )
+    recovery.add_argument("--campaign", type=Path, required=True)
+    recovery.add_argument("--mapping", type=Path, required=True)
+    recovery.add_argument("--output-dir", type=Path)
+    recovery.add_argument("--apply", action="store_true")
+    recovery.add_argument("--expected-plan-sha256")
     for name in ("run", "status", "report", "resolve"):
         sub = commands.add_parser(name)
         sub.add_argument("--campaign", type=Path, required=True)
@@ -39,6 +48,20 @@ def main(argv=None):
     if args.operation == "run" and (not args.live or not os.getenv("OPENAI_API_KEY")):
         parser.error("run requires --live and OPENAI_API_KEY in the local environment")
     try:
+        if args.operation == "recover-evidence-refs":
+            result = recover_campaign(
+                args.campaign, read_json(args.mapping), output=args.output_dir,
+                apply=args.apply, expected_plan_sha256=args.expected_plan_sha256,
+            )
+            print("RECOVERY_PLAN_SHA256=" + result["plan_sha256"])
+            if result["applied"]:
+                print("AFS_RECOVERY_CAMPAIGN=" + result["campaign"])
+            # Full environment hashes are retained in the applied recovery audit.
+            display = dict(result)
+            if "plan" in display:
+                display["plan"] = {k: v for k, v in result["plan"].items() if k != "environment"}
+            print("RECOVERY=" + json.dumps(display, ensure_ascii=False, indent=2))
+            return
         if args.operation == "init":
             config = CampaignConfig.model_validate(read_json(args.config))
             stamp = datetime.now(UTC).strftime("%Y%m%dT%H%M%S_%fZ")

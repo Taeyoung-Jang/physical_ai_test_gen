@@ -1,5 +1,14 @@
 # P2 — 행동 근거 피드백·AFS/Random 캠페인
 
+2026-09-28 갱신: 새 캠페인은 [가설 중심 선택 v2](AFS_SEARCH_V2.md)를 기본 사용한다.
+전체 행동 요약/중요 사건, 행동 패턴 cooldown, 목적 우선 선택, mixed 반복 우선,
+탐색 보조 지표와 INCONCLUSIVE 관측 토큰을 추가했다. 아래는 초기 구현 설명이며,
+선택 세부사항은 v2 문서가 우선한다. 기존 frozen campaign을 새 코드로 강제 재개하지 않는다.
+
+첫 제안의 근거 ID 한 글자 누락만 명시적으로 복구하는 예외 절차는
+[AFS_EVIDENCE_RECOVERY.md](AFS_EVIDENCE_RECOVERY.md)를 참고한다. 원본 보존·비용 계승·별도
+코드 고정·operator-assisted 표시가 필수이며 일반 drift 우회나 자동 재시도가 아니다.
+
 2026-09-27 UTC. 현재 3축 goal-agent backend를 대상으로 한 **첫 구현**이다.
 [P0 측정기](FAILURE_DISCOVERY_MEASURES.md), [P1 행동 근거/메모리](BEHAVIOR_FAILURE_MEMORY.md)를
 실행·관측·다음 제안에 연결했다. 새 서버나 로봇 기술은 추가하지 않았다.

@@ -1,5 +1,74 @@
 # Scene2Test workspace memory
 
+## Explicit AFS evidence-reference recovery (2026-09-28)
+
+Behavior request schemas now constrain evidence_refs to the supplied ID enum;
+host validation still rejects unknown IDs and records unknown/allowed values.
+`run_afs_benchmark.py recover-evidence-refs` is offline/dry-run by default. It only
+supports a stopped first proposal with one explicitly mapped, uniquely identifiable
+single-character deletion in a hex evidence ID and completed VALID cold starts.
+Apply requires a reviewed plan hash and a new disjoint output directory. Original
+DB/request/response/rollouts remain unchanged; inherited costs/budgets are retained.
+Source SQLite/WAL are queried from a private temporary copy under its campaign lock.
+Only recovery-specific code changes are migrated and audited; unrelated code,
+robot/resource/dependency changes are refused. The new fork remains code-frozen.
+Inherited rollout paths still reference the original folder: preserve it.
+Reports mark operator-assisted continuation and suppress prospective Gain claims,
+even on completion. This is not automatic fuzzy correction or general drift bypass.
+See scene2test/docs/AFS_EVIDENCE_RECOVERY.md. No paid retry or robot launch is implied.
+
+## AFS search-quality update (2026-09-28)
+
+User priority is AFS, not improving the robot as a prerequisite. New local campaigns
+default to `selection_policy=hypothesis-v2`; see `scene2test/docs/AFS_SEARCH_V2.md`.
+Feedback keeps the full bounded action timeline and selects up to 12 event/phase
+details across the episode, instead of truncating the beginning. Selection audits
+record purpose, LLM hypothesis order, endpoint novelty, exclusions and anchor evidence.
+Behavior cooldown ignores support-contact count noise and uses ordered tool states,
+coarse goal progress and audited object motion. These patterns are NOT failure families
+or causal labels. Fixed exploration/repeat slots and equal budgets remain; boundary
+slots first repeat mixed outcomes, then use an observed bracket or request a hypothesis.
+Robot code/goal/prompt/budget and Random distribution are unchanged by this work.
+With-memory reports add first success/bracket milestones, empirical bracket history,
+pattern repetition, per-hypothesis measured outcomes and observed costs. Verified
+INCONCLUSIVE archives retain available decision usage without becoming goal failures.
+Existing checkpoints/evidence are not rewritten. New code needs a new frozen campaign;
+novelty-v1 retains distance-first ranking only, not old-code bitwise reproduction.
+Offline Luna evidence confirms late blocked endpoints/recovery reach the new context;
+synthetic regressions pass. No new live AFS/GPU success or superiority evidence is implied.
+Next AFS work: budget-reviewed new pilot, selection-quality evaluation, then geometry/
+taxonomy and executable regression assets. Arbitrary historical-anchor LLM output,
+calibrated failure probabilities and automatic causal adjudication remain open.
+
+## Corridor geometry AFS update (2026-09-28)
+
+Opt-in `clear-path-corridor-v2` adds corridor_width_m (1.6–4.0m) and
+box_lateral_fraction (-1..1) to the three physics axes. This is a straight corridor
+without v1's side bay, not a general maze/terrain loader. Fixed box dimensions/X,
+spawn/goal, robot planner and action capabilities remain unchanged. Box Y equals
+fraction * (width/2 - 0.55 - 0.05); width changes also move Y when fraction is nonzero.
+See `scene2test/docs/CORRIDOR_AFS.md`. The existing campaign adapter now supports this
+five-axis domain for Random/AFS proposal, novelty, observed brackets, repeats and resume.
+Request schemas restrict axes per domain; v1 defaults and standalone suite remain three-axis.
+SceneConfig/XML checks precede v2 campaign validity; only audited scene-owned nodes are
+normalized for geometry pairing. Other robot/physics differences still forbid brackets.
+Goal runner saves initial SceneGraph/map artifacts but supplies no reference route to policy.
+Static no_path is not a goal FAIL or manipulation impossibility; no such filtering is added.
+`tools/preview_corridor_scenes.py` creates PNG/HTML development previews, optionally
+audits real G1 assets on CPU. No API/GPU inference or robot success is implied.
+`config/behavior_afs_corridor_luna.json` is a NEW Luna/Luna campaign: six valid/six max
+attempts per arm, two paired cold starts, up to 120 robot calls + two AFS proposals.
+New geometry and synthetic wiring are locally tested; live Luna/G1 success is unverified.
+One user-run live Luna wide-corridor archive passed integrity/goal checks as a valid
+10-call budget FAIL. CUDA walking and all ten API actions ran; no falls or non-floor
+robot contacts were recorded. Tight static routes plus gait tracking/hold deviation
+led to blocked-start planning feedback, one recovery and another blocked endpoint.
+This is not AFS/Random comparison or a successful baseline. See the workhistory review;
+robot-local navigation robustness and verbose feedback input cost need attention.
+Code changed: do not bypass frozen-source drift checks to resume pre-change campaigns.
+Next: budget-reviewed AFS pilot including success-side probes, then broader geometry;
+robot improvement is not a prerequisite. No jump/grasp skill added.
+
 ## Failure-discovery measurement priority (2026-09-27; initial P0/P1 and local P2 implemented)
 
 Follow `scene2test/docs/FAILURE_CASE_MEASUREMENT_PLAN.md` for the user-requested focus on
@@ -21,8 +90,9 @@ External robot code/assets are listed but not bundled/verified; this is not an e
 Keep goal outcome separate from contact/safety/behavior events;
 unknown/unsupported measurements are not zero. Compare equal valid rollout budgets including
 cold start and repeats, disclose invalid attempts/cost, and do not count legacy guard stops or
-incomplete archives as goal failures. Current behavior-AFS goal-agent supports only three
-physical scene axes; expanded generator support is not goal-agent backend support. Reuse client
+incomplete archives as goal failures. The original v1 behavior-AFS goal-agent supports three
+physical axes; see the opt-in corridor update above for the supported five-axis extension.
+Expanded terrain generator support is not goal-agent backend support. Reuse client
 contracts/storage/archive via adapters without making server rewrites or robot skill development
 prerequisites. P2 `tools/run_afs_benchmark.py` now provides opt-in local campaign init/run/status/report/resolve
 with frozen config/code/resources, per-method/seed valid budgets, P1 feedback into the existing LLM
@@ -36,8 +106,9 @@ LLM success-side proposals. Mass reduction followed by box-friction reduction wa
 light-box rollout moved the box about 0.19 m but did not reach the goal. This is closed-loop execution
 evidence, not a complete benchmark, a PASS/FAIL boundary, or AFS superiority. The declared eight-valid
 budget per arm remains incomplete; coverage is unmeasured. Infrastructure exclusions are preserved.
-Observed token usage in INCONCLUSIVE archives is currently lost by the importer's early return;
-raw decision usage remains available. Growing robot feedback history is a cost-review item.
+The earlier INCONCLUSIVE token-loss gap is addressed by the search-quality update above
+for verified archives with recorded usage. Unreturned calls/incomplete manifests and old
+checkpoint costs remain unknown. Growing robot feedback history remains a robot-side cost item.
 P2 now revalidates pending proposal evidence/context on resume and after inference, and checks frozen
 code/resources again before launch. Condition-drift stops commit atomically with observations; usable
 saved responses cannot be abandoned before validation. Spawned children are reaped on metadata/wait
@@ -53,7 +124,8 @@ three valid rollouts/three total attempts per arm, two paired cold starts per ar
 at most 60 robot calls plus one AFS proposal. This tests first-proposal wiring, not the
 full strategy cycle or model/search superiority. Episode settings remain unchanged.
 Default Astra config and existing campaigns are preserved; do not resume an Astra campaign
-with changed models. Luna synthetic wiring tests pass; live execution has not been validated.
+with changed models. Luna synthetic campaign wiring tests pass; live campaign validation
+remains open. The separate corridor robot run described above is not campaign evidence.
 See `scene2test/docs/LUNA_PILOT_AND_SCENARIO_PLAN.md` for commands and capability boundaries.
 Next: budget-reviewed live pilot, then taxonomy/geometry and regression execution. Core/media manifest
 separation/finalization improvements, family detectors and additional behavior measures remain open.

@@ -20,6 +20,10 @@ def write_discovery_report(
         for record in records:
             stream.write(record.model_dump_json() + "\n")
     metrics = {"campaign_id": campaign_id, **metrics}
+    if memory is not None and "search_diagnostics" not in metrics:
+        from .search_diagnostics import search_diagnostics
+
+        metrics["search_diagnostics"] = search_diagnostics(memory, records)
     (output / "metrics.json").write_text(
         json.dumps(metrics, indent=2, ensure_ascii=False, allow_nan=False) + "\n", encoding="utf-8"
     )
@@ -61,6 +65,64 @@ def write_discovery_report(
             + "</pre>"
         )
     memory_link = ""
+    search_section = ""
+    if "search_diagnostics" in metrics:
+        search_columns = (
+            "method",
+            "seed",
+            "status",
+            "first_success_at_valid_rollout",
+            "first_bracket_at_valid_rollout",
+            "current_brackets",
+            "mixed_cases",
+            "distinct_observed_failure_patterns",
+            "failures_without_pattern",
+            "repeated_pattern_fraction",
+        )
+        search_rows = []
+        for group in metrics["search_diagnostics"]["groups"]:
+            search_rows.append(
+                {
+                    **{k: group.get(k) for k in ("method", "seed", "status")},
+                    "first_success_at_valid_rollout": (
+                        group.get("first_observed_success") or {}
+                    ).get("valid_rollouts"),
+                    "first_bracket_at_valid_rollout": (
+                        group.get("first_observed_bracket") or {}
+                    ).get("valid_rollouts"),
+                    "current_brackets": len(group["current_observed_brackets"])
+                    if "current_observed_brackets" in group
+                    else None,
+                    "mixed_cases": len(group["mixed_cases"]) if "mixed_cases" in group else None,
+                    "distinct_observed_failure_patterns": group.get("distinct_failure_patterns"),
+                    "failures_without_pattern": group.get("failures_without_pattern"),
+                    "repeated_pattern_fraction": group.get("repeated_pattern_fraction"),
+                }
+            )
+        with (output / "search_diagnostics.csv").open("x", newline="", encoding="utf-8") as stream:
+            writer = csv.DictWriter(stream, fieldnames=search_columns)
+            writer.writeheader()
+            writer.writerows(search_rows)
+        search_table = "<table><tr>" + "".join(f"<th>{c}</th>" for c in search_columns) + "</tr>"
+        search_table += (
+            "".join(
+                "<tr>"
+                + "".join(f"<td>{escape(str(row[c]))}</td>" for c in search_columns)
+                + "</tr>"
+                for row in search_rows
+            )
+            + "</table>"
+        )
+        search_section = (
+            "<h2>AFS 탐색 진척·관측 경계·행동 중복</h2>"
+            "<p>행동 패턴은 공식 실패 유형/원인이 아닙니다. "
+            "최초 관측 경계는 혼합 반복 후 사라질 수 있습니다.</p>"
+            + search_table
+            + '<p><a href="search_diagnostics.csv">탐색 보조 지표 CSV</a></p>'
+            + "<details><summary>곡선·실험 가설·측정 근거·비용 상세</summary><pre>"
+            + escape(json.dumps(metrics["search_diagnostics"], indent=2, ensure_ascii=False))
+            + "</pre></details>"
+        )
     if memory is not None:
         from failure_client.archive.regression_cases import export_failure_memory
 
@@ -78,6 +140,7 @@ table{{border-collapse:collapse}}pre{{white-space:pre-wrap}}</style>
 <table><tr>{"".join(f"<th>{escape(c)}</th>" for c in columns)}</tr>{rows}</table>
 <h2>Random 대비 비교</h2><pre>{comparison}</pre>
 {campaign_section}
+{search_section}
 <h2>제외 기록</h2><ul>{exclusions}</ul>
 {memory_link}
 <h2>해석 범위</h2><ul>{notes}</ul>

@@ -8,6 +8,34 @@ from . import behavior as b
 from . import provider
 
 SELECTION_POLICIES = {
+    "campaign_hypothesis_endpoint": (
+        "behavior-campaign-feedback-v1",
+        """Selection policy: campaign-hypothesis-endpoint-v2.
+The host selects at most ONE endpoint per proposal, not both endpoints and
+not one endpoint per space. Other axes remain fixed at latest.parameters, the
+search_selection.anchor_case_id. Rank spaces in your preferred experimental order.
+Both endpoints of a space must serve its stated hypothesis; put competing questions
+in separate spaces. Explain the expected observation and its falsification, not just
+a desired FAIL label. No calibrated failure probabilities are assumed.
+After exact-duplicate and nearby similar-behavior cooldown filtering, the host ranks
+by search_selection.mode_priority, then your space order, then greatest minimum
+normalized distance to observed scenes within that space (ties choose low first).
+Thus novelty cannot override a higher-priority experimental purpose. A requested
+mode with no eligible candidate is skipped explicitly in the saved selection audit;
+no eligible endpoint is an error, never an automatic Random replacement.
+No comparable success: prioritize success_probe. Repeated similar failures:
+prioritize cross_mechanism, not repeatedly stronger versions of the same failure.
+Full action_timeline summarizes every recorded decision, including late tool errors
+and subsequent recovery attempts. Detailed intervals are selected representatives;
+omitted detail does not mean no event. behavior_pattern is a coarse similarity
+heuristic, NOT a failure family or a causal label.
+Separate fixed exploration/repeat slots remain charged to the rollout budget.
+The boundary slot repeats a mixed-outcome case if present; otherwise it samples
+an untested observed-bracket midpoint, or requests a new hypothesis. The
+boundary_probe label alone does not trigger midpoint selection. Never claim a
+boundary from all-FAIL evidence or prescribe robot actions.
+""",
+    ),
     "standalone_suite": (
         "behavior-afs-context-v2",
         """Selection policy: standalone-suite-v1.
@@ -45,7 +73,9 @@ def request(
     ctx,
     model,
     *,
-    selection_policy: Literal["standalone_suite", "campaign_single_endpoint"] = "standalone_suite",
+    selection_policy: Literal[
+        "standalone_suite", "campaign_single_endpoint", "campaign_hypothesis_endpoint"
+    ] = "standalone_suite",
 ):
     """Bind both evidence and the caller's actual candidate-selection instructions."""
     if selection_policy not in SELECTION_POLICIES:
@@ -55,6 +85,10 @@ def request(
         raise ValueError("behavior AFS selection policy does not match context schema")
     expected = b.digest(ctx)
     schema = b.Proposal.model_json_schema()
+    schema["$defs"]["Space"]["properties"]["axis"]["enum"] = list(b.context_axes(ctx))
+    schema["$defs"]["Space"]["properties"]["evidence_refs"]["items"]["enum"] = (
+        b.evidence_ids(ctx)
+    )
     schema["properties"]["context_sha256"]["enum"] = [expected]
     body = provider.request_body({"context_sha256": expected, "context": ctx}, schema)
     body.update(

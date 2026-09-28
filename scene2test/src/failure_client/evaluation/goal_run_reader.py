@@ -254,7 +254,35 @@ def read_goal_run(source: RunInput) -> EpisodeRecord:
         if policy_calls is not None and base["robot_api_calls"] > policy_calls:
             raise EvidenceError("inconsistent_policy_call_counts")
         if result["task_outcome"] == "INCONCLUSIVE":
-            raise EvidenceError("inconclusive_execution", "INCONCLUSIVE")
+            # Keep observed costs from a verified interrupted archive without
+            # promoting its outcome or requiring a complete physics trace.
+            usage = {}
+            warning = "Observed decision usage only; pending/failed calls may be missing"
+            try:
+                for row in _rows(root / "decisions.jsonl"):
+                    if "action" not in row:
+                        continue
+                    tokens = row.get("provider", {}).get("usage")
+                    if tokens is None or not {"input_tokens", "output_tokens"} <= tokens.keys():
+                        continue
+                    cid = _count(row["observation_version"])
+                    if cid in usage or cid >= protocol["max_calls"]:
+                        raise EvidenceError("invalid_call_usage_identity")
+                    usage[cid] = (_count(tokens["input_tokens"]), _count(tokens["output_tokens"]))
+            except (ValueError, KeyError, TypeError, AttributeError, OSError):
+                usage = {}
+                warning = (
+                    "Interrupted archive decision usage is malformed/unavailable; unknown, not zero"
+                )
+            return EpisodeRecord(
+                **base,
+                status="INCONCLUSIVE",
+                exclusion_reason="inconclusive_execution",
+                calls_with_token_usage=len(usage),
+                observed_input_tokens=sum(x[0] for x in usage.values()) if usage else None,
+                observed_output_tokens=sum(x[1] for x in usage.values()) if usage else None,
+                warnings=[warning],
+            )
         measures, models, usage = _trace(root, hashes, contract)
         if base["simulation_s"] < measures.last_sample_s:
             raise EvidenceError("duration_before_last_state")

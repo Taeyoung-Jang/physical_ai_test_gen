@@ -19,6 +19,25 @@ class Fixture(Strict):
     # Geometry is intentionally fixed for the first controlled fixture.
 
 
+class CorridorFixture(Fixture):
+    """Opt-in rectangular corridor; box dimensions, robot and goal stay fixed."""
+
+    schema_version: Literal["clear-path-corridor-v2"] = "clear-path-corridor-v2"
+    corridor_width_m: float = Field(default=4.0, ge=1.6, le=4.0)
+    box_lateral_fraction: float = Field(default=0.0, ge=-1.0, le=1.0)
+
+
+def parse_fixture(value=None):
+    if value is None:
+        return Fixture()
+    if isinstance(value, Fixture):
+        value = value.model_dump()
+    if not isinstance(value, dict):
+        raise ValueError("scene configuration must be an object")
+    cls = CorridorFixture if value.get("schema_version") == "clear-path-corridor-v2" else Fixture
+    return cls.model_validate(value)
+
+
 class Action(Strict):
     schema_version: Literal["clear-path-action-v1"]
     action: Literal["navigate_to", "push_object", "observe", "stop"]

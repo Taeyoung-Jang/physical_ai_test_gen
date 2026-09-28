@@ -6,6 +6,7 @@ Robot assets remain explicitly hashed external dependencies, not silently copied
 
 from __future__ import annotations
 
+import copy
 import hashlib
 import json
 import math
@@ -16,7 +17,9 @@ import xml.etree.ElementTree as ET
 from collections import defaultdict
 from pathlib import Path
 
+from clear_path.contracts import CorridorFixture
 from clear_path.fixture import identity, world_xml
+from clear_path.scene_space import CORRIDOR_AXES, axes_for_parameters
 from failure_client.evaluation.behavior_measures import analyze_behavior, interval_summary
 from failure_client.evaluation.goal_run_reader import _hash_file, _rows, read_json
 from failure_client.evaluation.research_records import EpisodeRecord
@@ -24,7 +27,7 @@ from failure_client.reporting.discovery_metrics import deduplicate_records
 from robot_vlm.scene_config import validate_scene
 from robot_vlm.task_outcome import digest
 
-AXES = {"box_mass_kg": (0.2, 10.0), "box_friction": (0.05, 1.5), "floor_friction": (0.05, 1.5)}
+AXES = CORRIDOR_AXES
 COPY_FILES = {
     "protocol.json",
     "result.json",
@@ -34,6 +37,8 @@ COPY_FILES = {
     "events.jsonl",
     "robot_audit.json",
     "terminal_state.json",
+    "scene_graph.json",
+    "navigation_map.json",
 }
 COPY_PATTERN = re.compile(r"(?:observation|skill|tool)_\d{3}\.json|camera_\d{3}\.png")
 SECRET_KEYS = {
@@ -91,7 +96,18 @@ def _scene_parameters(root, protocol):
             ):
                 raise ValueError("scene_parameter_mismatch")
             node.set(field, "CONTROLLED " + " ".join(str(x) for x in values[1:]))
-        # Only the three controlled values are removed. Any other XML difference forbids pairing.
+        if isinstance(config, CorridorFixture):
+            # Verify first, normalize second: only generated scene-owned nodes are
+            # replaced. Preserve every robot/compiler/physics difference in the hash.
+            baseline = ET.fromstring(world_xml(CorridorFixture())).find("worldbody")
+            for node in baseline:
+                if node.tag not in {"geom", "body", "site"}:
+                    continue
+                match = actual.find(f"{node.tag}[@name='{node.get('name')}']")
+                index = list(actual).index(match)
+                actual.remove(match)
+                actual.insert(index, copy.deepcopy(node))
+        # v1 only normalizes the three physics values; v2 also the audited scene geometry.
         geometry = hashlib.sha256(
             ET.canonicalize(ET.tostring(xml, encoding="unicode")).encode()
         ).hexdigest()
@@ -106,7 +122,7 @@ def _brackets(cases):
         if case["parameters"] is None:
             continue
         params = case["parameters"]
-        for axis in AXES:
+        for axis in axes_for_parameters(params):
             frozen = tuple((k, params[k]) for k in sorted(params) if k != axis)
             key = (case["condition_id"], case["geometry_id"], axis, frozen)
             buckets[key][params[axis]].append(case)

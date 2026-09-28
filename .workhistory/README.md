@@ -54,3 +54,17 @@
 - 2026-09-28: [AFS/Random 중간 8회 유효 FAIL·완화 탐색·네트워크 중단 분석](2026-09-28_afs_pilot_partial_results.md)
 
 - 2026-09-28: [Luna 소규모 캠페인 설정·76개 테스트·밀기 외 AFS 확장 계획](2026-09-28_luna_pilot_setup.md)
+
+- 2026-09-28: [통로 폭·상자 배치 5축 AFS·정적 지도·경계 메모리·Luna 실행 설정](2026-09-28_corridor_geometry_afs.md)
+
+- 2026-09-28: [Luna 넓은 통로 유효 FAIL 분석·경로 추종 여유 부족·입력 비용](2026-09-28_luna_corridor_wide_result.md)
+
+- 2026-09-28: [AFS 집중 검토·후반 행동 근거 누락 재현·가설/경계 탐색 개선안](2026-09-28_afs_search_review.md)
+
+- 2026-09-28: [AFS v2 구현·가설 선택·행동 중복 억제·탐색 측정·294개 회귀 테스트](2026-09-28_afs_search_v2_implementation.md)
+
+- 2026-09-28: [Luna 통로 파일럿 4회 유효 결과·첫 AFS 제안의 근거 ID 오타 중단 진단](2026-09-28_corridor_pilot_evidence_id_diagnosis.md)
+
+- 2026-09-28: [AFS 근거 ID 출력 제한·원본/비용 보존 복구·321개 회귀 테스트](2026-09-28_afs_evidence_reference_recovery.md)
+
+- 2026-09-28: [통로 4m success_probe 유효 PASS·자율 우회·관측 경계 분석](2026-09-28_afs_success_probe_result.md)

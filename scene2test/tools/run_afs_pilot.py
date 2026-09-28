@@ -133,6 +133,7 @@ def main(argv=None):
                     "max_attempts_total": 2 * len(config.seeds) * config.max_attempts_per_arm,
                     "robot_model": config.robot.model,
                     "afs_model": config.afs_model,
+                    "scene_schema": config.scene_schema,
                     "max_simulation_s": config.robot.max_seconds,
                     "http_read_timeout_s": config.robot.response_timeout,
                     "watchdog_wall_s": config.robot.watchdog_wall_s,

@@ -6,14 +6,14 @@ from the unmodified goal evaluator and P0 archive verifier.
 
 from __future__ import annotations
 
+import json
 import os
 import time
 from datetime import UTC, datetime
 from pathlib import Path
 
-from clear_path.contracts import Fixture
 from clear_path.fixture import identity
-from failure_client.archive.regression_cases import build_failure_memory
+from failure_client.archive.regression_cases import _scene_parameters, build_failure_memory
 from failure_client.evaluation.goal_run_reader import _hash_file, read_goal_run, read_json
 from failure_client.evaluation.research_records import ComparisonDesign, EpisodeRecord, RunInput
 from failure_client.methods.base import CandidateObservation
@@ -22,8 +22,8 @@ from failure_client.methods.behavior_feedback import (
     boundary_candidate,
     choose_probe,
     feedback_context,
-    parameters,
     proposal_request,
+    repeat_candidate,
     seeded,
     uniform_scene,
 )
@@ -31,10 +31,11 @@ from failure_client.reporting.discovery_metrics import calculate_discovery_metri
 from failure_client.reporting.discovery_report import write_discovery_report
 from failure_client.storage.research_store import ResearchStore
 from llm_afs import provider
-from llm_afs.behavior import digest
+from llm_afs.behavior import EvidenceReferenceError, digest
 from robot_vlm.debug_log import clean, exception_detail
 
 from .local_goal_adapter import LocalGoalRunner, atomic_json
+from .proposal_recovery import verify_recovery
 from .research_protocol import CampaignConfig, environment_fingerprint
 
 
@@ -107,6 +108,7 @@ class ResearchCampaign:
             "lock_sha256": self.state["lock_sha256"],
         }:
             raise ValueError("immutable campaign protocol mismatch")
+        verify_recovery(self.root, self.state)
 
     def _save(self, event, detail=None):
         self.revision = self.store.save(self.state, self.revision, event, detail)
@@ -167,13 +169,17 @@ class ResearchCampaign:
         attempts = sum(a["method"] == method and a["seed"] == seed for a in self.state["attempts"])
         if valid < self.config.cold_start:
             return {
-                "parameters": uniform_scene(seed, "paired-cold", valid),
+                "parameters": uniform_scene(
+                    seed, "paired-cold", valid, schema=self.config.scene_schema
+                ),
                 "strategy": "paired_uniform_cold_start",
                 "stage": "cold_start",
             }
         if method == "random":
             return {
-                "parameters": uniform_scene(seed, "random", attempts),
+                "parameters": uniform_scene(
+                    seed, "random", attempts, schema=self.config.scene_schema
+                ),
                 "strategy": "full_domain_uniform",
                 "stage": "discovery",
             }
@@ -182,7 +188,9 @@ class ResearchCampaign:
         strategy = self.config.strategy_cycle[slot % len(self.config.strategy_cycle)]
         if strategy == "exploration":
             return {
-                "parameters": uniform_scene(seed, "afs-exploration", attempts),
+                "parameters": uniform_scene(
+                    seed, "afs-exploration", attempts, schema=self.config.scene_schema
+                ),
                 "strategy": "independent_exploration",
                 "stage": "discovery",
             }
@@ -193,15 +201,12 @@ class ResearchCampaign:
                 if slot // len(self.config.strategy_cycle) % 2
                 else "observed_failure"
             )
-            choices = [c for c in memory["cases"] if c["role"] in {desired, "mixed_outcomes"}]
-            case = min(choices or memory["cases"], key=lambda c: len(c["episodes"]))
-            return {
-                "parameters": parameters(case),
-                "strategy": "control_repeat",
-                "stage": "repeat",
-                "evidence": {"case_id": case["case_id"]},
-            }
+            return repeat_candidate(memory, desired=desired)
         if strategy == "boundary":
+            if self.config.selection_policy == "hypothesis-v2":
+                candidate = repeat_candidate(memory, mixed_only=True)
+                if candidate is not None:
+                    return candidate
             candidate = boundary_candidate(memory)
             if candidate is not None:
                 return candidate
@@ -213,6 +218,8 @@ class ResearchCampaign:
             memory,
             history_limit=self.config.history_limit,
             remaining=self.config.valid_budget_per_seed - valid,
+            scene_schema=self.config.scene_schema,
+            selection_policy=self.config.selection_policy,
         )
         body = proposal_request(ctx, self.config.afs_model)
         pid = f"proposal_{len(self.state['proposals']):05d}"
@@ -225,6 +232,7 @@ class ResearchCampaign:
             "requested_slot": strategy,
             "wall_s": None,
             "usage": None,
+            "request_utf8_bytes": len(json.dumps(body, ensure_ascii=False).encode("utf-8")),
             "response_received": False,
         }
         self.state["proposals"].append(row)
@@ -240,7 +248,13 @@ class ResearchCampaign:
             return self._finish_proposal(row)
         except Exception as exc:
             row.update(error_type=type(exc).__name__, wall_s=time.monotonic() - started)
-            atomic_json(directory / "error.json", {"exception_chain": exception_detail(exc)})
+            diagnostic = {"exception_chain": exception_detail(exc)}
+            if isinstance(exc, EvidenceReferenceError):
+                diagnostic["validation"] = {
+                    "code": "unknown_evidence_reference",
+                    "unknown": exc.unknown, "allowed": exc.allowed,
+                }
+            atomic_json(directory / "error.json", diagnostic)
             self._save("proposal_error", {"id": pid, "error_type": type(exc).__name__})
             raise NeedsAttention(
                 f"{pid}: proposal failed; inspect saved evidence, no retry"
@@ -254,6 +268,8 @@ class ResearchCampaign:
             memory,
             history_limit=self.config.history_limit,
             remaining=self.config.valid_budget_per_seed - self._valid("afs", row["seed"]),
+            scene_schema=self.config.scene_schema,
+            selection_policy=self.config.selection_policy,
         )
         if digest(current) != digest(row["context"]):
             raise NeedsAttention("saved proposal context differs from current verified evidence")
@@ -277,7 +293,7 @@ class ResearchCampaign:
         return candidate
 
     def _prepare_attempt(self, arm, candidate):
-        config = Fixture(**candidate["parameters"])
+        config = self.config.scene(candidate["parameters"])
         aid = f"attempt_{len(self.state['attempts']):05d}"
         attempt = {
             "id": aid,
@@ -318,7 +334,8 @@ class ResearchCampaign:
             robot = self.config.robot
             if (
                 protocol["scene_revision"] != a["scene_revision"]
-                or protocol["scene_config"] != Fixture(**a["candidate"]["parameters"]).model_dump()
+                or protocol["scene_config"]
+                != self.config.scene(a["candidate"]["parameters"]).model_dump()
                 or protocol.get("model") != robot.model
                 or protocol["max_calls"] != robot.max_calls
                 or protocol["max_simulation_s"] != robot.max_seconds
@@ -333,6 +350,14 @@ class ResearchCampaign:
             elif record.evidence_id in {r.evidence_id for r in self.records() if r.evidence_id}:
                 record = EpisodeRecord(
                     source=source, status="INVALID", exclusion_reason="duplicate_core_evidence"
+                )
+            elif (
+                self.config.scene_schema == "clear-path-corridor-v2"
+                and _scene_parameters(directory / "rollout", protocol)[0] is None
+            ):
+                self.state.update(status="INCOMPLETE", reason="scene_geometry_mismatch")
+                record = EpisodeRecord(
+                    source=source, status="INVALID", exclusion_reason="scene_geometry_mismatch"
                 )
             elif self.state["condition_id"] is None:
                 self.state["condition_id"] = record.condition_id
@@ -517,11 +542,25 @@ class ResearchCampaign:
             values = [u[key] for u in usage if type(u.get(key)) is int and u[key] >= 0]
             tokens[key + "_observed"] = sum(values) if values else None
             tokens[key + "_missing_requests"] = len(usage) - len(values)
+        robot_tokens = {}
+        for key in ("observed_input_tokens", "observed_output_tokens"):
+            values = [r[key] for r in raw if r.get(key) is not None]
+            robot_tokens[key] = sum(values) if values else None
+            robot_tokens[key + "_missing_attempts"] = len(raw) - len(values)
         return {
             "campaign": str(self.root),
             "status": self.state["status"],
             "reason": self.state["reason"],
             "pending": self.state["pending"],
+            "recovery": (
+                {
+                    "claim": "operator_assisted_continuation_not_prospective_comparison",
+                    "audit_sha256": self.state["lock"]["recovery_sha256"],
+                    "audit_path": str(self.root / "recovery.json"),
+                    "inherited_costs_included": True,
+                }
+                if self.state["lock"].get("recovery_sha256") else None
+            ),
             "arms": [
                 {
                     **arm,
@@ -537,6 +576,10 @@ class ResearchCampaign:
             "excluded": sum(r.status != "VALID" for r in rows),
             "afs_requests_attempted": len(self.state["proposals"]),
             "afs_tokens": tokens,
+            "robot_tokens": robot_tokens,
+            "afs_request_utf8_bytes": [
+                p.get("request_utf8_bytes") for p in self.state["proposals"]
+            ],
             "robot_api_calls_observed": sum(robot_calls) if robot_calls else None,
             "robot_api_calls_missing_attempts": len(raw) - len(robot_calls),
             "afs_requests_without_usage": sum(
@@ -582,6 +625,17 @@ class ResearchCampaign:
             )
             metrics = calculate_discovery_metrics(records, design)
             metrics["campaign_execution"] = self.summary()
+            memory = build_failure_memory(records) if with_memory else None
+            if memory is not None:
+                from failure_client.reporting.search_diagnostics import (
+                    experiment_reviews,
+                    search_diagnostics,
+                )
+
+                metrics["search_diagnostics"] = search_diagnostics(memory, records)
+                metrics["search_diagnostics"]["experiment_reviews"] = experiment_reviews(
+                    self.state["attempts"], memory
+                )
             if self.state["status"] != "COMPLETE":
                 metrics["comparison"] = {
                     **metrics["comparison"],
@@ -590,6 +644,20 @@ class ResearchCampaign:
                     "gain_target_observed": None,
                     "campaign_incomplete": True,
                 }
+            if self.state["lock"].get("recovery_sha256"):
+                metrics["comparison"] = {
+                    **metrics["comparison"],
+                    "status": "not_comparable",
+                    "relative_gain": None,
+                    "gain_target_observed": None,
+                    "per_seed": [],
+                    "issues": [*metrics["comparison"].get("issues", []),
+                               "operator_assisted_recovery"],
+                }
+                metrics["limitations"].append(
+                    "Operator-assisted recovery: descriptive outcomes only, "
+                    "not a prospective gain claim"
+                )
             stamp = datetime.now(UTC).strftime("%Y%m%dT%H%M%S_%fZ")
             output = self.root / "reports" / stamp
             report = write_discovery_report(
@@ -597,14 +665,18 @@ class ResearchCampaign:
                 self.root.name,
                 records,
                 metrics,
-                memory=build_failure_memory(records) if with_memory else None,
+                memory=memory,
             )
             atomic_json(output / "campaign_ledger.json", self.store.ledger())
             atomic_json(output / "campaign_protocol.json", read_json(self.root / "protocol.json"))
+            extras = ["campaign_ledger.json", "campaign_protocol.json"]
+            if self.state["lock"].get("recovery_sha256"):
+                atomic_json(output / "recovery.json", read_json(self.root / "recovery.json"))
+                extras.append("recovery.json")
             manifest = read_json(output / "manifest.json")
             manifest["artifacts"].extend(
                 {"path": name, "sha256": _hash_file(output / name)}
-                for name in ("campaign_ledger.json", "campaign_protocol.json")
+                for name in extras
             )
             atomic_json(output / "manifest.json", manifest)
             atomic_json(self.root / "latest_report.json", {"report": str(report)})

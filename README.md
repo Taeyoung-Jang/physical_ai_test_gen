@@ -80,6 +80,27 @@ uv run --no-sync python tools/run_afs_pilot.py --live --config config/behavior_a
 `AFS_CAMPAIGN`, `REPORT`가 실제 경로를 출력합니다. MP4는 저장하고 GIF는 생성하지 않습니다.
 준비/실행 상태와 후속 확장 계획은 [Luna 실험·장면 확장 계획](scene2test/docs/LUNA_PILOT_AND_SCENARIO_PLAN.md)을 참조하세요.
 
+통로 폭·상자 좌우 배치를 탐색하는 **새 5축 버전**도 추가했습니다.
+[통로 AFS 실행 가이드](scene2test/docs/CORRIDOR_AFS.md)에 개발용 3개 장면,
+Luna 넓은 통로 1회 실행, 별도 6+6 캠페인 명령과 예산을 기록했습니다.
+먼저 비용 없는 정적 지도·G1 자산 점검을 실행할 수 있습니다(로봇 행동은 실행하지 않음).
+
+```bash
+uv run --no-sync python tools/preview_corridor_scenes.py --audit-robot
+```
+
+그림의 경로는 정적 지도 계산이며 실제 로봇 성공 결과가 아닙니다.
+이번 코드 변경 전 동결된 캠페인은 code drift 검사로 재개가 차단되므로 새 캠페인을 사용하세요.
+
+AFS 선택은 이제 `hypothesis-v2`가 기본입니다. 후반 실패·회복 행동을 보존하고,
+실험 목적/가설 순서 기반 선택과 행동 중복 억제, 관측 경계·비용 보고를 추가했습니다.
+[AFS v2 설명과 실행 명령](scene2test/docs/AFS_SEARCH_V2.md)을 참고하세요.
+
+`unknown evidence reference`로 중단된 Luna 통로 파일럿은
+[근거 ID 오류 예방·원본 보존 복구와 다음 실행 명령](scene2test/docs/AFS_EVIDENCE_RECOVERY.md)을
+참고하세요. 복구본은 기존 비용을 계승하는 명시적 보정 실험이며 정식 Gain 비교와 구분합니다.
+로봇 제어·최종 목표·episode 예산은 그대로이며 새 live 성능은 아직 검증하지 않았습니다.
+
 ### 3. 기존 Astra 전체 실험 (명시적 config가 없을 때의 기본값)
 
 아래는 **기존 `gpt-6-astra` 설정**입니다. Luna를 원하면 위의 `--config` 명령을 사용하세요.

@@ -291,3 +291,35 @@ def test_real_mp4_stream_does_not_retain_frame_history(monkeypatch, tmp_path):
     assert json.loads((tmp_path / "result.json").read_text()) == result
     artifacts = json.loads((tmp_path / "manifest.json").read_text())["artifacts"]
     assert {"result.json", "report.html", "rollout.mp4"} <= {r["path"] for r in artifacts}
+
+
+def test_corridor_scene_reaches_actual_runner_observation_without_reference_path(
+    monkeypatch, tmp_path
+):
+    from clear_path.contracts import CorridorFixture
+
+    policy = setup_loop(monkeypatch, "budget")
+    config = CorridorFixture(corridor_width_m=2.4, box_lateral_fraction=1.0)
+    result = runner.run(
+        tmp_path, tmp_path, policy, max_calls=1, scene_config=config.model_dump(), enable_push=True
+    )
+    # The controller and policy are doubles; this checks wiring, not physical success.
+    assert result["task_outcome"] == "FAIL"
+    obs = policy.observations[0]
+    geometry = {g.object_id: g for g in obs.geometry}
+    assert geometry["wall_north"].center_m[1] == pytest.approx(1.25)
+    assert geometry["clear_box_geom"].center_m[1] == pytest.approx(0.6)
+    assert "bay_north" not in geometry
+    assert obs.goal_xy_m == [7.0, 0.0]
+    body = policy.body(obs, b"\x89PNG\r\n\x1a\ntest")
+    context = json.loads(body["input"][0]["content"][0]["text"])
+    assert "reference_path" not in context and "afs_failure_hypothesis" not in context
+    protocol = json.loads((tmp_path / "protocol.json").read_text())
+    assert protocol["scene_config"] == config.model_dump()
+    assert not protocol["reference_path_provided"]
+    assert json.loads((tmp_path / "navigation_map.json").read_text())["reachable"]
+    assert json.loads((tmp_path / "scene_graph.json").read_text())["meta"][
+        "scene_revision"
+    ] == fixture.identity(config)
+    artifacts = json.loads((tmp_path / "manifest.json").read_text())["artifacts"]
+    assert {"scene_graph.json", "navigation_map.json"} <= {r["path"] for r in artifacts}

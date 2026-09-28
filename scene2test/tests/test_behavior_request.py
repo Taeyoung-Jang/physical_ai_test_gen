@@ -1,6 +1,7 @@
 import copy
 import json
 
+import jsonschema
 import pytest
 from test_behavior_afs import observation, proposal
 
@@ -19,6 +20,40 @@ def test_hash_is_supplied_and_constrained():
     ]
     assert body["model"] == "gpt-6-astra"
     assert body["store"] is False
+
+
+@pytest.mark.parametrize(
+    "policy,version",
+    [
+        ("standalone_suite", "behavior-afs-context-v2"),
+        ("campaign_single_endpoint", "behavior-campaign-feedback-v1"),
+        ("campaign_hypothesis_endpoint", "behavior-campaign-feedback-v1"),
+    ],
+)
+def test_evidence_references_constrained_for_every_request_policy(policy, version):
+    ctx = {**b.context(observation()), "schema_version": version}
+    body = request(ctx, "gpt-6-luna", selection_policy=policy)
+    schema = body["text"]["format"]["schema"]
+    assert schema["$defs"]["Space"]["properties"]["evidence_refs"]["items"]["enum"] == (
+        b.evidence_ids(ctx)
+    )
+    raw = proposal(ctx).model_dump()
+    jsonschema.validate(raw, schema)
+    raw["spaces"][0]["evidence_refs"] = ["invented-evidence-reference"]
+    with pytest.raises(jsonschema.ValidationError):
+        jsonschema.validate(raw, schema)
+    with pytest.raises(b.EvidenceReferenceError) as caught:
+        b.validate(b.Proposal.model_validate(raw), ctx)
+    assert caught.value.unknown == ["invented-evidence-reference"]
+    assert caught.value.allowed == b.evidence_ids(ctx)
+
+
+@pytest.mark.parametrize("refs", [[], [{"id": ""}], [{"id": "x"}, {"id": "x"}]])
+def test_invalid_evidence_catalog_rejected_before_api(refs):
+    ctx = b.context(observation())
+    ctx["latest"]["evidence"] = refs
+    with pytest.raises(ValueError, match="evidence IDs"):
+        request(ctx, "gpt-6-luna")
 
 
 def test_standalone_prompt_matches_suite_compiler(tmp_path):

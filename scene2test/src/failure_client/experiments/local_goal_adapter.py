@@ -83,10 +83,8 @@ class LocalGoalRunner:
         run_dir = attempt_dir / "rollout"
         if run_dir.exists():
             raise ValueError("refusing to launch into an existing rollout directory")
-        from clear_path.contracts import Fixture
-
         scene = attempt_dir / "scene_config.json"
-        atomic_json(scene, Fixture(**parameters).model_dump())
+        atomic_json(scene, config.scene(parameters).model_dump())
         args = command(config, scene, run_dir)
         atomic_json(attempt_dir / "command.json", {"argv": args, "automatic_retries": 0})
         start = time.monotonic()
