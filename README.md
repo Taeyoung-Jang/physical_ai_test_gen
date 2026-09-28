@@ -54,7 +54,35 @@ uv run --no-sync python -c 'import os; print("OPENAI_API_KEY: SET" if os.environ
 이 설정은 현재 셸과 그 자식 프로세스에만 적용됩니다. 새 SSH/터미널 세션이나 Pod 재시작 후에는
 다시 설정해야 합니다. 이 실행기는 `.env` 파일을 자동으로 읽지 않습니다.
 
-### 2. 계획 확인 및 전체 실험 실행
+### 2. Luna 소규모 실험 실행 (비용 확인용)
+
+로봇 VLM과 AFS 모두 `gpt-6-luna`를 쓰는 **새 캠페인**입니다.
+기존 Astra 캠페인의 모델을 바꾸어 재개하지 않습니다.
+AFS·Random 각 3회, 총 시도 최대 6회, 로봇 API 최대 60회 + AFS API 최대 1회입니다.
+각 방법의 초기 2회도 예산에 포함됩니다. 오류로 제외되는 실행이 생기면 6회 유효 완료에
+못 미칠 수 있으며 자동 추가 지출은 하지 않습니다. 호출 수 상한은 금액 상한이 아닙니다.
+
+먼저 계획만 확인합니다. API/GPU 호출이나 캠페인 생성은 없습니다.
+
+```bash
+uv run --no-sync python tools/run_afs_pilot.py --config config/behavior_afs_luna_smoke.json
+```
+
+키를 설정한 같은 터미널에서 실제 실행합니다. 아래 명령은 유료 API와 GPU를 사용합니다.
+
+```bash
+uv run --no-sync python tools/run_afs_pilot.py --live --config config/behavior_afs_luna_smoke.json
+```
+
+이 검사는 Luna 연결·시각 행동·AFS 제안 1회의 연결을 확인하기 위한 것입니다.
+전체 경계/독립 탐색/반복 전략이나 AFS 우월성을 검증하는 규모가 아닙니다.
+결과는 `/workspace/g1_failure/runtime/afs_benchmark/<새 실행 시각>/`에 저장되며
+`AFS_CAMPAIGN`, `REPORT`가 실제 경로를 출력합니다. MP4는 저장하고 GIF는 생성하지 않습니다.
+준비/실행 상태와 후속 확장 계획은 [Luna 실험·장면 확장 계획](scene2test/docs/LUNA_PILOT_AND_SCENARIO_PLAN.md)을 참조하세요.
+
+### 3. 기존 Astra 전체 실험 (명시적 config가 없을 때의 기본값)
+
+아래는 **기존 `gpt-6-astra` 설정**입니다. Luna를 원하면 위의 `--config` 명령을 사용하세요.
 
 먼저 계획만 확인합니다. 이 명령은 API/GPU를 호출하거나 캠페인을 생성하지 않습니다.
 

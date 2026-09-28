@@ -50,3 +50,7 @@
 - 2026-09-28: [첫 live AFS 파일럿의 EGL 라이브러리 누락 진단](2026-09-28_afs_pilot_egl_diagnosis.md)
 
 - 2026-09-28: [재개 파일럿의 API 크레딧 소진·로봇 행동·비용 집계 갭](2026-09-28_afs_pilot_quota_diagnosis.md)
+
+- 2026-09-28: [AFS/Random 중간 8회 유효 FAIL·완화 탐색·네트워크 중단 분석](2026-09-28_afs_pilot_partial_results.md)
+
+- 2026-09-28: [Luna 소규모 캠페인 설정·76개 테스트·밀기 외 AFS 확장 계획](2026-09-28_luna_pilot_setup.md)

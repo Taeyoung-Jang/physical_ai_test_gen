@@ -30,7 +30,14 @@ proposal schema, full-domain Random, separately charged paired cold start, explo
 SQLite intent + atomic observe checkpoints, and conservative ambiguous-call recovery (no automatic resend).
 See `scene2test/docs/BEHAVIOR_AFS_CAMPAIGN.md`. Reuses ClientRepository transactions and observation contracts;
 this local scene adapter is NOT an HTTP registry plugin. Interrupted/legacy/incomplete records remain excluded.
-Only synthetic archive/fault-injection tests and real-resource initialization were run; no new GPU/API pilot.
+Initial validation used synthetic archive/fault-injection tests and real-resource initialization.
+A reviewed partial live pilot (2026-09-28) now has four valid goal FAILs per arm and two validated
+LLM success-side proposals. Mass reduction followed by box-friction reduction was executed; one
+light-box rollout moved the box about 0.19 m but did not reach the goal. This is closed-loop execution
+evidence, not a complete benchmark, a PASS/FAIL boundary, or AFS superiority. The declared eight-valid
+budget per arm remains incomplete; coverage is unmeasured. Infrastructure exclusions are preserved.
+Observed token usage in INCONCLUSIVE archives is currently lost by the importer's early return;
+raw decision usage remains available. Growing robot feedback history is a cost-review item.
 P2 now revalidates pending proposal evidence/context on resume and after inference, and checks frozen
 code/resources again before launch. Condition-drift stops commit atomically with observations; usable
 saved responses cannot be abandoned before validation. Spawned children are reaped on metadata/wait
@@ -41,6 +48,13 @@ It stops on the first newly observed excluded rollout or operational error, neve
 and never auto-resolves/resends ambiguous operations. Each invocation has separate pilot_runs logs.
 Example config is 8 valid rollouts per arm, max 12 attempts per arm, up to 240 robot calls + 8 AFS requests;
 live execution requires explicit --live and a locally set API key. No implicit paid launch from init/report.
+An opt-in `config/behavior_afs_luna_smoke.json` sets both robot and AFS to gpt-6-luna:
+three valid rollouts/three total attempts per arm, two paired cold starts per arm,
+at most 60 robot calls plus one AFS proposal. This tests first-proposal wiring, not the
+full strategy cycle or model/search superiority. Episode settings remain unchanged.
+Default Astra config and existing campaigns are preserved; do not resume an Astra campaign
+with changed models. Luna synthetic wiring tests pass; live execution has not been validated.
+See `scene2test/docs/LUNA_PILOT_AND_SCENARIO_PLAN.md` for commands and capability boundaries.
 Next: budget-reviewed live pilot, then taxonomy/geometry and regression execution. Core/media manifest
 separation/finalization improvements, family detectors and additional behavior measures remain open.
 
