@@ -6,6 +6,80 @@
 랜덤 미로·여러 방 환경, SceneGraph, 이동 지도 생성: [실행 가이드](scene2test/docs/PROCEDURAL_WORLDS.md).
 생성기 자체는 정적 장면을 출력하며, G1 실행 연결은 위 Navigation 가이드를 참조하세요.
 
+## OpenAI API 키 설정 및 AFS 전체 실행 (RunPod / Bash)
+
+현재 LLM 기반 AFS와 로봇 VLM은 **`OPENAI_API_KEY` 환경 변수**를 사용합니다.
+변수 이름은 `OPENAPI_API_KEY`가 아닙니다. [OpenAI 공식 Quickstart](https://developers.openai.com/api/docs/quickstart)의
+키 생성·환경 변수 설정 방식을 따르며, 아래에서는 키를 명령문에 직접 쓰지 않고 숨김 입력합니다.
+이 절차는 기존 CUDA·MuJoCo·GR00T 및 `uv` 프로젝트 환경이 준비된 RunPod를 기준으로 합니다.
+아래의 기존 Panda/ExtraTrees 설명과는 별도의 G1 LLM 기반 실험 경로입니다.
+
+### 1. 실행할 터미널에서 키 설정
+
+OpenAI 대시보드에서 API 키를 발급받은 뒤, **실험을 실행할 RunPod 터미널**에서 진행하세요.
+각 코드 블록을 순서대로 실행합니다. 실제 키를 README, 설정 파일, Git, 채팅에 붙여 넣지 마세요.
+
+```bash
+cd /workspace/g1_failure/src/physical_ai_test_gen/scene2test
+```
+
+셸 디버그 출력이 켜져 있다면 키 노출을 막기 위해 먼저 끕니다.
+
+```bash
+set +x
+```
+
+아래 명령을 실행한 **후** `OpenAI API key:` 입력란에 키만 붙여 넣고 Enter를 누르세요.
+입력 문자가 화면에 보이지 않는 것이 정상입니다. 키를 포함한 명령문을 쓰지 않으므로
+일반적인 Bash 명령 기록에도 키를 남기지 않습니다.
+
+```bash
+read -r -s -p "OpenAI API key: " OPENAI_API_KEY
+```
+
+그다음 환경 변수로 내보냅니다. AFS 프로세스와 여기서 실행하는 로봇 프로세스가 함께 사용합니다.
+
+```bash
+export OPENAI_API_KEY
+```
+
+키 값을 출력하지 않고 등록 여부만 확인합니다.
+
+```bash
+uv run --no-sync python -c 'import os; print("OPENAI_API_KEY: SET" if os.environ.get("OPENAI_API_KEY", "").strip() else "OPENAI_API_KEY: MISSING")'
+```
+
+`SET`은 환경 변수에 값이 있다는 뜻이지, API 인증·모델 접근·사용 한도까지 검증했다는 뜻은 아닙니다.
+키를 확인하려고 `echo "$OPENAI_API_KEY"`를 실행하지 마세요.
+이 설정은 현재 셸과 그 자식 프로세스에만 적용됩니다. 새 SSH/터미널 세션이나 Pod 재시작 후에는
+다시 설정해야 합니다. 이 실행기는 `.env` 파일을 자동으로 읽지 않습니다.
+
+### 2. 계획 확인 및 전체 실험 실행
+
+먼저 계획만 확인합니다. 이 명령은 API/GPU를 호출하거나 캠페인을 생성하지 않습니다.
+
+```bash
+uv run --no-sync python tools/run_afs_pilot.py
+```
+
+전체 실행은 **키를 설정한 같은 터미널**에서 아래 명령으로 시작합니다. 유료 API와 GPU를 사용합니다.
+
+```bash
+uv run --no-sync python tools/run_afs_pilot.py --live
+```
+
+새 캠페인 생성 → 초기 2회 기록 점검 → AFS 8회·Random 8회 유효 실행 → 최종 보고서까지 진행합니다.
+초기 점검도 총 16회 예산에 포함됩니다. 기본 호출 상한은 로봇 API 240회 + AFS API 8회이며,
+실제 호출 수나 요금을 뜻하지 않습니다. 오류가 나면 중단하고 부분 보고서와 재개 명령을 남깁니다.
+결과는 `/workspace/g1_failure/runtime/afs_benchmark/<실행 시각>/`에 저장됩니다.
+예산·중단·재개·영상 위치는 [AFS 캠페인 실행 가이드](scene2test/docs/BEHAVIOR_AFS_CAMPAIGN.md)를 참조하세요.
+
+실험이 끝나고 현재 셸에서 키를 제거하려면 다음을 실행합니다. 키 자체를 폐기하는 명령은 아닙니다.
+
+```bash
+unset OPENAI_API_KEY
+```
+
 ## 현재 프로젝트 범위 (2026-09-06)
 
 G1/MuJoCo Client/Server와 기존 Panda AFS/LAM이 함께 존재합니다. 기존 AFS와 G1의

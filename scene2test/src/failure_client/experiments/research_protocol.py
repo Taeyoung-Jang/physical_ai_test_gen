@@ -87,6 +87,7 @@ def environment_fingerprint(config: CampaignConfig):
         PROJECT / "tools/run_robot_goal_agent.py",
     ]
     sources.append(PROJECT / "tools/run_afs_benchmark.py")
+    sources.append(PROJECT / "tools/run_afs_pilot.py")
     for folder in ("robot_vlm", "clear_path", "llm_afs", "failure_client", "simulation_server"):
         sources.extend(sorted((PROJECT / "src" / folder).rglob("*.py")))
     groot = Path(config.robot.groot_root).resolve()

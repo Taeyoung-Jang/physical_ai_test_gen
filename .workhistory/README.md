@@ -42,3 +42,11 @@
 - 2026-09-27: [AFS 프롬프트와 실제 후보 선택 방식 정합성 수정](2026-09-27_afs_selection_prompt_alignment.md)
 
 - 2026-09-27: [AFS 전체 연결 자가 점검·중단 복구·실행 자원·예산 검증 보강](2026-09-27_afs_pipeline_self_audit.md)
+
+- 2026-09-28: [AFS/Random 전체 파일럿 일괄 실행 스크립트](2026-09-28_afs_pilot_script.md)
+
+- 2026-09-28: [README의 OpenAI API 키 설정·전체 실행 안내](2026-09-28_readme_api_key.md)
+
+- 2026-09-28: [첫 live AFS 파일럿의 EGL 라이브러리 누락 진단](2026-09-28_afs_pilot_egl_diagnosis.md)
+
+- 2026-09-28: [재개 파일럿의 API 크레딧 소진·로봇 행동·비용 집계 갭](2026-09-28_afs_pilot_quota_diagnosis.md)

@@ -53,6 +53,75 @@ AFS는 장면 변수만 바꾼다. 로봇에게 이동 방향, 접촉 금지, �
 RunPod/Linux의 기존 CUDA·MuJoCo·GR00T 설치 환경을 사용한다. init은 파일/패키지를 확인할 뿐
 GPU 보행·EGL 렌더링·계정 모델 접근까지 검증하지 않는다.
 
+### 한 명령으로 전체 실행 — 2026-09-28 추가
+
+[`tools/run_afs_pilot.py`](../tools/run_afs_pilot.py)는 아래 수동 절차를 묶은 실행 스크립트다.
+기존 캠페인·로봇 실행기·측정기·메모리를 재사용하며 별도 검색 알고리즘을 추가하지 않는다.
+
+작업 디렉터리:
+
+```bash
+cd /workspace/g1_failure/src/physical_ai_test_gen/scene2test
+```
+
+계획·최대 호출 예산만 확인한다. 키가 설정되어 있어도 `--live`가 없으면 파일 생성·API·GPU 실행이 없다.
+
+```bash
+uv run --no-sync python tools/run_afs_pilot.py
+```
+
+`OPENAI_API_KEY`가 로컬 환경 변수에 설정된 상태에서 **아래 한 줄로 전체 실행**한다.
+기본 설정의 전체 유효 예산은 AFS 8회 + Random 8회다. 호출 상한은 로봇 240회 + AFS 8회이며
+실제 사용량/요금이 아니다. 무제한 simulation 조건은 유지하고 새 기본 시간 제한을 넣지 않았다.
+
+```bash
+uv run --no-sync python tools/run_afs_pilot.py --live
+```
+
+진행 순서:
+
+1. 기본 설정·코드·자원을 확인하고 `/workspace/g1_failure/runtime/afs_benchmark/<timestamp>`에 새 캠페인을 만든다.
+2. 먼저 최대 2회 신규 rollout을 실행하고 `INITIAL_REPORT`를 생성한다.
+3. 실행 기록/계약이 정상이면 같은 고정 예산 안에서 남은 실험을 자동 진행한다. 확인 질문은 없다.
+4. 끝나면 행동 메모리를 포함한 최종 `REPORT`와 `PILOT_SUMMARY`를 출력한다.
+
+실제로는 rollout을 한 번씩 수행하며 유효성을 확인하므로, 첫 회의 실행 오류를 보고 두 번째를
+무조건 시작하지 않는다. **유효한 목표 FAIL은 정상 탐색 결과로 받아 계속한다.**
+INCONCLUSIVE/INVALID/누락 기록, API 오류, watchdog/Ctrl+C, 코드/자원 변경은 추가 실행을 중단한다.
+기존 수동 `run`보다 보수적인 자동 실행 정책이며 전체 시도 상한/유효 예산은 바꾸지 않는다.
+2회 점검은 자동 기록 검사다. MP4를 사람이 검토하거나 로봇의 보행 성능을 승인한 것으로 해석하지 않는다.
+기본 첫 2회는 cold start이며, 그 시점에 적응형 AFS를 확인한 것은 아니다.
+
+다른 설정을 쓰려면 새 캠페인 생성 전에 `--config 경로`를 지정한다. 기본 파일은 실행 위치와
+무관하게 이 프로젝트의 `config/behavior_afs_benchmark.json`을 찾는다.
+`--output-dir 새경로`로 새 캠페인 위치를 지정할 수 있으나 기존 폴더는 덮어쓰지 않는다.
+
+중단 후 원인을 확인하고 **같은 폴더로 재개**하려면 아래 `CAMPAIGN_DIR`을 실제 출력 경로로 바꾼다.
+
+```bash
+uv run --no-sync python tools/run_afs_pilot.py --live --campaign CAMPAIGN_DIR
+```
+
+재개는 고정 설정을 사용하므로 `--config`를 함께 지정할 수 없다. 먼저 pending 결과를 새 호출 없이
+수집/검증하고, 완료 불명인 호출은 자동 재전송하거나 버리지 않는다. 수집한 결과가 제외 상태면
+추가 실행 전에 다시 멈춘다. 완결된 캠페인은 로봇을 재실행하지 않고 보고서만 생성한다.
+코드 변경 전 캠페인은 새 코드로 강제 재개하지 말고 새 캠페인을 만든다. 스크립트 자체도 source hash에 포함된다.
+
+오류 시에도 가능한 범위에서 부분 보고서를 생성한다. `REPORT` 출력만으로 실험 완료를 판단하지
+말고 `PILOT_EXIT_CODE`와 캠페인 상태를 함께 확인한다. 정상 완료 0, 오류/미완료 2,
+스크립트가 직접 받은 KeyboardInterrupt는 130이다. 로봇 실행기가 처리한 Ctrl+C는 운영 중단으로 2가 될 수 있다.
+기록 무결성이 깨져 보고서 생성도 불가능하면 그 오류를 별도로 보존하며 성공으로 표시하지 않는다.
+
+일괄 실행 로그는 매 실행마다 새 `pilot_runs/<timestamp>/`에 남는다:
+
+- `events.jsonl`: 실행 진행 이벤트. 상세 로봇 로그는 기존 attempt의 `process.log`를 본다.
+- `initial_check.json`: 첫 점검 후 상태. 점검 전에 오류가 나면 생성되지 않는다.
+- `summary.json`: 최종 상태·호출 집계·종료 코드.
+- `error.json`, `report_error.json`: 오류가 있을 때만 생성되는 비밀값 제거 예외/스택 정보.
+
+MP4·원본 결과는 기존 `attempts/.../rollout/`에 보존하며 GIF는 생성하지 않는다.
+같은 GPU에서 다른 캠페인·수동 로봇 실행을 동시에 시작하지 않는다.
+
 ### 1. 초기화 — API/GPU 실행 없음
 
 ```bash

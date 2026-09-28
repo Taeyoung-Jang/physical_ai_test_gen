@@ -35,6 +35,10 @@ P2 now revalidates pending proposal evidence/context on resume and after inferen
 code/resources again before launch. Condition-drift stops commit atomically with observations; usable
 saved responses cannot be abandoned before validation. Spawned children are reaped on metadata/wait
 errors. P0 excludes recorded API/policy call counts exceeding the declared episode budget.
+`tools/run_afs_pilot.py` wraps initialization/resume, two initial rollout checks, remaining fixed-budget
+execution and P1-inclusive reports. Default is plan-only; --live plus a local key permits paid runs.
+It stops on the first newly observed excluded rollout or operational error, never on a valid goal FAIL,
+and never auto-resolves/resends ambiguous operations. Each invocation has separate pilot_runs logs.
 Example config is 8 valid rollouts per arm, max 12 attempts per arm, up to 240 robot calls + 8 AFS requests;
 live execution requires explicit --live and a locally set API key. No implicit paid launch from init/report.
 Next: budget-reviewed live pilot, then taxonomy/geometry and regression execution. Core/media manifest
@@ -63,7 +67,7 @@ Do not restore the removed default120s limit. Static no_path does not prove a sc
 unsolvable when manipulation is available. Robot capability development remains
 separate from AFS evaluation/search work.
 
-Last refreshed: 2026-09-27 (UTC); earlier capability notes retain their historical scope.
+Last refreshed: 2026-09-28 (UTC); earlier capability notes retain their historical scope.
 
 
 ## G1 scene-search pilot update
