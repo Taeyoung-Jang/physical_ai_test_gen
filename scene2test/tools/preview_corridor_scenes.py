@@ -1,4 +1,4 @@
-"""Offline corridor-v2 development fixtures: static maps, NOT robot outcomes.
+"""Offline corridor-v2 / obstacles-v3 fixtures: static maps, NOT robot outcomes.
 
 No API calls, GPU inference, GIF or robot actions. Optional CPU G1 composition audit.
 """
@@ -29,17 +29,23 @@ def main(argv=None):
         "--output-root", type=Path, default=Path("/workspace/g1_failure/runtime/corridor_previews")
     )
     parser.add_argument("--scene-config", type=Path, action="append")
+    parser.add_argument("--preset", choices=("corridor", "obstacles"), default="corridor")
     parser.add_argument("--audit-robot", action="store_true")
     parser.add_argument(
         "--groot-root", type=Path, default=Path("/workspace/g1_failure/src/GR00T-WholeBodyControl")
     )
     args = parser.parse_args(argv)
+    names = (
+        ("wide", "narrow", "offset")
+        if args.preset == "corridor"
+        else ("slalom", "rotated", "low_blocks", "blocked")
+    )
     paths = args.scene_config or [
-        PROJECT / f"config/scenes/corridor_{name}.json" for name in ("wide", "narrow", "offset")
+        PROJECT / f"config/scenes/{args.preset}_{name}.json" for name in names
     ]
     configs = [validate_scene(json.loads(path.read_text())) for path in paths]
     if any(not isinstance(c, CorridorFixture) for c in configs):
-        parser.error("only clear-path-corridor-v2 scenes are supported")
+        parser.error("only clear-path-corridor-v2 / clear-path-obstacles-v3 are supported")
     source = None
     if args.audit_robot:
         source = args.groot_root / "decoupled_wbc/sim2mujoco/resources/robots/g1/g1_gear_wbc.xml"

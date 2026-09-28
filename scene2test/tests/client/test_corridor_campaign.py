@@ -8,7 +8,7 @@ from pathlib import Path
 import jsonschema
 import pytest
 
-from clear_path.contracts import CorridorFixture
+from clear_path.contracts import CorridorFixture, ObstacleFixture
 from clear_path.fixture import identity, world_xml
 from clear_path.scene_space import axes_for_schema
 from failure_client.archive.regression_cases import _scene_parameters, build_failure_memory
@@ -30,15 +30,18 @@ PROJECT = Path(__file__).resolve().parents[2]
 SCHEMA = "clear-path-corridor-v2"
 
 
-def config():
+def config(schema=SCHEMA):
+    name = "obstacles" if schema == "clear-path-obstacles-v3" else "corridor"
     return CampaignConfig.model_validate_json(
-        (PROJECT / "config/behavior_afs_corridor_luna.json").read_text()
+        (PROJECT / f"config/behavior_afs_{name}_luna.json").read_text()
     )
 
 
-def archive(root, *, width=4.0, offset=0.0, outcome="PASS", mass=2.0):
+def archive(root, *, width=4.0, offset=0.0, outcome="PASS", mass=2.0, scene=None):
     root = fixture(root, outcome=outcome)
-    scene = CorridorFixture(corridor_width_m=width, box_lateral_fraction=offset, box_mass_kg=mass)
+    scene = scene or CorridorFixture(
+        corridor_width_m=width, box_lateral_fraction=offset, box_mass_kg=mass
+    )
     protocol = json.loads((root / "protocol.json").read_text())
     protocol.update(scene_config=scene.model_dump(), scene_revision=identity(scene))
     json_write(root / "protocol.json", protocol)
@@ -89,6 +92,17 @@ class CorridorProposer(FakeProposer):
         return response
 
 
+class ObstacleProposer(FakeProposer):
+    def __call__(self, body, **kwargs):
+        response = super().__call__(body, **kwargs)
+        node = response["output"][0]["content"][0]
+        proposal = json.loads(node["text"])
+        proposal["spaces"][0].update(axis="obstacle_1_size_y_m", low=0.2, high=0.8)
+        jsonschema.validate(proposal, body["text"]["format"]["schema"])
+        node["text"] = json.dumps(proposal)
+        return response
+
+
 def test_domain_and_budget_do_not_relabel_legacy_space():
     cfg = config()
     design = cfg.design()
@@ -104,12 +118,15 @@ def test_domain_and_budget_do_not_relabel_legacy_space():
         assert set(a) == set(design["axes"])
 
 
-def test_full_cycle_resume_model_forwarding_and_budget(tmp_path):
+@pytest.mark.parametrize(
+    "schema,proposer", [(SCHEMA, CorridorProposer), ("clear-path-obstacles-v3", ObstacleProposer)]
+)
+def test_full_cycle_resume_model_forwarding_and_budget(tmp_path, schema, proposer):
     direct, robot_a, proposer_a = setup(
-        tmp_path / "direct", config=config(), robot=CorridorRobot(), proposer=CorridorProposer()
+        tmp_path / "direct", config=config(schema), robot=CorridorRobot(), proposer=proposer()
     )
     resumed, robot_b, proposer_b = setup(
-        tmp_path / "resumed", config=config(), robot=CorridorRobot(), proposer=CorridorProposer()
+        tmp_path / "resumed", config=config(schema), robot=CorridorRobot(), proposer=proposer()
     )
     assert direct.run()["status"] == "COMPLETE"
     resumed.run(max_new_attempts=5)
@@ -124,7 +141,7 @@ def test_full_cycle_resume_model_forwarding_and_budget(tmp_path):
         assert request["model"] == "gpt-6-luna"
         assert set(
             request["text"]["format"]["schema"]["$defs"]["Space"]["properties"]["axis"]["enum"]
-        ) == set(axes_for_schema(SCHEMA))
+        ) == set(axes_for_schema(schema))
     attempts = direct.state["attempts"]
     afs = [a for a in attempts if a["method"] == "afs"]
     random = [a for a in attempts if a["method"] == "random"]
@@ -216,7 +233,8 @@ def test_scene_audit_rejects_xml_config_disagreement(tmp_path, change):
     assert params is geometry is None and warning
 
 
-def test_campaign_excludes_wrong_geometry_before_goal_failure_count(tmp_path):
+@pytest.mark.parametrize("schema", [SCHEMA, "clear-path-obstacles-v3"])
+def test_campaign_excludes_wrong_geometry_before_goal_failure_count(tmp_path, schema):
     robot = CorridorRobot()
 
     def corrupted(cfg, directory, params):
@@ -228,9 +246,90 @@ def test_campaign_excludes_wrong_geometry_before_goal_failure_count(tmp_path):
         _rebind(root)
         return receipt
 
-    engine, _, _ = setup(tmp_path, config=config(), robot=corrupted, proposer=CorridorProposer())
+    engine, _, _ = setup(
+        tmp_path, config=config(schema), robot=corrupted, proposer=CorridorProposer()
+    )
     summary = engine.run()
     assert summary["status"] == "INCOMPLETE"
     assert summary["reason"] == "scene_geometry_mismatch"
     assert all(a["valid"] == 0 for a in summary["arms"])
     assert len(robot.calls) == 1
+
+
+@pytest.mark.parametrize("axis", ["obstacle_1_yaw_deg", "obstacle_2_height_m", "obstacle_1_x_m"])
+def test_obstacle_axis_feedback_brackets_and_midpoints(tmp_path, axis):
+    schema = "clear-path-obstacles-v3"
+    lo, hi = axes_for_schema(schema)[axis]
+    low = archive(tmp_path / "low", outcome="FAIL", scene=ObstacleFixture(**{axis: lo}))
+    high = archive(tmp_path / "high", scene=ObstacleFixture(**{axis: hi}))
+    memory = build_failure_memory([load(low), load(high)])
+    assert len(memory["brackets"]) == 1
+    bracket = memory["brackets"][0]
+    assert bracket["axis"] == axis and bracket["normalized_width"] == pytest.approx(1.0)
+    assert boundary_candidate(memory)["parameters"][axis] == (lo + hi) / 2
+    ctx = feedback_context(memory, history_limit=8, remaining=4, scene_schema=schema)
+    assert len(ctx["allowed_axes"]) == 17
+    assert {"obstacle_1", "obstacle_2"} <= {o["id"] for o in ctx["scene_graph"]["objects"]}
+    body = proposal_request(ctx, "gpt-6-luna")
+    raw = {
+        "context_sha256": b.digest(ctx),
+        "spaces": [
+            {
+                "mode": "boundary_probe",
+                "axis": axis,
+                "low": lo + (hi - lo) / 4,
+                "high": lo + 3 * (hi - lo) / 4,
+                "evidence_refs": ["case_memory"],
+                "hypothesis": "synthetic",
+                "alternative": "unknown",
+                "falsification": "measure",
+            }
+        ],
+    }
+    jsonschema.validate(raw, body["text"]["format"]["schema"])
+    candidate = choose_probe(raw, ctx, memory)
+    scene = config(schema).scene(candidate["parameters"])
+    assert scene.schema_version == schema
+    assert all(
+        candidate["parameters"][k] == ctx["latest"]["parameters"][k]
+        for k in axes_for_schema(schema)
+        if k != axis
+    )
+    # Residual solver differences must still prohibit a cross-condition bracket.
+    tree = ET.parse(high / "scene.xml")
+    tree.getroot().find("option").set("gravity", "0 0 -8")
+    tree.write(high / "scene.xml", encoding="unicode")
+    _rebind(high)
+    assert not build_failure_memory([load(low), load(high)])["brackets"]
+
+
+@pytest.mark.parametrize(
+    "attribute,value",
+    [("pos", "2.5 0 .3"), ("quat", "1 0 0 0"), ("size", ".1 .1 .1"), ("friction", ".1 .005 .0001")],
+)
+def test_obstacle_geometry_tampering_excluded_before_counting(tmp_path, attribute, value):
+    root = archive(tmp_path / "run", scene=ObstacleFixture(obstacle_1_yaw_deg=35.0))
+    tree = ET.parse(root / "scene.xml")
+    tree.getroot().find(".//geom[@name='obstacle_1']").set(attribute, value)
+    tree.write(root / "scene.xml", encoding="unicode")
+    _rebind(root)
+    params, geometry, warning = _scene_parameters(
+        root, json.loads((root / "protocol.json").read_text())
+    )
+    assert params is geometry is None and warning
+
+
+def test_obstacle_random_full_domain_no_path_filtering_or_domain_alias():
+    cfg = config("clear-path-obstacles-v3")
+    assert len(cfg.design()["axes"]) == 17
+    assert cfg.design()["domain_id"] not in {
+        config().design()["domain_id"],
+        CampaignConfig().design()["domain_id"],
+    }
+    for seed in range(100):
+        params = uniform_scene(seed, "cold", schema=cfg.scene_schema)
+        assert params == uniform_scene(seed, "cold", schema=cfg.scene_schema)
+        assert set(params) == set(cfg.design()["axes"])
+        assert cfg.scene(params).schema_version == cfg.scene_schema
+    corners = {k: bounds[0] for k, bounds in cfg.design()["axes"].items()}
+    assert cfg.scene(corners).schema_version == cfg.scene_schema

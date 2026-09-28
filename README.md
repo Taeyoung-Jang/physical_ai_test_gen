@@ -83,11 +83,29 @@ uv run --no-sync python tools/run_afs_pilot.py --live --config config/behavior_a
 통로 폭·상자 좌우 배치를 탐색하는 **새 5축 버전**도 추가했습니다.
 [통로 AFS 실행 가이드](scene2test/docs/CORRIDOR_AFS.md)에 개발용 3개 장면,
 Luna 넓은 통로 1회 실행, 별도 6+6 캠페인 명령과 예산을 기록했습니다.
-먼저 비용 없는 정적 지도·G1 자산 점검을 실행할 수 있습니다(로봇 행동은 실행하지 않음).
+
+5축 버전의 정적 지도·G1 자산 점검(API/로봇 행동 없음):
 
 ```bash
 uv run --no-sync python tools/preview_corridor_scenes.py --audit-robot
 ```
+
+다중 장애물 확장: [17축 AFS 실행 가이드](scene2test/docs/OBSTACLE_AFS.md).
+기존 상자에 **고정 장애물 2개**의 위치·크기·높이·회전을 추가했습니다.
+로봇 정책/목표는 유지하며, 미로·점프 기능까지 통합한 것은 아닙니다.
+아래 명령은 PNG/HTML 미리보기와 CPU 자산 검사만 수행합니다(API/GPU 추론 없음).
+
+```bash
+uv run --no-sync python tools/preview_corridor_scenes.py --preset obstacles --audit-robot --output-root /workspace/g1_failure/runtime/obstacle_previews
+```
+
+새 캠페인의 예산만 확인하려면:
+
+```bash
+uv run --no-sync python tools/run_afs_pilot.py --config config/behavior_afs_obstacles_luna.json
+```
+
+유료 실행 명령은 위 가이드에 분리했습니다. 기존 캠페인에 새 코드를 덮어 재개하지 마세요.
 
 그림의 경로는 정적 지도 계산이며 실제 로봇 성공 결과가 아닙니다.
 이번 코드 변경 전 동결된 캠페인은 code drift 검사로 재개가 차단되므로 새 캠페인을 사용하세요.

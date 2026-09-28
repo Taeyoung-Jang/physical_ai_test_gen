@@ -14,7 +14,26 @@ CORRIDOR_AXES = {
 }
 
 
+OBSTACLE_AXES = {
+    **CORRIDOR_AXES,
+    **{
+        f"obstacle_{i}_{axis}": bounds
+        for i in (1, 2)
+        for axis, bounds in {
+            "x_m": (2.25, 2.75) if i == 1 else (5.25, 5.75),
+            "lateral_fraction": (-1.0, 1.0),
+            "size_x_m": (0.2, 0.8),
+            "size_y_m": (0.2, 0.8),
+            "height_m": (0.1, 1.2),
+            "yaw_deg": (-90.0, 90.0),
+        }.items()
+    },
+}
+
+
 def axes_for_schema(schema="clear-path-fixture-v1"):
+    if schema == "clear-path-obstacles-v3":
+        return dict(OBSTACLE_AXES)
     if schema == "clear-path-fixture-v1":
         return dict(PHYSICS_AXES)
     if schema == "clear-path-corridor-v2":

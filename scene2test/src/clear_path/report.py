@@ -7,6 +7,7 @@ import numpy as np
 
 from .contracts import CorridorFixture
 from .fixture import BOX_SIZE, BOX_TARGET, GOAL, SPAWN, WALLS, walls
+from .obstacles import static_obstacles
 
 
 def plot_map(nav, path, config=None):
@@ -14,7 +15,7 @@ def plot_map(nav, path, config=None):
 
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
-    from matplotlib.patches import Rectangle
+    from matplotlib.patches import Polygon, Rectangle
 
     fig, ax = plt.subplots(figsize=(12, 5))
     x0, y0 = nav["origin_xy_m"]
@@ -35,6 +36,26 @@ def plot_map(nav, path, config=None):
     )
     for a, b, c, d in (walls(config) if config is not None else WALLS).values():
         ax.add_patch(Rectangle((a, c), b - a, d - c, color="#334155"))
+    for index, row in enumerate(static_obstacles(config)):
+        sx, sy, _ = row["local_size_m"]
+        corners = np.asarray([[-sx, -sy], [sx, -sy], [sx, sy], [-sx, sy]]) / 2
+        rotation = np.asarray(row["rotation_matrix"]).reshape(3, 3)[:2, :2]
+        center = np.asarray(row["center_m"][:2])
+        ax.add_patch(
+            Polygon(
+                corners @ rotation.T + center,
+                color="#8040a6",
+                label="Fixed obstacles (actual footprint)" if index == 0 else None,
+            )
+        )
+        ax.annotate(
+            f"{row['id']}\nh={row['local_size_m'][2]:.2f}m",
+            center,
+            xytext=(0, 10),
+            textcoords="offset points",
+            ha="center",
+            fontsize=7,
+        )
     bx, by = nav["box_xy_m"]
     ax.add_patch(
         Rectangle(

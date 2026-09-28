@@ -7,7 +7,8 @@ import numpy as np
 import pytest
 
 from clear_path import fixture
-from clear_path.contracts import CorridorFixture, Fixture
+from clear_path.contracts import CorridorFixture, Fixture, ObstacleFixture
+from clear_path.obstacles import static_obstacles
 from clear_path.scene_space import axes_for_schema, scene_from_parameters
 from robot_vlm.navigation_tools import plan
 from robot_vlm.policy import Geometry, Observation
@@ -123,7 +124,8 @@ def test_versions_and_exact_candidate_axes_are_not_interchangeable():
     assert fixture.identity(Fixture()) != fixture.identity(CorridorFixture())
 
 
-def test_real_g1_composition_preserves_actuators_and_gait_observation():
+@pytest.mark.parametrize("config", [CorridorFixture(), ObstacleFixture(obstacle_1_yaw_deg=45.0)])
+def test_real_g1_composition_preserves_actuators_and_gait_observation(config):
     from clear_path.audit import inspect
 
     source = Path(
@@ -132,7 +134,7 @@ def test_real_g1_composition_preserves_actuators_and_gait_observation():
     )
     if not source.is_file():
         pytest.skip("external G1 assets unavailable")
-    model = mujoco.MjModel.from_xml_string(fixture.world_xml(CorridorFixture(), source))
+    model = mujoco.MjModel.from_xml_string(fixture.world_xml(config, source))
     audit = inspect(source, model)
     assert audit["robot_joint_identity_preserved"] and audit["gait_observation_equal"]
     assert audit["robot_actuators"] == 29
@@ -171,3 +173,115 @@ def test_offline_preview_cli_outputs_static_report_not_rollout(tmp_path):
         assert nav["scene_revision"] == row["scene_revision"]
     assert not list(root.rglob("*.gif")) and not list(root.rglob("*.mp4"))
     assert "synthetic-must-not-be-used" not in (root / "report.html").read_text()
+
+
+@pytest.mark.parametrize("seed", range(24))
+def test_obstacles_map_graph_and_oriented_physics_agree(seed):
+    from failure_client.methods.behavior_feedback import uniform_scene
+
+    schema = "clear-path-obstacles-v3"
+    config = scene_from_parameters(uniform_scene(seed, "test", schema=schema), schema)
+    obs, model, data = observation(config)
+    nav, graph = fixture.navigation_map(config), fixture.graph(config)
+    route = plan(obs, list(fixture.GOAL))
+    assert (route["status"] == "path_found") == nav["reachable"]
+    assert route["path_xy_m"] == nav["path_xy_m"]
+    assert nav["schema_version"] == "clear-path-map-v3"
+    assert graph["meta"]["scene_revision"] == nav["scene_revision"] == fixture.identity(config)
+    assert set(fixture.world_geom_names(config)) == {model.geom(i).name for i in range(model.ngeom)}
+    nodes = {o["id"]: o for o in graph["objects"]}
+    for row in static_obstacles(config):
+        node = nodes[row["id"]]
+        g = model.geom(row["id"]).id
+        assert node["position"] == pytest.approx(data.geom_xpos[g])
+        assert node["extra"]["local_size_m"] == pytest.approx(2 * model.geom_size[g])
+        assert node["extra"]["rotation_matrix"] == pytest.approx(data.geom_xmat[g])
+        aabb = np.abs(data.geom_xmat[g].reshape(3, 3)) @ (2 * model.geom_size[g])
+        assert node["size"] == pytest.approx(aabb)
+        assert node["movable"] is False and node["extra"]["dynamic"] is False
+        assert node["extra"]["mujoco_geom_name"] == row["id"]
+        assert node["extra"]["contact_annotation"] == "diagnostic_only"
+    # One dynamic body only; adding static blocks must not grow the free-joint state.
+    assert model.nq == 7 and model.nv == 6
+
+
+@pytest.mark.parametrize("width", [1.6, 4.0])
+@pytest.mark.parametrize("yaw", [-90.0, -45.0, 0.0, 45.0, 90.0])
+@pytest.mark.parametrize("fraction", [-1.0, 0.0, 1.0])
+def test_obstacle_extreme_sizes_keep_initial_geometry_nonpenetrating(width, yaw, fraction):
+    config = ObstacleFixture(
+        corridor_width_m=width,
+        box_lateral_fraction=fraction,
+        obstacle_1_x_m=2.75,
+        obstacle_2_x_m=5.25,
+        **{
+            f"obstacle_{i}_{axis}": value
+            for i in (1, 2)
+            for axis, value in {
+                "size_x_m": 0.8,
+                "size_y_m": 0.8,
+                "yaw_deg": yaw,
+                "lateral_fraction": fraction,
+            }.items()
+        },
+    )
+    _, model, data = observation(config)
+    for row in static_obstacles(config):
+        x0, x1, y0, y1 = row["aabb_xy_m"]
+        assert y0 >= -width / 2 + 0.05 - 1e-12
+        assert y1 <= width / 2 - 0.05 + 1e-12
+        assert x0 > fixture.SPAWN[0] + 0.4 and x1 < fixture.GOAL[0] - 0.4
+        assert x1 < 3.6 or x0 > 4.4
+    floor = model.geom("clear_floor").id
+    assert all(floor in (c.geom1, c.geom2) for c in data.contact if c.dist < -1e-10)
+
+
+def test_obstacle_contract_bounds_fixed_count_and_height_projection():
+    schema = "clear-path-obstacles-v3"
+    axes = axes_for_schema(schema)
+    assert len(axes) == 17
+    for axis, (lo, hi) in axes.items():
+        field = ObstacleFixture.model_fields[axis]
+        assert any(getattr(m, "ge", None) == lo for m in field.metadata)
+        assert any(getattr(m, "le", None) == hi for m in field.metadata)
+        for value in (lo - 0.01, hi + 0.01, float("inf"), float("nan")):
+            with pytest.raises(ValueError):
+                validate_scene({"schema_version": schema, axis: value})
+    for extra in ({"obstacle_count": 3}, {"goal_xy_m": [2.0, 0.0]}, {"clearance_m": 0.1}):
+        with pytest.raises(ValueError):
+            validate_scene({"schema_version": schema, **extra})
+    low, high = ObstacleFixture(obstacle_1_height_m=0.1), ObstacleFixture(obstacle_1_height_m=1.2)
+    assert fixture.navigation_map(low)["blocked"] == fixture.navigation_map(high)["blocked"]
+    assert fixture.identity(low) != fixture.identity(high)
+
+
+def test_obstacle_offline_preview_cli(tmp_path):
+    import json
+    import subprocess
+    import sys
+
+    project = Path(__file__).resolve().parents[1]
+    result = subprocess.run(
+        [
+            sys.executable,
+            str(project / "tools/preview_corridor_scenes.py"),
+            "--preset",
+            "obstacles",
+            "--output-root",
+            str(tmp_path),
+        ],
+        capture_output=True,
+        text=True,
+        timeout=60,
+    )
+    assert result.returncode == 0, result.stderr
+    root = next(tmp_path.iterdir())
+    summary = json.loads((root / "summary.json").read_text())
+    assert summary["api_calls"] == summary["robot_rollouts"] == summary["physics_steps"] == 0
+    assert len(summary["scenes"]) == 4
+    assert summary["scenes"][-1]["static_path_exists"] is False
+    assert summary["scenes"][0]["static_path_exists"] is True
+    for row in summary["scenes"]:
+        assert row["task_outcome"] == "NOT_EXECUTED"
+        assert (root / row["directory"] / "map.png").is_file()
+    assert not list(root.rglob("*.gif")) and not list(root.rglob("*.mp4"))

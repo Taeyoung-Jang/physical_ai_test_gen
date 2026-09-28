@@ -252,7 +252,8 @@ class ResearchCampaign:
             if isinstance(exc, EvidenceReferenceError):
                 diagnostic["validation"] = {
                     "code": "unknown_evidence_reference",
-                    "unknown": exc.unknown, "allowed": exc.allowed,
+                    "unknown": exc.unknown,
+                    "allowed": exc.allowed,
                 }
             atomic_json(directory / "error.json", diagnostic)
             self._save("proposal_error", {"id": pid, "error_type": type(exc).__name__})
@@ -352,7 +353,7 @@ class ResearchCampaign:
                     source=source, status="INVALID", exclusion_reason="duplicate_core_evidence"
                 )
             elif (
-                self.config.scene_schema == "clear-path-corridor-v2"
+                self.config.scene_schema in {"clear-path-corridor-v2", "clear-path-obstacles-v3"}
                 and _scene_parameters(directory / "rollout", protocol)[0] is None
             ):
                 self.state.update(status="INCOMPLETE", reason="scene_geometry_mismatch")
@@ -559,7 +560,8 @@ class ResearchCampaign:
                     "audit_path": str(self.root / "recovery.json"),
                     "inherited_costs_included": True,
                 }
-                if self.state["lock"].get("recovery_sha256") else None
+                if self.state["lock"].get("recovery_sha256")
+                else None
             ),
             "arms": [
                 {
@@ -651,8 +653,10 @@ class ResearchCampaign:
                     "relative_gain": None,
                     "gain_target_observed": None,
                     "per_seed": [],
-                    "issues": [*metrics["comparison"].get("issues", []),
-                               "operator_assisted_recovery"],
+                    "issues": [
+                        *metrics["comparison"].get("issues", []),
+                        "operator_assisted_recovery",
+                    ],
                 }
                 metrics["limitations"].append(
                     "Operator-assisted recovery: descriptive outcomes only, "
@@ -675,8 +679,7 @@ class ResearchCampaign:
                 extras.append("recovery.json")
             manifest = read_json(output / "manifest.json")
             manifest["artifacts"].extend(
-                {"path": name, "sha256": _hash_file(output / name)}
-                for name in extras
+                {"path": name, "sha256": _hash_file(output / name)} for name in extras
             )
             atomic_json(output / "manifest.json", manifest)
             atomic_json(self.root / "latest_report.json", {"report": str(report)})

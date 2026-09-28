@@ -1,5 +1,34 @@
 # Scene2Test workspace memory
 
+## Multi-obstacle goal-agent AFS update (2026-09-28)
+
+Opt-in `clear-path-obstacles-v3` extends corridor-v2 with two STATIC oriented blocks:
+17 continuous axes total (existing five plus each block's X, lateral fraction,
+local X/Y size, height and yaw). See `scene2test/docs/OBSTACLE_AFS.md`.
+Disjoint X bands and rotated-AABB-based lateral placement prevent initial overlap;
+there is no path-based rejection sampling. Width/size/yaw can also move block Y.
+The graph stores world AABB size plus explicit local extents/rotation. XML, map,
+robot observations/contact logging and preview share the same scene-owned IDs.
+Maps/planner conservatively block low objects too; this does not add stepping/jumping.
+Only the existing box is movable/pushable. No changes to robot decisions, goal,
+action executors, planner or outcome semantics. This is NOT arbitrary maze/room/
+terrain loading. Generic procedural/terrain support remains a separate backend.
+Campaign sampling, constrained LLM axis schema, geometry audit and observed brackets
+support v3. Extra scene-owned nodes are verified before normalization; residual
+physics/robot differences still forbid brackets. New config uses Luna/Luna, 6+6
+valid/max attempts, up to 120 robot calls + 2 AFS calls; no implicit paid execution.
+CPU geometry/real-asset composition and synthetic integration are tested. One user-run
+Luna/CUDA slalom fixture now has validated goal PASS evidence: internal plan_path +
+navigate_to, no push, no recorded falls/non-floor robot-world contacts. This is one
+development fixture, not an AFS-picked case or general success-rate/Gain evidence.
+Review found pending-completed response usage omitted from the decision-only token
+sum, and standalone runner source_hashes lacks the new obstacles.py helper (campaign
+recursive freeze includes it). Fix provenance/accounting separately; preserve old outcomes.
+Old v1/v2 scene outputs remain compatible, but code frozen
+campaigns require their original environment; never bypass drift or relabel domains.
+Next: grounded taxonomy measures and executable regression assets; no need to wait
+for comparison pilots to finish before development. Six-family coverage is still unknown.
+
 ## Explicit AFS evidence-reference recovery (2026-09-28)
 
 Behavior request schemas now constrain evidence_refs to the supplied ID enum;

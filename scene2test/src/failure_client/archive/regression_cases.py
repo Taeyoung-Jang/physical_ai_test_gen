@@ -19,7 +19,7 @@ from pathlib import Path
 
 from clear_path.contracts import CorridorFixture
 from clear_path.fixture import identity, world_xml
-from clear_path.scene_space import CORRIDOR_AXES, axes_for_parameters
+from clear_path.scene_space import axes_for_parameters
 from failure_client.evaluation.behavior_measures import analyze_behavior, interval_summary
 from failure_client.evaluation.goal_run_reader import _hash_file, _rows, read_json
 from failure_client.evaluation.research_records import EpisodeRecord
@@ -27,7 +27,6 @@ from failure_client.reporting.discovery_metrics import deduplicate_records
 from robot_vlm.scene_config import validate_scene
 from robot_vlm.task_outcome import digest
 
-AXES = CORRIDOR_AXES
 COPY_FILES = {
     "protocol.json",
     "result.json",
@@ -99,7 +98,7 @@ def _scene_parameters(root, protocol):
         if isinstance(config, CorridorFixture):
             # Verify first, normalize second: only generated scene-owned nodes are
             # replaced. Preserve every robot/compiler/physics difference in the hash.
-            baseline = ET.fromstring(world_xml(CorridorFixture())).find("worldbody")
+            baseline = ET.fromstring(world_xml(type(config)())).find("worldbody")
             for node in baseline:
                 if node.tag not in {"geom", "body", "site"}:
                     continue
@@ -107,7 +106,7 @@ def _scene_parameters(root, protocol):
                 index = list(actual).index(match)
                 actual.remove(match)
                 actual.insert(index, copy.deepcopy(node))
-        # v1 only normalizes the three physics values; v2 also the audited scene geometry.
+        # v1 normalizes physics values; v2/v3 also normalize audited scene-owned geometry.
         geometry = hashlib.sha256(
             ET.canonicalize(ET.tostring(xml, encoding="unicode")).encode()
         ).hexdigest()
@@ -151,7 +150,11 @@ def _brackets(cases):
                     "axis": axis,
                     "low": a,
                     "high": b,
-                    "normalized_width": (high - low) / (AXES[axis][1] - AXES[axis][0]),
+                    "normalized_width": (high - low)
+                    / (
+                        axes_for_parameters(left[0]["parameters"])[axis][1]
+                        - axes_for_parameters(left[0]["parameters"])[axis][0]
+                    ),
                     "midpoint_probe": (low + high) / 2,
                     "limits": (
                         "Observed endpoints only; no monotonicity, causal or minimal-boundary proof"

@@ -61,7 +61,9 @@ def setup_loop(monkeypatch, scenario):
                 self.data.qpos[2] = 0.3
             elif scenario.startswith("contact") and 2 < t < 2.4:
                 self.data.qpos[0] = 4.0
-            elif scenario in {"fall_recover", "contact_goal"} and t >= 2.4:
+            elif scenario == "obstacle_contact_goal" and 2 < t < 2.4:
+                self.data.qpos[:3] = [2.5, 0, 0.3]
+            elif scenario in {"fall_recover", "contact_goal", "obstacle_contact_goal"} and t >= 2.4:
                 self.data.qpos[:3] = [7, 0, 0.74]
             elif scenario == "push_handoff_goal" and 20 < t < 20.3:
                 self.data.qpos[0] = 4.0
@@ -323,3 +325,41 @@ def test_corridor_scene_reaches_actual_runner_observation_without_reference_path
     ] == fixture.identity(config)
     artifacts = json.loads((tmp_path / "manifest.json").read_text())["artifacts"]
     assert {"scene_graph.json", "navigation_map.json"} <= {r["path"] for r in artifacts}
+
+
+def test_oriented_obstacles_reach_robot_observation_not_just_evaluator(monkeypatch, tmp_path):
+    from clear_path.contracts import ObstacleFixture
+    from clear_path.obstacles import static_obstacles
+
+    policy = setup_loop(monkeypatch, "budget")
+    config = ObstacleFixture(obstacle_1_yaw_deg=37.0, obstacle_2_height_m=0.1)
+    result = runner.run(
+        tmp_path, tmp_path, policy, max_calls=1, scene_config=config.model_dump(), enable_push=True
+    )
+    assert result["task_outcome"] == "FAIL"  # synthetic budget stop, not a geometry oracle
+    obs = policy.observations[0]
+    geometry = {g.object_id: g for g in obs.geometry}
+    assert set(geometry) == set(fixture.world_geom_names(config))
+    for row in static_obstacles(config):
+        geom = geometry[row["id"]]
+        assert geom.center_m == pytest.approx(row["center_m"])
+        assert geom.size_m == pytest.approx(row["local_size_m"])
+        assert geom.rotation_matrix == pytest.approx(row["rotation_matrix"])
+    assert obs.goal_xy_m == [7.0, 0.0]
+    body = policy.body(obs, b"\x89PNG\r\n\x1a\ntest")
+    ctx = json.loads(body["input"][0]["content"][0]["text"])
+    assert "reference_path" not in ctx and "afs_failure_hypothesis" not in ctx
+    assert not (tmp_path / "rollout.gif").exists()
+
+
+def test_new_obstacle_contact_is_recorded_but_not_automatic_goal_failure(monkeypatch, tmp_path):
+    from clear_path.contracts import ObstacleFixture
+
+    policy = setup_loop(monkeypatch, "obstacle_contact_goal")
+    config = ObstacleFixture(obstacle_1_lateral_fraction=0.0)
+    result = runner.run(
+        tmp_path, tmp_path, policy, max_calls=1, scene_config=config.model_dump(), enable_push=True
+    )
+    contacts = [json.loads(line) for line in (tmp_path / "contacts.jsonl").read_text().splitlines()]
+    assert any(c["world_geom_name"] == "obstacle_1" for c in contacts)
+    assert result["task_outcome"] == "PASS"  # recovery/arrival scripted; no real gait claim

@@ -1,0 +1,11 @@
+{
+  "schema_version": "clear-path-obstacles-v3",
+  "corridor_width_m": 4.0,
+  "box_lateral_fraction": -0.6,
+  "obstacle_1_lateral_fraction": 0.45,
+  "obstacle_2_lateral_fraction": 0.45,
+  "obstacle_1_size_x_m": 0.8,
+  "obstacle_1_size_y_m": 0.8,
+  "obstacle_2_size_x_m": 0.8,
+  "obstacle_2_size_y_m": 0.8
+}

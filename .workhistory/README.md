@@ -68,3 +68,7 @@
 - 2026-09-28: [AFS 근거 ID 출력 제한·원본/비용 보존 복구·321개 회귀 테스트](2026-09-28_afs_evidence_reference_recovery.md)
 
 - 2026-09-28: [통로 4m success_probe 유효 PASS·자율 우회·관측 경계 분석](2026-09-28_afs_success_probe_result.md)
+
+- 2026-09-28: [다중 장애물 17축 AFS·G1 관측/물리 연결·390개 회귀 검사](2026-09-28_obstacle_geometry_afs.md)
+
+- 2026-09-28: [다중 장애물 Luna/GPU 우회 PASS·종료 후 사용량/출처 보완점](2026-09-28_obstacle_slalom_live_result.md)

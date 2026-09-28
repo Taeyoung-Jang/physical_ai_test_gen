@@ -1,4 +1,4 @@
-"""One dynamic box and side bay, compiled from shared world-coordinate geometry."""
+"""Versioned box/bay, corridor and multi-obstacle scenes from shared world geometry."""
 
 import hashlib
 import json
@@ -9,7 +9,8 @@ import numpy as np
 
 from scene_graph import ObjectNode, Relation, SceneGraph, SupportSurface
 
-from .contracts import CorridorFixture
+from .contracts import CorridorFixture, ObstacleFixture
+from .obstacles import static_obstacles
 
 SPAWN = (1.0, 0.0)
 GOAL = (7.0, 0.0)
@@ -49,6 +50,16 @@ def box_start(config):
     return (4.0, config.box_lateral_fraction * available)
 
 
+def world_geom_names(config):
+    """Exactly the scene-owned collision geometries supplied to robot observations."""
+    return [
+        *walls(config),
+        *(o["id"] for o in static_obstacles(config)),
+        "clear_floor",
+        "clear_box_geom",
+    ]
+
+
 def identity(config):
     payload = {
         "config": config.model_dump(),
@@ -61,6 +72,8 @@ def identity(config):
     }
     if isinstance(config, CorridorFixture):
         del payload["box_target"]  # no prescribed object destination in the new scene
+    if isinstance(config, ObstacleFixture):
+        payload["static_obstacles"] = static_obstacles(config)
     return hashlib.sha256(json.dumps(payload, sort_keys=True).encode()).hexdigest()
 
 
@@ -90,6 +103,7 @@ def navigation_map(config, box_xy=None, *, hypothetical=False):
     blocked = ~inside
     rects = [
         *walls(config).values(),
+        *(o["aabb_xy_m"] for o in static_obstacles(config)),
         (box_xy[0] - 0.4, box_xy[0] + 0.4, box_xy[1] - 0.55, box_xy[1] + 0.55),
     ]
     radius = config.footprint_radius_m + config.clearance_m
@@ -126,7 +140,13 @@ def navigation_map(config, box_xy=None, *, hypothetical=False):
         path.append([float(x[current]), float(y[current])])
         current = parents[current]
     return {
-        "schema_version": "clear-path-map-v2" if corridor else "clear-path-map-v1",
+        "schema_version": (
+            "clear-path-map-v3"
+            if isinstance(config, ObstacleFixture)
+            else "clear-path-map-v2"
+            if corridor
+            else "clear-path-map-v1"
+        ),
         **({"scene_revision": identity(config)} if corridor else {}),
         "frame": "world_m",
         "state_version": 0,
@@ -139,6 +159,11 @@ def navigation_map(config, box_xy=None, *, hypothetical=False):
         "reachable": bool(path),
         "path_xy_m": path[::-1],
         "note": "Static circular-footprint test; NOT a whole-body manipulation oracle",
+        **(
+            {"obstacle_projection": "conservative world AABB at every height; no step-over model"}
+            if isinstance(config, ObstacleFixture)
+            else {}
+        ),
     }
 
 
@@ -156,6 +181,25 @@ def graph(config):
             else {"forbidden_contact": True},
         )
         for name, (a, b, c, d) in walls(config).items()
+    ]
+    objects += [
+        ObjectNode(
+            row["id"],
+            "obstacle",
+            row["center_m"],
+            row["world_aabb_size_m"],
+            movable=False,
+            extra={
+                "dynamic": False,
+                "contact_annotation": "diagnostic_only",
+                "size_convention": "world_axis_aligned_bounding_box",
+                "local_size_m": row["local_size_m"],
+                "rotation_matrix": row["rotation_matrix"],
+                "yaw_deg": row["yaw_deg"],
+                "sliding_friction": 1.0,
+            },
+        )
+        for row in static_obstacles(config)
     ]
     objects += [
         ObjectNode(
@@ -213,7 +257,10 @@ def graph(config):
             )
         ],
         objects=objects,
-        relations=[Relation("on", "clear_box", "clear_floor")],
+        relations=[
+            Relation("on", "clear_box", "clear_floor"),
+            *(Relation("on", o["id"], "clear_floor") for o in static_obstacles(config)),
+        ],
         meta={
             "task": "goal_navigation@0.1" if corridor else "clear_path@0.1",
             "scene_revision": revision,
@@ -303,6 +350,18 @@ def world_xml(config, robot_source=None):
             pos=f"{(a + b) / 2} {(c + d) / 2} .6",
             size=f"{(b - a) / 2} {(d - c) / 2} .6",
             rgba=".25 .3 .4 1",
+        )
+    for row in static_obstacles(config):
+        ET.SubElement(
+            wb,
+            "geom",
+            name=row["id"],
+            type="box",
+            pos=" ".join(map(str, row["center_m"])),
+            size=" ".join(str(v / 2) for v in row["local_size_m"]),
+            quat=" ".join(map(str, row["quaternion_wxyz"])),
+            friction="1 .005 .0001",
+            rgba=".5 .25 .65 1",
         )
     start = box_start(config)
     body = ET.SubElement(wb, "body", name="clear_box", pos=f"{start[0]} {start[1]} .35")

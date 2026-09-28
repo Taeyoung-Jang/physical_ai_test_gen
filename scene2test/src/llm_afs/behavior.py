@@ -44,6 +44,18 @@ box_y = fraction * (width/2 - 0.55 - 0.05) meters; changing width with nonzero
 fraction also changes box Y. The fraction is not meters. Keep this coupling explicit.
 Wider passages or lateral placement may enable bypass; never prescribe which action
 the robot must choose. A static path is not goal success; no_path is not impossibility.
+When obstacle_1_* / obstacle_2_* axes are listed, two additional STATIC oriented
+blocks are present before/after the movable box. Their count and non-movability are
+fixed. X is world meters; size_x/size_y/height are full LOCAL extents in meters;
+yaw_deg is degrees about world +Z. Their lateral fraction maps to
+y = fraction * (width/2 - rotated_AABB_half_y - 0.05), where
+rotated_AABB_half_y = (abs(sin(yaw))*size_x + abs(cos(yaw))*size_y)/2.
+Changing width, size or yaw can also change Y. Graph size is world AABB; exact local
+dimensions and rotation are in extra. Navigation conservatively blocks the projected
+AABB at every height, including low blocks; a low block does not enable stepping or
+jumping in this robot. Do not claim verified jump/step capabilities or causal effects.
+Vary geometry to probe bypass, approach space, turns and repeated route decisions;
+do not prescribe robot actions or label every static blockage an unsolvable task.
 """
 
 
@@ -64,7 +76,23 @@ class Space(BaseModel):
     model_config = ConfigDict(extra="forbid", strict=True, allow_inf_nan=False)
     mode: Literal["success_probe", "boundary_probe", "cross_mechanism"]
     axis: Literal[
-        "box_mass_kg", "box_friction", "floor_friction", "corridor_width_m", "box_lateral_fraction"
+        "box_mass_kg",
+        "box_friction",
+        "floor_friction",
+        "corridor_width_m",
+        "box_lateral_fraction",
+        "obstacle_1_x_m",
+        "obstacle_1_lateral_fraction",
+        "obstacle_1_size_x_m",
+        "obstacle_1_size_y_m",
+        "obstacle_1_height_m",
+        "obstacle_1_yaw_deg",
+        "obstacle_2_x_m",
+        "obstacle_2_lateral_fraction",
+        "obstacle_2_size_x_m",
+        "obstacle_2_size_y_m",
+        "obstacle_2_height_m",
+        "obstacle_2_yaw_deg",
     ]
     low: float
     high: float
@@ -282,7 +310,7 @@ def context(latest, history=()):
 
 def context_axes(ctx):
     supplied = ctx["allowed_axes"]
-    for schema in ("clear-path-fixture-v1", "clear-path-corridor-v2"):
+    for schema in ("clear-path-fixture-v1", "clear-path-corridor-v2", "clear-path-obstacles-v3"):
         axes = axes_for_schema(schema)
         if set(supplied) == set(axes) and all(tuple(supplied[k]) == v for k, v in axes.items()):
             return axes
@@ -304,8 +332,10 @@ class EvidenceReferenceError(ValueError):
         self.unknown = sorted(unknown)
         self.allowed = list(allowed)
         super().__init__(
-            "unknown evidence reference; unknown=" + json.dumps(self.unknown)
-            + "; allowed=" + json.dumps(self.allowed)
+            "unknown evidence reference; unknown="
+            + json.dumps(self.unknown)
+            + "; allowed="
+            + json.dumps(self.allowed)
         )
 
 
