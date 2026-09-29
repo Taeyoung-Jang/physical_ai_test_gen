@@ -115,6 +115,10 @@ def compact_evidence(entry, *, detail_limit=DETAIL_LIMIT):
         add(n, "temporal_representative")
     selected.sort()
     return {
+        "operational_taxonomy": {
+            key: entry["record"].get("taxonomy", {}).get(key)
+            for key in ("schema_version", "primary_family", "causal_status", "families", "warnings")
+        },
         "action_timeline": [_action_summary(i) for i in actions],
         "action_timeline_status": behavior.get("components", {}).get("actions", "UNAVAILABLE"),
         "intervals": [intervals[n] for n in selected],

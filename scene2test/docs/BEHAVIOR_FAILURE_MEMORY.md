@@ -3,7 +3,8 @@
 2026-09-27 UTC. [측정 계획](FAILURE_CASE_MEASUREMENT_PLAN.md)의 P1 중
 **시간별 행동 근거와 재사용 가능한 사례 자산**을 구현했다. 기존 기록을 읽는 오프라인 분석이며,
 로봇 명령·목표 판정·프롬프트를 바꾸거나 API/GPU 실험을 실행하지 않는다.
-6종 원인 detector와 자동 회귀 실행은 아직 없다.
+2026-09-28: [3개 보수적 유형 규칙·실행 가능한 회귀 suite](BEHAVIOR_TAXONOMY_AND_REGRESSION.md)를 추가했다.
+메모리 내보내기는 여전히 오프라인이며, 별도 `run --live` 없이 로봇을 실행하지 않는다.
 
 ## 실행
 
@@ -134,4 +135,5 @@ CPU 합성 fixture에서 시간 구간, 접촉 후 PASS 보존, 반복 중복/�
 후속 [P2 로컬 캠페인](BEHAVIOR_AFS_CAMPAIGN.md)의 첫 구현에서 이 근거를
 **LLM의 다음 후보 선택/observe**와 동일 유효 예산 AFS/Random·중단 재개에 연결했다.
 이 P1 오프라인 측정 명령 자체는 여전히 수집·분석·보관이며 로봇/LLM을 호출하지 않는다.
-6종 detector, clearance/goal occupancy, 계획 추종/사람 안전 계측, 자동 회귀 실행은 후속 범위다.
+3개 opt-in 유형 규칙은 base–물체 투영 거리/goal 원 점유를 사용한다. 전신 clearance나 도달 불가,
+계획 추종/사람 안전/인식 오류 검증은 아직 별도 후속이다. 회귀 실행기의 live 검증도 남아 있다.

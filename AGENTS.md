@@ -1,5 +1,29 @@
 # Scene2Test workspace memory
 
+## Usage audit, operational taxonomy and executable regression (2026-09-28)
+
+`call_usage.py` merges manifest-bound decisions, pending responses and per-call journals
+by observation ID/response ID; conflicts stay unknown and do not change goal outcomes.
+New goal protocols hash `clear_path/obstacles.py`. Preserve old protocols and checkpoints;
+use new offline reports rather than rewriting old campaign accounting.
+`--with-taxonomy` enables `goal-behavior-v1`: terminal stagnation plus static navigation
+contact, repeated blocked planning near obstacles, or sustained projected goal occupancy.
+PASS never becomes failure; multiple detected families remain primary UNKNOWN. These
+are operational temporal associations with UNCONFIRMED causality, not impossibility proof.
+Unreachable/human-risk/perception remain UNSUPPORTED. Coverage reports a lower bound and
+partial status, not complete six-family measurement or achieved 4/6. New obstacle campaign
+opts in and feeds only its own arm/seed's classified evidence to AFS; v1/v2 default none.
+`tools/run_behavior_regression.py` now has offline plan/init and explicit run --live,
+fixed attempt budgets (excluded attempts consume slots), frozen scene/task/budget/assets,
+current-code version comparisons, SQLite intent/checkpoints, conservative pending recovery,
+no automatic resend, separate PASS/FAIL/mixed/excluded summaries and MP4 links. Source
+archives and AFS budgets/history remain unchanged. This is not exact historical-code replay,
+portable external-asset restoration, or a statistical improvement claim. Original archives
+must be accessible for memory-index replay. New regression/AFS GPU/API validation remains
+pending; CPU/synthetic tests and read-only analysis of saved real archives are separate.
+See `scene2test/docs/BEHAVIOR_TAXONOMY_AND_REGRESSION.md`. These updates supersede historical
+"no detector/no regression runner" statements below. No GIF or implicit 120s cap.
+
 ## Multi-obstacle goal-agent AFS update (2026-09-28)
 
 Opt-in `clear-path-obstacles-v3` extends corridor-v2 with two STATIC oriented blocks:
@@ -21,13 +45,13 @@ CPU geometry/real-asset composition and synthetic integration are tested. One us
 Luna/CUDA slalom fixture now has validated goal PASS evidence: internal plan_path +
 navigate_to, no push, no recorded falls/non-floor robot-world contacts. This is one
 development fixture, not an AFS-picked case or general success-rate/Gain evidence.
-Review found pending-completed response usage omitted from the decision-only token
-sum, and standalone runner source_hashes lacks the new obstacles.py helper (campaign
-recursive freeze includes it). Fix provenance/accounting separately; preserve old outcomes.
+Review found pending-completed response usage omitted from the old decision-only token
+sum and standalone source provenance missing obstacles.py. Both are now fixed for new
+measurement/protocols as described above; old source evidence/outcomes are preserved.
 Old v1/v2 scene outputs remain compatible, but code frozen
 campaigns require their original environment; never bypass drift or relabel domains.
-Next: grounded taxonomy measures and executable regression assets; no need to wait
-for comparison pilots to finish before development. Six-family coverage is still unknown.
+Next: budget-reviewed live validation of the new taxonomy/regression path and obstacle AFS;
+no need to wait for comparison pilots to finish before development. Six-family coverage is unknown.
 
 ## Explicit AFS evidence-reference recovery (2026-09-28)
 

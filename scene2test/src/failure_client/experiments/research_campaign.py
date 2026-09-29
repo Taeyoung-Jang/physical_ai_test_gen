@@ -161,6 +161,10 @@ class ResearchCampaign:
         for row in rows:
             if row.status == "VALID" and read_goal_run(row.source) != row:
                 raise NeedsAttention("completed evidence changed; cannot continue search")
+        if self.config.taxonomy_profile != "none":
+            from failure_client.evaluation.failure_taxonomy import classify_record
+
+            rows = [classify_record(row) for row in rows]
         return build_failure_memory(rows)
 
     def _candidate(self, arm):
@@ -579,6 +583,18 @@ class ResearchCampaign:
             "afs_requests_attempted": len(self.state["proposals"]),
             "afs_tokens": tokens,
             "robot_tokens": robot_tokens,
+            "robot_usage_audit": {
+                "calls_with_usage": sum(r.get("calls_with_token_usage", 0) for r in raw),
+                "calls_missing_usage_observed": sum(
+                    r["usage_audit"]["calls_missing_usage"] for r in raw if r.get("usage_audit")
+                )
+                if any(r.get("usage_audit") for r in raw)
+                else None,
+                "attempts_without_usage_audit": sum(not r.get("usage_audit") for r in raw),
+                "attempts_partial": sum(
+                    r.get("usage_audit", {}).get("status") == "PARTIAL" for r in raw
+                ),
+            },
             "afs_request_utf8_bytes": [
                 p.get("request_utf8_bytes") for p in self.state["proposals"]
             ],
@@ -604,7 +620,8 @@ class ResearchCampaign:
             ),
             "limits": [
                 "Unknown costs are not zero; usage is observed, not a billing total",
-                "No family detectors, no real-model superiority claim from synthetic tests",
+                "Optional operational family associations are not established causes; "
+                "no superiority claim from synthetic tests",
             ],
         }
 
@@ -625,7 +642,13 @@ class ResearchCampaign:
                 valid_budget_per_seed=self.config.valid_budget_per_seed,
                 seeds=self.config.seeds,
             )
-            metrics = calculate_discovery_metrics(records, design)
+            rules = None
+            if self.config.taxonomy_profile != "none":
+                from failure_client.evaluation.failure_taxonomy import RULES, classify_record
+
+                records = [classify_record(r) for r in records]
+                rules = RULES
+            metrics = calculate_discovery_metrics(records, design, family_rules=rules)
             metrics["campaign_execution"] = self.summary()
             memory = build_failure_memory(records) if with_memory else None
             if memory is not None:

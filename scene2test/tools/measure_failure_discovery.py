@@ -21,6 +21,11 @@ def main(argv=None):
     )
     parser.add_argument("--output-dir", type=Path, help="new directory; refuses overwrites")
     parser.add_argument(
+        "--with-taxonomy",
+        action="store_true",
+        help="opt-in evidence-backed temporal association rules",
+    )
+    parser.add_argument(
         "--with-memory", action="store_true", help="P1 time evidence and case export"
     )
     parser.add_argument(
@@ -43,7 +48,13 @@ def main(argv=None):
                 runs=[RunInput(path=str(path.resolve())) for path in args.run],
             )
         records = [read_goal_run(r) for r in config.runs]
-        metrics = calculate_discovery_metrics(records, config.design)
+        rules = None
+        if args.with_taxonomy:
+            from failure_client.evaluation.failure_taxonomy import RULES, classify_record
+
+            records = [classify_record(r) for r in records]
+            rules = RULES
+        metrics = calculate_discovery_metrics(records, config.design, family_rules=rules)
         memory = None
         if args.with_memory:
             from failure_client.archive.regression_cases import build_failure_memory
@@ -64,7 +75,7 @@ def main(argv=None):
     excluded = sum(g["excluded_rollouts"] for g in metrics["groups"])
     print(f"FAILURE_MEASURES={report.parent}")
     print(f"REPORT={report}; valid={valid}; excluded={excluded}")
-    print(f"COMPARISON={metrics['comparison']['status']}; family detectors=not implemented")
+    print(f"COMPARISON={metrics['comparison']['status']}; family rules={list(rules or {})}")
     if memory is not None:
         print(
             f"MEMORY={report.parent / 'memory/index.html'}; cases={len(memory['cases'])}; "

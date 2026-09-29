@@ -107,6 +107,11 @@ uv run --no-sync python tools/run_afs_pilot.py --config config/behavior_afs_obst
 
 유료 실행 명령은 위 가이드에 분리했습니다. 기존 캠페인에 새 코드를 덮어 재개하지 마세요.
 
+2026-09-28 후속: [사용량 감사·근거 기반 유형 측정·회귀 실행 가이드](scene2test/docs/BEHAVIOR_TAXONOMY_AND_REGRESSION.md).
+종료 후 응답 토큰을 포함하고, goal 판정과 분리된 3개 유형 규칙 및 고정 예산의 저장 사례 재실행을 추가했습니다.
+가이드에 무료 오프라인 측정/plan/init과 유료 `run --live` 명령을 구분해 기록했습니다.
+6종 전체 검증이나 4/6 발견을 달성했다는 뜻은 아닙니다. GIF는 계속 생성하지 않습니다.
+
 그림의 경로는 정적 지도 계산이며 실제 로봇 성공 결과가 아닙니다.
 이번 코드 변경 전 동결된 캠페인은 code drift 검사로 재개가 차단되므로 새 캠페인을 사용하세요.
 

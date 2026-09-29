@@ -65,6 +65,33 @@ def write_discovery_report(
             + "</pre>"
         )
     memory_link = ""
+    taxonomy_section = ""
+    if any(r.taxonomy for r in records):
+        taxonomy = [{"source": r.source.path, **r.taxonomy} for r in records]
+        (output / "taxonomy.json").write_text(
+            json.dumps(taxonomy, indent=2, ensure_ascii=False, allow_nan=False) + "\n"
+        )
+        taxonomy_section = (
+            '<h2>근거 기반 행동 유형 (원인 미확정)</h2><p><a href="taxonomy.json">'
+            "임계값·구간·검증된 근거</a></p><pre>"
+            + escape(
+                json.dumps(
+                    [
+                        {
+                            "source": r.source.path,
+                            "outcome": r.task_outcome,
+                            "primary_family": r.taxonomy.get("primary_family"),
+                            "families": r.taxonomy.get("families"),
+                            "warnings": r.taxonomy.get("warnings"),
+                        }
+                        for r in records
+                    ],
+                    indent=2,
+                    ensure_ascii=False,
+                )
+            )
+            + "</pre>"
+        )
     search_section = ""
     if "search_diagnostics" in metrics:
         search_columns = (
@@ -135,12 +162,14 @@ table{{border-collapse:collapse}}pre{{white-space:pre-wrap}}</style>
 <h1>실패 발견 지표: {escape(campaign_id)}</h1>
 <p>목표: FDR ≥ 30%, Random 대비 상대 향상 ≥ 20%, 실패 유형 ≥ 4/6.</p>
 <p>접촉·낙상은 사건이며 목표 실패와 별개입니다. null은 미측정/계산 불가이지 0이 아닙니다.</p>
-<p>현재 importer는 6종 detector를 구현하지 않았습니다. 유형 다양성은 미측정입니다.
+<p>활성 유형 규칙: {escape(str(metrics.get("supported_family_rules", {})))}.
+미지원/근거 부족 유형은 UNKNOWN/UNSUPPORTED이며, 사건과 원인 확정은 다릅니다.
 원본을 변경하거나 로봇을 실행하지 않은 사후 보고서입니다.</p>
 <table><tr>{"".join(f"<th>{escape(c)}</th>" for c in columns)}</tr>{rows}</table>
 <h2>Random 대비 비교</h2><pre>{comparison}</pre>
 {campaign_section}
 {search_section}
+{taxonomy_section}
 <h2>제외 기록</h2><ul>{exclusions}</ul>
 {memory_link}
 <h2>해석 범위</h2><ul>{notes}</ul>

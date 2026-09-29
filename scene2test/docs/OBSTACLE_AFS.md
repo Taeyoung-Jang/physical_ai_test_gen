@@ -10,6 +10,11 @@
 이는 하나의 개발 장면 성공이지 일반 성공률이나 AFS 비교 결과가 아니다.
 [상세 결과와 기록 보완점](../../.workhistory/2026-09-28_obstacle_slalom_live_result.md)을 참조한다.
 
+후속 구현: 종료 후 응답 사용량/obstacles 소스 해시를 보완하고,
+[3개 근거 기반 유형 규칙·회귀 실행기](BEHAVIOR_TAXONOMY_AND_REGRESSION.md)를 추가했다.
+새 obstacle 캠페인은 `taxonomy_profile=goal-behavior-v1`로 자기 arm/seed의 근거만 AFS에 전달한다.
+6종 전체 검증이나 실제 4/6 발견을 뜻하지 않는다. 아래의 미구현 언급은 기하 확장 당시 범위다.
+
 ## 제어 가능한 장면 요소
 
 | 축 | 범위 | 의미 |

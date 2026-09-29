@@ -234,6 +234,24 @@ def build_failure_memory(records):
             "mixed_outcomes" if p and f else "observed_failure" if f else "success_control"
         )
         case["confirmation_status"] = "observations_only"
+        labels = {
+            episodes[e]["record"]["taxonomy"]["primary_family"]
+            for e in case["episodes"]
+            if episodes[e]["record"].get("taxonomy", {}).get("primary_family")
+        }
+        case["operational_family_candidates"] = sorted(labels)
+        # Mixed repeats or incomplete/ambiguous labels are not a stable case label.
+        if (
+            f
+            and not p
+            and len(labels) == 1
+            and all(
+                episodes[e]["record"].get("taxonomy", {}).get("primary_family") in labels
+                for e in case["episodes"]
+            )
+        ):
+            case["primary_family"] = next(iter(labels))
+            case["causal_status"] = "UNCONFIRMED"
     cases = list(cases.values())
     memory = {
         "schema_version": "failure-memory-v1",

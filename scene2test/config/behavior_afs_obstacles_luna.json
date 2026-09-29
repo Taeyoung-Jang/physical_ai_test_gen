@@ -10,6 +10,7 @@
   "afs_timeout_s": 300.0,
   "history_limit": 8,
   "selection_policy": "hypothesis-v2",
+  "taxonomy_profile": "goal-behavior-v1",
   "strategy_cycle": ["llm", "boundary", "exploration", "repeat"],
   "robot": {
     "model": "gpt-6-luna",

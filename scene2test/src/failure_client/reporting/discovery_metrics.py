@@ -42,7 +42,7 @@ def _costs(records):
         "observed_input_tokens",
         "observed_output_tokens",
     )
-    return {
+    costs = {
         field: {
             "observed_total": sum(values) if values else None,
             "records_measured": len(values),
@@ -51,6 +51,16 @@ def _costs(records):
         for field in fields
         for values in [[getattr(r, field) for r in records if getattr(r, field) is not None]]
     }
+    audits = [r.usage_audit for r in records if r.usage_audit]
+    costs["token_usage_coverage"] = {
+        "calls_with_usage": sum(r.calls_with_token_usage for r in records),
+        "calls_missing_usage_observed": sum(a["calls_missing_usage"] for a in audits)
+        if audits
+        else None,
+        "records_without_usage_audit": len(records) - len(audits),
+        "records_partial": sum(a["status"] == "PARTIAL" for a in audits),
+    }
+    return costs
 
 
 def _summary(records, family_rules):
@@ -75,6 +85,12 @@ def _summary(records, family_rules):
     }
     families = sorted(set(qualified.values()))
     measured = bool(family_rules) and compatible and bool(valid)
+    operational = any(r.taxonomy for r in records)
+    partial = (
+        operational
+        and measured
+        and (len(family_rules) < len(FAMILIES) or any(not r.attribution for r in failures))
+    )
     rate = len(failures) / len(valid) if valid and compatible else None
     curve, seen_failures, seen_scenes, seen_families = [], 0, set(), set()
     for index, r in enumerate(valid, 1):
@@ -111,13 +127,29 @@ def _summary(records, family_rules):
         "valid_stage_counts": dict(Counter(r.source.stage for r in valid)),
         "discovered_families": families if measured else [],
         "discovered_family_count": len(families) if measured else None,
-        "failure_diversity_coverage": len(families) / 6 if measured else None,
-        "diversity_target_observed": len(families) >= 4 if measured and valid else None,
-        "coverage_status": "measured"
+        "failure_diversity_coverage": len(families) / 6 if measured and not partial else None,
+        "observed_family_coverage_lower_bound": len(families) / 6 if measured else None,
+        "diversity_target_observed": (
+            True if measured and len(families) >= 4 else False if measured and not partial else None
+        ),
+        "coverage_status": "partial_operational_rules"
+        if partial
+        else "measured"
         if measured
         else ("incompatible_conditions" if not compatible else "not_measured"),
         "family_status": {
-            f: ("DISCOVERED" if f in families else "NOT_DISCOVERED")
+            f: (
+                "DISCOVERED"
+                if f in families
+                else "UNKNOWN"
+                if operational
+                and any(
+                    r.taxonomy.get("families", {}).get(f, {}).get("status") in {None, "UNKNOWN"}
+                    or "ambiguous_multiple_families" in r.taxonomy.get("warnings", [])
+                    for r in failures
+                )
+                else "NOT_DISCOVERED"
+            )
             if f in family_rules and compatible
             else "UNSUPPORTED"
             for f in FAMILIES

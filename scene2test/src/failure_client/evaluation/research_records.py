@@ -64,6 +64,7 @@ class Attribution(StrictRecord):
     primary_family: Family
     rule_version: str = Field(min_length=1)
     evidence_refs: list[str] = Field(min_length=1)
+    causal_status: Literal["UNCONFIRMED"] = "UNCONFIRMED"
 
 
 class TraceMeasures(StrictRecord):
@@ -102,6 +103,8 @@ class EpisodeRecord(StrictRecord):
     observed_input_tokens: int | None = Field(default=None, ge=0)
     observed_output_tokens: int | None = Field(default=None, ge=0)
     calls_with_token_usage: int = Field(default=0, ge=0)
+    usage_audit: dict = Field(default_factory=dict)
+    taxonomy: dict = Field(default_factory=dict)
     warnings: list[str] = Field(default_factory=list)
 
     @model_validator(mode="after")

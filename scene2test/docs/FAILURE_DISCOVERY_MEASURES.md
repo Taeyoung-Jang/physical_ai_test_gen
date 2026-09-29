@@ -2,7 +2,9 @@
 
 2026-09-26 UTC. [전체 계획](FAILURE_CASE_MEASUREMENT_PLAN.md)의 P0 측정 모듈과 최소 trace reader.
 기존 goal-agent 기록을 읽는 **오프라인 도구**다. 로봇/GPU/유료 API를 실행하지 않으며 원본을 수정하지 않는다.
-6종 실패 원인 detector와 회귀 실행기는 아직 구현하지 않았다.
+2026-09-28 후속: `--with-taxonomy`로 3개 보수적 연관 규칙을 추가하고 별도 회귀 실행기를 구현했다.
+[사용량·유형·회귀 가이드](BEHAVIOR_TAXONOMY_AND_REGRESSION.md)가 최신 범위다.
+6종 전체 원인 판정이나 실제 4/6 발견은 완료하지 않았다.
 후속 [P2 로컬 3축 캠페인](BEHAVIOR_AFS_CAMPAIGN.md)의 첫 구현은 별도 opt-in CLI다.
 
 2026-09-27: `--with-memory`로 [P1 행동 시간선·failure memory](BEHAVIOR_FAILURE_MEMORY.md)를
@@ -45,13 +47,15 @@ uv run --no-sync python tools/measure_failure_discovery.py --run /workspace/g1_f
 - FDR = 유효 FAIL / 유효 PASS+FAIL. 유효 표본 0개면 `null`이다.
 - Gain = `(FDR_AFS - FDR_Random) / FDR_Random`. Random 실패 0개면 `baseline_zero`, 값은 `null`이다.
 - Diversity는 고정 6종 분모와 검증된 detector registry를 사용하는 계산 함수를 구현했다.
-  **현재 goal-agent importer에는 detector가 없으므로 실제 보고서는 `not_measured/null/UNSUPPORTED`다.**
+  기본 importer는 `not_measured/null/UNSUPPORTED`다. `--with-taxonomy`는 현재 3종을 지원하며
+  미지원/불명확 유형 때문에 coverage는 null, 별도 관측 하한과 `partial_operational_rules`를 보고한다.
   합성 단위 테스트의 4/6 계산 성공은 실제 로봇에서 4종을 찾았다는 증거가 아니다.
 - `*_target_observed`는 해당 표본의 점추정이다. 통계적 우월성/재현성 검증 완료를 뜻하지 않는다.
 - 같은 조건의 독립 반복도 예산에 포함한다. 고유 장면 수와 동일 장면의 반복 실패 수를 병기한다.
   고유 장면은 revision+XML 해시 기준이며 고유 실패 메커니즘 수가 아니다.
 - `pooled_by_method`의 유형 합집합은 전체 seed의 총 예산 결과다. seed 하나의 예산과 비교하지 않는다.
-- 모델/API 토큰은 decision에 기록된 부분만 집계하며 미수집 건수를 함께 표시한다.
+- 모델/API 토큰은 검증된 decision·pending response·per-call journal을 중복 제거해 집계하며
+  미수집 호출/사용량 audit 미지원 기록 수를 함께 표시한다. 관측 부분 합계를 청구 총액으로 해석하지 않는다.
   pending/실패 호출의 토큰, 전체 wall time, AFS 제안 비용은 이 importer로 완전히 측정하지 못한다.
 - GIF나 새 MP4는 생성하지 않는다. 원본 실행의 미디어는 그대로 보존한다.
 
@@ -120,6 +124,7 @@ condition ID는 `episodes.jsonl`의 값을 사용한다. 경로는 입력 JSON �
 GIF와 API 전송 원문은 복사하지 않는다. 성공 대조·혼합 반복도 보관하고 동일 조건의 단일 축
 관측 bracket만 추출한다. [해석과 제한](BEHAVIOR_FAILURE_MEMORY.md)을 참고한다.
 
-실패 유형 detector는 아직 없어 이 출력도 공식 coverage를 늘리지 않는다.
+기본 메모리 export만으로 유형을 부여하지 않는다. `--with-taxonomy`가 있어야 규칙을 적용한다.
 P2의 LLM 행동 근거 피드백·동일 유효 예산 AFS/Random campaign은 별도 CLI에 첫 구현했다.
-실제 live 비교, 자동 회귀 실행과 추가 유형 계측은 후속 범위다. 로봇 행동이나 goal 판정은 바꾸지 않는다.
+자동 회귀는 새 `run_behavior_regression.py`에 구현했다. 새 live 검증과 추가 유형 계측은 후속 범위다.
+로봇 행동이나 goal 판정은 바꾸지 않는다.

@@ -175,6 +175,9 @@ def run(
                 "observation_contract": audit.sha256(Path(__file__).with_name("policy.py")),
                 "robot_audit": audit.sha256(Path(audit.__file__)),
                 "fixture": audit.sha256(Path(fixture.__file__)),
+                "fixture_obstacles": audit.sha256(
+                    Path(__file__).parents[1] / "clear_path/obstacles.py"
+                ),
                 "navigation_tools": audit.sha256(Path(navigation_tools.__file__)),
                 "gait": audit.sha256(
                     Path(__file__).parents[1] / "simulation_server/groot_locomotion.py"

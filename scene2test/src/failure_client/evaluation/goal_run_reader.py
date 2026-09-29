@@ -11,6 +11,7 @@ from pathlib import Path
 
 from robot_vlm.task_outcome import GoalEvaluator, digest, task_contract
 
+from .call_usage import collect_usage
 from .research_records import EpisodeRecord, RunInput, TraceMeasures
 
 REQUIRED = {"protocol.json", "result.json", "scene.xml", "states.jsonl", "decisions.jsonl"}
@@ -139,7 +140,7 @@ def _trace(root, hashes, contract):
         samples += 1
     if not samples:
         raise EvidenceError("empty_state_trace")
-    actions, models, usage = Counter(), set(), {}
+    actions, models = Counter(), set()
     for row in _rows(root / "decisions.jsonl"):
         if "action" not in row:
             continue
@@ -148,12 +149,6 @@ def _trace(root, hashes, contract):
         meta = row.get("provider", {})
         if meta.get("model"):
             models.add(meta["model"])
-        tokens = meta.get("usage")
-        if tokens is not None and {"input_tokens", "output_tokens"} <= tokens.keys():
-            call_id = row["observation_version"]
-            if call_id in usage:
-                raise EvidenceError("duplicate_call_usage")
-            usage[call_id] = (_count(tokens["input_tokens"]), _count(tokens["output_tokens"]))
     events = None
     if "events.jsonl" in hashes:
         events = dict(Counter(row["event"] for row in _rows(root / "events.jsonl")))
@@ -172,7 +167,7 @@ def _trace(root, hashes, contract):
         action_counts=dict(actions),
         event_counts=events,
     )
-    return measures, sorted(models), list(usage.values())
+    return measures, sorted(models)
 
 
 def read_goal_run(source: RunInput) -> EpisodeRecord:
@@ -253,51 +248,40 @@ def read_goal_run(source: RunInput) -> EpisodeRecord:
             raise EvidenceError("episode_call_budget_exceeded")
         if policy_calls is not None and base["robot_api_calls"] > policy_calls:
             raise EvidenceError("inconsistent_policy_call_counts")
+        usage = collect_usage(
+            root, hashes, max_calls=protocol["max_calls"], attempted=base["robot_api_calls"]
+        )
+        costs = usage["calls"]
+        base.update(
+            usage_audit=usage,
+            calls_with_token_usage=len(costs),
+            observed_input_tokens=sum(r["input_tokens"] for r in costs) if costs else None,
+            observed_output_tokens=sum(r["output_tokens"] for r in costs) if costs else None,
+        )
         if result["task_outcome"] == "INCONCLUSIVE":
             # Keep observed costs from a verified interrupted archive without
             # promoting its outcome or requiring a complete physics trace.
-            usage = {}
-            warning = "Observed decision usage only; pending/failed calls may be missing"
-            try:
-                for row in _rows(root / "decisions.jsonl"):
-                    if "action" not in row:
-                        continue
-                    tokens = row.get("provider", {}).get("usage")
-                    if tokens is None or not {"input_tokens", "output_tokens"} <= tokens.keys():
-                        continue
-                    cid = _count(row["observation_version"])
-                    if cid in usage or cid >= protocol["max_calls"]:
-                        raise EvidenceError("invalid_call_usage_identity")
-                    usage[cid] = (_count(tokens["input_tokens"]), _count(tokens["output_tokens"]))
-            except (ValueError, KeyError, TypeError, AttributeError, OSError):
-                usage = {}
-                warning = (
-                    "Interrupted archive decision usage is malformed/unavailable; unknown, not zero"
-                )
             return EpisodeRecord(
                 **base,
                 status="INCONCLUSIVE",
                 exclusion_reason="inconclusive_execution",
-                calls_with_token_usage=len(usage),
-                observed_input_tokens=sum(x[0] for x in usage.values()) if usage else None,
-                observed_output_tokens=sum(x[1] for x in usage.values()) if usage else None,
-                warnings=[warning],
+                warnings=usage["warnings"],
             )
-        measures, models, usage = _trace(root, hashes, contract)
+        measures, models = _trace(root, hashes, contract)
         if base["simulation_s"] < measures.last_sample_s:
             raise EvidenceError("duration_before_last_state")
         base.update(
             measures=measures,
             returned_models=models,
             condition_id=digest({"robot_condition": digest(condition), "returned_models": models}),
-            calls_with_token_usage=len(usage),
-            observed_input_tokens=sum(x[0] for x in usage) if usage else None,
-            observed_output_tokens=sum(x[1] for x in usage) if usage else None,
             warnings=[
                 "Goal outcome comes from the full-rate evaluator, not a sampled-state replay",
-                "No failure-family detector is enabled; behavior events are not failure labels",
+                "Base importer does not assign failure families; "
+                "opt-in taxonomy is a separate measurement",
                 "Identical core evidence is deduplicated; old runs have no execution UUID",
-                "Token totals cover decision records only; pending/failed calls may be missing",
+                "Tokens merge verified decisions, pending responses and journals; "
+                "not a billing total",
+                *usage["warnings"],
             ],
         )
         if protocol["policy_origin"] == "openai_api" and not models:

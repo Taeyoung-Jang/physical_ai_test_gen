@@ -72,3 +72,5 @@
 - 2026-09-28: [다중 장애물 17축 AFS·G1 관측/물리 연결·390개 회귀 검사](2026-09-28_obstacle_geometry_afs.md)
 
 - 2026-09-28: [다중 장애물 Luna/GPU 우회 PASS·종료 후 사용량/출처 보완점](2026-09-28_obstacle_slalom_live_result.md)
+
+- 2026-09-28: [사용량·출처 보완, 3개 유형 규칙, 실행 가능한 고정 예산 회귀 suite](2026-09-28_measurement_taxonomy_regression.md)

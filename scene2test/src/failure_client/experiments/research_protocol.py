@@ -42,6 +42,7 @@ class CampaignConfig(StrictRecord):
     afs_timeout_s: float = Field(default=300.0, ge=1, le=600)
     history_limit: int = Field(default=8, ge=2, le=16)
     selection_policy: Literal["novelty-v1", "hypothesis-v2"] = "hypothesis-v2"
+    taxonomy_profile: Literal["none", "goal-behavior-v1"] = "none"
     # A fixed pilot allocation, not ratios tuned after seeing the evaluation seed.
     strategy_cycle: list[Literal["llm", "boundary", "exploration", "repeat"]] = Field(
         default_factory=lambda: ["llm", "boundary", "exploration", "repeat"]
@@ -77,6 +78,7 @@ class CampaignConfig(StrictRecord):
             "cold_start": "paired scene draws, separately executed and charged to each arm",
             "strategy_cycle": self.strategy_cycle,
             "selection_policy": self.selection_policy,
+            "taxonomy_profile": self.taxonomy_profile,
             "behavior_feedback": "behavior-search-evidence-v2: full actions + selected details",
             "fallback_policy": "stop; no silent Random substitution",
             "history_policy": "AFS arm's own seed only; no external warm history",
