@@ -107,6 +107,14 @@ uv run --no-sync python tools/run_afs_pilot.py --config config/behavior_afs_obst
 
 유료 실행 명령은 위 가이드에 분리했습니다. 기존 캠페인에 새 코드를 덮어 재개하지 마세요.
 
+2026-09-29 출력 토큰 설정 변경: 로봇 VLM/goal-agent/push와 LLM AFS의 기본 요청에서
+`max_output_tokens`를 생략합니다. 기존 2,048/4,096/8,192토큰의 코드 기본 상한은 없습니다.
+API·모델 자체 한도는 여전히 적용되며, 응답 길이·비용이 늘어날 수 있습니다.
+로봇의 10회 호출 예산, 요청 timeout, 추론 강도, 목표 판정은 바꾸지 않았습니다.
+기존 terrain/expanded CLI의 `--max-output-tokens`는 사용자가 명시한 경우에만 적용됩니다.
+변경 전 캠페인을 `--campaign`으로 재개하지 말고 새 캠페인을 준비해야 합니다.
+원본 결과/프로토콜과 실패·제외 기록은 그대로 보존합니다.
+
 2026-09-28 후속: [사용량 감사·근거 기반 유형 측정·회귀 실행 가이드](scene2test/docs/BEHAVIOR_TAXONOMY_AND_REGRESSION.md).
 종료 후 응답 토큰을 포함하고, goal 판정과 분리된 3개 유형 규칙 및 고정 예산의 저장 사례 재실행을 추가했습니다.
 가이드에 무료 오프라인 측정/plan/init과 유료 `run --live` 명령을 구분해 기록했습니다.

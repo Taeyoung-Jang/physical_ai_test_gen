@@ -65,12 +65,12 @@ class Policy(Protocol):
     def decide(self, observation: Observation, png: bytes) -> tuple[Action, dict]: ...
 
 
-def request_body(observation, png, *, model=MODEL, max_output_tokens=2048):
+def request_body(observation, png, *, model=MODEL, max_output_tokens=None):
     from .wire_contract import VelocityEnvelope, schema
 
     if not png.startswith(b"\x89PNG\r\n\x1a\n") or len(png) > 5_000_000:
         raise ValueError("bounded PNG camera observation required")
-    if not 512 <= max_output_tokens <= 8192:
+    if max_output_tokens is not None and not 512 <= max_output_tokens <= 8192:
         raise ValueError("bounded output token cap required")
     context = {
         "observation": Observation.model_validate(observation).model_dump(),
@@ -79,7 +79,7 @@ def request_body(observation, png, *, model=MODEL, max_output_tokens=2048):
         "actions": "move, observe, stop; no manipulation; no path planner",
         "camera_convention": "MuJoCo camera looks along local -Z, local +Y is up",
     }
-    return {
+    body = {
         "model": model,
         "store": False,
         "instructions": INSTRUCTIONS,
@@ -97,7 +97,6 @@ def request_body(observation, png, *, model=MODEL, max_output_tokens=2048):
             }
         ],
         "reasoning": {"effort": "medium"},
-        "max_output_tokens": max_output_tokens,
         "text": {
             "format": {
                 "type": "json_schema",
@@ -107,6 +106,11 @@ def request_body(observation, png, *, model=MODEL, max_output_tokens=2048):
             }
         },
     }
+    # Omit the optional API field, rather than sending null or an artificial large cap.
+    # The provider/model limits still apply; this is not unlimited generation.
+    if max_output_tokens is not None:
+        body["max_output_tokens"] = max_output_tokens
+    return body
 
 
 class PolicyError(RuntimeError):

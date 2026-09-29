@@ -126,6 +126,52 @@ v3는 새 domain ID다. v1/v2 장면 생성 규칙은 유지했지만 코드 fin
 기존 campaign 재개에는 원래 고정된 코드 환경이 필요하다. 과거 recovery 캠페인도 동일하다.
 이전 PASS/FAIL 및 비용 기록을 새 실험에 몰래 합치지 않는다.
 
+### 2026-09-29 준비된 캠페인 실행
+
+**아래는 출력 토큰 설정 변경 전 준비 기록이다.** 이후 사용자 요청으로 기본 API 요청의
+`max_output_tokens`를 생략하도록 코드를 변경했다. 아래 고정 캠페인은 이전 코드 조건이므로
+현재 코드로 재개하지 않는다. 원본 실험은 보존하며, 새 실험에는 위의
+`--config config/behavior_afs_obstacles_luna.json` 신규 캠페인 명령을 사용한다.
+동일 config의 유효 목표 6회/최대 시도 6회에는 제외 여유가 없다는 한계는 그대로다.
+토큰 변경과 별개로 시도 예산을 임의 확대하지 않았다.
+
+새 캠페인 `/workspace/g1_failure/runtime/afs_benchmark/obstacles_luna_20260929`의
+설정·코드·의존성·로봇 자산 fingerprint를 고정했다. 초기 상태는 `READY`, 양쪽 시도 0회다.
+EGL 컨텍스트 생성과 NVIDIA GPU renderer 확인은 통과했다. 이는 GPU 보행 추론 검증이 아니다.
+준비 당시 에이전트 실행 환경에는 API 키가 없어 **유료 실험은 시작하지 않았다**.
+
+`OPENAI_API_KEY`를 등록한 사용자 터미널에서 아래 명령을 실행한다.
+키를 대화나 문서에 붙여넣지 않는다. 이미 초기화했으므로 `--config` 대신 `--campaign`을 사용한다.
+
+```bash
+cd /workspace/g1_failure/src/physical_ai_test_gen/scene2test
+uv run --no-sync python tools/run_afs_pilot.py --live --campaign /workspace/g1_failure/runtime/afs_benchmark/obstacles_luna_20260929
+```
+
+이 명령은 **유료**이며 전체 예산은 AFS/Random 각각 최대 6회 시도,
+로봇 최대 120회 + AFS 최대 2회 API 요청이다. 첫 두 실행을 점검한 뒤 같은 예산 내에서
+계속한다. 유효 목표 FAIL은 계속 탐색하지만, 실행 제외/운영 오류는 중단해 확인을 요구한다.
+제외도 시도 예산을 사용하므로 12회 유효 결과가 보장되지 않는다. 자동 재전송은 하지 않는다.
+
+로봇과 AFS 모델 모두 `gpt-6-luna`, 로봇당 최대 10호출, 밀기 사용 가능,
+HTTP read timeout 300초, 시뮬레이션 전체 시간 상한 없음으로 고정했다.
+기존 slalom 회귀/성공 결과는 이 캠페인에 포함하지 않았다.
+처음 두 장면씩은 동일 표본을 각 방법에서 별도로 실행·과금하고,
+이후 AFS는 자신의 seed/arm에서 얻은 행동 근거만 사용한다.
+
+결과는 해당 캠페인의 `attempts/`, `proposals/`, `reports/`, `pilot_runs/`에 저장된다.
+실행별 MP4는 rollout 산출물에서 확인한다. 초기 준비 보고서에는 아직 궤적/영상이 없다.
+코드·의존성·자산이 달라져 재개가 차단되면 fingerprint 검사를 우회하지 않는다.
+[준비 및 검증 기록](../../.workhistory/2026-09-29_obstacle_afs_campaign_preparation.md)을 참조한다.
+
+현재 로봇/AFS 기본 요청에는 클라이언트 출력 토큰 상한이 없다. API·모델 자체의 한도는
+남으므로 미완성 응답이 절대 발생하지 않는다는 뜻은 아니다. 미완성 응답 제외/진단,
+자동 재전송 금지, 사용량 감사는 유지한다. 로봇 protocol에는
+`max_output_tokens_per_call: null`, `output_token_limit_policy: provider_default_no_client_cap`을
+기록한다. 기본 호출 수/timeout/추론 강도/시뮬레이션 시간 조건은 변경하지 않았다.
+[OpenAI API 문서](https://developers.openai.com/api/reference/cli/resources/responses/methods/create)의
+선택적 `max_output_tokens` 필드를 생략하며, 임의의 큰 수나 무한대 값을 보내지 않는다.
+
 ## 검증과 남은 작업
 
 CPU MuJoCo로 여러 seed와 경계값의 정합성을 검사하고, 실제 runner의 제어기/API를 대역으로

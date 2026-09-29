@@ -290,6 +290,8 @@ def test_real_mp4_stream_does_not_retain_frame_history(monkeypatch, tmp_path):
     protocol = json.loads((tmp_path / "protocol.json").read_text())
     assert protocol["recording"]["gif_enabled"] is False
     assert protocol["recording"]["retain_frame_history"] is False
+    assert protocol["max_output_tokens_per_call"] is None
+    assert protocol["output_token_limit_policy"] == "provider_default_no_client_cap"
     assert json.loads((tmp_path / "result.json").read_text()) == result
     artifacts = json.loads((tmp_path / "manifest.json").read_text())["artifacts"]
     assert {"result.json", "report.html", "rollout.mp4"} <= {r["path"] for r in artifacts}

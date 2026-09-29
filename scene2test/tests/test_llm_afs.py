@@ -50,6 +50,7 @@ def test_structured_request_and_mock_api(config, monkeypatch):
         requests.append(request)
         assert str(request.url) == "https://api.openai.com/v1/responses"
         assert json.loads(request.content)["text"]["format"]["strict"] is True
+        assert "max_output_tokens" not in json.loads(request.content)
         return httpx.Response(200, json=response(proposal))
 
     result = call(body, transport=httpx.MockTransport(handler))

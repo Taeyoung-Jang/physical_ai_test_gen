@@ -73,7 +73,7 @@ class GoalPolicy(OpenAIPolicy):
     def body(self, observation, png):
         from .wire_contract import GoalEnvelope, schema
 
-        body = camera_request(observation, png, model=self.model, max_output_tokens=4096)
+        body = camera_request(observation, png, model=self.model)
         body["instructions"] = INSTRUCTIONS
         body["reasoning"] = {"effort": "high"}
         body["text"]["format"]["schema"] = schema(GoalEnvelope)

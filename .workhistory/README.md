@@ -74,3 +74,13 @@
 - 2026-09-28: [다중 장애물 Luna/GPU 우회 PASS·종료 후 사용량/출처 보완점](2026-09-28_obstacle_slalom_live_result.md)
 
 - 2026-09-28: [사용량·출처 보완, 3개 유형 규칙, 실행 가능한 고정 예산 회귀 suite](2026-09-28_measurement_taxonomy_regression.md)
+
+- 2026-09-29: [Slalom 회귀 시작 전 EGL 누락 진단·사전 검사 한계·복구 명령](2026-09-29_regression_egl_startup_diagnosis.md)
+
+- 2026-09-29: [Slalom 회귀 유효 FAIL·경로 추종/시작점 차단·제외 포함 완료 분석](2026-09-29_slalom_regression_valid_fail.md)
+
+- 2026-09-29: [새 17축 Luna AFS 캠페인 준비·EGL 점검·고정 예산 및 실행 명령](2026-09-29_obstacle_afs_campaign_preparation.md)
+
+- 2026-09-29: [17축 AFS 완화 탐색·5회 유효 FAIL·응답 출력 한도 제외·고정 예산 한계](2026-09-29_obstacle_afs_partial_result.md)
+
+- 2026-09-29: [로봇·AFS 기본 출력 토큰 상한 제거·요청/프로토콜/회귀 검증](2026-09-29_remove_default_output_token_caps.md)

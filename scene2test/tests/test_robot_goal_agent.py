@@ -130,6 +130,7 @@ def test_memory_capabilities_and_model_transport(monkeypatch):
     assert len(context["history"]) == 8 and "plan_path" in context["capabilities"]
     assert "no path planner" not in json.dumps(seen[0])
     assert seen[0]["reasoning"]["effort"] == "high"
+    assert "max_output_tokens" not in seen[0]
     assert "afs" not in context
     assert context["task_contract"]["evaluation_profile"] == "goal_outcome_v1"
     assert "No forbidden body/obstacle contacts or falls" not in json.dumps(seen[0])

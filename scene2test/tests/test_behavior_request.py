@@ -33,6 +33,7 @@ def test_hash_is_supplied_and_constrained():
 def test_evidence_references_constrained_for_every_request_policy(policy, version):
     ctx = {**b.context(observation()), "schema_version": version}
     body = request(ctx, "gpt-6-luna", selection_policy=policy)
+    assert "max_output_tokens" not in body
     schema = body["text"]["format"]["schema"]
     assert schema["$defs"]["Space"]["properties"]["evidence_refs"]["items"]["enum"] == (
         b.evidence_ids(ctx)

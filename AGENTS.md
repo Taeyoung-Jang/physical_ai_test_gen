@@ -1,5 +1,16 @@
 # Scene2Test workspace memory
 
+## Output token default update (2026-09-29)
+
+User requested removal of the client-side max-token ceiling. Robot velocity/goal/push
+and LLM AFS requests now omit `max_output_tokens` by default, including terrain/expanded
+CLI defaults. Explicit legacy CLI/helper caps remain opt-in only. New robot protocols
+record a null per-call cap and `provider_default_no_client_cap`; provider/model limits
+still apply, so this is not unlimited generation. Keep inference effort, call budgets,
+timeouts, outcome rules, incomplete-response diagnostics/usage and no-retry behavior
+unchanged. Preserve historical caps/results; frozen old campaigns cannot resume with
+changed source. No paid validation is implied by offline/mock tests.
+
 ## Usage audit, operational taxonomy and executable regression (2026-09-28)
 
 `call_usage.py` merges manifest-bound decisions, pending responses and per-call journals
