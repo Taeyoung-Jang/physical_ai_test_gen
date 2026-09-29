@@ -84,3 +84,5 @@
 - 2026-09-29: [17축 AFS 완화 탐색·5회 유효 FAIL·응답 출력 한도 제외·고정 예산 한계](2026-09-29_obstacle_afs_partial_result.md)
 
 - 2026-09-29: [로봇·AFS 기본 출력 토큰 상한 제거·요청/프로토콜/회귀 검증](2026-09-29_remove_default_output_token_caps.md)
+
+- 2026-09-29: [17축 Luna AFS 6+6 완료·관측 Gain 20%·근접 도달 FAIL과 체류시간 감사](2026-09-29_obstacle_afs_completed_result.md)

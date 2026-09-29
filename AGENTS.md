@@ -1,5 +1,21 @@
 # Scene2Test workspace memory
 
+## Completed obstacle pilot review (2026-09-29)
+
+A user-run Luna/Luna v3 pilot completed 6 valid rollouts per arm, zero exclusions,
+120 robot calls and 2 AFS requests with fully observed usage. AFS 6 FAIL vs Random
+5 FAIL/1 PASS gives observed relative Gain 20%, not statistical superiority: single
+seed, one failure difference, and unique failure scenes are 5 each (AFS includes
+one repeat). One operational obstacle_interference rule fired; six-family coverage
+is still partial, not 4/6. Success-side probes widened the corridor then moved a
+static block toward a wall. The latter got within 0.119m but failed the frozen goal:
+navigate_to stops at 0.12m; the tenth action ended with only 0.775s of required 1s
+goal dwell. Random PASS had a spare call and completed dwell during inference hold.
+Audit this final-action/dwell interaction before broad conclusions; never relabel
+old outcomes or silently change budgets. No AFS PASS/bracket yet. Near-goal repeats,
+explicit terminal-contract review and evidence-backed follow-up are next priorities.
+See the completed-result workhistory. This was read-only review, not a new paid run.
+
 ## Output token default update (2026-09-29)
 
 User requested removal of the client-side max-token ceiling. Robot velocity/goal/push
