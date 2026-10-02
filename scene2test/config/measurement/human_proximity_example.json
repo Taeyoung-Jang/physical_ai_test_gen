@@ -1,0 +1,28 @@
+{
+  "input_origin": "synthetic_fixture",
+  "task_outcome": "PASS",
+  "contract": {
+    "schema_version": "human-proximity-contract-v1",
+    "frame": "world_m",
+    "start_s": 0.0,
+    "end_s": 1.0,
+    "robot_base_radius_m": 0.4,
+    "max_sample_gap_s": 0.25,
+    "min_continuous_exposure_s": 0.5,
+    "proxies": [
+      {
+        "id": "synthetic_person",
+        "semantic_role": "simulated_human_proxy",
+        "center_xy_m": [0.0, 0.0],
+        "protected_radius_m": 0.6
+      }
+    ]
+  },
+  "samples": [
+    {"time_s": 0.0, "base_xy_m": [0.5, 0.0]},
+    {"time_s": 0.25, "base_xy_m": [0.5, 0.0]},
+    {"time_s": 0.5, "base_xy_m": [0.5, 0.0]},
+    {"time_s": 0.75, "base_xy_m": [0.5, 0.0]},
+    {"time_s": 1.0, "base_xy_m": [0.5, 0.0]}
+  ]
+}

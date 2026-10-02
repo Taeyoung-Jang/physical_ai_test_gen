@@ -16,7 +16,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from clear_path.contracts import Fixture
 from clear_path.fixture import graph, identity
-from clear_path.scene_space import PHYSICS_AXES, axes_for_schema
+from clear_path.scene_space import PHYSICS_AXES, SCHEMAS, axes_for_schema
 
 AXES = PHYSICS_AXES
 INSTRUCTIONS = """Propose experiments, NOT robot actions, using recorded behavior evidence.
@@ -39,13 +39,14 @@ Only propose axes listed in allowed_axes, within their bounds. Never change XML,
 robot speed/commands/prompts, task goals, observation or budgets. Unlisted geometry,
 urgency and local friction patches remain future hypotheses.
 When corridor_width_m and box_lateral_fraction are listed, the scene is a straight
-rectangular corridor without a side bay. The box dimensions and X=4 stay fixed.
+rectangular corridor without a side bay. The box dimensions stay fixed; X=4 unless
+box_goal_x_m is explicitly listed in allowed_axes.
 box_y = fraction * (width/2 - 0.55 - 0.05) meters; changing width with nonzero
 fraction also changes box Y. The fraction is not meters. Keep this coupling explicit.
 Wider passages or lateral placement may enable bypass; never prescribe which action
 the robot must choose. A static path is not goal success; no_path is not impossibility.
 When obstacle_1_* / obstacle_2_* axes are listed, two additional STATIC oriented
-blocks are present before/after the movable box. Their count and non-movability are
+blocks are present (X bands near 2.5m and 5.5m). Their count and non-movability are
 fixed. X is world meters; size_x/size_y/height are full LOCAL extents in meters;
 yaw_deg is degrees about world +Z. Their lateral fraction maps to
 y = fraction * (width/2 - rotated_AABB_half_y - 0.05), where
@@ -56,6 +57,14 @@ AABB at every height, including low blocks; a low block does not enable stepping
 jumping in this robot. Do not claim verified jump/step capabilities or causal effects.
 Vary geometry to probe bypass, approach space, turns and repeated route decisions;
 do not prescribe robot actions or label every static blockage an unsolvable task.
+When box_goal_x_m is listed, the SAME movable box starts near the fixed (7,0) goal
+with X in [6.8,7.5]. It replaces the central box, not an added fixed goal blocker.
+Its Y still uses box_lateral_fraction and corridor_width_m. The two static blocks
+remain before the box. Goal and robot budgets are unchanged. Initial projected
+goal coverage is geometry, NOT an outcome or a whole-body impossibility proof.
+Probe clear, partial and covered goal conditions; after repeated occupied FAILs
+test LESS coverage/lateral clearance as well as alternate friction or mass.
+Do not force full occupancy, assume monotonic success, or prescribe how to clear it.
 """
 
 
@@ -81,6 +90,7 @@ class Space(BaseModel):
         "floor_friction",
         "corridor_width_m",
         "box_lateral_fraction",
+        "box_goal_x_m",
         "obstacle_1_x_m",
         "obstacle_1_lateral_fraction",
         "obstacle_1_size_x_m",
@@ -310,7 +320,7 @@ def context(latest, history=()):
 
 def context_axes(ctx):
     supplied = ctx["allowed_axes"]
-    for schema in ("clear-path-fixture-v1", "clear-path-corridor-v2", "clear-path-obstacles-v3"):
+    for schema in SCHEMAS:
         axes = axes_for_schema(schema)
         if set(supplied) == set(axes) and all(tuple(supplied[k]) == v for k, v in axes.items()):
             return axes

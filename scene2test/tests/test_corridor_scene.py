@@ -10,7 +10,15 @@ from clear_path import fixture
 from clear_path.contracts import CorridorFixture, Fixture, ObstacleFixture
 from clear_path.obstacles import static_obstacles
 from clear_path.scene_space import axes_for_schema, scene_from_parameters
-from robot_vlm.navigation_tools import plan
+from robot_vlm.navigation_tools import (
+    PLANNING_RADIUS,
+    RADIUS,
+    RESOLUTION,
+    clearances,
+    plan,
+    rectangles,
+    segment_clear,
+)
 from robot_vlm.policy import Geometry, Observation
 from robot_vlm.scene_config import validate_scene
 
@@ -43,6 +51,38 @@ def observation(config):
     return obs, model, data
 
 
+def assert_route_contracts(obs, nav, route):
+    """Same geometry, distinct radii/endpoints; a preview is NOT the live route."""
+    assert nav["effective_radius_m"] == pytest.approx(RADIUS)
+    assert route["radius_m"] == RADIUS
+    assert route["planning_radius_m"] == PLANNING_RADIUS > RADIUS
+    points = nav["path_xy_m"]
+    assert bool(points) == nav["reachable"]
+    for x, y in points:
+        row = int((y - nav["origin_xy_m"][1]) / nav["resolution_m"])
+        col = int((x - nav["origin_xy_m"][0]) / nav["resolution_m"])
+        assert nav["blocked"][row][col] == 0
+    if points:
+        assert np.linalg.norm(np.array(points[0]) - fixture.SPAWN) <= RESOLUTION / 2**0.5 + 1e-10
+        assert np.linalg.norm(np.array(points[-1]) - fixture.GOAL) <= RESOLUTION / 2**0.5 + 1e-10
+        assert all(
+            sum(abs(x - y) for x, y in zip(a, b)) == pytest.approx(RESOLUTION)
+            for a, b in zip(points, points[1:])
+        )
+    if route["status"] == "path_found":
+        floor, rects = rectangles(obs)
+        path = route["path_xy_m"]
+        assert path[0] == obs.base_xyz_m[:2] and path[-1] == list(fixture.GOAL)
+        assert all(segment_clear(a, b, floor, rects) for a, b in zip(path, path[1:]))
+        assert all(
+            min(clearances(p, floor, rects)) >= PLANNING_RADIUS + RESOLUTION / 2**0.5 - 1e-9
+            for p in path[1:-1]
+        )
+    else:
+        assert route["status"] in {"no_path", "blocked_endpoint", "no_tracking_clearance"}
+        assert route["path_xy_m"] == []
+
+
 @pytest.mark.parametrize(
     "width,offset,reachable",
     [
@@ -53,7 +93,7 @@ def observation(config):
         (2.4, -1.0, True),
     ],
 )
-def test_generated_map_matches_robot_local_planner(width, offset, reachable):
+def test_generated_map_and_robot_planner_use_their_declared_contracts(width, offset, reachable):
     config = CorridorFixture(corridor_width_m=width, box_lateral_fraction=offset)
     obs, model, data = observation(config)
     nav = fixture.navigation_map(config)
@@ -61,8 +101,7 @@ def test_generated_map_matches_robot_local_planner(width, offset, reachable):
     assert nav["reachable"] is reachable
     route = plan(obs, list(fixture.GOAL))
     assert (route["status"] == "path_found") is reachable
-    if reachable:
-        assert np.asarray(nav["path_xy_m"]) == pytest.approx(np.asarray(route["path_xy_m"]))
+    assert_route_contracts(obs, nav, route)
     graph = fixture.graph(config)
     assert graph["meta"]["scene_revision"] == fixture.identity(config)
     assert not any(obj["id"] == "push_goal" for obj in graph["objects"])
@@ -184,8 +223,7 @@ def test_obstacles_map_graph_and_oriented_physics_agree(seed):
     obs, model, data = observation(config)
     nav, graph = fixture.navigation_map(config), fixture.graph(config)
     route = plan(obs, list(fixture.GOAL))
-    assert (route["status"] == "path_found") == nav["reachable"]
-    assert route["path_xy_m"] == nav["path_xy_m"]
+    assert_route_contracts(obs, nav, route)
     assert nav["schema_version"] == "clear-path-map-v3"
     assert graph["meta"]["scene_revision"] == nav["scene_revision"] == fixture.identity(config)
     assert set(fixture.world_geom_names(config)) == {model.geom(i).name for i in range(model.ngeom)}
@@ -203,6 +241,18 @@ def test_obstacles_map_graph_and_oriented_physics_agree(seed):
         assert node["extra"]["contact_annotation"] == "diagnostic_only"
     # One dynamic body only; adding static blocks must not grow the free-joint state.
     assert model.nq == 7 and model.nv == 6
+
+
+def test_static_preview_path_is_not_a_live_tracking_feasibility_promise():
+    from failure_client.methods.behavior_feedback import uniform_scene
+
+    schema = "clear-path-obstacles-v3"
+    config = scene_from_parameters(uniform_scene(1, "test", schema=schema), schema)
+    obs, _, _ = observation(config)
+    nav = fixture.navigation_map(config)
+    route = plan(obs, list(fixture.GOAL))
+    assert nav["reachable"] is True and route["status"] == "no_path"
+    assert_route_contracts(obs, nav, route)
 
 
 @pytest.mark.parametrize("width", [1.6, 4.0])

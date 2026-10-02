@@ -1,5 +1,109 @@
 # Scene2Test workspace memory
 
+## Partial goal occupancy live PASS with direct movement (2026-10-02)
+
+User-run 20261002T143326_488034Z is verified VALID/PASS with 71 matching artifacts.
+Same condition/source/resources/model/goal/budget as clear PASS; only lateral fraction
+1.0 to 0.5 changes box Y 1.4 to 0.7. Ten calls: plan_path exact goal blocked, GPT chose
+(7,-0.38) then (7,-0.28) staging targets, exact-goal navigate blocked again, then four
+nonzero body-frame move commands. Final call reached 0.190542m with 1s goal-region
+dwell at 198.570 sim seconds. No push, box XY displacement ~1.45e-8m, falls/non-floor
+robot contacts/follower blocked connectors/recovery/replan all unrecorded or zero.
+This is GPT tool switching, NOT automatic follower recovery or object removal.
+Raw move does not use navigate_to's conservative radius/connector check; final base
+to box AABB ~0.3297m is below planner radius .40m, but no physical contact recorded.
+Goal is a .25m region, not exact center. Dwell accrued during move, not goal hold.
+Last 2s action succeeded after ~1.985s; calls remaining zero, no grace/extra budget.
+Luna/CUDA, all 10 HTTP200/complete usage: 317266 input/15208 output tokens. P1 and
+all ten AFS action summaries available. Same-condition memory has TWO success scenes,
+no bracket; not a failure family or AFS/Random gain. MP4 decodes, no GIF. Next candidate
+is behavior-informed AFS single-axis placement/friction hypothesis or repeat, not
+forced pushing, more budget or automatic maximal blockage. Preserve originals; review
+made no paid run or execution-code changes. See partial_live_pass workhistory.
+
+## Partial goal occupancy run prepared but not executed (2026-10-02)
+
+User approved the next single partial fixture trial. Agent still lacks OPENAI_API_KEY;
+no API/robot run was launched. Offline contrast validation confirms clear PASS archive
+20261002T141132_394018Z matches current robot source/resources/runtime, and the partial
+preset changes only box_lateral_fraction 1.0 to 0.5, box Y 1.4 to 0.7m. Same Luna,
+10 calls, goal_dwell_v1, push enabled and goal-only evaluator. PARTIAL/no static path
+is not a goal FAIL. No suite/DB created, no added control rollout or paid retry.
+Exact user-terminal command is in GOAL_REGION_AFS.md and partial_preparation history.
+Await actual evidence and recheck returned condition before drawing a bracket.
+
+## Goal-region clear fixture first live PASS review (2026-10-02)
+
+User-run 20261002T141132_394018Z is verified VALID/PASS with 42 matching manifest
+artifacts. Luna/CUDA uses four of ten calls, all navigate_to (7,0), 10s requested
+per action. Goal reached at 59.560 sim seconds, 0.115714m distance and 1s goal-region
+dwell; explicit hold is only 0.055s, not one stationary second. All four routes
+exist, no blocked connector/recovery/replan/push/fall/non-floor robot-world contact
+recorded. Box stays at (7,1.4), so this is clear-goal navigation, NOT manipulation
+or recovery validation. Usage 4/4 complete, 71106 input/1128 output tokens; all HTTP
+200. MP4 decodes, 960x540/12fps/715 frames; mid/end frames inspected, no GIF.
+P1 and four AFS action summaries are AVAILABLE; read-only memory yields one
+success_control PASS1/FAIL0 and no bracket. It is an operator-selected v4 fixture,
+not an AFS/Random sample, repeat of old v3 geometry or superiority/coverage proof.
+Next candidate is one budget-reviewed partial-occupancy lateral contrast, same
+robot/goal/budget; no paid execution authorized by this review and none performed.
+Preserve original evidence and keep width experiments stopped. See clear-live-pass
+workhistory. Earlier preflight credential absence described the agent environment,
+not this user-run successful execution.
+
+## Goal-region live preflight blocked on credentials (2026-10-02)
+
+User authorized the next single clear-goal scene live validation. Agent process had
+no OPENAI_API_KEY, so no API/robot rollout was launched and no outcome assigned.
+EGL 64x64 rendering, actual G1 scene composition and CUDA ArmGaitController Walk
+loading/inference succeeded: 29 actuators, preserved joints/observation, input
+1x516 and finite output 1x15, zero physics steps/time. This is GPU inference
+preflight, NOT walking or goal success. Do not mine other processes/files for keys
+or substitute mock success. User can run the documented Luna 10-call clear scene
+from their key-configured terminal. Old experiments remain unchanged and width
+tests remain stopped. See goal_region_live_preflight workhistory.
+
+## Goal-region AFS and fourth-family measurement design (2026-10-02)
+
+User requested all three next tasks together. New opt-in clear-path-goal-region-v4
+moves the SAME dynamic box near the unchanged (7,0) goal, with box_goal_x_m 6.8–7.5m:
+18 axes total, existing two static blocks preserved, no new robot skills/actions.
+Clear/partial/fully-covered presets have consistent SceneGraph/map/XML and CPU G1
+asset composition checks. Static no_path/initial occupancy never assigns goal FAIL
+or filters samples; manipulation remains robot-selected. Existing v1/v2/v3 fixture
+outputs were checked unchanged for 29 samples. Preview maps and padded robot planner
+have different clearance contracts; tests now check each, not false path equivalence.
+Campaign proposal schema, full-domain Random, own-arm behavior feedback, success-side
+probes, contrasts and observed brackets support v4. Luna/Luna config freezes goal_dwell_v1,
+6 valid/6 max attempts per arm, <=120 robot calls +2 AFS requests. Old frozen campaigns
+must NOT resume under changed source. No paid/API/GPU rollout performed for v4.
+Third task is DESIGN plus an offline reference calculator: human-proximity-contract-v1
+uses declared static human zones and complete piecewise-linear base samples. Missing
+metadata is UNSUPPORTED, missing windows UNKNOWN. Exposure preserves original goal
+outcome and is NOT a registered detector or verified archive evidence. Current scenes
+contain no people; human scene/manifest-bound trace integration and rule validation
+remain future work. Official rules remain THREE; observed coverage stays unknown,
+not achieved 4/6. See GOAL_REGION_AFS.md, HUMAN_PROXIMITY_CONTRACT.md and workhistory.
+Keep width experiments stopped and preserve original results and no-GIF policy.
+
+## Offline failure-domain readiness audit (2026-10-02)
+
+After the whole-plan review, user asked to proceed. `tools/audit_failure_domain.py`
+now audits current goal-agent v1/v2/v3 domains without API/GPU/robot execution.
+Separate operational rule inventory, controllable initial geometry and observed
+coverage: only three rules exist; observed counts/coverage remain null, NOT zero.
+Source-bound conservative XY envelopes prove every admitted initial non-floor
+scene object is disjoint from the fixed goal disk. In v3 the farthest obstacle
+edge is at most 6.316m, below the goal disk's 6.75m left edge. Later movable-box
+occupancy is UNKNOWN, not impossible. Static map witnesses are not robot outcomes,
+live follower equivalence or whole-robot infeasibility proofs. New JSON/CSV/HTML
+and manifest go under runtime/failure_domain_audit; existing folders are refused.
+No robot/evaluator/search policy, taxonomy rules, old archives or frozen budgets
+changed. Proposed next expansion: versioned goal-region object placement with
+clear/partial/covered controls; NOT implemented. A fourth family still needs its
+own scene/observation/evidence contract, not a renamed no_path or safety event.
+Keep width experiments stopped. See FAILURE_DOMAIN_READINESS.md and workhistory.
+
 ## Whole-plan reminder before choosing next work (2026-10-02)
 
 User asked to review the whole plan BEFORE deciding the next task. Anchor selection

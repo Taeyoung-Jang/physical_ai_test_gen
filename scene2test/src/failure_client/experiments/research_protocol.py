@@ -32,7 +32,10 @@ class RobotSettings(StrictRecord):
 class CampaignConfig(StrictRecord):
     schema_version: Literal["behavior-afs-campaign-v1"] = "behavior-afs-campaign-v1"
     scene_schema: Literal[
-        "clear-path-fixture-v1", "clear-path-corridor-v2", "clear-path-obstacles-v3"
+        "clear-path-fixture-v1",
+        "clear-path-corridor-v2",
+        "clear-path-obstacles-v3",
+        "clear-path-goal-region-v4",
     ] = "clear-path-fixture-v1"
     seeds: list[int] = Field(default_factory=lambda: [17], min_length=1, max_length=20)
     valid_budget_per_seed: int = Field(default=8, ge=2, le=128)
@@ -75,6 +78,8 @@ class CampaignConfig(StrictRecord):
                 else "independent-uniform-full-five-axis-corridor-v2"
                 if self.scene_schema == "clear-path-corridor-v2"
                 else "independent-uniform-full-seventeen-axis-obstacles-v3"
+                if self.scene_schema == "clear-path-obstacles-v3"
+                else "independent-uniform-full-eighteen-axis-goal-region-v4"
             ),
             "cold_start": "paired scene draws, separately executed and charged to each arm",
             "strategy_cycle": self.strategy_cycle,

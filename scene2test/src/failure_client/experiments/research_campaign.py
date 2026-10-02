@@ -359,7 +359,7 @@ class ResearchCampaign:
                     source=source, status="INVALID", exclusion_reason="duplicate_core_evidence"
                 )
             elif (
-                self.config.scene_schema in {"clear-path-corridor-v2", "clear-path-obstacles-v3"}
+                self.config.scene_schema != "clear-path-fixture-v1"
                 and _scene_parameters(directory / "rollout", protocol)[0] is None
             ):
                 self.state.update(status="INCOMPLETE", reason="scene_geometry_mismatch")

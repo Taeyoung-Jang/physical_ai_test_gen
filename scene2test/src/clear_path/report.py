@@ -5,7 +5,7 @@ import json
 
 import numpy as np
 
-from .contracts import CorridorFixture
+from .contracts import CorridorFixture, GoalRegionFixture
 from .fixture import BOX_SIZE, BOX_TARGET, GOAL, SPAWN, WALLS, walls
 from .obstacles import static_obstacles
 
@@ -15,7 +15,7 @@ def plot_map(nav, path, config=None):
 
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
-    from matplotlib.patches import Polygon, Rectangle
+    from matplotlib.patches import Circle, Polygon, Rectangle
 
     fig, ax = plt.subplots(figsize=(12, 5))
     x0, y0 = nav["origin_xy_m"]
@@ -76,6 +76,10 @@ def plot_map(nav, path, config=None):
         )
     ax.scatter(*SPAWN, color="green", label="Robot start")
     ax.scatter(*GOAL, color="blue", label="Robot goal")
+    if isinstance(config, GoalRegionFixture):
+        ax.add_patch(
+            Circle(GOAL, 0.25, fill=False, color="blue", linewidth=2, label="Goal region (0.25m)")
+        )
     if nav["path_xy_m"]:
         points = np.asarray(nav["path_xy_m"])
         ax.plot(
@@ -92,7 +96,10 @@ def plot_map(nav, path, config=None):
         ylabel="World Y (m)",
         aspect="equal",
     )
-    ax.legend(loc="upper left", fontsize=8)
+    if isinstance(config, GoalRegionFixture):
+        ax.legend(loc="upper center", bbox_to_anchor=(0.5, -0.18), ncol=3, fontsize=8)
+    else:
+        ax.legend(loc="upper left", fontsize=8)
     fig.tight_layout()
     fig.savefig(path, dpi=130)
     plt.close(fig)

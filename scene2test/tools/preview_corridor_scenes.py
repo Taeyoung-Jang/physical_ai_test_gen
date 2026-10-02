@@ -1,4 +1,4 @@
-"""Offline corridor-v2 / obstacles-v3 fixtures: static maps, NOT robot outcomes.
+"""Offline corridor-v2 / obstacles-v3 / goal-region-v4: maps, NOT robot outcomes.
 
 No API calls, GPU inference, GIF or robot actions. Optional CPU G1 composition audit.
 """
@@ -10,7 +10,7 @@ from html import escape
 from pathlib import Path
 
 from clear_path import fixture
-from clear_path.contracts import CorridorFixture
+from clear_path.contracts import CorridorFixture, GoalRegionFixture
 from clear_path.report import plot_map
 from failure_client.evaluation.goal_run_reader import _hash_file
 from robot_vlm.scene_config import validate_scene
@@ -29,23 +29,25 @@ def main(argv=None):
         "--output-root", type=Path, default=Path("/workspace/g1_failure/runtime/corridor_previews")
     )
     parser.add_argument("--scene-config", type=Path, action="append")
-    parser.add_argument("--preset", choices=("corridor", "obstacles"), default="corridor")
+    parser.add_argument(
+        "--preset", choices=("corridor", "obstacles", "goal_region"), default="corridor"
+    )
     parser.add_argument("--audit-robot", action="store_true")
     parser.add_argument(
         "--groot-root", type=Path, default=Path("/workspace/g1_failure/src/GR00T-WholeBodyControl")
     )
     args = parser.parse_args(argv)
-    names = (
-        ("wide", "narrow", "offset")
-        if args.preset == "corridor"
-        else ("slalom", "rotated", "low_blocks", "blocked")
-    )
+    names = {
+        "corridor": ("wide", "narrow", "offset"),
+        "obstacles": ("slalom", "rotated", "low_blocks", "blocked"),
+        "goal_region": ("clear", "partial", "covered"),
+    }[args.preset]
     paths = args.scene_config or [
         PROJECT / f"config/scenes/{args.preset}_{name}.json" for name in names
     ]
     configs = [validate_scene(json.loads(path.read_text())) for path in paths]
     if any(not isinstance(c, CorridorFixture) for c in configs):
-        parser.error("only clear-path-corridor-v2 / clear-path-obstacles-v3 are supported")
+        parser.error("only corridor-v2 / obstacles-v3 / goal-region-v4 are supported")
     source = None
     if args.audit_robot:
         source = args.groot_root / "decoupled_wbc/sim2mujoco/resources/robots/g1/g1_gear_wbc.xml"
@@ -80,6 +82,11 @@ def main(argv=None):
             "static_path_exists": nav["reachable"],
             "task_outcome": "NOT_EXECUTED",
             "robot_composition_audited": source is not None,
+            **(
+                {"initial_goal_relation": fixture.initial_goal_relation(config)}
+                if isinstance(config, GoalRegionFixture)
+                else {}
+            ),
         }
         rows.append(row)
         sections.append(

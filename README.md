@@ -6,6 +6,50 @@
 랜덤 미로·여러 방 환경, SceneGraph, 이동 지도 생성: [실행 가이드](scene2test/docs/PROCEDURAL_WORLDS.md).
 생성기 자체는 정적 장면을 출력하며, G1 실행 연결은 위 Navigation 가이드를 참조하세요.
 
+## 실패 유형과 장면 범위 점검
+
+현재 goal-agent AFS가 어떤 실패 조건을 생성·측정할 수 있는지 무료 오프라인으로 점검합니다.
+규칙 구현, 장면 제어, 실제 발견을 구분하며 API 키나 GPU는 필요하지 않습니다.
+
+```bash
+cd /workspace/g1_failure/src/physical_ai_test_gen/scene2test
+uv run --no-sync python tools/audit_failure_domain.py
+```
+
+HTML·JSON·CSV는 `/workspace/g1_failure/runtime/failure_domain_audit/<새 실행 시각>/`에 저장됩니다.
+현재 세 규칙이 있다는 것은 세 유형을 발견했다는 뜻이 아니며, 4/6 목표는 아직 미달성입니다.
+[결과 해석과 장면 확장 범위](scene2test/docs/FAILURE_DOMAIN_READINESS.md)를 참조하세요.
+
+## 목표 주변 장면과 18축 AFS 확장
+
+`clear-path-goal-region-v4`는 같은 이동 가능한 상자를 목표 주변에 배치합니다.
+목표 영역이 빈 장면·부분 점유·전체 점유를 생성하고, 기존 17축에 상자 X 위치를 추가했습니다.
+로봇의 최종 목표와 행동 선택은 바꾸지 않습니다. 초기 점유나 정적 경로 없음은 FAIL 판정이 아닙니다.
+
+무료 미리보기와 실제 G1 자산의 CPU 합성 검사(API/주행 없음):
+
+```bash
+cd /workspace/g1_failure/src/physical_ai_test_gen/scene2test
+uv run --no-sync python tools/preview_corridor_scenes.py --preset goal_region --audit-robot --output-root /workspace/g1_failure/runtime/goal_region_previews
+```
+
+새 Luna/Luna 캠페인의 계획만 확인하기:
+
+```bash
+uv run --no-sync python tools/run_afs_pilot.py --config config/behavior_afs_goal_region_luna.json
+```
+
+실제 실행은 별도 `--live`가 필요하며 최대 12회 시도, 로봇 API 120회 + AFS 2회입니다.
+빈 목표 장면 한 회에서 Luna/CUDA PASS를 확인했습니다(4회 호출, 목표 거리 0.116m).
+부분 점유도 같은 조건에서 PASS였습니다(10회 호출, 목표 거리 0.191m).
+GPT가 중간 목표와 직접 속도 이동으로 접근했으며 상자를 밀지는 않았습니다.
+실패 경계·전체 점유·AFS 탐색 성능은 아직 미검증입니다. 기존 동결 캠페인은 재개하지 마세요.
+[장면 설명·단독 실행·AFS 실행 명령](scene2test/docs/GOAL_REGION_AFS.md)에 안내했습니다.
+
+네 번째 유형 후보인 작업자 안전 위험은 [근접 측정 계약과 오프라인 계산기](scene2test/docs/HUMAN_PROXIMITY_CONTRACT.md)까지
+추가했습니다. 현재 장면에 사람을 넣거나 공식 detector를 등록한 것은 아니므로 규칙 수는 여전히 3개이며
+4/6 발견을 달성한 것은 아닙니다. 목표 PASS를 근접 관측 때문에 FAIL로 바꾸지 않습니다.
+
 ## OpenAI API 키 설정 및 AFS 전체 실행 (RunPod / Bash)
 
 현재 LLM 기반 AFS와 로봇 VLM은 **`OPENAI_API_KEY` 환경 변수**를 사용합니다.

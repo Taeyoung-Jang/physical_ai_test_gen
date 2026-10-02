@@ -2,6 +2,7 @@
 
 import hashlib
 import json
+import math
 import xml.etree.ElementTree as ET
 from collections import deque
 
@@ -9,7 +10,7 @@ import numpy as np
 
 from scene_graph import ObjectNode, Relation, SceneGraph, SupportSurface
 
-from .contracts import CorridorFixture, ObstacleFixture
+from .contracts import CorridorFixture, GoalRegionFixture, ObstacleFixture
 from .obstacles import static_obstacles
 
 SPAWN = (1.0, 0.0)
@@ -47,7 +48,37 @@ def box_start(config):
         return BOX_START
     # Independent bounded axes cannot initially overlap box and wall.
     available = config.corridor_width_m / 2 - BOX_SIZE[1] / 2 - 0.05
-    return (4.0, config.box_lateral_fraction * available)
+    x = config.box_goal_x_m if isinstance(config, GoalRegionFixture) else 4.0
+    return (x, config.box_lateral_fraction * available)
+
+
+def initial_goal_relation(config, *, target_xy=GOAL, radius_m=0.25):
+    """Exact initial upright-box projection only; NOT feasibility or a goal verdict.
+
+    Radius is supplied from the task contract by measurement callers. The default
+    matches the current fixed goal contract and is tested against that contract.
+    """
+    if len(target_xy) != 2 or not all(math.isfinite(v) for v in (*target_xy, radius_m)):
+        raise ValueError("finite 2D goal and radius required")
+    if radius_m <= 0:
+        raise ValueError("positive goal radius required")
+    box = box_start(config)
+    delta = [abs(a - b) for a, b in zip(target_xy, box)]
+    half = [s / 2 for s in BOX_SIZE[:2]]
+    distance = math.hypot(*(max(d - h, 0) for d, h in zip(delta, half)))
+    full = all(h - d >= radius_m for d, h in zip(delta, half))
+    return {
+        "schema_version": "initial-goal-relation-v1",
+        "object_id": "clear_box",
+        "object_movable": True,
+        "goal_xy_m": list(target_xy),
+        "goal_radius_m": radius_m,
+        "box_xy_m": list(box),
+        "relation": "FULLY_COVERED" if full else "CLEAR" if distance > radius_m else "PARTIAL",
+        "goal_to_box_distance_m": distance,
+        "goal_outcome": None,
+        "claim": "Initial projected geometry only; no robot strategy or impossibility verdict",
+    }
 
 
 def world_geom_names(config):
@@ -141,7 +172,9 @@ def navigation_map(config, box_xy=None, *, hypothetical=False):
         current = parents[current]
     return {
         "schema_version": (
-            "clear-path-map-v3"
+            "clear-path-map-v4"
+            if isinstance(config, GoalRegionFixture)
+            else "clear-path-map-v3"
             if isinstance(config, ObstacleFixture)
             else "clear-path-map-v2"
             if corridor
@@ -269,6 +302,11 @@ def graph(config):
             "source": "trusted_simulator_geometry",
             "robot_rollout": False,
             "floor_bounds_are_not_navigation_free_space": True,
+            **(
+                {"initial_goal_relation": initial_goal_relation(config)}
+                if isinstance(config, GoalRegionFixture)
+                else {}
+            ),
         },
     ).to_dict()
 

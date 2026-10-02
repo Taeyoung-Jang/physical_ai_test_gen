@@ -112,3 +112,15 @@
 - 2026-10-02: [폭 대조 실험 중단 결정·AFS 기준 장면과 환경 축 선택 확장 제안](2026-10-02_afs_next_development_plan.md)
 
 - 2026-10-02: [전체 연구 개발 계획 리마인드·P0–P4 현황·다음 우선순위 미확정](2026-10-02_project_plan_reminder.md)
+
+- 2026-10-02: [실패 유형과 장면 도메인 자동 점검·초기 목표 점유 공백·166개 회귀 검사](2026-10-02_failure_domain_readiness.md)
+
+- 2026-10-02: [목표 주변 18축 장면·AFS 연결·작업자 근접 측정 계약과 오프라인 검증](2026-10-02_goal_region_afs_and_human_contract.md)
+
+- 2026-10-02: [목표 주변 첫 실동작 준비·CUDA 추론 확인·에이전트 API 키 부재로 실행 대기](2026-10-02_goal_region_live_preflight.md)
+
+- 2026-10-02: [목표 주변 빈 공간의 Luna CUDA 첫 PASS·4회 호출·성공 대조 근거 검증](2026-10-02_goal_region_clear_live_pass.md)
+
+- 2026-10-02: [목표 부분 점유 한 회 준비·단일 축과 동일 소스 자산 확인·API 키 대기](2026-10-02_goal_region_partial_preparation.md)
+
+- 2026-10-02: [목표 부분 점유 PASS·GPT 중간 목표와 직접 이동 선택·10회 호출과 미확정 경계](2026-10-02_goal_region_partial_live_pass.md)

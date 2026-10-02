@@ -30,8 +30,18 @@ OBSTACLE_AXES = {
     },
 }
 
+GOAL_REGION_AXES = {**OBSTACLE_AXES, "box_goal_x_m": (6.8, 7.5)}
+SCHEMAS = (
+    "clear-path-fixture-v1",
+    "clear-path-corridor-v2",
+    "clear-path-obstacles-v3",
+    "clear-path-goal-region-v4",
+)
+
 
 def axes_for_schema(schema="clear-path-fixture-v1"):
+    if schema == "clear-path-goal-region-v4":
+        return dict(GOAL_REGION_AXES)
     if schema == "clear-path-obstacles-v3":
         return dict(OBSTACLE_AXES)
     if schema == "clear-path-fixture-v1":

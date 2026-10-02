@@ -50,6 +50,18 @@ class ObstacleFixture(CorridorFixture):
     obstacle_2_yaw_deg: float = Field(default=0.0, ge=-90.0, le=90.0)
 
 
+class GoalRegionFixture(ObstacleFixture):
+    """Move the SAME dynamic box near the unchanged goal; no extra object or skill.
+
+    At X>=6.8 its left edge is beyond the maximum rotated obstacle-2 edge
+    (6.316m); at X<=7.5 its right edge leaves 10cm to the end wall. All bounded
+    samples are initially non-overlapping without path/occupancy rejection.
+    """
+
+    schema_version: Literal["clear-path-goal-region-v4"] = "clear-path-goal-region-v4"
+    box_goal_x_m: float = Field(default=7.0, ge=6.8, le=7.5)
+
+
 def parse_fixture(value=None):
     if value is None:
         return Fixture()
@@ -60,6 +72,7 @@ def parse_fixture(value=None):
     cls = {
         "clear-path-corridor-v2": CorridorFixture,
         "clear-path-obstacles-v3": ObstacleFixture,
+        "clear-path-goal-region-v4": GoalRegionFixture,
     }.get(value.get("schema_version"), Fixture)
     return cls.model_validate(value)
 

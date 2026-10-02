@@ -171,7 +171,8 @@ def feedback_context(
         },
         "limitations": [
             "Events are not causes or goal failures; unsupported telemetry is not zero",
-            "No failure family detectors; diversity cannot currently be measured",
+            "Only supplied validated taxonomy evidence supports family labels; "
+            "unsupported types and behavior patterns are not discovered coverage",
             "Only P1 observed_brackets may support a boundary claim; mixed repeats stay uncertain",
             "SceneGraph legacy push_goal/contact annotations are not task requirements",
             "Do not keep amplifying a failing setting; test success side and alternative axes",
