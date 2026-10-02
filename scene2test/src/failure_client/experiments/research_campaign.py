@@ -33,6 +33,7 @@ from failure_client.storage.research_store import ResearchStore
 from llm_afs import provider
 from llm_afs.behavior import EvidenceReferenceError, digest
 from robot_vlm.debug_log import clean, exception_detail
+from robot_vlm.navigation_completion import profile_from_protocol
 
 from .local_goal_adapter import LocalGoalRunner, atomic_json
 from .proposal_recovery import verify_recovery
@@ -345,6 +346,7 @@ class ResearchCampaign:
                 or protocol["max_calls"] != robot.max_calls
                 or protocol["max_simulation_s"] != robot.max_seconds
                 or protocol.get("push_enabled") != robot.enable_push
+                or profile_from_protocol(protocol) != robot.navigation_completion
                 or protocol.get("http_read_timeout_s") != robot.response_timeout
                 or protocol["policy_origin"] != self.state["lock"]["execution_origin"]
             ):

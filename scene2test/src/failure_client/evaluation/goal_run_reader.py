@@ -9,6 +9,7 @@ import re
 from collections import Counter
 from pathlib import Path
 
+from robot_vlm.navigation_completion import profile_from_protocol
 from robot_vlm.task_outcome import GoalEvaluator, digest, task_contract
 
 from .call_usage import collect_usage
@@ -197,6 +198,7 @@ def read_goal_run(source: RunInput) -> EpisodeRecord:
         )
         if contract != expected_contract or protocol["task_contract_sha256"] != digest(contract):
             raise EvidenceError("task_contract_mismatch")
+        profile_from_protocol(protocol)
         for field in ("source_hashes", "robot_resources"):
             values = protocol[field]
             if (

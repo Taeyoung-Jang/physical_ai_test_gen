@@ -344,6 +344,109 @@ def _action_intervals(root, record):
             for field in ("status", "reason", "success", "terminal_reason"):
                 if field in feedback:
                     details["tool_" + field] = feedback[field]
+            # Optional full-rate action-end readings. Missing old measurements
+            # remain absent, never zero; they do not change goal labels/taxonomy.
+            if "goal_progress" in feedback:
+                progress = feedback["goal_progress"]
+                for field in ("distance_m", "current_dwell_s", "remaining_dwell_s"):
+                    value = progress[field]
+                    details["goal_" + field] = (
+                        None if value is None else _number(value, nonnegative=True)
+                    )
+            if "motion" in feedback:
+                motion = feedback["motion"]
+                if motion.get("version") != "action-motion-v1":
+                    raise EvidenceError("unsupported_motion_feedback")
+                motion_start = _time(motion["start_simulation_s"], record.simulation_s)
+                motion_end = _time(motion["end_simulation_s"], record.simulation_s)
+                elapsed = _number(motion["elapsed_s"], nonnegative=True)
+                if (
+                    motion_end != end
+                    or motion_start > motion_end
+                    or (start is not None and motion_start < start)
+                    or abs(motion_end - motion_start - elapsed) > 1e-6
+                ):
+                    raise EvidenceError("invalid_motion_window")
+                details["execution_start_s"] = motion_start
+                details["motion_elapsed_s"] = elapsed
+                for field, nonnegative in (
+                    ("net_translation_m", True),
+                    ("goal_distance_reduction_m", False),
+                ):
+                    details["motion_" + field] = _number(motion[field], nonnegative=nonnegative)
+                stationary = motion["commanded_stationary"]
+                expected = (
+                    all(action.get(k) == 0 for k in ("vx_mps", "vy_mps", "yaw_rate_rps"))
+                    if action["action"] == "move"
+                    else None
+                )
+                if stationary is not expected:
+                    raise EvidenceError("motion_command_mismatch")
+                details["motion_commanded_stationary"] = stationary
+                fraction = motion["yaw_limit_fraction"]
+                if fraction is not None and not 0 <= _number(fraction) <= 1:
+                    raise EvidenceError("invalid_yaw_limit_fraction")
+                details["motion_yaw_limit_fraction"] = fraction
+                blocked = motion["blocked_connector_samples"]
+                if type(blocked) is not int or blocked < 0:
+                    raise EvidenceError("invalid_blocked_connector_count")
+                details["motion_blocked_connector_samples"] = blocked
+            if "navigation_recovery" in feedback:
+                recovery = feedback["navigation_recovery"]
+                if (
+                    recovery.get("version") != "clearance-recovery-v3"
+                    or action["action"] != "navigate_to"
+                ):
+                    raise EvidenceError("unsupported_navigation_recovery")
+                if _time(recovery["ended_at_simulation_s"], record.simulation_s) != end:
+                    raise EvidenceError("invalid_navigation_recovery_time")
+                for field in ("recovery_count", "replan_count"):
+                    value = recovery[field]
+                    if type(value) is not int or not 0 <= value <= 2:
+                        raise EvidenceError("invalid_navigation_recovery_count")
+                    details["navigation_" + field] = value
+                status = recovery["status"]
+                if not isinstance(status, str) or not 0 < len(status) <= 80:
+                    raise EvidenceError("invalid_navigation_recovery_status")
+                details["navigation_recovery_status"] = status
+                events = recovery["events"]
+                if not isinstance(events, list) or len(events) > 12:
+                    raise EvidenceError("invalid_navigation_recovery_events")
+                previous = (
+                    details["execution_start_s"]
+                    if details["execution_start_s"] is not None
+                    else start
+                )
+                summary = []
+                names = {
+                    "blocked_connector",
+                    "recovery_started",
+                    "recovery_completed",
+                    "replan",
+                    "tool_return",
+                }
+                for event in events:
+                    time_s = _time(event["simulation_time_s"], record.simulation_s)
+                    if (
+                        (previous is not None and time_s < previous)
+                        or time_s > end
+                        or event["event"] not in names
+                    ):
+                        raise EvidenceError("invalid_navigation_recovery_event")
+                    previous = time_s
+                    label = event.get("reason", event.get("plan_status"))
+                    if label is not None and (not isinstance(label, str) or len(label) > 80):
+                        raise EvidenceError("invalid_navigation_recovery_event_label")
+                    summary.append(
+                        f"{time_s:.6f}s {event['event']}" + (f" ({label})" if label else "")
+                    )
+                if (
+                    sum(e["event"] == "recovery_started" for e in events)
+                    != recovery["recovery_count"]
+                    or sum(e["event"] == "replan" for e in events) != recovery["replan_count"]
+                ):
+                    raise EvidenceError("navigation_recovery_event_count_mismatch")
+                details["navigation_recovery_timeline"] = "; ".join(summary)
         skill = f"skill_{cid:03}.json"
         if skill in record.artifact_hashes:
             saved = read_json(root / skill)

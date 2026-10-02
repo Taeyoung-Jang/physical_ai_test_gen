@@ -9,7 +9,7 @@ from .goal_policy import GoalMock, GoalPolicy
 from .policy import Strict
 from .wire_contract import Move, Navigate, Passive, Skill, schema
 
-PROMPT_VERSION = "goal-agent-push-v5"
+PROMPT_VERSION = "goal-agent-push-v7-motion-feedback"
 
 
 class PushAction(Strict):

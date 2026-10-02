@@ -32,6 +32,20 @@ def _action_summary(interval):
         "tool_success",
         "tool_terminal_reason",
         "inference_wall_s",
+        "goal_distance_m",
+        "goal_current_dwell_s",
+        "goal_remaining_dwell_s",
+        "execution_start_s",
+        "motion_elapsed_s",
+        "motion_net_translation_m",
+        "motion_goal_distance_reduction_m",
+        "motion_commanded_stationary",
+        "motion_yaw_limit_fraction",
+        "motion_blocked_connector_samples",
+        "navigation_recovery_count",
+        "navigation_replan_count",
+        "navigation_recovery_status",
+        "navigation_recovery_timeline",
     )
     return {
         "start_s": interval["start_s"],
@@ -79,7 +93,14 @@ def compact_evidence(entry, *, detail_limit=DETAIL_LIMIT):
             or d.get("tool_success") is False
             or d.get("tool_reason")
             or d.get("tool_status")
-            not in (None, "executed", "path_found", "target_reached", "execution_slice_ended")
+            not in (
+                None,
+                "executed",
+                "path_found",
+                "target_reached",
+                "execution_slice_ended",
+                "goal_reached",
+            )
         ):
             exceptional.append(n)
     for n in reversed(exceptional):

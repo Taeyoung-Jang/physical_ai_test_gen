@@ -23,6 +23,9 @@ from .api_transport import DiagnosticError
 from .behavior_events import BehaviorEvents
 from .budget import simulation_limit
 from .debug_log import Journal, exception_detail
+from .execution_feedback import VERSION as MOTION_VERSION
+from .execution_feedback import MotionFeedback, policy_feedback
+from .navigation_completion import DEFAULT, NavigationCompletion, completion_contract
 from .policy import Geometry, Observation, PolicyError, validate_fresh
 from .scene_config import validate_scene
 from .task_outcome import GoalEvaluator, digest, task_contract
@@ -50,14 +53,19 @@ def run(
     response_timeout=90.0,
     scene_config=None,
     evaluation_profile="goal_outcome_v1",
+    navigation_completion=DEFAULT,
 ):
     if not 1 <= max_calls <= 20:
         raise ValueError("bounded call budget 1..20 required")
     requested_max_seconds = max_seconds
     contract = task_contract(fixture.GOAL, max_calls, max_seconds, evaluation_profile)
+    nav_contract = completion_contract(navigation_completion)
+    if evaluation_profile != "goal_outcome_v1" and navigation_completion != DEFAULT:
+        raise ValueError("goal dwell navigation requires goal_outcome_v1")
     evaluator = GoalEvaluator(contract)
     guarded = evaluation_profile == "legacy_guarded"
     policy.task_contract = contract
+    policy.navigation_completion = nav_contract
     max_seconds = simulation_limit(max_seconds)
     timing = RequestTiming(response_timeout)
     config = validate_scene(scene_config)
@@ -71,6 +79,7 @@ def run(
         from clear_path.push_probe import ArmGaitController
 
         from . import push_execution
+        from .push_policy import PROMPT_VERSION as push_prompt_version
         from .push_policy import PushPolicy
 
         if not isinstance(policy, PushPolicy):
@@ -84,6 +93,18 @@ def run(
     data = controller.data
     dt = model.opt.timestep
     world = {model.geom(n).id for n in fixture.world_geom_names(config)}
+
+    def current_geometry():
+        return [
+            Geometry(
+                object_id=model.geom(g).name,
+                center_m=data.geom_xpos[g].tolist(),
+                size_m=(2 * model.geom_size[g]).tolist(),
+                rotation_matrix=data.geom_xmat[g].tolist(),
+            )
+            for g in sorted(world)
+        ]
+
     # Evaluation artifacts only; no reference path is supplied to the policy.
     write(root / "scene_graph.json", fixture.graph(config))
     write(root / "navigation_map.json", fixture.navigation_map(config))
@@ -104,7 +125,7 @@ def run(
             "task_contract_sha256": digest(contract),
             "policy_origin": origin,
             "model": getattr(policy, "model", None),
-            "prompt_version": "goal-agent-push-v5" if enable_push else policy_module.PROMPT_VERSION,
+            "prompt_version": push_prompt_version if enable_push else policy_module.PROMPT_VERSION,
             "max_calls": max_calls,
             "max_simulation_s": requested_max_seconds,
             "simulation_time_unlimited": requested_max_seconds is None,
@@ -118,6 +139,9 @@ def run(
             "observation": "RGB + full geometry + GT pose",
             "reference_path_provided": False,
             "robot_internal_planner": "BFS radius 0.40m; GPT chooses target",
+            "navigation_follower": navigation_tools.follower_contract(),
+            "execution_feedback_version": MOTION_VERSION,
+            "navigation_completion": nav_contract,
             "manipulation_available": enable_push,
             "push_enabled": enable_push,
             "manipulation_scope": "short near-contact push only" if enable_push else "none",
@@ -180,6 +204,12 @@ def run(
                     Path(__file__).parents[1] / "clear_path/obstacles.py"
                 ),
                 "navigation_tools": audit.sha256(Path(navigation_tools.__file__)),
+                "execution_feedback": audit.sha256(
+                    Path(__file__).with_name("execution_feedback.py")
+                ),
+                "navigation_completion": audit.sha256(
+                    Path(__file__).with_name("navigation_completion.py")
+                ),
                 "gait": audit.sha256(
                     Path(__file__).parents[1] / "simulation_server/groot_locomotion.py"
                 ),
@@ -211,6 +241,8 @@ def run(
     video = None
     error_diagnostic = None
     observer = None
+    last_navigation = None
+    navigation_tracking = None
     try:
         with (
             mujoco.Renderer(model, height=540, width=960) as renderer,
@@ -327,6 +359,9 @@ def run(
                                 "qvel": data.qvel.tolist(),
                                 "ctrl": data.ctrl.tolist(),
                                 "command": controller.command.tolist(),
+                                "navigation_tracking": (
+                                    navigation_tracking if phase == "navigate_to" else None
+                                ),
                                 "goal_distance_m": float(
                                     np.linalg.norm(data.qpos[:2] - fixture.GOAL)
                                 ),
@@ -356,6 +391,7 @@ def run(
             while data.time < 2 and not terminated:
                 step(navigation_tools.hold_command(data.qpos[:3], yaw(data), anchor, anchor_yaw))
             while calls < max_calls and data.time < max_seconds and not terminated:
+                policy.goal_progress = evaluator.progress(float(data.time), data.qpos[:2])
                 renderer.update_scene(data, camera="clear_robot_camera")
                 buffer = io.BytesIO()
                 Image.fromarray(renderer.render()).save(buffer, format="PNG")
@@ -373,17 +409,19 @@ def run(
                     camera_xyz_m=data.cam_xpos[cid].tolist(),
                     camera_rotation_matrix=data.cam_xmat[cid].tolist(),
                     behavior_feedback=observer.observation(),
-                    geometry=[
-                        Geometry(
-                            object_id=model.geom(g).name,
-                            center_m=data.geom_xpos[g].tolist(),
-                            size_m=(2 * model.geom_size[g]).tolist(),
-                            rotation_matrix=data.geom_xmat[g].tolist(),
-                        )
-                        for g in sorted(world)
-                    ],
+                    geometry=current_geometry(),
                 )
                 write(root / f"observation_{calls:03}.json", obs.model_dump())
+                write(
+                    root / f"goal_context_{calls:03}.json",
+                    {
+                        "observation_version": calls,
+                        "task_contract": contract,
+                        "navigation_completion": nav_contract,
+                        "goal_progress": policy.goal_progress,
+                        "execution_feedback": policy_feedback(policy.memory, obs.yaw_rad),
+                    },
+                )
                 (root / f"camera_{calls:03}.png").write_bytes(png)
                 anchor, anchor_yaw = data.qpos[:3].copy(), yaw(data)
                 began = time.monotonic()
@@ -550,6 +588,7 @@ def run(
                     feedback["terminal_reason"] = reason if terminated else None
                     feedback["actual_base_xyz_m"] = data.qpos[:3].tolist()
                     feedback["simulation_time_s"] = float(data.time)
+                    feedback["goal_progress"] = evaluator.progress(float(data.time), data.qpos[:2])
                     if not feedback.get("success", False):
                         observer.emit(
                             "skill_interrupted"
@@ -578,37 +617,128 @@ def run(
                     continue
                 phase = action.action
                 tool_result = {"status": "executed"}
-                path = []
+                follower = None
+                navigation_tracking = None
                 if action.action in {"plan_path", "navigate_to"}:
-                    current = obs.model_copy(update={"base_xyz_m": data.qpos[:3].tolist()})
+                    # Inference advances physics. Refresh geometry too: a pushed
+                    # object may have moved since the model's camera observation.
+                    def refresh_navigation():
+                        return obs.model_copy(
+                            update={
+                                "base_xyz_m": data.qpos[:3].tolist(),
+                                "yaw_rad": yaw(data),
+                                "simulation_time_s": float(data.time),
+                                "geometry": current_geometry(),
+                            }
+                        )
+
+                    current = refresh_navigation()
+                    write(
+                        root / f"navigation_context_{obs.state_version:03}.json",
+                        {
+                            "simulation_time_s": current.simulation_time_s,
+                            "base_xyz_m": current.base_xyz_m,
+                            "yaw_rad": current.yaw_rad,
+                            "geometry": [g.model_dump() for g in current.geometry],
+                            "follower": navigation_tools.follower_contract(),
+                        },
+                    )
                     tool_result = navigation_tools.plan(current, action.target_xy_m)
-                    path = [point[:] for point in tool_result["path_xy_m"]]
+                    if action.action == "navigate_to":
+                        follower = navigation_tools.NavigationSession(
+                            current, action.target_xy_m, tool_result
+                        )
                     write(root / f"tool_{obs.state_version:03}.json", tool_result)
                 if action.action == "request_skill":
                     tool_result = {"status": "unsupported", "request": action.skill_request}
                 anchor, anchor_yaw = data.qpos[:3].copy(), yaw(data)
+                action_start = float(data.time)
+                motion = MotionFeedback(action, data.time, data.qpos[:3], yaw(data), fixture.GOAL)
                 end = min(float(data.time) + action.duration_s, max_seconds)
+                completion = (
+                    NavigationCompletion(
+                        navigation_completion, action.target_xy_m, contract["goal"]
+                    )
+                    if action.action == "navigate_to"
+                    else None
+                )
                 if action.action in {"plan_path", "request_skill"} or (
-                    action.action == "navigate_to" and not path
+                    action.action == "navigate_to" and not follower.can_execute
                 ):
                     end = min(float(data.time) + 0.2, max_seconds)
                 while data.time < end and not terminated:
                     if action.action == "move":
                         command = [action.vx_mps, action.vy_mps, action.yaw_rate_rps]
-                    elif action.action == "navigate_to" and path:
-                        if math.dist(data.qpos[:2], action.target_xy_m) < 0.12:
+                    elif action.action == "navigate_to" and follower.can_execute:
+                        mode = completion.mode(float(data.time), data.qpos[:3], yaw(data))
+                        if mode == "return":
                             tool_result["status"] = "target_reached"
                             break
-                        command = navigation_tools.follow_command(data.qpos[:3], yaw(data), path)
+                        if mode == "hold":
+                            phase = "navigate_goal_hold"
+                            command = navigation_tools.hold_command(
+                                data.qpos[:3], yaw(data), completion.anchor, completion.anchor_yaw
+                            )
+                        else:
+                            phase = "navigate_to"
+                            command = follower.command(
+                                data.qpos[:3], yaw(data), float(data.time), refresh_navigation
+                            )
+                            navigation_tracking = follower.last
+                            if command is None:
+                                tool_result["status"] = follower.stop_reason
+                                break  # return tool feedback, never spend the slice issuing zero
                     else:
                         command = navigation_tools.hold_command(
                             data.qpos[:3], yaw(data), anchor, anchor_yaw
                         )
                     step(command)
+                    if valid:
+                        motion.observe(
+                            data.qpos[:3],
+                            command,
+                            navigation_tracking if phase == "navigate_to" else None,
+                        )
                 if not valid:
                     break
-                if action.action == "navigate_to" and tool_result["status"] == "path_found":
-                    tool_result["status"] = "execution_slice_ended"
+                if (
+                    follower is not None
+                    and follower.can_execute
+                    and follower.stop_reason is None
+                    and tool_result["status"] != "target_reached"
+                ):
+                    tool_result["status"] = (
+                        "goal_reached" if reason == "GOAL_REACHED" else "execution_slice_ended"
+                    )
+                if completion is not None:
+                    tool_result["navigation_completion"] = {
+                        "profile": navigation_completion,
+                        "action_start_s": action_start,
+                        "requested_duration_s": action.duration_s,
+                        "action_deadline_s": end,
+                        **completion.audit(dt),
+                    }
+                    last_navigation = {
+                        "observation_version": obs.state_version,
+                        "status": tool_result["status"],
+                        **tool_result["navigation_completion"],
+                    }
+                tool_result["motion"] = motion.result(data.time, data.qpos[:3], yaw(data))
+                if follower is not None:
+                    tool_result["navigation_tracking"] = follower.last
+                    tool_result["navigation_recovery"] = follower.audit(
+                        data.time, reason if terminated else None
+                    )
+                    write(
+                        root / f"navigation_trace_{obs.state_version:03}.json",
+                        {
+                            "target_xy_m": action.target_xy_m,
+                            "action_deadline_s": end,
+                            "events": follower.events,
+                            "summary": tool_result["navigation_recovery"],
+                        },
+                    )
+                tool_result["goal_progress"] = evaluator.progress(float(data.time), data.qpos[:2])
                 tool_result["actual_base_xyz_m"] = data.qpos[:3].tolist()
                 tool_result["terminal_reason"] = reason if terminated else None
                 tool_result["simulation_time_s"] = float(data.time)
@@ -697,11 +827,34 @@ def run(
     # GIF disabled by request; do not buffer frames or delay result saving for conversion.
     # if frames:
     #     imageio.mimsave(root / "rollout.gif", frames, duration=1000 / 12, loop=0)
+    progress = evaluator.progress(float(data.time), data.qpos[:2])
+    terminal_diagnostics = {
+        "schema_version": "goal-termination-diagnostics-v1",
+        "phase": phase,
+        "reason": reason,
+        "navigation_completion": nav_contract,
+        "goal_progress": progress,
+        "policy_calls_remaining": max(0, max_calls - calls),
+        "simulation_seconds_remaining": (
+            None if requested_max_seconds is None else max(0.0, max_seconds - float(data.time))
+        ),
+        "budget_ended_during_goal_dwell": (
+            valid
+            and reason in {"BUDGET_EXHAUSTED", "SIMULATION_BUDGET", "INFERENCE_SIM_BUDGET"}
+            and progress["inside_goal_region"] is True
+            and not evaluator.goal_reached
+            and progress["current_dwell_s"] > 0
+        ),
+        "last_navigation": last_navigation,
+        "claim": "Observed terminal state only; no counterfactual PASS or failure cause",
+    }
+    write(root / "terminal_diagnostics.json", terminal_diagnostics)
     result = {
         **evaluator.result(reason, valid),
         "robot_condition_sha256": condition_sha256,
         "scene_revision": fixture.identity(config),
         "events_summary": observer.summary() if observer is not None else {},
+        "goal_progress": progress,
         "reason": reason,
         "error_diagnostic": error_diagnostic,
         "calls_attempted": calls,
@@ -724,6 +877,10 @@ def run(
 <p>Task outcome: {result["task_outcome"]}; profile: {evaluation_profile}; reason: {reason}.</p>
 <p>{result["note"]}</p>
 <p>Goal distance: {result["goal_distance_m"]} m; calls: {calls}/{max_calls}.</p>
+<p>Goal dwell: {progress["current_dwell_s"]} / {progress["required_dwell_s"]} s.
+Navigation completion: {navigation_completion}. No post-budget grace.</p>
+<details><summary>Terminal diagnostics (not a counterfactual verdict)</summary>
+<pre>{escape(json.dumps(terminal_diagnostics, indent=2))}</pre></details>
 <details><summary>Behavior events (not task verdicts)</summary>
 <pre>{escape(json.dumps(result["events_summary"], indent=2))}</pre></details>
 <video controls width='960' src='rollout.mp4'></video><p>MP4 recording only; GIF disabled.</p>

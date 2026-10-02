@@ -28,6 +28,11 @@ def main(argv=None):
             "--model", help="explicit version comparison override; otherwise retain source model"
         )
         sub.add_argument("--groot-root", type=Path)
+        sub.add_argument(
+            "--navigation-completion",
+            choices=["position_only_v1", "goal_dwell_v1"],
+            help="explicit executor comparison override; default retains each baseline contract",
+        )
         if name == "init":
             sub.add_argument("--output-dir", type=Path)
     for name in ("run", "status", "report", "resolve"):
@@ -45,7 +50,11 @@ def main(argv=None):
         if args.operation in {"plan", "init"}:
             paths = memory_paths(args.memory) if args.memory else args.run
             plan = replay_plan(
-                paths, repeats=args.repeats, model=args.model, groot_root=args.groot_root
+                paths,
+                repeats=args.repeats,
+                model=args.model,
+                groot_root=args.groot_root,
+                navigation_completion=args.navigation_completion,
             )
             display = {k: v for k, v in plan.items() if k != "cases"}
             display["cases"] = [

@@ -568,6 +568,27 @@ def test_command_preserves_unlimited_time_and_separates_watchdog(tmp_path):
     assert "--max-seconds" not in args
     assert "--run-dir" in args and "--live" in args and "--enable-push" in args
     assert "5000" not in str(args)
+    assert args[args.index("--navigation-completion") + 1] == "position_only_v1"
+
+
+def test_campaign_rejects_wrong_navigation_contract(tmp_path):
+    from robot_vlm.navigation_completion import completion_contract
+
+    engine, robot, _ = setup(tmp_path)
+
+    def wrong(cfg, directory, params):
+        receipt = robot(cfg, directory, params)
+        path = directory / "rollout"
+        p = read_json(path / "protocol.json")
+        p["navigation_completion"] = completion_contract("goal_dwell_v1")
+        json_write(path / "protocol.json", p)
+        _rebind(path)
+        return receipt
+
+    engine.runner = wrong
+    result = engine.run(max_new_attempts=1)
+    assert result["excluded"] == 1
+    assert not sum(arm["valid"] for arm in result["arms"])
 
 
 @pytest.mark.parametrize("watchdog", [False, True])

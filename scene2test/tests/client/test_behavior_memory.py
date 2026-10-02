@@ -179,6 +179,143 @@ def test_intervals_exact_contacts_sampled_phases_and_inference_window(tmp_path):
     assert record.task_outcome == "FAIL" and record.attribution is None
 
 
+def test_goal_dwell_feedback_survives_afs_summary_without_changing_outcome(tmp_path):
+    from failure_client.methods.search_evidence import compact_evidence
+
+    root = fixture(tmp_path / "run")
+    rows = [json.loads(s) for s in (root / "decisions.jsonl").read_text().splitlines()]
+    feedback = rows[-1]["result"]
+    feedback["goal_progress"] = {
+        "distance_m": 0.119,
+        "current_dwell_s": 0.775,
+        "remaining_dwell_s": 0.225,
+    }
+    json_write(root / "skill_000.json", feedback)
+    (root / "decisions.jsonl").write_text("".join(json.dumps(r) + "\n" for r in rows))
+    _rebind(root)
+    record = load(root)
+    analysis = analyze_behavior(record)
+    compact = compact_evidence({"record": record.model_dump(), "behavior": analysis.model_dump()})
+    row = compact["action_timeline"][0]
+    assert row["goal_distance_m"] == 0.119
+    assert row["goal_current_dwell_s"] == 0.775
+    assert row["goal_remaining_dwell_s"] == 0.225
+    assert row["evidence"] and analysis.components["actions"] == "AVAILABLE"
+    assert record.task_outcome == "FAIL" and record.attribution is None
+
+
+@pytest.mark.parametrize("bad", [None, "time", "nan", "command", "fraction", "count"])
+def test_motion_feedback_retained_for_afs_or_rejected_without_relabeling(tmp_path, bad):
+    from failure_client.methods.search_evidence import compact_evidence
+
+    root = fixture(tmp_path / "run")
+    rows = [json.loads(s) for s in (root / "decisions.jsonl").read_text().splitlines()]
+    # Synthetic telemetry extends this fixture's push action, so stationary is null.
+    # The actual first implementation records non-push tools; no new push data is claimed.
+    motion = {
+        "version": "action-motion-v1",
+        "start_simulation_s": 3.0,
+        "end_simulation_s": 6.0,
+        "elapsed_s": 3.0,
+        "net_translation_m": 0.01,
+        "goal_distance_reduction_m": -0.01,
+        "commanded_stationary": None,
+        "yaw_limit_fraction": 0.9,
+        "blocked_connector_samples": 4,
+    }
+    if bad == "time":
+        motion["start_simulation_s"] = 1.0
+    elif bad == "nan":
+        motion["net_translation_m"] = "NaN"  # malformed metric in otherwise valid JSON
+    elif bad == "command":
+        motion["commanded_stationary"] = True
+    elif bad == "fraction":
+        motion["yaw_limit_fraction"] = 2.0
+    elif bad == "count":
+        motion["blocked_connector_samples"] = -1
+    rows[-1]["result"]["motion"] = motion
+    json_write(root / "skill_000.json", rows[-1]["result"])
+    (root / "decisions.jsonl").write_text("".join(json.dumps(r) + "\n" for r in rows))
+    _rebind(root)
+    record = load(root)
+    analysis = analyze_behavior(record)
+    assert record.task_outcome == "FAIL" and record.attribution is None
+    if bad:
+        assert analysis.components["actions"] == "INVALID"
+    else:
+        compact = compact_evidence(
+            {"record": record.model_dump(), "behavior": analysis.model_dump()}
+        )
+        row = compact["action_timeline"][0]
+        assert row["execution_start_s"] == 3.0
+        assert row["motion_elapsed_s"] == 3.0
+        assert row["motion_goal_distance_reduction_m"] == -0.01
+        assert row["motion_yaw_limit_fraction"] == 0.9
+        assert row["motion_commanded_stationary"] is None
+        assert row["motion_blocked_connector_samples"] == 4
+
+
+def test_legacy_action_has_no_invented_motion_measurements(tmp_path):
+    from failure_client.methods.search_evidence import compact_evidence
+
+    record = load(fixture(tmp_path / "run"))
+    analysis = analyze_behavior(record)
+    compact = compact_evidence({"record": record.model_dump(), "behavior": analysis.model_dump()})
+    row = compact["action_timeline"][0]
+    assert row["execution_start_s"] is None
+    assert not any(key.startswith("motion_") for key in row)
+    assert not any(key.startswith("navigation_") for key in row)
+
+
+@pytest.mark.parametrize("bad", [None, "count", "time", "events", "version", "action"])
+def test_navigation_recovery_evidence_survives_afs_without_relabeling(tmp_path, bad):
+    from failure_client.methods.search_evidence import compact_evidence
+
+    root = fixture(tmp_path / "run", outcome="PASS")
+    rows = [json.loads(s) for s in (root / "decisions.jsonl").read_text().splitlines()]
+    rows[1]["action"] = {"action": "navigate_to", "target_xy_m": [7.0, 0.0], "duration_s": 4.0}
+    recovery = {
+        "version": "clearance-recovery-v3",
+        "ended_at_simulation_s": 6.0,
+        "recovery_count": 1,
+        "replan_count": 0,
+        "status": "recovery_no_progress",
+        "events": [
+            {"event": "blocked_connector", "simulation_time_s": 3.0},
+            {"event": "recovery_started", "simulation_time_s": 3.0},
+            {"event": "tool_return", "simulation_time_s": 4.0, "reason": "recovery_no_progress"},
+        ],
+    }
+    if bad == "count":
+        recovery["replan_count"] = True
+    elif bad == "time":
+        recovery["events"][-1]["simulation_time_s"] = 6.1
+    elif bad == "events":
+        recovery["recovery_count"] = 2
+    elif bad == "version":
+        recovery["version"] = "unknown"
+    elif bad == "action":
+        rows[1]["action"]["action"] = "observe"
+    rows[-1]["result"]["navigation_recovery"] = recovery
+    json_write(root / "skill_000.json", rows[-1]["result"])
+    (root / "decisions.jsonl").write_text("".join(json.dumps(r) + "\n" for r in rows))
+    _rebind(root)
+    record = load(root)
+    analysis = analyze_behavior(record)
+    assert record.task_outcome == "PASS" and record.attribution is None
+    if bad:
+        assert analysis.components["actions"] == "INVALID"
+    else:
+        assert analysis.components["actions"] == "AVAILABLE"
+        compact = compact_evidence(
+            {"record": record.model_dump(), "behavior": analysis.model_dump()}
+        )
+        row = compact["action_timeline"][0]
+        assert row["navigation_recovery_count"] == 1 and row["navigation_replan_count"] == 0
+        assert row["navigation_recovery_status"] == "recovery_no_progress"
+        assert "4.000000s tool_return (recovery_no_progress)" in row["navigation_recovery_timeline"]
+
+
 def test_events_do_not_turn_a_goal_pass_into_failure(tmp_path):
     record = load(fixture(tmp_path / "pass", outcome="PASS"))
     memory = build_failure_memory([record])

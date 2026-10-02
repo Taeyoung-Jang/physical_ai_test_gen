@@ -24,6 +24,7 @@ from failure_client.evaluation.behavior_measures import analyze_behavior, interv
 from failure_client.evaluation.goal_run_reader import _hash_file, _rows, read_json
 from failure_client.evaluation.research_records import EpisodeRecord
 from failure_client.reporting.discovery_metrics import deduplicate_records
+from robot_vlm.navigation_completion import profile_from_protocol
 from robot_vlm.scene_config import validate_scene
 from robot_vlm.task_outcome import digest
 
@@ -214,6 +215,7 @@ def build_failure_memory(records):
                     "push_enabled": protocol.get("push_enabled"),
                     "policy_origin": record.policy_origin,
                     "evaluation_profile": protocol["evaluation_profile"],
+                    "navigation_completion": profile_from_protocol(protocol),
                     "limits": (
                         "No replay was executed; external model responses need not be deterministic"
                     ),
@@ -349,6 +351,8 @@ def _reproduction_note(case):
         "{GROOT_ROOT}",
         "--evaluation-profile",
         "goal_outcome_v1",
+        "--navigation-completion",
+        spec["navigation_completion"],
         "--max-calls",
         str(spec["max_calls"]),
         "--response-timeout",

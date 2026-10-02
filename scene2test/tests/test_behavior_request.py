@@ -28,6 +28,7 @@ def test_hash_is_supplied_and_constrained():
         ("standalone_suite", "behavior-afs-context-v2"),
         ("campaign_single_endpoint", "behavior-campaign-feedback-v1"),
         ("campaign_hypothesis_endpoint", "behavior-campaign-feedback-v1"),
+        ("anchored_contrast_endpoint", "behavior-campaign-feedback-v1"),
     ],
 )
 def test_evidence_references_constrained_for_every_request_policy(policy, version):

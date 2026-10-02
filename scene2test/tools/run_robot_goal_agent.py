@@ -14,6 +14,12 @@ def main():
     p.add_argument("--model", default="gpt-6-astra")
     p.add_argument("--max-calls", type=int, default=10)
     p.add_argument(
+        "--navigation-completion",
+        choices=["position_only_v1", "goal_dwell_v1"],
+        default="position_only_v1",
+        help="opt-in goal_dwell_v1 holds final arrival within the requested action duration",
+    )
+    p.add_argument(
         "--evaluation-profile",
         choices=["goal_outcome_v1", "legacy_guarded"],
         default="goal_outcome_v1",
@@ -50,6 +56,11 @@ def main():
     )
     if not 1 <= args.max_calls <= 20:
         p.error("max-calls 1..20 required")
+    if (
+        args.evaluation_profile != "goal_outcome_v1"
+        and args.navigation_completion != "position_only_v1"
+    ):
+        p.error("goal dwell navigation requires goal_outcome_v1")
     from robot_vlm.budget import simulation_limit
 
     try:
@@ -67,6 +78,13 @@ def main():
         f"TIMING: HTTP read={timing.read_s}s; runner deadline={timing.deadline_s}s; "
         f"simulation={simulation_label} (includes inference waits); automatic retries=0",
         flush=True,
+    )
+    print(f"NAVIGATION_COMPLETION={args.navigation_completion}; post-budget grace=0s", flush=True)
+    from robot_vlm.execution_feedback import VERSION as motion_version
+    from robot_vlm.navigation_tools import FOLLOWER_VERSION
+
+    print(
+        f"NAVIGATION_FOLLOWER={FOLLOWER_VERSION}; EXECUTION_FEEDBACK={motion_version}", flush=True
     )
     if args.live and not os.getenv("OPENAI_API_KEY"):
         p.error("set OPENAI_API_KEY locally; do not put it in command arguments")
@@ -98,6 +116,7 @@ def main():
             response_timeout=timing.read_s,
             scene_config=config.model_dump(),
             evaluation_profile=args.evaluation_profile,
+            navigation_completion=args.navigation_completion,
         )
     except Exception as exc:
         write(

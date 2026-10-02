@@ -11,19 +11,26 @@ from html import escape
 from pathlib import Path
 
 from clear_path.scene_space import axes_for_schema
-from failure_client.archive.regression_cases import _scene_parameters, build_failure_memory
+from failure_client.archive.regression_cases import (
+    _scene_parameters,
+    build_failure_memory,
+    export_failure_memory,
+)
 from failure_client.evaluation.behavior_measures import verify_episode_files
 from failure_client.evaluation.failure_taxonomy import classify_record
 from failure_client.evaluation.goal_run_reader import _hash_file, read_goal_run, read_json
 from failure_client.evaluation.research_records import EpisodeRecord, RunInput
 from failure_client.storage.research_store import ResearchStore
+from robot_vlm.navigation_completion import profile_from_protocol
 from robot_vlm.task_outcome import digest, task_contract
 
+from .afs_contrast import MODE as CONTRAST_MODE
+from .afs_contrast import verify_condition
 from .local_goal_adapter import LocalGoalRunner, atomic_json
 from .research_protocol import PROJECT, CampaignConfig, RobotSettings, environment_fingerprint
 
 
-def replay_plan(paths, *, repeats=2, model=None, groot_root=None):
+def replay_plan(paths, *, repeats=2, model=None, groot_root=None, navigation_completion=None):
     if type(repeats) is not int or not 1 <= repeats <= 10:
         raise ValueError("repeats must be 1..10; exclusions consume attempts")
     if not paths or len(paths) > 32:
@@ -45,6 +52,11 @@ def replay_plan(paths, *, repeats=2, model=None, groot_root=None):
             max_seconds=protocol["max_simulation_s"],
             response_timeout=float(protocol["http_read_timeout_s"]),
             enable_push=protocol["push_enabled"],
+            navigation_completion=(
+                profile_from_protocol(protocol)
+                if navigation_completion is None
+                else navigation_completion
+            ),
             **({"groot_root": str(Path(groot_root).resolve())} if groot_root else {}),
         )
         if case["task_contract"] != task_contract([7.0, 0.0], robot.max_calls, robot.max_seconds):
@@ -78,7 +90,7 @@ def replay_plan(paths, *, repeats=2, model=None, groot_root=None):
         "limits": [
             "Goal, scene, task budget, push availability and timeout are fixed per baseline",
             "Current code is a versioned comparison, not exact old-code replay; "
-            "model override is explicit",
+            "model and navigation-completion overrides are explicit",
             "Remote model/physics repeats need not be deterministic; "
             "changes are observations, not significance",
             "Excluded attempts consume budget; no replacement or automatic paid retry",
@@ -111,6 +123,9 @@ def regression_fingerprint(config):
     value["source_hashes"]["tools/run_behavior_regression.py"] = _hash_file(
         PROJECT / "tools/run_behavior_regression.py"
     )
+    value["source_hashes"]["tools/run_afs_contrast.py"] = _hash_file(
+        PROJECT / "tools/run_afs_contrast.py"
+    )
     return value
 
 
@@ -141,6 +156,8 @@ class BehaviorRegression:
         for case in plan["cases"]:
             cfg = CampaignConfig.model_validate(case["target_config"])
             env = fingerprint(cfg)
+            if plan.get("mode") == CONTRAST_MODE:
+                verify_condition(plan, env)
             environments[case["case_id"]] = env
             for record, protocol in zip(case["baselines"], case["baseline_protocols"]):
                 if record["policy_origin"] != execution_origin:
@@ -151,6 +168,10 @@ class BehaviorRegression:
                 ):
                     raise ValueError("baseline robot resources changed or unavailable")
         root = Path(root).resolve()
+        for row in plan.get("history", []):
+            source = Path(row["source"]["path"]).resolve()
+            if root.is_relative_to(source) or source.is_relative_to(root):
+                raise ValueError("output must be separate from all history archives")
         for case in plan["cases"]:
             for row in case["baselines"]:
                 source = Path(row["source"]["path"]).resolve()
@@ -194,6 +215,9 @@ class BehaviorRegression:
                 raise RuntimeError(
                     "frozen code/resources/dependencies changed; initialize a new suite"
                 )
+        if self.state["lock"]["plan"].get("mode") == CONTRAST_MODE:
+            for row in self.state["lock"]["plan"]["history"]:
+                verify_episode_files(EpisodeRecord.model_validate(row))
         for attempt in self.state["attempts"]:
             if attempt.get("episode", {}).get("status") == "VALID":
                 verify_episode_files(EpisodeRecord.model_validate(attempt["episode"]))
@@ -225,12 +249,15 @@ class BehaviorRegression:
         receipt = (
             read_json(directory / "receipt.json") if (directory / "receipt.json").exists() else None
         )
-        record = read_goal_run(RunInput(path=str(directory / "rollout"), stage="repeat"))
+        case = self._case(attempt)
+        stage = "repeat"
+        if case.get("contrast_role") == "single_axis_probe":
+            stage = self.state["lock"]["plan"]["selection"].get("stage", "discovery")
+        record = read_goal_run(RunInput(path=str(directory / "rollout"), stage=stage))
         if receipt is None and record.status not in {"VALID", "INCONCLUSIVE"}:
             raise RuntimeError(
                 "ambiguous pending attempt; inspect then explicitly exclude, never resend"
             )
-        case = self._case(attempt)
         cfg = CampaignConfig.model_validate(case["target_config"])
         error = "external_interrupt" if receipt and receipt.get("interrupted") else None
         comparison = {}
@@ -249,6 +276,7 @@ class BehaviorRegression:
             }
             if (
                 any(p.get(k) != v for k, v in expected.items())
+                or profile_from_protocol(p) != cfg.robot.navigation_completion
                 or params != case["scene"]
                 or geometry != case["geometry_id"]
             ):
@@ -260,6 +288,16 @@ class BehaviorRegression:
                 error = "duplicate_core_evidence"
             elif any(record.evidence_id == r["evidence_id"] for r in case["baselines"]):
                 error = "baseline_copy_is_not_a_replay"
+            elif (
+                case.get("expected_condition_id") is not None
+                and record.condition_id != case["expected_condition_id"]
+            ):
+                error = "contrast_condition_or_returned_model_drift"
+            elif any(
+                record.evidence_id == r["evidence_id"]
+                for r in self.state["lock"]["plan"].get("history", [])
+            ):
+                error = "history_copy_is_not_new_evidence"
             else:
                 previous = self.state["target_conditions"].setdefault(
                     case["case_id"], record.condition_id
@@ -421,6 +459,24 @@ class BehaviorRegression:
                     "comparison": label,
                 }
             )
+            if plan.get("mode") == CONTRAST_MODE:
+                rows[-1].update(
+                    contrast_role=case["contrast_role"],
+                    changed_axis=case["changed_axis"],
+                    reference_value=plan["reference_scene"][plan["axis"]],
+                    tested_value=case["scene"][plan["axis"]],
+                    comparison=(
+                        "PENDING"
+                        if not complete
+                        else "INCONCLUSIVE"
+                        if excluded
+                        else "MIXED"
+                        if passed and failed
+                        else "OBSERVED_PASS"
+                        if passed
+                        else "OBSERVED_FAIL"
+                    ),
+                )
         records = [a["episode"] for a in self.state["attempts"] if "episode" in a]
         costs = {}
         for field in ("observed_input_tokens", "observed_output_tokens", "robot_api_calls"):
@@ -436,12 +492,39 @@ class BehaviorRegression:
         costs["attempts_without_usage_audit"] = len(self.state["attempts"]) - len(audits)
         return {
             "suite": str(self.root),
+            "mode": plan["mode"],
             "status": self.state["status"],
             "pending": self.state["pending"],
             "max_attempts": plan["max_attempts"],
             "robot_api_call_upper_bound": plan["robot_api_call_upper_bound"],
             "cases": rows,
             "new_execution_costs": costs,
+            **(
+                {"selection_costs": plan.get("selection_costs", [])}
+                if plan.get("mode") == CONTRAST_MODE
+                else {}
+            ),
+            **(
+                {
+                    "inherited_history_costs": {
+                        field: {
+                            "observed": sum(
+                                r[field] for r in plan["history"] if r.get(field) is not None
+                            )
+                            if any(r.get(field) is not None for r in plan["history"])
+                            else None,
+                            "missing_episodes": sum(r.get(field) is None for r in plan["history"]),
+                        }
+                        for field in (
+                            "observed_input_tokens",
+                            "observed_output_tokens",
+                            "robot_api_calls",
+                        )
+                    }
+                }
+                if plan.get("mode") == CONTRAST_MODE
+                else {}
+            ),
             "limits": plan["limits"],
         }
 
@@ -470,6 +553,26 @@ class BehaviorRegression:
                 '<!doctype html><meta charset="utf-8"><title>Behavior regression</title>'
                 "<h1>버전별 목표 회귀 결과</h1>"
             )
+            if self.state["lock"]["plan"].get("mode") == CONTRAST_MODE:
+                page = (
+                    '<!doctype html><meta charset="utf-8"><title>AFS scene contrasts</title>'
+                    "<h1>단일 축 장면 대조</h1>"
+                )
+                page += (
+                    "<p>외부 성공·실패 근거를 사용하는 개발 탐색입니다. "
+                    "AFS/Random 비교나 로봇 성능 퇴행 판정이 아닙니다.</p>"
+                )
+                records = [
+                    EpisodeRecord.model_validate(r) for r in self.state["lock"]["plan"]["history"]
+                ]
+                records.extend(
+                    EpisodeRecord.model_validate(a["episode"])
+                    for a in self.state["attempts"]
+                    if "episode" in a
+                )
+                memory = build_failure_memory(records)
+                export_failure_memory(output / "behavior", memory)
+                page += '<p><a href="behavior/index.html">행동 근거·반복 결과·관측 경계</a></p>'
             page += (
                 "<p>반복 관측이며 통계적 성능 개선/퇴행의 확정은 아닙니다. "
                 "원본 평가와 AFS 예산은 변경하지 않습니다.</p>"
@@ -490,7 +593,9 @@ class BehaviorRegression:
                 output / "manifest.json",
                 {
                     "artifacts": [
-                        {"path": p.name, "sha256": _hash_file(p)} for p in sorted(output.iterdir())
+                        {"path": str(p.relative_to(output)), "sha256": _hash_file(p)}
+                        for p in sorted(output.rglob("*"))
+                        if p.is_file()
                     ]
                 },
             )

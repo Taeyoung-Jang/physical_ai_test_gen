@@ -14,7 +14,9 @@ from failure_client.experiments.behavior_regression import (
     memory_paths,
     replay_plan,
 )
-from failure_client.experiments.local_goal_adapter import atomic_json
+from failure_client.experiments.local_goal_adapter import atomic_json, command
+from failure_client.experiments.research_protocol import CampaignConfig
+from robot_vlm.navigation_completion import completion_contract
 
 from .test_behavior_memory import _rebind
 from .test_corridor_campaign import archive
@@ -45,6 +47,7 @@ class Robot:
             model="wrong" if self.wrong_model else config.robot.model,
             http_read_timeout_s=config.robot.response_timeout,
             source_hashes={"runner": "e" * 64},
+            navigation_completion=completion_contract(config.robot.navigation_completion),
         )
         json_write(root / "protocol.json", protocol)
         rows = [json.loads(s) for s in (root / "decisions.jsonl").read_text().splitlines()]
@@ -81,6 +84,53 @@ def test_plan_is_readonly_bounded_and_deduplicated(tmp_path):
     for value in (0, 11, True):
         with pytest.raises(ValueError):
             replay_plan([root], repeats=value)
+
+
+def test_navigation_override_is_explicit_frozen_and_preserves_baseline(tmp_path):
+    source = archive(tmp_path / "baseline", outcome="FAIL")
+    manifest = (source / "manifest.json").read_bytes()
+    plan = replay_plan([source], repeats=1, navigation_completion="goal_dwell_v1")
+    case = plan["cases"][0]
+    cfg = CampaignConfig.model_validate(case["target_config"])
+    assert cfg.robot.navigation_completion == "goal_dwell_v1"
+    assert cfg.robot.max_calls == 10 and cfg.robot.max_seconds is None
+    args = command(cfg, tmp_path / "scene", tmp_path / "out")
+    assert args[args.index("--navigation-completion") + 1] == "goal_dwell_v1"
+    suite_root = BehaviorRegression.create(
+        tmp_path / "suite", plan, fingerprint=fingerprint, execution_origin="mock"
+    )
+    suite = BehaviorRegression(suite_root, runner=Robot(("PASS",)), fingerprint=fingerprint)
+    suite.run(live=True)
+    assert suite.summary()["status"] == "COMPLETE"
+    diff = suite.state["attempts"][0]["protocol_differences"]["navigation_completion"]
+    assert diff["baseline"] is None and diff["current"]["profile"] == "goal_dwell_v1"
+    assert (source / "manifest.json").read_bytes() == manifest
+
+
+def test_replay_inherits_navigation_profile_and_rejects_wrong_execution(tmp_path):
+    source = archive(tmp_path / "baseline")
+    protocol = read_json(source / "protocol.json")
+    protocol["navigation_completion"] = completion_contract("goal_dwell_v1")
+    json_write(source / "protocol.json", protocol)
+    _rebind(source)
+    plan = replay_plan([source], repeats=1)
+    assert plan["cases"][0]["target_config"]["robot"]["navigation_completion"] == "goal_dwell_v1"
+    root = BehaviorRegression.create(
+        tmp_path / "suite", plan, fingerprint=fingerprint, execution_origin="mock"
+    )
+
+    def wrong(cfg, directory, params):
+        receipt = Robot(("PASS",))(cfg, directory, params)
+        p = read_json(directory / "rollout/protocol.json")
+        p["navigation_completion"] = completion_contract("position_only_v1")
+        json_write(directory / "rollout/protocol.json", p)
+        _rebind(directory / "rollout")
+        return receipt
+
+    suite = BehaviorRegression(root, runner=wrong, fingerprint=fingerprint)
+    suite.run(live=True)
+    assert suite.summary()["cases"][0]["excluded"] == 1
+    assert suite.state["attempts"][0]["episode"]["task_outcome"] == "INCONCLUSIVE"
 
 
 @pytest.mark.parametrize(

@@ -25,6 +25,7 @@ class RobotSettings(StrictRecord):
     max_seconds: float | None = Field(default=None, ge=3)
     response_timeout: float = Field(default=300.0, ge=1, le=300)
     enable_push: bool = True
+    navigation_completion: Literal["position_only_v1", "goal_dwell_v1"] = "position_only_v1"
     watchdog_wall_s: float | None = Field(default=None, gt=0)
 
 
@@ -84,6 +85,7 @@ class CampaignConfig(StrictRecord):
             "history_policy": "AFS arm's own seed only; no external warm history",
             "robot_repeat_seed": "not configurable in current runner; no determinism claim",
             "inference_time": "counts toward simulation; no default simulation time cap",
+            "navigation_completion": self.robot.navigation_completion,
             "robot_api_call_upper_bound": (
                 len(self.seeds) * 2 * self.max_attempts_per_arm * self.robot.max_calls
             ),

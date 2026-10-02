@@ -8,6 +8,26 @@ from . import behavior as b
 from . import provider
 
 SELECTION_POLICIES = {
+    "anchored_contrast_endpoint": (
+        "behavior-campaign-feedback-v1",
+        """Selection policy: anchored-contrast-endpoint-v1.
+This is operator-seeded DEVELOPMENT search with disclosed external history, not
+an AFS/Random benchmark. Propose one to four single-axis hypothesis ranges.
+The host selects at most ONE unobserved endpoint across those ranges, keeping
+all other values at latest.parameters. It ranks eligible endpoints by declared
+search_selection.mode_priority, your space order, then minimum normalized distance
+to observed scenes (ties choose low first). Duplicate and nearby repeated-failure
+cooldown filtering apply. No eligible endpoint is an error, not a Random fallback.
+The host prepares that probe plus one repeat of its anchor as a fixed two-attempt
+suite; it does not execute both endpoints. Robot execution requires separate approval.
+Before requesting you, mixed outcomes take priority for a one-attempt repeat;
+otherwise an observed single-axis PASS/FAIL bracket supplies a midpoint plus anchor
+repeat without an LLM call. No automatic exploration slot or indefinite loop exists.
+Behavior timelines and patterns are evidence, not causes or failure families.
+Seek success-side and alternative-mechanism probes instead of escalating one failure.
+All-FAIL evidence is not a boundary. Do not change or prescribe robot behavior.
+""",
+    ),
     "campaign_hypothesis_endpoint": (
         "behavior-campaign-feedback-v1",
         """Selection policy: campaign-hypothesis-endpoint-v2.
@@ -74,7 +94,10 @@ def request(
     model,
     *,
     selection_policy: Literal[
-        "standalone_suite", "campaign_single_endpoint", "campaign_hypothesis_endpoint"
+        "standalone_suite",
+        "campaign_single_endpoint",
+        "campaign_hypothesis_endpoint",
+        "anchored_contrast_endpoint",
     ] = "standalone_suite",
 ):
     """Bind both evidence and the caller's actual candidate-selection instructions."""
@@ -86,9 +109,7 @@ def request(
     expected = b.digest(ctx)
     schema = b.Proposal.model_json_schema()
     schema["$defs"]["Space"]["properties"]["axis"]["enum"] = list(b.context_axes(ctx))
-    schema["$defs"]["Space"]["properties"]["evidence_refs"]["items"]["enum"] = (
-        b.evidence_ids(ctx)
-    )
+    schema["$defs"]["Space"]["properties"]["evidence_refs"]["items"]["enum"] = b.evidence_ids(ctx)
     schema["properties"]["context_sha256"]["enum"] = [expected]
     body = provider.request_body({"context_sha256": expected, "context": ctx}, schema)
     body.update(

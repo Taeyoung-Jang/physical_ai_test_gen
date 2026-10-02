@@ -86,3 +86,29 @@
 - 2026-09-29: [로봇·AFS 기본 출력 토큰 상한 제거·요청/프로토콜/회귀 검증](2026-09-29_remove_default_output_token_caps.md)
 
 - 2026-09-29: [17축 Luna AFS 6+6 완료·관측 Gain 20%·근접 도달 FAIL과 체류시간 감사](2026-09-29_obstacle_afs_completed_result.md)
+
+- 2026-10-02: [최종 이동 체류 처리 옵션·AFS 진행 근거·고정 예산 회귀 계획](2026-10-02_goal_navigation_completion.md)
+
+- 2026-10-02: [새 도착 옵션 실험의 이동 정체·0속도 명령 반복·체류 미검증 분석](2026-10-02_goal_dwell_live_result.md)
+
+- 2026-10-02: [경로점 선회 수정·수치 명령 피드백·AFS 측정 근거 연결](2026-10-02_navigation_tracking_feedback.md)
+
+- 2026-10-02: [새 추종기 실제 전진·횡이동 확인과 발자국 여유 복구 한계](2026-10-02_navigation_followup_live_result.md)
+
+- 2026-10-02: [경로 여유 추가·제한된 바깥 복구와 재계획·AFS 근거 전달](2026-10-02_navigation_clearance_recovery.md)
+
+- 2026-10-02: [새 경로 추종기의 Luna와 CUDA 목표 PASS·5회 호출·복구 미사용 확인](2026-10-02_navigation_v3_live_pass.md)
+
+- 2026-10-02: [동일 조건 재실행 PASS·6회 호출 이유·두 성공의 회귀 기준선 확인](2026-10-02_navigation_v3_repeat_pass.md)
+
+- 2026-10-02: [성공 기준의 AFS 단일 축 대조·후속 경계와 LLM 선택·고정 예산 실행 준비](2026-10-02_anchored_contrasts.md)
+
+- 2026-10-02: [AFS 폭 대조 기준 장면의 세 번째 PASS·긴 응답과 출력 비용 검토](2026-10-02_anchored_contrast_control_pass.md)
+
+- 2026-10-02: [AFS 통로 폭 3.6m 유효 PASS·6회 이동·누적 사용량 구분](2026-10-02_anchored_contrast_width36_pass.md)
+
+- 2026-10-02: [AFS 통로 폭 3.2m API 응답 중단·중간 지점 접근·미확정 경계와 비용](2026-10-02_anchored_contrast_width32_timeout.md)
+
+- 2026-10-02: [폭 대조 실험 중단 결정·AFS 기준 장면과 환경 축 선택 확장 제안](2026-10-02_afs_next_development_plan.md)
+
+- 2026-10-02: [전체 연구 개발 계획 리마인드·P0–P4 현황·다음 우선순위 미확정](2026-10-02_project_plan_reminder.md)

@@ -55,7 +55,14 @@ def setup_loop(monkeypatch, scenario):
             self.counter += 1
             self.data.time = round(self.data.time + 0.05, 8)
             t = self.data.time
-            if scenario == "numerical" and t > 2:
+            if scenario.startswith("recovery_"):
+                self.data.qpos[:3] = [3.205, 0, 0.74]  # frozen shallow .395m box clearance
+            elif scenario.startswith("nav_") and t >= 2.05:
+                if scenario == "nav_leave" and 3.0 <= t < 3.3:
+                    self.data.qpos[:3] = [6.6, 0, 0.74]
+                elif scenario != "nav_never_arrive":
+                    self.data.qpos[:3] = [6.8 if t < 2.8 else 6.9, 0, 0.74]
+            elif scenario == "numerical" and t > 2:
                 self.data.qpos[0] = float("nan")
             elif scenario == "fall_recover" and 2 < t < 2.4:
                 self.data.qpos[2] = 0.3
@@ -163,6 +170,22 @@ def setup_loop(monkeypatch, scenario):
                 yaw_rate_rps=0.0,
                 duration_s=2.0,
             )
+            if scenario.startswith("nav_"):
+                value.update(
+                    action="navigate_to",
+                    target_xy_m=[6.9, 0.0] if scenario == "nav_waypoint" else [7.0, 0.0],
+                    duration_s=0.85 if scenario == "nav_short" else 3.0,
+                )
+                if scenario == "nav_stop":
+                    value.update(action="stop", target_xy_m=None)
+            if scenario.startswith("recovery_") and obs.state_version == 0:
+                value.update(
+                    action="plan_path" if scenario == "recovery_query" else "navigate_to",
+                    target_xy_m=[7.0, 0.0],
+                    duration_s=3.0,
+                )
+            if scenario in {"move_zero", "move_lateral"}:
+                value.update(action="move", vy_mps=0.1 if scenario == "move_lateral" else 0.0)
             if scenario.startswith("push_") and obs.state_version == 0:
                 value.update(
                     action="push_object",
@@ -174,6 +197,231 @@ def setup_loop(monkeypatch, scenario):
             return GoalAction(**value), {"origin": "mock"}
 
     return Script()
+
+
+@pytest.mark.parametrize("scenario,expected_vy", [("move_zero", 0.0), ("move_lateral", 0.1)])
+def test_numeric_move_feedback_reaches_next_policy_without_rewrite_or_extra_call(
+    monkeypatch, tmp_path, scenario, expected_vy
+):
+    policy = setup_loop(monkeypatch, scenario)
+    result = runner.run(tmp_path, tmp_path, policy, max_calls=2)
+    assert (result["task_outcome"], result["reason"]) == ("FAIL", "BUDGET_EXHAUSTED")
+    assert result["calls_attempted"] == 2
+    rows = [json.loads(s) for s in (tmp_path / "states.jsonl").read_text().splitlines()]
+    assert all(
+        r["command"] == pytest.approx([0, expected_vy, 0]) for r in rows if r["phase"] == "move"
+    )
+    context = json.loads((tmp_path / "goal_context_001.json").read_text())
+    feedback = context["execution_feedback"]
+    assert feedback["recent_consecutive_zero_move_commands"] == (1 if expected_vy == 0 else 0)
+    assert feedback["last_motion"]["elapsed_s"] == 2
+    assert feedback["last_motion"]["net_translation_m"] == 0  # scripted fixed pose
+    assert policy.memory[-1]["execution"]["motion"]["raw_move_command_body"] == [0, expected_vy, 0]
+    protocol = json.loads((tmp_path / "protocol.json").read_text())
+    assert protocol["navigation_follower"]["version"] == "clearance-recovery-v3"
+    assert "execution_feedback" in protocol["source_hashes"]
+
+
+@pytest.mark.parametrize(
+    "scenario,profile,max_seconds,outcome,reason",
+    [
+        ("nav_arrive", "position_only_v1", None, "FAIL", "BUDGET_EXHAUSTED"),
+        ("nav_arrive", "goal_dwell_v1", None, "PASS", "GOAL_REACHED"),
+        ("nav_short", "goal_dwell_v1", None, "FAIL", "BUDGET_EXHAUSTED"),
+        ("nav_arrive", "goal_dwell_v1", 3, "FAIL", "SIMULATION_BUDGET"),
+        ("nav_leave", "goal_dwell_v1", None, "PASS", "GOAL_REACHED"),
+        ("nav_waypoint", "goal_dwell_v1", None, "FAIL", "BUDGET_EXHAUSTED"),
+        ("nav_never_arrive", "goal_dwell_v1", None, "FAIL", "BUDGET_EXHAUSTED"),
+        ("nav_no_path", "goal_dwell_v1", None, "FAIL", "BUDGET_EXHAUSTED"),
+        ("nav_stop", "goal_dwell_v1", None, "FAIL", "POLICY_STOP"),
+    ],
+)
+def test_final_navigation_contract_is_bounded_and_goal_independent(
+    monkeypatch, tmp_path, scenario, profile, max_seconds, outcome, reason
+):
+    policy = setup_loop(monkeypatch, scenario)
+
+    # The route/state are scripted to test the actual runner, not G1 capabilities.
+    # This completion-contract fixture deliberately jumps through a box. Stub
+    # following too; real geometry/recovery is exercised in dedicated tests.
+    def scripted_follow(self, base, heading):
+        self.last = {"status": "tracking", "command_body": [0.1, 0, 0]}
+        return [0.1, 0, 0]
+
+    monkeypatch.setattr(runner.navigation_tools.PathFollower, "command", scripted_follow)
+    monkeypatch.setattr(
+        runner.navigation_tools,
+        "plan",
+        lambda obs, target: {
+            "status": "no_path" if scenario == "nav_no_path" else "path_found",
+            "path_xy_m": [] if scenario == "nav_no_path" else [list(target)],
+        },
+    )
+    result = runner.run(
+        tmp_path,
+        tmp_path,
+        policy,
+        max_calls=1,
+        max_seconds=max_seconds,
+        navigation_completion=profile,
+    )
+    assert (result["task_outcome"], result["reason"]) == (outcome, reason), result
+    assert result["calls_attempted"] == 1
+    diagnostic = json.loads((tmp_path / "terminal_diagnostics.json").read_text())
+    assert diagnostic["policy_calls_remaining"] == 0
+    assert diagnostic["goal_progress"] == result["goal_progress"]
+    assert diagnostic["navigation_completion"]["post_budget_grace_s"] == 0
+    if diagnostic["last_navigation"]:
+        assert result["duration_s"] <= diagnostic["last_navigation"]["action_deadline_s"] + 1e-8
+    if scenario == "nav_never_arrive":
+        rows = [json.loads(s) for s in (tmp_path / "states.jsonl").read_text().splitlines()]
+        samples = [r for r in rows if r["phase"] == "navigate_to"]
+        assert samples and all(r["navigation_tracking"] is not None for r in samples)
+        assert policy.memory[-1]["execution"]["motion"]["samples"] > 0
+    protocol = json.loads((tmp_path / "protocol.json").read_text())
+    assert protocol["navigation_completion"]["profile"] == profile
+    assert "navigation_completion" in protocol["source_hashes"]
+    if scenario == "nav_arrive" and profile == "position_only_v1":
+        assert result["goal_progress"]["current_dwell_s"] == pytest.approx(0.75)
+        assert result["duration_s"] == pytest.approx(2.8)
+        assert diagnostic["budget_ended_during_goal_dwell"]
+    if outcome == "PASS":
+        assert result["duration_s"] == pytest.approx(4.3 if scenario == "nav_leave" else 3.05)
+        assert result["goal_progress"]["current_dwell_s"] == pytest.approx(1.0)
+        assert diagnostic["last_navigation"]["hold_simulation_s"] > 0
+        assert not diagnostic["budget_ended_during_goal_dwell"]
+    if scenario == "nav_waypoint":
+        assert not diagnostic["last_navigation"]["goal_dwell_enabled_for_target"]
+        assert diagnostic["last_navigation"]["hold_simulation_s"] == 0
+    if scenario == "nav_no_path":
+        assert diagnostic["last_navigation"]["status"] == "no_path"
+        assert diagnostic["last_navigation"]["hold_simulation_s"] == 0
+    assert not (tmp_path / "rollout.gif").exists()
+
+
+def test_navigation_profile_rejects_legacy_guard_before_assets(tmp_path):
+    with pytest.raises(ValueError, match="requires goal_outcome_v1"):
+        runner.run(
+            tmp_path,
+            tmp_path,
+            None,
+            navigation_completion="goal_dwell_v1",
+            evaluation_profile="legacy_guarded",
+        )
+    assert not list(tmp_path.iterdir())
+
+
+def test_planner_refreshes_geometry_after_model_observation(monkeypatch, tmp_path):
+    policy = setup_loop(monkeypatch, "nav_never_arrive")
+    original = policy.decide
+
+    def stale_geometry(obs, png):
+        value = original(obs, png)
+        # Simulate an obsolete camera-time geometry snapshot. The real execution
+        # must use current MuJoCo geometry, not these stale coordinates.
+        for geom in obs.geometry:
+            if geom.object_id == "clear_box_geom":
+                geom.center_m[0] = 100.0
+        return value
+
+    policy.decide = stale_geometry
+    planned = []
+
+    def planner(obs, target):
+        planned.append(obs)
+        return {"status": "no_path", "path_xy_m": []}
+
+    monkeypatch.setattr(runner.navigation_tools, "plan", planner)
+    result = runner.run(tmp_path, tmp_path, policy, max_calls=1)
+    assert result["task_outcome"] == "FAIL" and result["calls_attempted"] == 1
+    assert len(planned) == 1
+    geom = next(g for g in planned[0].geometry if g.object_id == "clear_box_geom")
+    assert geom.center_m[0] == pytest.approx(4.0)
+    context = json.loads((tmp_path / "navigation_context_000.json").read_text())
+    assert context["geometry"] == [g.model_dump() for g in planned[0].geometry]
+
+
+@pytest.mark.parametrize(
+    "duration,simulation_cap,expected_status",
+    [
+        (3.0, None, "recovery_no_progress"),
+        (0.35, None, "execution_slice_ended"),
+        (3.0, 3.0, "execution_slice_ended"),
+    ],
+)
+def test_actual_recovery_loop_respects_action_and_episode_budget(
+    monkeypatch, tmp_path, duration, simulation_cap, expected_status
+):
+    from clear_path.contracts import CorridorFixture
+
+    policy = setup_loop(monkeypatch, "recovery_frozen")
+    decide = policy.decide
+
+    def short_action(obs, png):
+        action, raw = decide(obs, png)
+        return action.model_copy(update={"duration_s": duration}), raw
+
+    policy.decide = short_action
+    result = runner.run(
+        tmp_path,
+        tmp_path,
+        policy,
+        max_calls=1,
+        max_seconds=simulation_cap,
+        scene_config=CorridorFixture(corridor_width_m=4).model_dump(),
+        navigation_completion="goal_dwell_v1",
+    )
+    assert result["task_outcome"] == "FAIL" and result["valid_execution"]
+    assert result["calls_attempted"] == 1
+    feedback = policy.memory[0]["execution"]
+    assert feedback["status"] == expected_status
+    assert feedback["navigation_recovery"]["recovery_count"] == 1
+    assert feedback["navigation_recovery"]["replan_count"] == 0
+    assert feedback["motion"]["elapsed_s"] <= min(duration, 1.05) + 1e-8
+    if simulation_cap is not None:
+        assert result["duration_s"] <= simulation_cap
+        assert result["reason"] == "SIMULATION_BUDGET"
+    else:
+        assert result["reason"] == "BUDGET_EXHAUSTED"
+    trace = json.loads((tmp_path / "navigation_trace_000.json").read_text())
+    assert trace["target_xy_m"] == [7, 0] and trace["summary"] == feedback["navigation_recovery"]
+    artifacts = json.loads((tmp_path / "manifest.json").read_text())["artifacts"]
+    assert "navigation_trace_000.json" in {r["path"] for r in artifacts}
+    assert not (tmp_path / "rollout.gif").exists()
+
+
+@pytest.mark.parametrize("scenario", ["recovery_frozen", "recovery_query"])
+def test_recovery_diagnostic_reaches_next_policy_and_query_never_recovers(
+    monkeypatch, tmp_path, scenario
+):
+    from clear_path.contracts import CorridorFixture
+
+    policy = setup_loop(monkeypatch, scenario)
+    captured_inputs = []
+    decide = policy.decide
+
+    def capture_input(obs, png):
+        body = policy.body(obs, png)
+        captured_inputs.append(json.loads(body["input"][0]["content"][0]["text"]))
+        return decide(obs, png)
+
+    policy.decide = capture_input
+    result = runner.run(
+        tmp_path,
+        tmp_path,
+        policy,
+        max_calls=2,
+        scene_config=CorridorFixture(corridor_width_m=4).model_dump(),
+    )
+    assert result["calls_attempted"] == 2 and result["task_outcome"] == "FAIL"
+    feedback = captured_inputs[1]["history"][0]["execution"]
+    if scenario == "recovery_frozen":
+        assert feedback["status"] == "recovery_no_progress"
+        assert feedback["navigation_recovery"]["events"][-1]["reason"] == "recovery_no_progress"
+    else:
+        assert feedback["status"] == "blocked_endpoint"
+        assert "navigation_recovery" not in feedback
+        assert not (tmp_path / "navigation_trace_000.json").exists()
 
 
 @pytest.mark.parametrize(

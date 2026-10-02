@@ -1,5 +1,9 @@
 # 목표 중심 평가와 행동 AFS v2 구현 현황
 
+2026-10-02 추가: [최종 도착 처리와 체류 검증](GOAL_NAVIGATION_COMPLETION.md).
+별도 선택 옵션으로 최종 navigation의 남은 행동 시간에 자세 유지를 수행한다.
+기존 목표 평가·예산·기본 도착 처리와 과거 결과는 유지하며 새 코드/관측 조건으로 기록한다.
+
 2026-09-26. [설계](GOAL_OUTCOME_AFS_DESIGN.md)의 첫 세 단계 중 실행 가능한 핵심을 반영했다.
 대상은 `tools/run_robot_goal_agent.py`와 `tools/run_behavior_afs.py`의 격리된 G1 경로다.
 기존 Panda, velocity-only `run_robot_vlm.py`, navigation 서버의 평가 규칙은 바꾸지 않았다.

@@ -43,6 +43,21 @@ def test_budget_and_profile_change_contract_digest():
     assert digest(c) != digest(task_contract([7.0, 0.0], 10, None, "legacy_guarded"))
 
 
+def test_progress_is_nonmutating_and_nonfinite_is_unknown():
+    e = evaluator()
+    e.observe(2.0, [7.0, 0.0])
+    value = e.progress(2.75, [6.9, 0])
+    assert value["current_dwell_s"] == pytest.approx(0.75)
+    assert value["remaining_dwell_s"] == pytest.approx(0.25)
+    assert not value["goal_reached"]
+    e.progress(50, [7, 0])
+    assert not e.goal_reached and e.reached_since == 2.0
+    value = e.progress(3, [float("nan"), 0])
+    assert value["distance_m"] is None and value["current_dwell_s"] is None
+    assert value["inside_goal_region"] is None and value["remaining_dwell_s"] is None
+    assert e.progress(3, [6, 0])["current_dwell_s"] == 0
+
+
 def test_event_episodes_force_integral_recovery_and_truncation():
     stream = io.StringIO()
     events = BehaviorEvents(stream)

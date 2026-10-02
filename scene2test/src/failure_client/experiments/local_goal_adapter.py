@@ -47,6 +47,8 @@ def command(config, scene, run_dir):
         str(robot.response_timeout),
         "--evaluation-profile",
         "goal_outcome_v1",
+        "--navigation-completion",
+        robot.navigation_completion,
         "--groot-root",
         robot.groot_root,
         "--scene-config",

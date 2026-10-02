@@ -1,5 +1,248 @@
 # Scene2Test workspace memory
 
+## Whole-plan reminder before choosing next work (2026-10-02)
+
+User asked to review the whole plan BEFORE deciding the next task. Anchor selection
+is only a proposed P2 improvement, not the approved next priority or whole roadmap.
+Overall goal: controllable scenes/SceneGraph, fixed robot autonomous execution,
+goal-only evaluation plus behavior evidence, adaptive search, regression assets,
+fair FDR/Gain/diversity evaluation. P0/P1/P2 foundations and pilots exist; P3 scene/
+taxonomy breadth is partial, P4 multi-seed independent validation incomplete.
+Targets remain FDR >=30%, relative Gain >=20%, >=4 of six evidence-backed families.
+Only three operational rules exist, not three proven families or four-of-six
+coverage. The 17-axis goal backend is not the separate maze/terrain generator;
+raw mesh perception, generic SLAM and new robot skills are not prerequisites.
+Keep width runs stopped. Compare AFS selection-quality versus scene/measurement
+scope gaps before selecting implementation; no new feature or paid run authorized
+by this reminder. See project_plan_reminder workhistory for the unified account.
+
+## Width testing stopped and next AFS proposal (2026-10-02)
+
+User explicitly stopped this width experiment and asked what comes next. Do not
+make the 3.2m retry a prerequisite or continue paid runs. Original suite/outcomes/
+costs remain unchanged; no DB closure or status rewrite was performed. Proposed
+next development reuses existing behavior memory/hypothesis selection: explicit
+reviewed-history input for a NEW disclosed development session, validated historical
+anchor selection plus one supported scene axis, selection audit and result links.
+Only comparable VALID outcomes may anchor goal labels/brackets; retain excluded
+history and unknown costs separately, never bypass pending/source checks or inject
+external history into old benchmark arms. Optional interrupted behavior clues need
+a separate validated observation contract, not inferred FAILs. Start offline on
+the current 17-axis backend with robot fixed. This is a proposal/documentation,
+NOT implemented or authorized paid execution. See afs_next_development_plan history.
+
+## Anchored 3.2m width probe timeout review (2026-10-02)
+
+Third user-run attempt has 73 verified artifacts but INCONCLUSIVE/api_timeout:
+robot call 9 sent its request then timed out awaiting HTTP response headers at
+300s (ReadTimeout), not the 330s runner deadline or a simulation/token cap. Eight
+accepted actions preceded it, HTTP 200/no retries; ninth usage unknown. New attempt
+cost is 9 calls/204453 observed input/9019 observed output, PARTIAL 8/9. Aggregate
+missing_attempts=0 does not remove calls_missing_usage_observed=1 or imply zero cost.
+Final-target planning returned no_path three times and one proposed intermediate
+endpoint was blocked. GPT then chose reachable (3,0.95) and (4,0.95) staging targets
+and physically approached the box. Prose considered pushing, but no push executed.
+No recorded fall/non-floor robot contact/tracking connector block/recovery/replan.
+Final distance 3.22686m at 395.235 sim seconds, zero dwell, one call still unused.
+This is interrupted behavior evidence, NOT a 3.2m FAIL or 3.2–3.6m goal bracket;
+static padded no_path is not manipulation impossibility. Local logs cannot identify
+provider/proxy/network root cause. Existing 3 attempts are consumed, pending null;
+same run will not retry, continue-after-exclusion only closes the exhausted budget,
+and next refuses excluded suites. Preserve originals; a separately budgeted same-
+condition recheck is the next candidate. Changed timeout/effort requires a new
+condition/control. Review only: no paid execution, code fix or DB mutation. See
+anchored_contrast_width32_timeout workhistory for detailed actions and evidence.
+
+## Anchored 3.6m width probe review (2026-10-02)
+
+The next user-run probe is VALID/PASS with 56 verified artifacts: 6 navigate_to
+calls, 78.080 simulation seconds, final goal distance 0.11213m, 1s goal-region dwell.
+Goal hold itself lasted 0.095s; not a stationary one-second hold. Compared with the
+4.0m control, config changes only width to 3.6m; protocol differs only in that
+scene config and revision, with the same normalized robot condition. No push,
+recorded fall/non-floor robot contact, blocked connector, recovery or replan.
+Memory now has two scenes: 4.0m PASS 3/FAIL 0, 3.6m PASS 1/FAIL 0; brackets 0.
+This is a success-side observation, not a boundary or Gain. Width can change derived
+object Y coordinates. 3.2m remains pending; READY after max-new-attempts 1 is normal.
+New episode usage is 6 calls/150193 input/2121 output, complete; report 13 calls/
+354867 input/43356 output is cumulative across two new attempts, not this run alone.
+Individual response latency 3.54–9.27s; prior long response did not recur, without
+proving its cause fixed. No paid execution/code fix in review. Next is the frozen
+3.2m probe, not an unbounded run. See anchored_contrast_width36_pass workhistory.
+
+## Anchored width contrast control review (2026-10-02)
+
+User-run first control is VALID/PASS with 62 verified artifacts. Full protocol and
+scene.xml match the prior success: same-condition memory now has PASS 3/FAIL 0,
+duplicates 0, brackets 0. Seven calls (plan_path, then six navigate_to) reached
+0.11530m with 1s goal-region dwell; goal hold itself lasted only 0.060s. No recorded
+fall, non-floor robot/world contact, push, blocked connector, recovery or replan.
+READY is expected after one of three planned attempts; 3.6m/3.2m probes are pending,
+their baseline_pass=2 is inherited reference evidence, not success at those widths.
+One robot API call took 164.68s and 39230 output tokens, about 95% of the new 41235
+output total. HTTP 200/no retry, usage 7/7 complete; no reasoning-token breakdown
+supports assigning an internal cause. Total simulation 235.930s versus 45.005s
+tool execution highlights inference wait, not demonstrated walking degradation.
+Do not alter frozen budgets/model/token defaults to optimize this review. Selection
+costs are empty; this was not an AFS proposal call. Next is the fixed 3.6m probe,
+not more robot development or a Gain claim. No paid run/code fix in this review.
+See anchored_contrast_control_pass workhistory for evidence, costs and limits.
+
+## Anchored AFS development contrasts (2026-10-02)
+
+`run_afs_contrast.py` adds offline plan/init/PNG preview and explicit bounded run
+over the existing durable regression executor. It freezes the successful robot
+condition, changes exactly one scene-config axis, retains a control repeat, verifies
+archived code/resources/runtime before launch and checks full condition_id after it.
+Changed robot conditions, incomplete/infra errors and duplicate archives remain excluded.
+This is disclosed operator-seeded development search, NOT an AFS/Random comparison;
+external history never enters old frozen arms or Gain. Initial width values are operator
+choices, not LLM selections. Width also changes derived object Y coordinates.
+`next` requires a complete exclusion-free batch: mixed outcome repeat first, else
+observed single-axis bracket midpoint, else prepare an evidence-bound LLM request.
+Optional next --live makes at most one Luna AFS call and prepares an anchor+probe pair;
+it never launches a robot or silently substitutes Random. New dedicated selection
+instructions describe this workflow, not campaign strategy slots. Saved responses
+can be revalidated offline; no automatic retry. Each new batch needs explicit run
+authority, excluded attempts consume slots, history is bounded at 32 input archives.
+Reports preserve inherited/new/selection costs separately, P1 memory and MP4 links.
+Memory reproduction commands now retain navigation completion. No GIF, default token
+ceiling, simulation cap or robot-policy changes. See AFS_ANCHORED_CONTRASTS.md and
+anchored_contrasts workhistory. Synthetic tests and real-archive offline preparation
+are not live contrast outcomes; the first live control is reviewed above and
+narrower-width probes remain pending.
+
+## Same-condition v3 repeat PASS review (2026-10-02)
+
+Second reviewed Luna/CUDA v3 run is VALID/PASS with 56 verified artifacts. Full
+protocol JSON, condition/scene IDs and scene.xml match the first PASS. Six calls
+instead of five: GPT selected a 0.2s first navigate_to, then five 10s requests.
+All targets were the final goal, with no blocked connector, recovery, within-action
+replan, push, recorded fall or non-floor robot/world contact. Goal distance 0.11391m,
+1s goal-region dwell, 77.660 simulation seconds, four calls unused. Hold ran 0.070s;
+not one full stationary second. Action execution totals differ by only 0.290s;
+most total-time difference is inference/other waits. Usage observed 6/6 with no gaps.
+P1 and compact AFS evidence are available. Read-only failure memory groups the two
+independent archives as one success_control, PASS 2/FAIL 0, duplicates 0, brackets 0.
+This supports a development baseline, not a population success rate or AFS superiority.
+Freeze this robot condition and return to budget-reviewed AFS single-axis contrasts;
+do not inject external success into frozen arm/seed histories or pair prior-code
+FAILs as same-condition brackets. Recovery remains live-unvalidated but is not an
+AFS prerequisite. No code change or paid run in this review; see repeat-pass history.
+
+## First v3 navigation live PASS review (2026-10-02)
+
+User-run Luna/CUDA clearance-recovery-v3 has verified VALID/PASS with 49 matching
+manifest artifacts. Five navigate_to actions to the unchanged final goal used five
+of ten calls, ending at 0.11807m with 1s goal-region dwell in 66.815 simulation seconds.
+No raw moves/pushes, blocked connectors, recovery attempts, within-action replans,
+recorded falls or non-floor robot/world contacts. Recovery branch remains live-unvalidated.
+GT geometry/planner condition unchanged. Goal hold ran only 0.015s: most dwell accrued
+while approaching inside the 0.25m goal region, not one second of stationary holding.
+Same scene/XML/resources/model/task/budget as prior v2 FAIL; runner/navigation source
+changed, so this is not a same-condition boundary, causal estimate or AFS superiority.
+P1 components and all five compact AFS action summaries are available; usage observed
+5/5 with no conflicts/missing. Treat as new-condition development success control;
+preserve historical outcomes and frozen campaigns. Next: budget-reviewed repeat and
+AFS single-axis contrasts under the fixed new robot condition, not more unneeded
+robot capability work. No paid execution or implementation changes in this review.
+See navigation_v3_live_pass workhistory for evidence and limits.
+
+## Bounded navigation clearance recovery update (2026-10-02)
+
+clearance-recovery-v3 supersedes v2 in new goal runs. Planner retains hard radius
+0.40m plus 0.10m tracking padding and conservative half-cell-diagonal grid inflation.
+Exact endpoints have bounded 0.35m hard-clear connectors; no whole-route radius fallback.
+Blocked following refreshes GT geometry. Shallow margin infringement (at most 0.06m)
+may trigger an outward, continuously checked escape: <=0.10m/s, <=0.35m, <=3s,
+abort on worsening/blocked connector or 1s without 5mm progress. Geometry refreshes
+during recovery; unchanged GPT target is replanned at most twice per action. Guards
+return tool feedback early, not a goal FAIL. No teleports, extra calls, task-budget
+extensions, plan_path movement or evaluator-selected actions. Extra conservatism
+can reject narrow routes; no_path/no_tracking_clearance is not impossibility proof.
+navigation_trace artifacts record geometry/routes/events; compact recovery counts,
+status and times reach robot memory and validated P1/AFS summaries. Old missing
+metrics stay absent; malformed optional telemetry never relabels goal outcomes.
+Stored three first-blocked poses recover in ideal kinematics across three headings;
+CPU/scripted runner guards and budget tests are separate from real G1/Luna success.
+No new paid rollout performed. Preserve old archives and frozen campaigns; new robot
+condition requires a new comparison. See ROBOT_NAVIGATION_FEEDBACK.md and the
+navigation_clearance_recovery workhistory. AFS remains the project priority.
+
+## First live lookahead follower review (2026-10-02)
+
+A user-run Luna/CUDA episode is verified VALID/FAIL with 62 hashed artifacts and
+10 complete calls. Final goal distance improved observationally from 6.27m to 2.18m;
+all-zero raw moves fell from five to one. Same scene/XML/assets/goal, changed robot
+code/prompt: not a controlled effect estimate or an added frozen-campaign sample.
+Four navigate_to paths existed, with real forward/lateral motion, but the new
+connector check stalled when base-to-box AABB distance dipped below radius 0.40m.
+First logged violations were only 0.2–4.3mm; planned path-point extra margin was
+as low as 1.42cm. Inside that margin, even outward segments fail at their starting
+point. One navigation spent 8.25/10s issuing zero, with further base drift; raw GPT
+moves recovered partially. No non-floor robot contacts, falls or pushes occurred.
+Goal hold never activated. New motion feedback and AFS action summaries are verified
+on this archive; taxonomy detected no supported family. Do not call this collision,
+heavy-box push failure, general success, or overwrite historical outcomes/metrics.
+Next narrow candidates: gait-tracking clearance and robot-local clearance recovery,
+not just more calls or removing collision checks. This turn was read-only analysis
+plus workhistory/memory; no new paid run or execution-code fix. See followup live-result history.
+
+## Robot following and numeric action feedback update (2026-10-02)
+
+Goal runner now uses clearance-lookahead-v2: local monotone path progress, up to
+0.35m path lookahead, distance-proportional bounded forward/lateral tracking and
+continuous radius-0.40m segment/AABB checks. A blocked connector returns zero with
+diagnostics, not a goal FAIL or automatic replan/call. Uses action-start GT geometry;
+not full-body safety, dynamic avoidance or guaranteed gait tracking. Legacy follower
+helper remains for offline comparison only. Goal, completion option and budgets unchanged.
+action-motion-v1 measures non-push tool execution separately from inference waits,
+reports actual displacement/goal progress/command/yaw saturation, and prominently
+feeds the latest measurement and bounded zero-command streak to both robot policies.
+Numeric move commands, including zero, remain unmodified; no prose-to-motion coercion.
+State logs include sampled target/index/heading diagnostics. New protocols hash/declare
+the follower and feedback module; prompts are versioned. Optional validated measurements
+survive P1/AFS action summaries; missing old data is not invented, outcomes/taxonomy unchanged.
+CPU/ideal-kinematic and mock-loop regressions are separate from live G1/Luna evidence.
+The first live validation is reviewed above; robust goal success remains unverified.
+Preserve old archives/frozen campaigns and create
+new comparisons; never resume them with changed code. See docs/ROBOT_NAVIGATION_FEEDBACK.md
+inside scene2test. User remains focused on AFS; this is a narrow robot-internal follow-up.
+
+## First live goal dwell option review (2026-10-02)
+
+A user-run Luna/CUDA single-episode replay is verified VALID/FAIL at the 10-call
+budget, with complete usage and MP4. Scene/XML/assets match the prior near-goal case,
+but robot prompt/context/completion condition changed; it is NOT a same-condition
+repeat or a new AFS/Random comparison. This time final distance was 6.27m and goal
+dwell zero. All three navigation paths existed but following was turn-dominated near
+spawn; then five move actions described lateral motion yet commanded all-zero velocity.
+Recorded state commands agree; local typed parsing permits and preserves nonzero moves.
+No falls, non-floor robot contacts or pushing were recorded. Goal hold never activated,
+so live final-arrival/dwell success remains unverified despite working pipeline/diagnostics.
+Operational taxonomy detected no supported family; do not invent collision/perception
+labels or alter prior outcomes/coverage. Next narrow diagnostics: waypoint-following
+stagnation and robot-side numeric-action feedback, not automatic paid retries or evaluator
+invention of motion. See the goal dwell live-result workhistory. Preserve all evidence.
+
+## Final navigation completion contract update (2026-10-02)
+
+Opt-in `--navigation-completion goal_dwell_v1` adds robot-local pose hold after arrival
+when GPT explicitly targets the final goal coordinate. Hold stays within that action's
+requested duration and the simulation cap; no extra calls, time extension or post-budget
+grace. Drift outside the goal region resets dwell and resumes following. Intermediate
+targets, no-path and stop retain existing behavior; default is position_only_v1.
+GoalEvaluator/task contract remains unchanged. New policy context and hashed protocol
+declare completion behavior and goal progress; default mode is NOT exact old prompt/code
+replay. `terminal_diagnostics.json`, action-end progress and report expose dwell/budget
+interaction without relabeling outcomes. Optional action-end dwell fields survive AFS
+evidence summarization; old missing measurements remain absent, not zero or new taxonomy.
+Campaign/CLI/regression wiring freezes and checks the completion condition. Regression
+inherits source behavior unless explicitly overridden; never resume old frozen suites
+under changed code. CPU/scripted tests and read-only three-case regression planning are
+verified; a first live run is reviewed above, but actual goal-hold validation is pending. Preserve old results. See
+`scene2test/docs/GOAL_NAVIGATION_COMPLETION.md` for bounded next-run commands.
+
 ## Completed obstacle pilot review (2026-09-29)
 
 A user-run Luna/Luna v3 pilot completed 6 valid rollouts per arm, zero exclusions,

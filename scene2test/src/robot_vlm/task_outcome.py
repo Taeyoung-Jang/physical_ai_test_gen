@@ -52,6 +52,29 @@ class GoalEvaluator:
             self.reached_since = None
         return self.goal_reached
 
+    def progress(self, time_s, xy):
+        """Read-only diagnostics, not a second evaluator or a success prediction."""
+        goal = self.contract["goal"]
+        distance = math.dist(xy, goal["target_xy_m"])
+        distance = distance if math.isfinite(distance) else None
+        inside = None if distance is None else distance < goal["radius_m"]
+        dwell = (
+            None
+            if inside is None
+            else max(0.0, time_s - self.reached_since)
+            if inside and self.reached_since is not None
+            else 0.0
+        )
+        return {
+            "distance_m": distance,
+            "radius_m": goal["radius_m"],
+            "inside_goal_region": inside,
+            "required_dwell_s": goal["dwell_s"],
+            "current_dwell_s": dwell,
+            "remaining_dwell_s": None if dwell is None else max(0.0, goal["dwell_s"] - dwell),
+            "goal_reached": self.goal_reached,
+        }
+
     def result(self, reason, valid):
         profile = self.contract["evaluation_profile"]
         if not valid:
