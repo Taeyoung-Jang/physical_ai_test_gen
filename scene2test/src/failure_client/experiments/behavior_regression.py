@@ -477,6 +477,8 @@ class BehaviorRegression:
                         else "OBSERVED_FAIL"
                     ),
                 )
+                if "probe_purpose" in case:
+                    rows[-1]["probe_purpose"] = case["probe_purpose"]
         records = [a["episode"] for a in self.state["attempts"] if "episode" in a]
         costs = {}
         for field in ("observed_input_tokens", "observed_output_tokens", "robot_api_calls"):
@@ -573,6 +575,11 @@ class BehaviorRegression:
                 memory = build_failure_memory(records)
                 export_failure_memory(output / "behavior", memory)
                 page += '<p><a href="behavior/index.html">행동 근거·반복 결과·관측 경계</a></p>'
+                from .afs_paired_contrast import comparison_report
+
+                page += comparison_report(
+                    output, self.state["lock"]["plan"], self.state["attempts"], memory
+                )
             page += (
                 "<p>반복 관측이며 통계적 성능 개선/퇴행의 확정은 아닙니다. "
                 "원본 평가와 AFS 예산은 변경하지 않습니다.</p>"

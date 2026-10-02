@@ -50,6 +50,30 @@ GPT가 중간 목표와 직접 속도 이동으로 접근했으며 상자를 밀
 추가했습니다. 현재 장면에 사람을 넣거나 공식 detector를 등록한 것은 아니므로 규칙 수는 여전히 3개이며
 4/6 발견을 달성한 것은 아닙니다. 목표 PASS를 근접 관측 때문에 FAIL로 바꾸지 않습니다.
 
+## 두 성공 기록으로 AFS 배치 후보 제안하기
+
+빈 목표·부분 점유의 성공 행동을 읽어 Luna가 상자의 측면 위치 두 개를 제안하도록 연결했습니다.
+부분 점유 장면 반복 1회 + 여유 있는 배치 1회 + 좁은 배치 1회이며, 로봇의 행동은 지정하지 않습니다.
+API 오류나 계획기의 no_path를 로봇 실패로 바꾸지 않습니다.
+
+준비된 세션에서 **AFS 요청만 최대 1회** 실행합니다. 로봇은 아직 실행하지 않습니다.
+
+```bash
+cd /workspace/g1_failure/src/physical_ai_test_gen/scene2test
+uv run --no-sync python tools/run_afs_contrast.py select-pair --session /workspace/g1_failure/runtime/afs_contrast/goal_region_lateral_20261002 --live
+```
+
+제안·PNG 미리보기를 확인한 뒤 다음 명령으로 로봇을 한 장면씩 실행합니다.
+총 세 시도, 최대 로봇 API 30회이며 제외도 예산을 소비합니다. 과거 실행 비용은 별도입니다.
+
+```bash
+uv run --no-sync python tools/run_afs_contrast.py run --suite /workspace/g1_failure/runtime/afs_contrast/goal_region_lateral_20261002/suite --live --max-new-attempts 1
+```
+
+다른 환경에서 처음 시작하거나 세션이 없으면 먼저
+[오프라인 준비·전체 실행·오류 처리 안내](scene2test/docs/AFS_PAIRED_GOAL_CONTRASTS.md)를 따르세요.
+이는 개발용 대조이며 기존 AFS/Random 비교 캠페인을 재개하거나 우월성을 측정하지 않습니다.
+
 ## OpenAI API 키 설정 및 AFS 전체 실행 (RunPod / Bash)
 
 현재 LLM 기반 AFS와 로봇 VLM은 **`OPENAI_API_KEY` 환경 변수**를 사용합니다.

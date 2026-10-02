@@ -1,5 +1,29 @@
 # Scene2Test workspace memory
 
+## Reviewed success pair to goal-region AFS proposals (2026-10-02)
+
+User approved behavior-informed control plus relief/challenge lateral probes. New
+prepare-pair/select-pair commands accept 2..8 VALID unmixed v4 success archives,
+same condition and only lateral scene differences; last archive is operator-fixed
+anchor. Both real clear/partial archives passed offline source/assets/runtime checks;
+all 4 and 10 action summaries enter the request. A dedicated strict schema proposes
+two concrete values with evidence IDs, hypotheses and falsification. Restrict this
+initial experiment to positive-side challenge < anchor < relief in [0,1], unobserved
+values only; no_path never rejects a candidate or assigns FAIL. No robot commands.
+SQLite intent/OS lock limits each session to one paid selection request; no resend
+after interruption/error. Saved responses may be revalidated without calls, with
+usage/unknown prior costs preserved. Source/resources/evidence checked before/after.
+Reuse fixed-condition contrast executor: control then relief then challenge, one
+attempt each, <=30 robot calls for these Luna baselines; robot launch separate.
+Reports link hypotheses to full behavior summaries and MP4, never auto-confirm causes.
+Use existing next for mixed repeats/observed midpoints or another separately budgeted
+proposal. External history is development-only, NOT an AFS/Random benchmark. No paid
+API/GPU/robot execution performed in implementation; real candidates/outcomes pending.
+Preserve width stop, old frozen suites/outcomes, no GIF/token/simulation default caps.
+See AFS_PAIRED_GOAL_CONTRASTS.md and goal_region_paired_afs workhistory.
+Offline session is prepared at runtime/afs_contrast/goal_region_lateral_20261002,
+PREPARED/calls_attempted=0, no response or robot suite yet. Related tests: 134 passed.
+
 ## Partial goal occupancy live PASS with direct movement (2026-10-02)
 
 User-run 20261002T143326_488034Z is verified VALID/PASS with 71 matching artifacts.

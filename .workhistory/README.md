@@ -124,3 +124,5 @@
 - 2026-10-02: [목표 부분 점유 한 회 준비·단일 축과 동일 소스 자산 확인·API 키 대기](2026-10-02_goal_region_partial_preparation.md)
 
 - 2026-10-02: [목표 부분 점유 PASS·GPT 중간 목표와 직접 이동 선택·10회 호출과 미확정 경계](2026-10-02_goal_region_partial_live_pass.md)
+
+- 2026-10-02: [두 성공 근거의 AFS 양쪽 배치 제안·1회 요청 잠금·세 장면 고정 예산과 행동 비교](2026-10-02_goal_region_paired_afs.md)

@@ -259,7 +259,8 @@ def write_preview(root, plan):
         atomic_json(root / f"scene_{i:03}.json", case["scene"])
         atomic_json(root / f"graph_{i:03}.json", fixture.graph(scene))
         plot_map(nav, root / f"scene_{i:03}.png", scene)
-        label = f"{case['contrast_role']}: {plan['axis']} = {case['scene'][plan['axis']]}"
+        role = case.get("probe_purpose", case["contrast_role"])
+        label = f"{role}: {plan['axis']} = {case['scene'][plan['axis']]}"
         sections.append(
             f'<h2>{escape(label)}</h2><img src="scene_{i:03}.png" '
             'style="max-width:100%" alt="Static scene preview">'

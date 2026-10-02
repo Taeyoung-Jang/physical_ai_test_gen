@@ -28,6 +28,23 @@ def stamp():
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     subs = parser.add_subparsers(dest="op", required=True)
+    p = subs.add_parser(
+        "prepare-pair", help="offline: reviewed v4 success evidence, one AFS request"
+    )
+    p.add_argument(
+        "--run",
+        type=Path,
+        action="append",
+        required=True,
+        help="2..8 reviewed archives; LAST archive is the fixed anchor",
+    )
+    p.add_argument("--model", default="gpt-6-luna")
+    p.add_argument("--output-dir", type=Path)
+    p = subs.add_parser("select-pair", help="at most one AFS call; prepare 3 scenes, never a robot")
+    p.add_argument("--session", type=Path, required=True)
+    group = p.add_mutually_exclusive_group()
+    group.add_argument("--live", action="store_true")
+    group.add_argument("--response", type=Path, help="validate saved response without API resend")
     for name in ("plan", "init"):
         p = subs.add_parser(name, help="offline: fixed single-axis contrasts")
         p.add_argument("--run", type=Path, action="append", required=True)
@@ -57,6 +74,32 @@ def main(argv=None):
             p.add_argument("--output-dir", type=Path)
     args = parser.parse_args(argv)
     try:
+        if args.op in {"prepare-pair", "select-pair"}:
+            from failure_client.experiments.afs_paired_contrast import PairedSelection
+
+            if args.op == "prepare-pair":
+                root = PairedSelection.prepare(
+                    args.output_dir or RUNTIME / (stamp() + "_paired"), args.run, model=args.model
+                )
+                state, _ = PairedSelection(root).store.load()
+                print(
+                    "PAIRED_PLAN="
+                    + json.dumps(state["lock"]["context"]["search_selection"], ensure_ascii=False)
+                )
+                print(f"AFS_SELECTION={root}; no API or robot launched")
+                print(f"AFS_REQUEST={root / 'request.json'}")
+            else:
+                print(
+                    f"AFS_SELECTION={args.session.resolve()}; at most one AFS call; robot disabled",
+                    flush=True,
+                )
+                target = PairedSelection(args.session).select(
+                    live=args.live, response_path=args.response
+                )
+                print(f"CONTRAST_SUITE={target}; no robot launched")
+                print(f"PREVIEW={target / 'preview/index.html'}")
+                print(f"REPORT={BehaviorRegression(target).report()}")
+            return 0
         if args.op in {"plan", "init"}:
             plan = contrast_plan(args.run, axis=args.axis, values=args.values, repeats=args.repeats)
             display = {
