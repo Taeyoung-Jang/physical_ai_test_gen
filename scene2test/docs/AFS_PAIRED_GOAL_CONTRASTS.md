@@ -16,8 +16,14 @@
 [완화 후보 행동·누적 비용 검토](../../.workhistory/2026-10-02_goal_region_relief_probe_pass.md)를 참조한다.
 [도전 실패와 밀기 수치 오류 검토](../../.workhistory/2026-10-02_goal_region_challenge_fail_review.md)도 기록했다.
 아래는 원래 실험 절차이며 이 완료된 세션에서 `run`을 다시 실행할 필요는 없다.
-2026-10-03에는 20cm 경계의 수치 오류를 수정했다. 수정 후 유료 실행은 아직 하지 않았다.
+2026-10-03에는 20cm 경계의 수치 오류를 수정했다. 이후 사용자의 새 조건 0.5 기준 실행은
+VALID/FAIL이었다. 목표 반경을 잠깐 출입했지만 연속 1초 체류를 채우지 못했고, 밀기 요청은
+없었다. 수정 소스 반영은 확인됐으나 물리 밀기는 미검증이다.
 [수정 및 회귀 기록](../../.workhistory/2026-10-03_push_distance_numeric_fix.md)을 참조한다.
+[새 조건 기준 실패와 완화 대조 제안](../../.workhistory/2026-10-03_postfix_baseline_fail_review.md)도 기록했다.
+이후 새 조건의 완화 0.75는 `20261003T154614_537450Z`에서 VALID/PASS로 완료됐다.
+같은 로봇 조건의 0.5 FAIL–0.75 PASS 관측 구간과 0.625 중간값 후보를 확인했다.
+[새 완화 성공·조건 비교·비용 검토](../../.workhistory/2026-10-03_postfix_relief_pass_review.md)를 참조한다.
 로봇 소스 해시가 바뀌었으므로 아래 옛 suite의 `next`를 현재 코드로 이어가면 안 된다.
 
 ## 입력과 후보 선택
@@ -133,10 +139,32 @@ uv run --no-sync python tools/run_afs_contrast.py next --suite /workspace/g1_fai
 
 ## 거리 검사 수정 후 새 조건 확인
 
-다음은 사용자 승인 후 한 장면씩 실행할 유료 검증 명령이다. 이번 코드 수정 작업에서는 실행하지
-않았다. 원본 장면 설정만 읽고 새 timestamp 폴더에 저장한다. 옛 suite의 DB·결과·예산은 바꾸지
-않으며 그 비교의 추가 표본으로 집계하지 않는다. 먼저 기준 0.5를 확인하고 그 결과를 검토한 뒤
-도전 0.25를 실행한다. 각 실행 최대 로봇 호출 10회, 둘 다 실행하면 최대 20회이고 새 AFS 호출은 없다.
+새 기준 0.5는 `20261003T150653_133405Z`에서 VALID/FAIL, 완화 0.75는
+`20261003T154614_537450Z`에서 VALID/PASS로 완료됐다. 로봇 condition ID가 같고
+상자 측면 배치만 다르다. 0.75는 여섯 번의 최종 목표 navigate_to로 거리 0.117204m와
+연속 목표 체류 1초를 달성했다. 밀기는 실행하지 않았다.
+
+원본을 보존한 오프라인 메모리에서 0.5 FAIL–0.75 PASS 관측 구간과 중간값 0.625를
+확인했다. 다음 권고는 별도 예산의 **0.5 기준 재확인과 0.625 중간값 비교**이며 아직 준비·
+실행하지 않았다. 기존 선택 규칙을 쓰므로 새 LLM 제안 호출 없이 후보를 정할 수 있다.
+한 번씩의 결과는 단조 경계나 원인 증명이 아니다. 옛 동결 suite의 run/next는 재개하지 않는다.
+
+아래는 사용자가 완료한 0.75 실행 명령을 보존한 것이다. 같은 성공을 얻기 위해 반복할
+필요는 없다. 최대 로봇 API 10회, AFS 호출 없음이었다.
+[당시 준비 기록](../../.workhistory/2026-10-03_postfix_relief_preflight.md)과
+[성공 및 비용 검토](../../.workhistory/2026-10-03_postfix_relief_pass_review.md)를 구분해 보존한다.
+
+```bash
+uv run --no-sync python tools/run_robot_goal_agent.py --live --model gpt-6-luna --max-calls 10 --enable-push --response-timeout 300 --evaluation-profile goal_outcome_v1 --navigation-completion goal_dwell_v1 --scene-config /workspace/g1_failure/runtime/afs_contrast/goal_region_lateral_20261002/suite/attempts/attempt_00001/scene_config.json
+```
+
+이하 두 명령은 수정 직후 준비했던 기준/도전 절차를 보존한 것이다. 기준은 이미 실행했고,
+도전은 이번 검토에서 실행하지 않았다. 무조건 성공할 때까지 기준을 재실행하지 않는다.
+
+수정 직후에는 기준 0.5를 검토한 뒤 도전 0.25를 실행하는 순서를 제안했다. 각 명령은 원본
+장면 설정만 읽고 새 timestamp 폴더에 저장하며, 옛 suite의 DB·결과·예산이나 그 비교의 표본 수를
+바꾸지 않는다. 각 실행 최대 로봇 호출 10회, 두 명령 합계 최대 20회이고 새 AFS 호출은 없다.
+현재 후속 제안은 새 조건의 0.5 반복과 0.625 비교이며, 아래 도전 명령은 자동 진행 지시가 아니다.
 
 기준 장면 0.5:
 

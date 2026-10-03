@@ -1,5 +1,83 @@
 # Scene2Test workspace memory
 
+## User requests AFS automation priority over manual numeric trials (2026-10-03)
+
+After questioning repeated number changes/user-run commands, user asks what work
+remains. Code review confirms pilot/research campaign already loops automatically
+with llm/boundary/exploration/repeat and behavior evidence/cooldown; do NOT claim
+all automation or LLM feedback is missing. Recent contrast.next_selection instead
+prioritizes mixed repeat, then midpoint, only then LLM, explaining the local loop.
+Proposed next development: a disclosed reviewed-history development session using
+the NEW-condition .5 FAIL/.75 PASS; reuse existing components for bounded autonomous
+select/generate/run/measure/memory/report, with axis/repeat budgets and transitions
+so local refinement cannot indefinitely crowd out new hypotheses. Initial scope
+existing18 axes; no new robot skills/evaluator weakening or unsupported terrain.
+One key-configured process should start the whole approved budget; valid FAILs
+continue, infrastructure/ambiguous paid calls stop transparently without retries.
+External history/costs remain separate from independent AFS/Random validation.
+.5 repeat/.625 remains optional, NOT a prerequisite for this development priority.
+Later: genuine fourth-family scene/trace/rule support, then frozen multi-seed fair
+FDR/Gain/diversity evaluation. This turn is PLAN/documentation, not implementation
+or new paid-run authorization. Preserve old results/frozen budgets/width stop.
+See 2026-10-03_afs_autonomous_next_plan workhistory.
+
+## Post-fix .75 relief PASS and same-condition bracket reviewed (2026-10-03)
+
+User-run 20261003T154614_537450Z is VALID/PASS/GOAL_REACHED with 56 matching
+artifacts; prior new .5 FAIL's71 reverified. Both condition eb42efe3...; protocol
+differs only in lateral fraction .5 to .75 and scene revision (boxY .7 to1.05).
+Six accepted navigate_to actions ALL target (7,0), all six planner routes found;
+first two request .2s, remaining four10s. No raw move/plan/observe/push, recorded
+fall/non-floor contact/blocked connector/recovery/replan. Final .117204m at488.510s
+with1s goal-region dwell and4 calls left. Explicit goal hold only .035s; most dwell
+accrued approaching, not one stationary second. All6 HTTP200/no retries/complete
+usage:151198 input/97029 output. Calls1/2 take220.084/242.988 wall seconds and
+45120/50267 output (98.3%); internal cause unknown, do not reinstate token caps.
+Tool execution totals36.970 sim seconds; full duration is mostly waits, not walking.
+MP4 fully decodes, no GIF. Read-only P1 two cases, .5 FAIL1 vs .75 PASS1, one
+observed bracket/no exclusions/duplicates; compact summaries10 and6 actions.
+Existing read-only selector chooses .625 midpoint without LLM; selected_plan
+would repeat low anchor .5 plus .625. NO next plan/suite/API/robot created/run.
+Recommend separately budgeted <=20-call pair, not old frozen suite continuation.
+No causal/monotonic boundary, population rate, Gain or physical push validation.
+No code/archive/DB/outcome changes; width stays stopped. See postfix_relief_pass_review
+workhistory; earlier .75 pending notes describe preparation, now superseded.
+
+## Post-fix .75 relief preflight awaiting user-terminal execution (2026-10-03)
+
+User approved one .75 relief episode after the goal reminder. Agent process has no
+OPENAI_API_KEY; no live runner/API/GPU/physics execution or new result/suite/DB was
+started. Do not mine credentials elsewhere. Offline reverified new .5 baseline's
+71 artifacts, 25 archived source hashes, 52 resource hashes and recorded runtime
+versions against current environment. Target old attempt00001 scene differs ONLY
+in lateral fraction .5 to .75; Luna/10 calls/push/goal-only/dwell/HTTP300 stay fixed.
+No extra control, .25 challenge, paid AFS call or automatic retry is authorized by
+this single-trial scope. User-terminal command is in postfix_relief_preflight history.
+New result must retain the new baseline condition eb42efe3... before comparison;
+old .75 PASS is not a new-condition success. No execution-code/source archive or
+frozen-budget changes, no GIF, no width restart. Actual .75 result still pending.
+
+## Post-fix .5 baseline valid FAIL reviewed (2026-10-03)
+
+User-run 20261003T150653_133405Z is VALID/FAIL/BUDGET_EXHAUSTED with 71 verified
+artifacts. Protocol differs from old .5 control only in push_skill/push_alignment
+hashes; current fixed sources match, scene.xml identical. NEW condition eb42efe3...,
+not an old-condition mixed outcome or proof of a fix regression. Ten accepted actions:
+5 navigate, 1 plan, 3 move, 1 observe; NO push. First exact-goal plan blocked, then
+GPT chose (7,-.4) staging and raw moves. Call8 ended inside at .234220m with .080s
+dwell; during call9 inference hold it crossed the boundary. Observe anchored the
+then-current outside pose (.269351m), not the earlier observed pose or final goal.
+Sampled minimum distance .225689m/max dwell .390s; final .256236m and dwell0 at
+320.545s, all10 calls consumed. No recorded fall/non-floor contact/recovery/replan.
+Goal hold never activated; do not add grace, relabel FAIL or claim push validation.
+Luna/CUDA, HTTP200 all10, usage complete322709 input/45037 output. First call157.224s
+and31889 output tokens, not a timeout or proven internal cause. MP4 fully decodes,
+no GIF. Read-only P1 has one observed_failure, no bracket/exclusion/duplicate.
+Recommend separately budgeted NEW-condition .75 relief (old attempt00001 scene)
+before automatically escalating to .25; no paid run authorized/performed by review.
+No execution-code/archive/DB changes; preserve width stop and old frozen suites.
+See 2026-10-03_postfix_baseline_fail_review; earlier post-fix pending notes historical.
+
 ## Push distance numeric endpoints fixed on CPU (2026-10-03)
 
 User authorized code fix. push_skill/preflight and push_alignment/readiness now share

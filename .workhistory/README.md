@@ -136,3 +136,11 @@
 - 2026-10-02: [목표 배치 대조 완료·0.25 유효 FAIL과 관측 구간·밀기 20cm 수치 경계 오류 진단](2026-10-02_goal_region_challenge_fail_review.md)
 
 - 2026-10-03: [밀기 거리 끝점 수치 오류 수정·공통 검사·233개 회귀 통과·기존 결과 보존](2026-10-03_push_distance_numeric_fix.md)
+
+- 2026-10-03: [수정 후 0.5 기준 유효 FAIL·목표 경계 출입과 추론 대기·완화 대조 제안](2026-10-03_postfix_baseline_fail_review.md)
+
+- 2026-10-03: [새 조건 0.75 완화 장면 사전 검증·에이전트 키 부재·단일 실행 명령](2026-10-03_postfix_relief_preflight.md)
+
+- 2026-10-03: [새 조건 0.75 PASS·0.5 FAIL과 단일 축 관측 구간·긴 응답 비용과 0.625 후보](2026-10-03_postfix_relief_pass_review.md)
+
+- 2026-10-03: [수동 단일 축 검증에서 AFS 자동 탐색으로 후속 우선순위 정리](2026-10-03_afs_autonomous_next_plan.md)
