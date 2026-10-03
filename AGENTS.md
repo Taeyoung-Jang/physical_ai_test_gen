@@ -1,5 +1,36 @@
 # Scene2Test workspace memory
 
+## First autonomous AFS live session completed and reviewed (2026-10-03)
+
+User-run runtime/afs_autonomous/20261003T165928_663622Z is COMPLETE:6 VALID attempts,
+PASS5/FAIL1/excluded0/pendingnull,5 Luna AFS requests,52 robot calls/48 executed actions.
+Read-only DB snapshot/lock/report verified;408 new rollout hashes,127 inherited and
+316 report hashes match, plus all proposal files. Same condition eb42efe3... throughout.
+Selections: lateral .75->.625 PASS; X7->7.5 at .625 FAIL; lateral .625->.9 at X7.5 PASS;
+local X midpoint7.25 at .625 PASS; obstacle2 lateral-.7->-1 PASS; obstacle1 sizeY.5->.2 PASS.
+Four axes explored, quotas respected, no repeats. First .625 was LLM-selected, not
+mandatory host midpoint. Offline replay reproduces all contexts and selections.
+Only FAIL ends .241504m inside .25m goal but dwell .27/1s when10calls exhaust; plan1,
+navigate7,move2. Final .65s move plan mentions another final call despite being call10.
+No push/fall/nonfloor contact in any episode; box stationary. Do NOT label mass,
+balance or impossibility failure. Supported taxonomy rules NOT_DETECTED on FAIL;
+other families unsupported. New-only observed brackets X7.25PASS–7.5FAIL at .625 and
+lateral .625FAIL–.9PASS at X7.5; inherited adds .5FAIL–.625PASS at X7. No causal/monotonic
+proof or Gain. All new initial box projections disjoint goal disk; planner inflation
+is a separate contract. Last two proposals eased already-PASS anchors: challenge/
+relief balance and numerical clearance/terminal evidence are proposed AFS improvements.
+Latent RESUME BUG found, NOT affecting completed outcomes: after reconstructing DB,
+proposal00001..4 contexts and parsed request content match, but nested JSON string
+key order differs. _finish_proposal compares raw body at afs_autonomous.py:293 and
+can reject response-saved/pre-validation interruption as 'saved proposal request changed'.
+Recommend narrow canonical semantic comparison + real-order fault tests; NO fix this
+review, no DB mutation/resend/budget change. Preserve original request/context hashes.
+New costs:robot1576963in/158893out,AFS213425in/8092out,complete usage. Attempt3 two long
+HTTP200 responses253.65s/198.22s contribute86804 output (54.63% total robot output).
+No token caps restored. Six MP4 decode, GIF0. Detailed live_review workhistory added;
+no new paid run/code changes/commit/push. Session exhausted; do not tell user to
+manually continue or restart width runs. Live loop works, selection quality still open.
+
 ## Autonomous reviewed-history development AFS implemented (2026-10-03)
 
 User approved the automation plan. New run_afs_autonomous.py plan/init/run/status/report
