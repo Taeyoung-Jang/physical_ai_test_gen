@@ -6,6 +6,250 @@
 랜덤 미로·여러 방 환경, SceneGraph, 이동 지도 생성: [실행 가이드](scene2test/docs/PROCEDURAL_WORLDS.md).
 생성기 자체는 정적 장면을 출력하며, G1 실행 연결은 위 Navigation 가이드를 참조하세요.
 
+## 실패 유형과 장면 범위 점검
+
+현재 goal-agent AFS가 어떤 실패 조건을 생성·측정할 수 있는지 무료 오프라인으로 점검합니다.
+규칙 구현, 장면 제어, 실제 발견을 구분하며 API 키나 GPU는 필요하지 않습니다.
+
+```bash
+cd /workspace/g1_failure/src/physical_ai_test_gen/scene2test
+uv run --no-sync python tools/audit_failure_domain.py
+```
+
+HTML·JSON·CSV는 `/workspace/g1_failure/runtime/failure_domain_audit/<새 실행 시각>/`에 저장됩니다.
+현재 세 규칙이 있다는 것은 세 유형을 발견했다는 뜻이 아니며, 4/6 목표는 아직 미달성입니다.
+[결과 해석과 장면 확장 범위](scene2test/docs/FAILURE_DOMAIN_READINESS.md)를 참조하세요.
+
+## 목표 주변 장면과 18축 AFS 확장
+
+`clear-path-goal-region-v4`는 같은 이동 가능한 상자를 목표 주변에 배치합니다.
+목표 영역이 빈 장면·부분 점유·전체 점유를 생성하고, 기존 17축에 상자 X 위치를 추가했습니다.
+로봇의 최종 목표와 행동 선택은 바꾸지 않습니다. 초기 점유나 정적 경로 없음은 FAIL 판정이 아닙니다.
+
+무료 미리보기와 실제 G1 자산의 CPU 합성 검사(API/주행 없음):
+
+```bash
+cd /workspace/g1_failure/src/physical_ai_test_gen/scene2test
+uv run --no-sync python tools/preview_corridor_scenes.py --preset goal_region --audit-robot --output-root /workspace/g1_failure/runtime/goal_region_previews
+```
+
+새 Luna/Luna 캠페인의 계획만 확인하기:
+
+```bash
+uv run --no-sync python tools/run_afs_pilot.py --config config/behavior_afs_goal_region_luna.json
+```
+
+실제 실행은 별도 `--live`가 필요하며 최대 12회 시도, 로봇 API 120회 + AFS 2회입니다.
+빈 목표 장면 한 회에서 Luna/CUDA PASS를 확인했습니다(4회 호출, 목표 거리 0.116m).
+부분 점유도 같은 조건에서 PASS였습니다(10회 호출, 목표 거리 0.191m).
+GPT가 중간 목표와 직접 속도 이동으로 접근했으며 상자를 밀지는 않았습니다.
+실패 경계·전체 점유·AFS 탐색 성능은 아직 미검증입니다. 기존 동결 캠페인은 재개하지 마세요.
+[장면 설명·단독 실행·AFS 실행 명령](scene2test/docs/GOAL_REGION_AFS.md)에 안내했습니다.
+
+네 번째 유형 후보인 작업자 안전 위험은 [근접 측정 계약과 오프라인 계산기](scene2test/docs/HUMAN_PROXIMITY_CONTRACT.md)까지
+추가했습니다. 현재 장면에 사람을 넣거나 공식 detector를 등록한 것은 아니므로 규칙 수는 여전히 3개이며
+4/6 발견을 달성한 것은 아닙니다. 목표 PASS를 근접 관측 때문에 FAIL로 바꾸지 않습니다.
+
+## 두 성공 기록으로 AFS 배치 후보 제안하기
+
+빈 목표·부분 점유의 성공 행동을 읽어 Luna가 상자의 측면 위치 두 개를 제안하도록 연결했습니다.
+부분 점유 장면 반복 1회 + 여유 있는 배치 1회 + 좁은 배치 1회이며, 로봇의 행동은 지정하지 않습니다.
+API 오류나 계획기의 no_path를 로봇 실패로 바꾸지 않습니다.
+
+준비된 세션에서 **AFS 요청만 최대 1회** 실행합니다. 로봇은 아직 실행하지 않습니다.
+
+```bash
+cd /workspace/g1_failure/src/physical_ai_test_gen/scene2test
+uv run --no-sync python tools/run_afs_contrast.py select-pair --session /workspace/g1_failure/runtime/afs_contrast/goal_region_lateral_20261002 --live
+```
+
+제안·PNG 미리보기를 확인한 뒤 다음 명령으로 로봇을 한 장면씩 실행합니다.
+총 세 시도, 최대 로봇 API 30회이며 제외도 예산을 소비합니다. 과거 실행 비용은 별도입니다.
+
+```bash
+uv run --no-sync python tools/run_afs_contrast.py run --suite /workspace/g1_failure/runtime/afs_contrast/goal_region_lateral_20261002/suite --live --max-new-attempts 1
+```
+
+다른 환경에서 처음 시작하거나 세션이 없으면 먼저
+[오프라인 준비·전체 실행·오류 처리 안내](scene2test/docs/AFS_PAIRED_GOAL_CONTRASTS.md)를 따르세요.
+이는 개발용 대조이며 기존 AFS/Random 비교 캠페인을 재개하거나 우월성을 측정하지 않습니다.
+
+## OpenAI API 키 설정 및 AFS 전체 실행 (RunPod / Bash)
+
+현재 LLM 기반 AFS와 로봇 VLM은 **`OPENAI_API_KEY` 환경 변수**를 사용합니다.
+변수 이름은 `OPENAPI_API_KEY`가 아닙니다. [OpenAI 공식 Quickstart](https://developers.openai.com/api/docs/quickstart)의
+키 생성·환경 변수 설정 방식을 따르며, 아래에서는 키를 명령문에 직접 쓰지 않고 숨김 입력합니다.
+이 절차는 기존 CUDA·MuJoCo·GR00T 및 `uv` 프로젝트 환경이 준비된 RunPod를 기준으로 합니다.
+아래의 기존 Panda/ExtraTrees 설명과는 별도의 G1 LLM 기반 실험 경로입니다.
+
+### 1. 실행할 터미널에서 키 설정
+
+OpenAI 대시보드에서 API 키를 발급받은 뒤, **실험을 실행할 RunPod 터미널**에서 진행하세요.
+각 코드 블록을 순서대로 실행합니다. 실제 키를 README, 설정 파일, Git, 채팅에 붙여 넣지 마세요.
+
+```bash
+cd /workspace/g1_failure/src/physical_ai_test_gen/scene2test
+```
+
+셸 디버그 출력이 켜져 있다면 키 노출을 막기 위해 먼저 끕니다.
+
+```bash
+set +x
+```
+
+아래 명령을 실행한 **후** `OpenAI API key:` 입력란에 키만 붙여 넣고 Enter를 누르세요.
+입력 문자가 화면에 보이지 않는 것이 정상입니다. 키를 포함한 명령문을 쓰지 않으므로
+일반적인 Bash 명령 기록에도 키를 남기지 않습니다.
+
+```bash
+read -r -s -p "OpenAI API key: " OPENAI_API_KEY
+```
+
+그다음 환경 변수로 내보냅니다. AFS 프로세스와 여기서 실행하는 로봇 프로세스가 함께 사용합니다.
+
+```bash
+export OPENAI_API_KEY
+```
+
+키 값을 출력하지 않고 등록 여부만 확인합니다.
+
+```bash
+uv run --no-sync python -c 'import os; print("OPENAI_API_KEY: SET" if os.environ.get("OPENAI_API_KEY", "").strip() else "OPENAI_API_KEY: MISSING")'
+```
+
+`SET`은 환경 변수에 값이 있다는 뜻이지, API 인증·모델 접근·사용 한도까지 검증했다는 뜻은 아닙니다.
+키를 확인하려고 `echo "$OPENAI_API_KEY"`를 실행하지 마세요.
+이 설정은 현재 셸과 그 자식 프로세스에만 적용됩니다. 새 SSH/터미널 세션이나 Pod 재시작 후에는
+다시 설정해야 합니다. 이 실행기는 `.env` 파일을 자동으로 읽지 않습니다.
+
+### 2. Luna 소규모 실험 실행 (비용 확인용)
+
+로봇 VLM과 AFS 모두 `gpt-6-luna`를 쓰는 **새 캠페인**입니다.
+기존 Astra 캠페인의 모델을 바꾸어 재개하지 않습니다.
+AFS·Random 각 3회, 총 시도 최대 6회, 로봇 API 최대 60회 + AFS API 최대 1회입니다.
+각 방법의 초기 2회도 예산에 포함됩니다. 오류로 제외되는 실행이 생기면 6회 유효 완료에
+못 미칠 수 있으며 자동 추가 지출은 하지 않습니다. 호출 수 상한은 금액 상한이 아닙니다.
+
+먼저 계획만 확인합니다. API/GPU 호출이나 캠페인 생성은 없습니다.
+
+```bash
+uv run --no-sync python tools/run_afs_pilot.py --config config/behavior_afs_luna_smoke.json
+```
+
+키를 설정한 같은 터미널에서 실제 실행합니다. 아래 명령은 유료 API와 GPU를 사용합니다.
+
+```bash
+uv run --no-sync python tools/run_afs_pilot.py --live --config config/behavior_afs_luna_smoke.json
+```
+
+이 검사는 Luna 연결·시각 행동·AFS 제안 1회의 연결을 확인하기 위한 것입니다.
+전체 경계/독립 탐색/반복 전략이나 AFS 우월성을 검증하는 규모가 아닙니다.
+결과는 `/workspace/g1_failure/runtime/afs_benchmark/<새 실행 시각>/`에 저장되며
+`AFS_CAMPAIGN`, `REPORT`가 실제 경로를 출력합니다. MP4는 저장하고 GIF는 생성하지 않습니다.
+준비/실행 상태와 후속 확장 계획은 [Luna 실험·장면 확장 계획](scene2test/docs/LUNA_PILOT_AND_SCENARIO_PLAN.md)을 참조하세요.
+
+통로 폭·상자 좌우 배치를 탐색하는 **새 5축 버전**도 추가했습니다.
+[통로 AFS 실행 가이드](scene2test/docs/CORRIDOR_AFS.md)에 개발용 3개 장면,
+Luna 넓은 통로 1회 실행, 별도 6+6 캠페인 명령과 예산을 기록했습니다.
+
+5축 버전의 정적 지도·G1 자산 점검(API/로봇 행동 없음):
+
+```bash
+uv run --no-sync python tools/preview_corridor_scenes.py --audit-robot
+```
+
+다중 장애물 확장: [17축 AFS 실행 가이드](scene2test/docs/OBSTACLE_AFS.md).
+기존 상자에 **고정 장애물 2개**의 위치·크기·높이·회전을 추가했습니다.
+로봇 정책/목표는 유지하며, 미로·점프 기능까지 통합한 것은 아닙니다.
+아래 명령은 PNG/HTML 미리보기와 CPU 자산 검사만 수행합니다(API/GPU 추론 없음).
+
+```bash
+uv run --no-sync python tools/preview_corridor_scenes.py --preset obstacles --audit-robot --output-root /workspace/g1_failure/runtime/obstacle_previews
+```
+
+새 캠페인의 예산만 확인하려면:
+
+```bash
+uv run --no-sync python tools/run_afs_pilot.py --config config/behavior_afs_obstacles_luna.json
+```
+
+유료 실행 명령은 위 가이드에 분리했습니다. 기존 캠페인에 새 코드를 덮어 재개하지 마세요.
+
+2026-10-02 최종 도착 처리 점검: [목표 체류 검증과 실행 명령](scene2test/docs/GOAL_NAVIGATION_COMPLETION.md).
+선택 옵션 `--navigation-completion goal_dwell_v1`은 최종 목표 도착 후 **기존 행동 시간 안에서**
+자세를 유지하며 목표 체류를 확인합니다. 기본값은 기존 position-only 처리이며 목표·호출 예산은 그대로입니다.
+종료 진단과 체류시간 피드백을 추가했고, 기존 근접 실패·성공·간섭 사례의 별도 회귀 계획을 제공합니다.
+새 실행 조건이므로 기존 캠페인을 재개하지 않습니다. 첫 사용자 실행은 유효 FAIL이었고,
+목표에 도착하지 않아 체류 유지의 실제 효과는 아직 검증되지 않았습니다.
+
+2026-10-02 후속: [경로 추종·수치 명령 피드백과 실행 명령](scene2test/docs/ROBOT_NAVIGATION_FEEDBACK.md).
+근접 경로점 선회에 대한 로봇 내부 추종 수정과 실제 이동/0명령 피드백을 추가했습니다.
+현재 `clearance-recovery-v3`는 계획에 10cm 여유와 제한된 바깥 복구·재계획을 추가합니다.
+진전이 없으면 즉시 원인을 GPT에 반환하며 원래 목표·행동 시간·호출 예산을 바꾸지 않습니다.
+새 측정치는 AFS 행동 근거에도 전달합니다. 동일 조건 사용자 Luna/CUDA 실행 2회에서 각각
+5회·6회 이동 호출로 원래 목표 PASS를 확인했습니다. 차단·복구가 필요하지 않았으므로
+복구 자체의 실제 검증이나 일반 성공률을 의미하지는 않습니다. 이 로봇 조건을 고정해
+AFS 대조 탐색을 이어가는 단계입니다. 상세 근거와 실행 명령은 위 문서에 있습니다.
+
+2026-10-02 AFS 후속: [성공 기준 장면의 단일 축 대조와 실행 명령](scene2test/docs/AFS_ANCHORED_CONTRASTS.md).
+동일 로봇 조건에서 통로 폭 4.0m 대조 재실행·3.6m·3.2m, 최대 3 rollout/로봇 API 30회를 준비했습니다.
+초기 값은 운영자 선정이며 LLM 제안으로 표시하지 않습니다. 결과를 읽고 혼합 반복 → 관측 경계 중점
+→ 필요 시 Luna 가설 1회 순으로 다음 계획을 만듭니다. `next`는 로봇을 실행하지 않습니다.
+외부 성공 기록을 쓰는 별도 개발 탐색이며 기존 AFS/Random 캠페인의 표본이나 Gain에 합치지 않습니다.
+
+2026-09-29 출력 토큰 설정 변경: 로봇 VLM/goal-agent/push와 LLM AFS의 기본 요청에서
+`max_output_tokens`를 생략합니다. 기존 2,048/4,096/8,192토큰의 코드 기본 상한은 없습니다.
+API·모델 자체 한도는 여전히 적용되며, 응답 길이·비용이 늘어날 수 있습니다.
+로봇의 10회 호출 예산, 요청 timeout, 추론 강도, 목표 판정은 바꾸지 않았습니다.
+기존 terrain/expanded CLI의 `--max-output-tokens`는 사용자가 명시한 경우에만 적용됩니다.
+변경 전 캠페인을 `--campaign`으로 재개하지 말고 새 캠페인을 준비해야 합니다.
+원본 결과/프로토콜과 실패·제외 기록은 그대로 보존합니다.
+
+2026-09-28 후속: [사용량 감사·근거 기반 유형 측정·회귀 실행 가이드](scene2test/docs/BEHAVIOR_TAXONOMY_AND_REGRESSION.md).
+종료 후 응답 토큰을 포함하고, goal 판정과 분리된 3개 유형 규칙 및 고정 예산의 저장 사례 재실행을 추가했습니다.
+가이드에 무료 오프라인 측정/plan/init과 유료 `run --live` 명령을 구분해 기록했습니다.
+6종 전체 검증이나 4/6 발견을 달성했다는 뜻은 아닙니다. GIF는 계속 생성하지 않습니다.
+
+그림의 경로는 정적 지도 계산이며 실제 로봇 성공 결과가 아닙니다.
+이번 코드 변경 전 동결된 캠페인은 code drift 검사로 재개가 차단되므로 새 캠페인을 사용하세요.
+
+AFS 선택은 이제 `hypothesis-v2`가 기본입니다. 후반 실패·회복 행동을 보존하고,
+실험 목적/가설 순서 기반 선택과 행동 중복 억제, 관측 경계·비용 보고를 추가했습니다.
+[AFS v2 설명과 실행 명령](scene2test/docs/AFS_SEARCH_V2.md)을 참고하세요.
+
+`unknown evidence reference`로 중단된 Luna 통로 파일럿은
+[근거 ID 오류 예방·원본 보존 복구와 다음 실행 명령](scene2test/docs/AFS_EVIDENCE_RECOVERY.md)을
+참고하세요. 복구본은 기존 비용을 계승하는 명시적 보정 실험이며 정식 Gain 비교와 구분합니다.
+로봇 제어·최종 목표·episode 예산은 그대로이며 새 live 성능은 아직 검증하지 않았습니다.
+
+### 3. 기존 Astra 전체 실험 (명시적 config가 없을 때의 기본값)
+
+아래는 **기존 `gpt-6-astra` 설정**입니다. Luna를 원하면 위의 `--config` 명령을 사용하세요.
+
+먼저 계획만 확인합니다. 이 명령은 API/GPU를 호출하거나 캠페인을 생성하지 않습니다.
+
+```bash
+uv run --no-sync python tools/run_afs_pilot.py
+```
+
+전체 실행은 **키를 설정한 같은 터미널**에서 아래 명령으로 시작합니다. 유료 API와 GPU를 사용합니다.
+
+```bash
+uv run --no-sync python tools/run_afs_pilot.py --live
+```
+
+새 캠페인 생성 → 초기 2회 기록 점검 → AFS 8회·Random 8회 유효 실행 → 최종 보고서까지 진행합니다.
+초기 점검도 총 16회 예산에 포함됩니다. 기본 호출 상한은 로봇 API 240회 + AFS API 8회이며,
+실제 호출 수나 요금을 뜻하지 않습니다. 오류가 나면 중단하고 부분 보고서와 재개 명령을 남깁니다.
+결과는 `/workspace/g1_failure/runtime/afs_benchmark/<실행 시각>/`에 저장됩니다.
+예산·중단·재개·영상 위치는 [AFS 캠페인 실행 가이드](scene2test/docs/BEHAVIOR_AFS_CAMPAIGN.md)를 참조하세요.
+
+실험이 끝나고 현재 셸에서 키를 제거하려면 다음을 실행합니다. 키 자체를 폐기하는 명령은 아닙니다.
+
+```bash
+unset OPENAI_API_KEY
+```
+
 ## 현재 프로젝트 범위 (2026-09-06)
 
 G1/MuJoCo Client/Server와 기존 Panda AFS/LAM이 함께 존재합니다. 기존 AFS와 G1의

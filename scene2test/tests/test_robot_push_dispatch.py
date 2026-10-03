@@ -81,3 +81,5 @@ def test_mock_api_push_and_feedback(monkeypatch):
     assert "push_object" in context["capabilities"]
     assert context["history"][-1]["execution"]["status"] == "rejected"
     assert len(requests) == 1
+    assert "max_output_tokens" not in requests[0]
+    assert "max_output_tokens" not in body

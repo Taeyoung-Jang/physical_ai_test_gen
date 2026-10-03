@@ -5,47 +5,81 @@ import json
 
 import numpy as np
 
-from .fixture import BOX_SIZE, BOX_TARGET, GOAL, SPAWN, WALLS
+from .contracts import CorridorFixture, GoalRegionFixture
+from .fixture import BOX_SIZE, BOX_TARGET, GOAL, SPAWN, WALLS, walls
+from .obstacles import static_obstacles
 
 
-def plot_map(nav, path):
+def plot_map(nav, path, config=None):
     import matplotlib
 
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
-    from matplotlib.patches import Rectangle
+    from matplotlib.patches import Circle, Polygon, Rectangle
 
     fig, ax = plt.subplots(figsize=(12, 5))
+    x0, y0 = nav["origin_xy_m"]
+    resolution = nav["resolution_m"]
     ax.imshow(
         nav["blocked"],
         origin="lower",
-        extent=[-0.1, 8.1, -1, 2.7],
+        extent=[
+            x0,
+            x0 + len(nav["blocked"][0]) * resolution,
+            y0,
+            y0 + len(nav["blocked"]) * resolution,
+        ],
         cmap="Greys",
         alpha=0.35,
         vmin=0,
         vmax=1,
     )
-    for a, b, c, d in WALLS.values():
+    for a, b, c, d in (walls(config) if config is not None else WALLS).values():
         ax.add_patch(Rectangle((a, c), b - a, d - c, color="#334155"))
+    for index, row in enumerate(static_obstacles(config)):
+        sx, sy, _ = row["local_size_m"]
+        corners = np.asarray([[-sx, -sy], [sx, -sy], [sx, sy], [-sx, sy]]) / 2
+        rotation = np.asarray(row["rotation_matrix"]).reshape(3, 3)[:2, :2]
+        center = np.asarray(row["center_m"][:2])
+        ax.add_patch(
+            Polygon(
+                corners @ rotation.T + center,
+                color="#8040a6",
+                label="Fixed obstacles (actual footprint)" if index == 0 else None,
+            )
+        )
+        ax.annotate(
+            f"{row['id']}\nh={row['local_size_m'][2]:.2f}m",
+            center,
+            xytext=(0, 10),
+            textcoords="offset points",
+            ha="center",
+            fontsize=7,
+        )
     bx, by = nav["box_xy_m"]
     ax.add_patch(
         Rectangle(
             (bx - 0.4, by - 0.55), BOX_SIZE[0], BOX_SIZE[1], color="#fb923c", label="Movable box"
         )
     )
-    ax.add_patch(
-        Rectangle(
-            (BOX_TARGET[0] - 0.4, BOX_TARGET[1] - 0.55),
-            0.8,
-            1.1,
-            fill=False,
-            edgecolor="green",
-            linestyle="--",
-            label="Proposed box destination",
+    if not isinstance(config, CorridorFixture):
+        ax.add_patch(
+            Rectangle(
+                (BOX_TARGET[0] - 0.4, BOX_TARGET[1] - 0.55),
+                0.8,
+                1.1,
+                fill=False,
+                edgecolor="green",
+                linestyle="--",
+                label="Proposed box destination",
+            )
         )
-    )
     ax.scatter(*SPAWN, color="green", label="Robot start")
     ax.scatter(*GOAL, color="blue", label="Robot goal")
+    if isinstance(config, GoalRegionFixture):
+        ax.add_patch(
+            Circle(GOAL, 0.25, fill=False, color="blue", linewidth=2, label="Goal region (0.25m)")
+        )
     if nav["path_xy_m"]:
         points = np.asarray(nav["path_xy_m"])
         ax.plot(
@@ -62,7 +96,10 @@ def plot_map(nav, path):
         ylabel="World Y (m)",
         aspect="equal",
     )
-    ax.legend(loc="upper left", fontsize=8)
+    if isinstance(config, GoalRegionFixture):
+        ax.legend(loc="upper center", bbox_to_anchor=(0.5, -0.18), ncol=3, fontsize=8)
+    else:
+        ax.legend(loc="upper left", fontsize=8)
     fig.tight_layout()
     fig.savefig(path, dpi=130)
     plt.close(fig)

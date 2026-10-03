@@ -1,0 +1,9 @@
+{
+  "schema_version": "clear-path-goal-region-v4",
+  "corridor_width_m": 4.0,
+  "box_goal_x_m": 7.0,
+  "box_lateral_fraction": 1.0,
+  "box_mass_kg": 2.0,
+  "box_friction": 0.5,
+  "floor_friction": 0.8
+}

@@ -9,6 +9,7 @@ import pytest
 from clear_path import fixture
 from clear_path.contracts import Fixture
 from robot_vlm.goal_policy import GoalAction, GoalPolicy
+from robot_vlm.navigation_completion import completion_contract, profile_from_protocol
 from robot_vlm.navigation_tools import follow_command, hold_command, plan
 from robot_vlm.policy import Geometry, Observation
 
@@ -130,9 +131,43 @@ def test_memory_capabilities_and_model_transport(monkeypatch):
     assert len(context["history"]) == 8 and "plan_path" in context["capabilities"]
     assert "no path planner" not in json.dumps(seen[0])
     assert seen[0]["reasoning"]["effort"] == "high"
+    assert "max_output_tokens" not in seen[0]
     assert "afs" not in context
+    assert context["task_contract"]["evaluation_profile"] == "goal_outcome_v1"
+    assert "No forbidden body/obstacle contacts or falls" not in json.dumps(seen[0])
+    assert "Only numeric vx_mps" in seen[0]["instructions"]
+    assert context["execution_feedback"]["last_motion"] is None
+    assert context["capabilities"]["navigate_to"]["follower"]["version"] == "clearance-recovery-v3"
 
 
 def test_unsupported_skill_can_be_expressed_without_fake_execution():
     a = action(action="request_skill", target_xy_m=None, skill_request="move the box sideways")
     assert a.action == "request_skill"
+
+
+@pytest.mark.parametrize("profile", ["position_only_v1", "goal_dwell_v1"])
+def test_navigation_contract_reaches_both_policies(profile):
+    from robot_vlm.push_policy import PushPolicy
+
+    for cls in (GoalPolicy, PushPolicy):
+        policy = cls()
+        policy.navigation_completion = completion_contract(profile)
+        policy.goal_progress = {"current_dwell_s": 0.75, "remaining_dwell_s": 0.25}
+        ctx = json.loads(
+            policy.body(obs(), b"\x89PNG\r\n\x1a\nmock")["input"][0]["content"][0]["text"]
+        )
+        assert ctx["navigation_completion"] == completion_contract(profile)
+        assert ctx["goal_progress"] == policy.goal_progress
+
+
+def test_navigation_protocol_compatibility_and_validation():
+    assert profile_from_protocol({}) == "position_only_v1"
+    for profile in ("position_only_v1", "goal_dwell_v1"):
+        value = completion_contract(profile)
+        assert profile_from_protocol({"navigation_completion": value}) == profile
+        value["post_budget_grace_s"] = 1
+        with pytest.raises(ValueError):
+            profile_from_protocol({"navigation_completion": value})
+    for value in (None, {}, {"profile": "unknown"}):
+        with pytest.raises(ValueError):
+            profile_from_protocol({"navigation_completion": value})

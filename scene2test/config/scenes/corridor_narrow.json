@@ -1,0 +1,8 @@
+{
+  "schema_version": "clear-path-corridor-v2",
+  "box_mass_kg": 2.0,
+  "box_friction": 0.5,
+  "floor_friction": 0.8,
+  "corridor_width_m": 1.6,
+  "box_lateral_fraction": 0.0
+}

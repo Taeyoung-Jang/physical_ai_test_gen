@@ -111,6 +111,7 @@ def test_mock_transport_image_and_no_retry(monkeypatch):
     def handler(req):
         calls.append(req)
         assert req.url == "https://api.openai.com/v1/responses"
+        assert "max_output_tokens" not in json.loads(req.content)
         assert json.loads(req.content)["input"][0]["content"][1]["type"] == "input_image"
         return httpx.Response(200, json=response())
 

@@ -1,0 +1,24 @@
+{
+  "schema_version": "behavior-afs-campaign-v1",
+  "scene_schema": "clear-path-obstacles-v3",
+  "seeds": [17],
+  "valid_budget_per_seed": 6,
+  "max_attempts_per_arm": 6,
+  "cold_start": 2,
+  "max_proposals_per_seed": 2,
+  "afs_model": "gpt-6-luna",
+  "afs_timeout_s": 300.0,
+  "history_limit": 8,
+  "selection_policy": "hypothesis-v2",
+  "taxonomy_profile": "goal-behavior-v1",
+  "strategy_cycle": ["llm", "boundary", "exploration", "repeat"],
+  "robot": {
+    "model": "gpt-6-luna",
+    "groot_root": "/workspace/g1_failure/src/GR00T-WholeBodyControl",
+    "max_calls": 10,
+    "max_seconds": null,
+    "response_timeout": 300.0,
+    "enable_push": true,
+    "watchdog_wall_s": null
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "proposal_id": "proposal_00000",
+  "replacements": {
+    "a34ae8cb1f146d7d0390a20d5a8c97d96e8f927e7eb09598620e6d501e60a69": "a34ae8cb1f146d7d0390a20d5a8c97d96e98f927e7eb09598620e6d501e60a69"
+  },
+  "note": "Explicit recovery of the single deleted 9 in a provided evidence ID. No hypothesis, scene axis, range, goal, robot setting or budget change; original request/response and four cold-start results preserved. Operator-assisted continuation, not an unmodified prospective benchmark."
+}

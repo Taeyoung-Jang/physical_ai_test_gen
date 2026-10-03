@@ -1,4 +1,8 @@
-# 목표 중심 로봇 에이전트 v2
+# 목표 중심 로봇 에이전트
+
+2026-09-26: 현재 실행기는 v5 / 기본 평가 `goal_outcome_v1`이다.
+[목표 중심 평가 구현 현황](GOAL_OUTCOME_AFS_IMPLEMENTATION.md)을 우선 적용한다.
+아래 초기 v2 검증 이력은 과거 증거이며 새 GPU 실행 검증을 의미하지 않는다.
 
 2026-09-18. 기존 `run_robot_vlm.py`/velocity-v1과 별도 버전이다.
 최종 목표는 유지하되 중간 목표, 계획, 도구 선택과 재계획을 GPT가 결정한다.
@@ -37,7 +41,9 @@
 - raw move는 VLM 속도 명령 그대로이며 내부 계획기가 대신 경로를 고르지 않는다.
 - settle/응답 대기/observe에 별도 GT 위치·yaw 유지 제어를 추가했다.
   이는 zero-command v1과 다른 로봇 조건이며 강건한 hold를 보장하지 않는다.
-- 기존 금지 접촉/넘어짐/수치 이상 종료와 15cm/0.2rad 응답 신선도 검사 유지.
+- 접촉·넘어짐·기술 실패는 관측/피드백이며 기본 평가에서 즉시 종료하지 않는다.
+  수치 이상·API 오류는 INCONCLUSIVE, 유효한 예산 소진/로봇 중지는 목표 미달 시 FAIL.
+  15cm/0.2rad 응답 신선도 검사는 로봇 실행 어댑터에 유지한다.
   자기충돌 분류는 여전히 미구현. 토크를 GPT가 직접 출력하지 않는다.
 
 ## 실행
@@ -48,17 +54,19 @@ cd /workspace/g1_failure/src/physical_ai_test_gen/scene2test
 uv run python tools/run_robot_goal_agent.py --max-calls 2 --max-seconds 10
 
 # OPENAI_API_KEY가 설정된 같은 터미널에서만 실행. 유료 호출 최대 10회.
-uv run python tools/run_robot_goal_agent.py --live --model gpt-6-astra --max-calls 10 --max-seconds 120
+uv run python tools/run_robot_goal_agent.py --live --model gpt-6-astra --max-calls 10 --enable-push --response-timeout 300
 ```
 
-기본 10회/120초, 모델 high reasoning, 호출별 출력 최대 4096 tokens.
-API timeout/응답 대기 deadline은 기존 30초; 높은 reasoning이 이 제한을 넘으면
-명시적 infrastructure 실패이며 재시도하지 않는다. API 접근·비용은 키 소유자 환경에
+기본 10회/시뮬레이션 시간 무제한, 모델 high reasoning, 호출별 최대 4096 tokens.
+HTTP read 기본 90초/runner deadline 120초이며 `--response-timeout 300`이면 300/330초다.
+이 제한은 mission simulation budget과 별개다. 초과하면 INCONCLUSIVE이며 재시도하지 않는다.
+API 접근·비용은 키 소유자 환경에
 의존한다. 키를 로그/CLI 인자로 남기지 않는다. 이 구현 검증에서는 실제 호출 0회.
 모든 도구 질의도 모델 호출 예산을 사용한다. 10회가 10개 이동 행동을 보장하지 않는다.
 
-산출물: `/workspace/g1_failure/runtime/robot_goal_agent/<UTC>/`의 실제 영상/GIF,
+산출물: `/workspace/g1_failure/runtime/robot_goal_agent/<UTC>/`의 MP4 영상,
 카메라 이미지, 관측, 계획/행동/도구결과, physics states, protocol 및 hashes.
+GIF 저장과 GIF용 프레임 누적은 2026-09-26 사용자 요청으로 비활성화했다.
 tool_NNN.json은 계획 당시 route 결과, decisions.jsonl의 tool_result는 실행 후 결과다.
 최종 성공 여부는 GPT 주장이 아닌 독립 측정이다. 기존 scene은 상자로 막혀 있어
 이동 전용 로봇의 no_path/지원 부족/정지 또는 실패가 정상적인 실험 결과일 수 있다.

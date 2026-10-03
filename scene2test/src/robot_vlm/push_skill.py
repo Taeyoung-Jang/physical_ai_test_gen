@@ -11,6 +11,24 @@ import numpy as np
 from clear_path.contact_control import ContactControl
 
 VERSION = "near-contact-push-v1"
+MIN_PUSH_DISTANCE_M = 0.075
+MAX_PUSH_DISTANCE_M = 0.20
+# Absolute numerical tolerance (one nanometre), not extra physical skill range.
+PUSH_DISTANCE_ABS_TOLERANCE_M = 1e-9
+
+
+def supported_push_distance(distance):
+    """Inclusive distance limits shared by preflight and alignment readiness.
+
+    Translation/rotation and physics roundoff must not reject an endpoint such as
+    7.2 - 7.0. Keep the measured distance and requested target unchanged, and never
+    use a relative tolerance that grows with world coordinates or displacement.
+    """
+    return math.isfinite(distance) and (
+        MIN_PUSH_DISTANCE_M - PUSH_DISTANCE_ABS_TOLERANCE_M
+        <= distance
+        <= MAX_PUSH_DISTANCE_M + PUSH_DISTANCE_ABS_TOLERANCE_M
+    )
 
 
 def angle_error(a, b):
@@ -32,7 +50,7 @@ def preflight(base, yaw, box, box_yaw, size, target):
         return "unsupported_box_geometry"
     delta = np.asarray(target) - np.asarray(box)[:2]
     distance = float(np.linalg.norm(delta))
-    if not 0.075 <= distance <= 0.20:
+    if not supported_push_distance(distance):
         return "unsupported_push_distance"
     heading = math.atan2(delta[1], delta[0])
     if abs(angle_error(yaw, heading)) > 0.12:

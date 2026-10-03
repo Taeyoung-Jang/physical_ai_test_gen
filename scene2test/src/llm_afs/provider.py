@@ -21,19 +21,18 @@ known failures. The host validates and creates scenes; you do not execute anythi
 """
 
 
-def request_body(context, schema, *, max_output_tokens=4096):
-    if not 512 <= max_output_tokens <= 16384:
+def request_body(context, schema, *, max_output_tokens=None):
+    if max_output_tokens is not None and not 512 <= max_output_tokens <= 16384:
         raise ValueError("max_output_tokens must be [512,16384]")
     content = json.dumps(context, ensure_ascii=False, allow_nan=False)
     if len(content.encode()) > 250_000:
         raise ValueError("context exceeds 250 KB; select fewer observations explicitly")
-    return {
+    body = {
         "model": MODEL,
         "store": False,
         "instructions": INSTRUCTIONS,
         "input": [{"role": "user", "content": content}],
         "reasoning": {"effort": "medium"},
-        "max_output_tokens": max_output_tokens,
         "text": {
             "format": {
                 "type": "json_schema",
@@ -43,6 +42,11 @@ def request_body(context, schema, *, max_output_tokens=4096):
             }
         },
     }
+    # Default to provider/model limits, not a local token ceiling. Keep explicit opt-in
+    # caps for callers that deliberately request one (including older CLI workflows).
+    if max_output_tokens is not None:
+        body["max_output_tokens"] = max_output_tokens
+    return body
 
 
 def call(body, *, transport=None, timeout=120):

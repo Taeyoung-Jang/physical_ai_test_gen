@@ -56,6 +56,8 @@ def test_flushed_trace_redaction_and_failure_details(tmp_path, monkeypatch, mode
     text = journal.path.read_text()
     assert secret not in text
     rows = [json.loads(line) for line in text.splitlines()]
+    started = next(r for r in rows if r["event"] == "api_started")
+    assert started["max_output_tokens"] is None
     assert rows[-1]["event"] == ("policy_completed" if mode == "ok" else "policy_failed")
     assert all(r["observation_version"] == 7 for r in rows)
     assert all(r["elapsed_wall_s"] >= 0 for r in rows)

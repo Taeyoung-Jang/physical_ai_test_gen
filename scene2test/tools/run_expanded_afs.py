@@ -23,7 +23,10 @@ def main():
     parser.add_argument("--feedback", nargs=2, type=Path, metavar=("PRIOR_RUN", "SUMMARY"))
     parser.add_argument("--samples", type=int, default=12)
     parser.add_argument("--seed", type=int, default=0)
-    parser.add_argument("--max-output-tokens", type=int, default=8192)
+    parser.add_argument(
+        "--max-output-tokens", type=int, default=None,
+        help="optional explicit output cap; default omits the API field (provider limits apply)",
+    )
     parser.add_argument(
         "--output-root", type=Path, default=Path("/workspace/g1_failure/runtime/llm_afs_expanded")
     )

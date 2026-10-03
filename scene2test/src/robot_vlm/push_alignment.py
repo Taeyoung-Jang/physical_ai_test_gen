@@ -4,7 +4,13 @@ import math
 
 import numpy as np
 
-from .push_skill import angle_error
+from .push_skill import (
+    MAX_PUSH_DISTANCE_M,
+    MIN_PUSH_DISTANCE_M,
+    PUSH_DISTANCE_ABS_TOLERANCE_M,
+    angle_error,
+    supported_push_distance,
+)
 
 VERSION = "push-alignment-v1"
 MAX_SECONDS = 8.0
@@ -32,7 +38,7 @@ def readiness(base, yaw, box, box_yaw, size, target):
         "lateral": abs(values["lateral_error_m"]) <= 0.06,
         "heading": abs(values["heading_error_rad"]) <= 0.12,
         "box_face": abs(values["box_face_error_rad"]) <= 0.12,
-        "distance": 0.075 <= distance <= 0.20,
+        "distance": supported_push_distance(distance),
         "height": 0.65 <= base[2] <= 0.85 and 0.30 <= box[2] <= 0.40,
         "geometry": bool(np.allclose(size, [0.8, 1.1, 0.7], atol=0.001)),
         "finite": bool(np.isfinite([*values.values(), *size]).all()),
@@ -43,7 +49,8 @@ def readiness(base, yaw, box, box_yaw, size, target):
         "lateral_error_abs_m": 0.06,
         "heading_error_abs_rad": 0.12,
         "box_face_error_abs_rad": 0.12,
-        "push_distance_m": [0.075, 0.20],
+        "push_distance_m": [MIN_PUSH_DISTANCE_M, MAX_PUSH_DISTANCE_M],
+        "push_distance_abs_tolerance_m": PUSH_DISTANCE_ABS_TOLERANCE_M,
         "base_height_m": [0.65, 0.85],
         "box_height_m": [0.30, 0.40],
         "box_size_m": [0.8, 1.1, 0.7],
