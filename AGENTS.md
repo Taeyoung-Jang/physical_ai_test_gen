@@ -1,5 +1,31 @@
 # Scene2Test workspace memory
 
+## Autonomous reviewed-history development AFS implemented (2026-10-03)
+
+User approved the automation plan. New run_afs_autonomous.py plan/init/run/status/report
+uses 1..8 explicitly reviewed same-condition archives, existing evidence/feedback/memory,
+ResearchStore intent/OS locking and LocalGoalRunner. Development-only, NOT AFS/Random.
+LLM first even with a bracket; alternate hypothesis/local slots, with bounded mixed
+repeat or eligible midpoint; unavailable local candidates request LLM, never Random.
+Defaults: 6 total attempt intents, <=6 Luna AFS calls, <=60 robot calls for current
+Luna10 baselines, <=2 changed probes per axis, <=1 mixed repeat. Prior changed axis
+cools down even across repeats; schema+host enforce eligibility. Same full v4 18-axis
+domain; robot/task/goal-only verdict/completion/timeout fixed. No new skills or caps.
+VALID FAIL continues; exclusions/drift/ambiguous calls stop with redacted diagnostics.
+Resume collects saved response/archive without resend; Ctrl+C after selection retains
+candidate. Old suite protocol rejected before DB open. Source/assets/runtime frozen.
+Reports link hypotheses/actions/MP4, new-only and combined pattern diagnostics, memory
+for regression, inherited/new/selection costs; missing usage and prior AFS cost unknown.
+CLI run --live executes remaining whole budget by default; --session resumes, no
+per-attempt manual commands required. Artifacts default runtime/afs_autonomous/<stamp>.
+Actual .5 FAIL 20261003T150653_133405Z and .75 PASS 20261003T154614_537450Z pass read-only
+preflight under condition eb42efe3...; initial request has18 axes/81474 UTF-8 bytes,
+two real evidence IDs plus case_memory/brackets, no output-token cap. No API/GPU/robot
+or new runtime session executed. Final related tests176 passed (19 new), lint/format
+and diff checks pass. Live behavior of this NEW loop remains unverified. Original
+archives/frozen campaigns/width stop preserved; no commit/push. See
+AFS_AUTONOMOUS_DEVELOPMENT.md, README and autonomous_implementation workhistory.
+
 ## User requests AFS automation priority over manual numeric trials (2026-10-03)
 
 After questioning repeated number changes/user-run commands, user asks what work

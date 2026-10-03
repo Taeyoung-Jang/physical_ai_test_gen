@@ -144,3 +144,5 @@
 - 2026-10-03: [새 조건 0.75 PASS·0.5 FAIL과 단일 축 관측 구간·긴 응답 비용과 0.625 후보](2026-10-03_postfix_relief_pass_review.md)
 
 - 2026-10-03: [수동 단일 축 검증에서 AFS 자동 탐색으로 후속 우선순위 정리](2026-10-03_afs_autonomous_next_plan.md)
+
+- 2026-10-03: [검토된 행동 이력 기반 자동 개발 AFS·축 전환·총예산·중단 재개 구현](2026-10-03_afs_autonomous_implementation.md)

@@ -1,0 +1,10 @@
+{
+  "schema_version": "autonomous-afs-budget-v1",
+  "max_attempts": 6,
+  "max_afs_requests": 6,
+  "max_attempts_per_axis": 2,
+  "max_repeats": 1,
+  "history_limit": 4,
+  "afs_model": "gpt-6-luna",
+  "afs_timeout_s": 300.0
+}
