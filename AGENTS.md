@@ -1,5 +1,101 @@
 # Scene2Test workspace memory
 
+## Push distance numeric endpoints fixed on CPU (2026-10-03)
+
+User authorized code fix. push_skill/preflight and push_alignment/readiness now share
+supported_push_distance: nominal inclusive .075–.20m with absolute 1e-9m tolerance,
+no relative tolerance, target clamping or measurement rewriting. Readiness exposes
+push_distance_abs_tolerance_m. Pose/alignment/motion/contact/budget limits unchanged.
+Red test reproduced 8 failures/20 passes before fix; now push regressions69 passed,
+GPU opt-in2 skipped, and AFS/memory/regression/goal/budget164 passed (233 total).
+Ruff check/format and diff check pass. Tests cover translated/rotated endpoints,
+real excess/nonfinite rejection, saved poses and fake-kinematic guarded dispatch.
+Saved first nominal20cm request now has distance=true/correctable=true but ready=false:
+alignment required, not automatic push success. Second .1454m lateral error remains
+uncorrectable. Original three archives retain hashes/evidence IDs and PASS/PASS/FAIL.
+Controller family VERSION names retained; existing protocol source hashes include both
+changed modules and make this a NEW robot condition. Never resume old frozen suites
+or mix old/new outcomes as one boundary. Docs include separate new baseline .5 and
+challenge .25 commands, <=10 calls each, but none executed here. No API/GPU/robot
+rollout, outcome/DB rewrite, commit or push; no GIF or width restart. See
+2026-10-03_push_distance_numeric_fix workhistory; prior no-fix notes are historical.
+
+## Goal-region contrast completed and push numeric gate diagnosed (2026-10-02)
+
+Third user-run .25 challenge is VALID/FAIL/BUDGET_EXHAUSTED: 77 rollout and 184 report
+hashes verified. Same robot condition; only lateral fraction changes. Ten accepted
+requests (6 navigate, 1 plan, 1 move, 2 push) ended .854021m away, zero dwell at 263.585s.
+Both pushes rejected BEFORE contact motion; no physical pushing, recorded falls or
+non-floor contact. First nominal .20m push measured .20000000000010654m; strict upper
+bound in push_skill.py and push_alignment.py rejects it and blocks alignment. Confirmed
+offline even exact box=7,target=7.2 gives .20000000000000018. Its .10855m lateral error
+was within .14m alignment entry (not .06m push-ready) range; tiny distance tolerance
+would permit entry, NOT prove success. Second .15m push had .1453869m lateral error,
+outside .14m entry; this is not the same numeric artifact. No source fix performed.
+Original FAIL remains valid for recorded robot/budget, not a mass/friction incapacity
+or physical boundary proof. Suite COMPLETE, exclusions0, pending=null; 24 new calls
+699073 input/41167 output, complete usage. New attempt10/325080/23526. Memory brackets
+.25 FAIL vs .5 PASS2, midpoint .375; read-only selector confirms .25 repeat + .375
+candidate, no next suite created. Recommend narrow numeric-gate fix/CPU tests BEFORE
+new paid physical-boundary interpretation. Any fix changes robot condition: new
+version controls/comparison, no frozen drift bypass, old outcome rewrite or mixed
+brackets. Review only; no API/robot launch. MP4 decodes, no GIF. See challenge_fail_review
+workhistory; width tests remain stopped and old pending notes are historical.
+
+## Goal-region relief probe PASS reviewed (2026-10-02)
+
+Second user-run paired-suite attempt is NEW fraction .75, not a repeat of .5:
+VALID/PASS with 48 rollout and 140 report artifact hashes verified. Protocol changes
+only scene_config/revision; only lateral fraction changes, box Y .7 to 1.05m.
+Five calls/actions: plan_path then four navigate_to, all to (7,0), all paths found.
+No raw move, push, recorded fall/non-floor robot contact, blocked connector, recovery
+or replan. Final .112632m at 60.955s with 1s goal-region dwell; final goal hold itself
+was .065s, not a stationary full second. Five calls remain; no grace or budget change.
+New usage 5 calls/105088 input/1530 output, complete; report 14/373993/17641 is cumulative
+with the first control. Selection/inherited costs separate; no new AFS call in this
+execution. Memory: 1.0 PASS1, .5 PASS2, .75 PASS1; duplicates/brackets0. Faster observed
+completion includes less inference wait, not a causal speed/difficulty estimate or Gain.
+MP4 decodes; no GIF. READY/pending=null now means ONLY challenge .25 remains; same run
+--max-new-attempts 1 advances there. No API/robot or source/DB/outcome changes in review.
+Preserve fixed budget and width stop. See goal_region_relief_probe_pass workhistory.
+
+## Goal-region paired control repeat PASS reviewed (2026-10-02)
+
+First user-run paired-suite control (.5) is VALID/PASS: 66 rollout and 110 report
+artifact hashes verified. Full protocol and scene.xml match prior partial PASS;
+same-scene memory now PASS 2/FAIL 0, no duplicates or brackets. Nine API calls but
+eight executed actions (5 navigate_to, 3 raw move); one target was blocked before
+GPT selected intermediate targets and direct movement. No push, recorded fall,
+non-floor robot contact, blocked connector, recovery or replan. Last move ended
+with .605s dwell; .395s during ordinary inference hold completed the 1s goal-region
+dwell at 201.110s and .167210m. Ninth observe response arrived after termination,
+was NOT executed, and is preserved/charged; this is not an extra action or stationary
+one-second goal hold. Usage 9/9 complete, 268905 input/16111 output; AFS selection
+and inherited costs remain separate. MP4 fully decodes; final frame checked, no GIF.
+Suite READY/pending=null with .75 relief and .25 challenge still untested. Same run
+--max-new-attempts 1 advances to .75, not another control or AFS request. No new
+API/robot, source-code/DB/outcome changes in review. Preserve frozen budget and width
+stop; repeat PASS is not a boundary, success-rate guarantee or Gain. See paired_control_pass
+workhistory; this supersedes the earlier all-three-pending selection-time status.
+
+## Goal-region paired selection live response reviewed (2026-10-02)
+
+User's select-pair completed one Luna request: relief fraction .75, challenge .25,
+with fixed .5 anchor repeat first. Box centers are (7,1.05), (7,.35) and (7,.7);
+only lateral fraction changes. Both hypotheses cite both real PASS episodes and
+late blocked planning/direct moves; no forced robot actions or invented pushing.
+Strict schema/context/evidence/plan/current environment verified, report 75 hashes
+matched, previews inspected. .25 covers goal center but remains PARTIAL, not full
+goal-disk occupancy; static no_path is not impossibility or a FAIL. Usage 1 call,
+25635 input/1312 output, 22.585 wall seconds; inherited robot costs stay separate.
+Selection and suite READY, robot attempts=0/pending=null, three cases PENDING.
+baseline_pass=1 on probes is inherited anchor evidence, NOT probe success. No new
+MP4 is expected yet. Next is run --live --max-new-attempts 1 on
+runtime/afs_contrast/goal_region_lateral_20261002/suite (control .5 first), not another
+AFS request. Review launched no API/robot, changed no code/DB/outcomes; width remains
+stopped. See goal_region_paired_selection_review workhistory. Earlier PREPARED notes
+describe implementation-time state, superseded by this user-run result.
+
 ## Reviewed success pair to goal-region AFS proposals (2026-10-02)
 
 User approved behavior-informed control plus relief/challenge lateral probes. New

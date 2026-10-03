@@ -46,6 +46,31 @@ does not mean successful pushing or route clearance.
 
 ## Verification scope
 
+### Inclusive distance endpoints corrected on 2026-10-03
+
+Preflight and readiness now share `push_skill.supported_push_distance`. Nominal
+displacement limits remain 0.075–0.20m inclusive, with an absolute numerical tolerance
+of 1e-9m (one nanometre) at those endpoints only. No relative tolerance is used.
+Readiness reports it as `limits.push_distance_abs_tolerance_m`; the raw measured
+distance and GPT's target are retained, not rounded or clamped. Nonfinite distances
+and real out-of-range requests remain rejected. Pose, contact, time and travel
+guards are unchanged.
+
+The reviewed nominal 20cm request measured 0.20000000000010654m and previously failed
+before alignment. It now passes the distance gate, but its lateral error still
+requires alignment: it does not become an immediately executable push. The later
+15cm request with 14.54cm lateral error still cannot enter the 14cm alignment range.
+CPU endpoint/rotation/saved-input tests and fake-kinematic dispatch cover the fix;
+they do not prove that live G1 alignment, pushing or goal completion will succeed.
+
+Both changed modules are already covered by protocol source hashes. Controller
+family names stay the same, but this is a NEW robot condition. Preserve old FAILs;
+do not resume old frozen suites with changed code or combine their outcomes into
+a same-condition boundary. See the
+[implementation and verification record](../../.workhistory/2026-10-03_push_distance_numeric_fix.md).
+
+### Existing alignment coverage
+
 Tests cover the saved3.60cm versus7.17cm alignment case, JSON-safe numeric feedback,
 correct correction direction, stable-hold reset, motion/time/range caps and guarded
 dispatch using fake kinematics. Fake callback motion is ONLY a unit-test mechanism;

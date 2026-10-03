@@ -126,3 +126,13 @@
 - 2026-10-02: [목표 부분 점유 PASS·GPT 중간 목표와 직접 이동 선택·10회 호출과 미확정 경계](2026-10-02_goal_region_partial_live_pass.md)
 
 - 2026-10-02: [두 성공 근거의 AFS 양쪽 배치 제안·1회 요청 잠금·세 장면 고정 예산과 행동 비교](2026-10-02_goal_region_paired_afs.md)
+
+- 2026-10-02: [실제 Luna 배치 제안 완료·0.75와 0.25 근거 검증·세 로봇 실험 대기](2026-10-02_goal_region_paired_selection_review.md)
+
+- 2026-10-02: [목표 주변 0.5 기준 반복 PASS·미실행 9번째 응답과 체류 완료·완화 후보 대기](2026-10-02_goal_region_paired_control_pass.md)
+
+- 2026-10-02: [AFS 완화 0.75 후보 PASS·경로 조회와 이동 5회·누적 비용 구분과 도전 후보 대기](2026-10-02_goal_region_relief_probe_pass.md)
+
+- 2026-10-02: [목표 배치 대조 완료·0.25 유효 FAIL과 관측 구간·밀기 20cm 수치 경계 오류 진단](2026-10-02_goal_region_challenge_fail_review.md)
+
+- 2026-10-03: [밀기 거리 끝점 수치 오류 수정·공통 검사·233개 회귀 통과·기존 결과 보존](2026-10-03_push_distance_numeric_fix.md)

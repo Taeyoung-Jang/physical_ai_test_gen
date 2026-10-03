@@ -56,7 +56,8 @@ def test_motion_bound():
 
 
 @pytest.mark.parametrize("mode", ["converge", "stuck", "safety", "budget", "object_moved"])
-def test_guarded_dispatch_with_fake_kinematics_only(mode):
+@pytest.mark.parametrize("push_distance", [0.15, 0.20])
+def test_guarded_dispatch_with_fake_kinematics_only(mode, push_distance):
     # Not a MuJoCo/GPU rollout: deterministic callback tests orchestration only.
     model = SimpleNamespace(
         geom=lambda name: SimpleNamespace(id=0), geom_size=np.array([[0.4, 0.55, 0.35]])
@@ -82,7 +83,7 @@ def test_guarded_dispatch_with_fake_kinematics_only(mode):
     session, feedback, summary = align(
         model,
         data,
-        SimpleNamespace(**push(target=[4.15, 0.0])),
+        SimpleNamespace(**push(target=[4.0 + push_distance, 0.0])),
         observation,
         25 if mode == "budget" else 40,
         step,

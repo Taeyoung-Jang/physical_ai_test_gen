@@ -6,7 +6,19 @@
 
 이것은 외부 성공 이력을 사용하는 개발 탐색이다. 기존 AFS/Random 캠페인이나 중단한
 통로 폭 실험을 재개하지 않는다. Gain, 실패 확률, 단조 경계 또는 원인을 입증하는 실험이 아니다.
-이번 구현에서는 API나 로봇을 실행하지 않았으며, 아래 명령의 `--live`는 별도 유료 단계다.
+구현 시에는 API나 로봇을 실행하지 않았다. 이후 사용자 실행으로 Luna 제안 1회가 완료돼
+완화 0.75와 도전 0.25가 준비됐다. 이후 첫 기준 0.5 반복은 VALID/PASS로 완료됐다.
+동일 프로토콜·scene.xml의 기존 성공과 합쳐 이 장면은 PASS 2/FAIL 0이다. 이어 완화 0.75도
+경로 조회 1회와 목표 이동 4회로 VALID/PASS가 됐다. 마지막 도전 0.25는 VALID/FAIL로 끝나
+현재 suite는 **COMPLETE, 제외 0회**다. 세 실행 누적 로봇 API는 24회다.
+[제안·비용·검증 기록](../../.workhistory/2026-10-02_goal_region_paired_selection_review.md)을 참조한다.
+[기준 반복의 행동·체류·비용 검토](../../.workhistory/2026-10-02_goal_region_paired_control_pass.md)도 기록했다.
+[완화 후보 행동·누적 비용 검토](../../.workhistory/2026-10-02_goal_region_relief_probe_pass.md)를 참조한다.
+[도전 실패와 밀기 수치 오류 검토](../../.workhistory/2026-10-02_goal_region_challenge_fail_review.md)도 기록했다.
+아래는 원래 실험 절차이며 이 완료된 세션에서 `run`을 다시 실행할 필요는 없다.
+2026-10-03에는 20cm 경계의 수치 오류를 수정했다. 수정 후 유료 실행은 아직 하지 않았다.
+[수정 및 회귀 기록](../../.workhistory/2026-10-03_push_distance_numeric_fix.md)을 참조한다.
+로봇 소스 해시가 바뀌었으므로 아래 옛 suite의 `next`를 현재 코드로 이어가면 안 된다.
 
 ## 입력과 후보 선택
 
@@ -53,7 +65,8 @@ cd /workspace/g1_failure/src/physical_ai_test_gen/scene2test
 
 ### 1 오프라인 준비
 
-이 작업 환경에서는 아래 세션을 이미 준비했다. 그대로 사용할 때는 **2단계부터** 진행한다.
+아래 세션은 준비·AFS 제안·세 로봇 실행까지 완료했다. 다음 준비 명령은 새 세션을 만들 때의
+절차 설명이며 완료된 세션에 다시 적용하지 않는다.
 
 새 세션을 만들 때만 사용한다. 기존 폴더가 있으면 덮어쓰지 않고 거부한다.
 API·GPU·물리 step 없이 원본과 현재 소스·외부 자산·의존성을 확인하고 요청을 저장한다.
@@ -79,6 +92,9 @@ uv run --no-sync python tools/run_afs_contrast.py select-pair --session /workspa
 제안과 미리보기를 확인한 뒤 실행한다. 처음은 기존 부분 점유 반복, 두 번째는 relief,
 세 번째는 challenge다. 같은 명령을 단계별로 반복하면 남은 다음 장면만 실행한다.
 
+현재 세 장면 모두 완료돼 이 세션에서 더 실행할 장면은 없다. 아래는 한 장면씩 실행했던
+명령이다. baseline_pass=1은 상속된 기준 성공이며 후보 자신의 pass/fail과 구분한다.
+
 ```bash
 uv run --no-sync python tools/run_afs_contrast.py run --suite /workspace/g1_failure/runtime/afs_contrast/goal_region_lateral_20261002/suite --live --max-new-attempts 1
 ```
@@ -101,7 +117,11 @@ uv run --no-sync python tools/run_afs_contrast.py report --suite /workspace/g1_f
 원본 마지막 표본의 거리/체류가 full-rate 최종 평가와 조금 다를 수 있으며 목표 판정은 유지한다.
 MP4는 실제 실행 후에만 생긴다. GIF는 생성하지 않는다.
 
-세 시도가 제외 없이 완료된 경우 다음 명령으로 후속 계획을 준비한다. 기본은 API 호출 없음이다.
+세 시도가 제외 없이 완료된 경우 다음 명령으로 후속 계획을 준비할 수 있다. 기본은 API 호출 없음이다.
+현재 기록은 0.25 FAIL–0.5 PASS 관측 구간을 만들었으며 규칙은 0.25 반복과 0.375 중간값을
+선택한다. 다만 이 FAIL에는 밀기 거리 경계 오류가 관여했다. 2026-10-03 수정으로 로봇 조건이
+달라졌으므로 새 조건의 별도 비교가 필요하다. 아래는 동결 조건이 유지될 때 사용하는 명령이며,
+현재 코드로 옛 suite를 이어가거나 source drift 검사를 우회하지 않는다.
 
 ```bash
 uv run --no-sync python tools/run_afs_contrast.py next --suite /workspace/g1_failure/runtime/afs_contrast/goal_region_lateral_20261002/suite
@@ -110,6 +130,28 @@ uv run --no-sync python tools/run_afs_contrast.py next --suite /workspace/g1_fai
 같은 조건에서 결과가 섞이면 반복부터, 그렇지 않고 관측 PASS/FAIL 구간이 있으면 중점과
 기준 반복을 제안한다. 전부 성공하면 다음 LLM 요청만 준비한다. 모두 기존 기능을 재사용한다.
 어느 경우도 새 로봇 실행을 자동으로 시작하지 않는다. 각 후속 단계는 별도 예산 검토 대상이다.
+
+## 거리 검사 수정 후 새 조건 확인
+
+다음은 사용자 승인 후 한 장면씩 실행할 유료 검증 명령이다. 이번 코드 수정 작업에서는 실행하지
+않았다. 원본 장면 설정만 읽고 새 timestamp 폴더에 저장한다. 옛 suite의 DB·결과·예산은 바꾸지
+않으며 그 비교의 추가 표본으로 집계하지 않는다. 먼저 기준 0.5를 확인하고 그 결과를 검토한 뒤
+도전 0.25를 실행한다. 각 실행 최대 로봇 호출 10회, 둘 다 실행하면 최대 20회이고 새 AFS 호출은 없다.
+
+기준 장면 0.5:
+
+```bash
+uv run --no-sync python tools/run_robot_goal_agent.py --live --model gpt-6-luna --max-calls 10 --enable-push --response-timeout 300 --evaluation-profile goal_outcome_v1 --navigation-completion goal_dwell_v1 --scene-config /workspace/g1_failure/runtime/afs_contrast/goal_region_lateral_20261002/suite/attempts/attempt_00000/scene_config.json
+```
+
+도전 장면 0.25:
+
+```bash
+uv run --no-sync python tools/run_robot_goal_agent.py --live --model gpt-6-luna --max-calls 10 --enable-push --response-timeout 300 --evaluation-profile goal_outcome_v1 --navigation-completion goal_dwell_v1 --scene-config /workspace/g1_failure/runtime/afs_contrast/goal_region_lateral_20261002/suite/attempts/attempt_00002/scene_config.json
+```
+
+두 실행 모두 새 코드 조건을 검증한 뒤 성공·실패 구간을 판단한다. 옛 0.5 PASS와 새 코드의
+0.25 결과만으로 같은 조건의 경계를 만들지 않는다. 0.375 중간값은 그 이후 검토할 후보일 뿐이다.
 
 ## 오류와 보존 규칙
 
