@@ -148,3 +148,7 @@
 - 2026-10-03: [검토된 행동 이력 기반 자동 개발 AFS·축 전환·총예산·중단 재개 구현](2026-10-03_afs_autonomous_implementation.md)
 
 - 2026-10-03: [첫 자동 AFS 실험 6회 완료·체류 부족 FAIL과 완화 PASS·선택 품질 및 재개 취약점 검토](2026-10-03_afs_autonomous_live_review.md)
+
+- 2026-10-16: [과제 목표 대비 현황·자동 탐색 개념 검증과 정량 목표의 구분·유형 범위 및 본 평가 우선순위](2026-10-16_project_status_against_goals.md)
+
+- 2026-10-17: [평가 지표 정의 재확인·FDR 분모와 반복·상대 Gain·6종 Coverage 및 안전 사건 구분](2026-10-17_evaluation_metric_definitions.md)
