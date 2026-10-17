@@ -144,3 +144,15 @@
 - 2026-10-03: [새 조건 0.75 PASS·0.5 FAIL과 단일 축 관측 구간·긴 응답 비용과 0.625 후보](2026-10-03_postfix_relief_pass_review.md)
 
 - 2026-10-03: [수동 단일 축 검증에서 AFS 자동 탐색으로 후속 우선순위 정리](2026-10-03_afs_autonomous_next_plan.md)
+
+- 2026-10-03: [검토된 행동 이력 기반 자동 개발 AFS·축 전환·총예산·중단 재개 구현](2026-10-03_afs_autonomous_implementation.md)
+
+- 2026-10-03: [첫 자동 AFS 실험 6회 완료·체류 부족 FAIL과 완화 PASS·선택 품질 및 재개 취약점 검토](2026-10-03_afs_autonomous_live_review.md)
+
+- 2026-10-16: [과제 목표 대비 현황·자동 탐색 개념 검증과 정량 목표의 구분·유형 범위 및 본 평가 우선순위](2026-10-16_project_status_against_goals.md)
+
+- 2026-10-17: [평가 지표 정의 재확인·FDR 분모와 반복·상대 Gain·6종 Coverage 및 안전 사건 구분](2026-10-17_evaluation_metric_definitions.md)
+
+- 2026-10-17: [FDR와 다양성 공동 달성 우선·Gain 후순위·기존 보고서와 유형 근거 보존 확인](2026-10-17_fdr_diversity_priority_and_evidence.md)
+
+- 2026-10-17: [경계 정밀화 후순위·허용 범위의 폭넓은 실패 발견 우선·기존 작은 변화의 목적 구분](2026-10-17_broad_discovery_priority.md)

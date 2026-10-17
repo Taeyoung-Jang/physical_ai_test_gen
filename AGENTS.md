@@ -1,5 +1,92 @@
 # Scene2Test workspace memory
 
+## Broad failure discovery before boundary refinement (2026-10-17)
+
+User clarifies earlier small changes intentionally sought failure boundaries and now
+wants that objective set aside. Keep joint FDR>=30% / >=4-of-6 family priority, Gain
+later. Plan initial discovery across the admitted domain, including large changes;
+defer automatic midpoint/local boundary narrowing and repeated fine adjustment.
+Small steps were not intrinsically defective; useful failure relief differs from
+repeatedly easing an already-PASS anchor. Keep evidence grounding, genuine family
+measurement, fixed robot/goal/validity and bounded confirmation of useful discoveries.
+Current code STILL alternates local/hypothesis slots and accepts exactly one changed
+axis: this turn changes plans/docs only, not execution or old frozen sessions. Broad
+single-axis moves need not wait for unimplemented multi-axis proposals. No paid run.
+See broad_discovery_priority history. Preserve width stop and original outcomes.
+
+## FDR and diversity first, Gain later (2026-10-17)
+
+User prioritizes metric1 FDR>=30% and metric3 >=4/6 evidence-backed families TOGETHER;
+metric2 Random-relative Gain follows afterward. Do not require more Random runs now.
+Saved evidence remains: completed 20260929T163123 pilot AFS6/6 FAIL (5 unique scenes,
+one repeat), one operational obstacle_interference attribution at attempt00004,
+five failures unclassified; coverage null/partial, lower bound1/6, NOT four families.
+Latest autonomous 20261003T165928 new-only5PASS/1FAIL has descriptive FDR1/6 and no
+primary family; its FAIL has three NOT_DETECTED and three UNSUPPORTED rules.
+Robot conditions differ (6225836a... vs eb42efe3...), so never pool those results.
+Both representative reports and raw logs/MP4 remain; seven selected report hashes
+rechecked. Existing evidence is reusable, not joint target achievement. Current
+three-rule support needs genuine measurement/scene expansion, not label invention.
+This turn records priority/evidence only: no code/evaluator/DB/budget changes or paid
+execution; preserve width stop and all originals. See fdr_diversity_priority_and_evidence history.
+
+## First autonomous AFS live session completed and reviewed (2026-10-03)
+
+User-run runtime/afs_autonomous/20261003T165928_663622Z is COMPLETE:6 VALID attempts,
+PASS5/FAIL1/excluded0/pendingnull,5 Luna AFS requests,52 robot calls/48 executed actions.
+Read-only DB snapshot/lock/report verified;408 new rollout hashes,127 inherited and
+316 report hashes match, plus all proposal files. Same condition eb42efe3... throughout.
+Selections: lateral .75->.625 PASS; X7->7.5 at .625 FAIL; lateral .625->.9 at X7.5 PASS;
+local X midpoint7.25 at .625 PASS; obstacle2 lateral-.7->-1 PASS; obstacle1 sizeY.5->.2 PASS.
+Four axes explored, quotas respected, no repeats. First .625 was LLM-selected, not
+mandatory host midpoint. Offline replay reproduces all contexts and selections.
+Only FAIL ends .241504m inside .25m goal but dwell .27/1s when10calls exhaust; plan1,
+navigate7,move2. Final .65s move plan mentions another final call despite being call10.
+No push/fall/nonfloor contact in any episode; box stationary. Do NOT label mass,
+balance or impossibility failure. Supported taxonomy rules NOT_DETECTED on FAIL;
+other families unsupported. New-only observed brackets X7.25PASS–7.5FAIL at .625 and
+lateral .625FAIL–.9PASS at X7.5; inherited adds .5FAIL–.625PASS at X7. No causal/monotonic
+proof or Gain. All new initial box projections disjoint goal disk; planner inflation
+is a separate contract. Last two proposals eased already-PASS anchors: challenge/
+relief balance and numerical clearance/terminal evidence are proposed AFS improvements.
+Latent RESUME BUG found, NOT affecting completed outcomes: after reconstructing DB,
+proposal00001..4 contexts and parsed request content match, but nested JSON string
+key order differs. _finish_proposal compares raw body at afs_autonomous.py:293 and
+can reject response-saved/pre-validation interruption as 'saved proposal request changed'.
+Recommend narrow canonical semantic comparison + real-order fault tests; NO fix this
+review, no DB mutation/resend/budget change. Preserve original request/context hashes.
+New costs:robot1576963in/158893out,AFS213425in/8092out,complete usage. Attempt3 two long
+HTTP200 responses253.65s/198.22s contribute86804 output (54.63% total robot output).
+No token caps restored. Six MP4 decode, GIF0. Detailed live_review workhistory added;
+no new paid run/code changes/commit/push. Session exhausted; do not tell user to
+manually continue or restart width runs. Live loop works, selection quality still open.
+
+## Autonomous reviewed-history development AFS implemented (2026-10-03)
+
+User approved the automation plan. New run_afs_autonomous.py plan/init/run/status/report
+uses 1..8 explicitly reviewed same-condition archives, existing evidence/feedback/memory,
+ResearchStore intent/OS locking and LocalGoalRunner. Development-only, NOT AFS/Random.
+LLM first even with a bracket; alternate hypothesis/local slots, with bounded mixed
+repeat or eligible midpoint; unavailable local candidates request LLM, never Random.
+Defaults: 6 total attempt intents, <=6 Luna AFS calls, <=60 robot calls for current
+Luna10 baselines, <=2 changed probes per axis, <=1 mixed repeat. Prior changed axis
+cools down even across repeats; schema+host enforce eligibility. Same full v4 18-axis
+domain; robot/task/goal-only verdict/completion/timeout fixed. No new skills or caps.
+VALID FAIL continues; exclusions/drift/ambiguous calls stop with redacted diagnostics.
+Resume collects saved response/archive without resend; Ctrl+C after selection retains
+candidate. Old suite protocol rejected before DB open. Source/assets/runtime frozen.
+Reports link hypotheses/actions/MP4, new-only and combined pattern diagnostics, memory
+for regression, inherited/new/selection costs; missing usage and prior AFS cost unknown.
+CLI run --live executes remaining whole budget by default; --session resumes, no
+per-attempt manual commands required. Artifacts default runtime/afs_autonomous/<stamp>.
+Actual .5 FAIL 20261003T150653_133405Z and .75 PASS 20261003T154614_537450Z pass read-only
+preflight under condition eb42efe3...; initial request has18 axes/81474 UTF-8 bytes,
+two real evidence IDs plus case_memory/brackets, no output-token cap. No API/GPU/robot
+or new runtime session executed. Final related tests176 passed (19 new), lint/format
+and diff checks pass. Live behavior of this NEW loop remains unverified. Original
+archives/frozen campaigns/width stop preserved; no commit/push. See
+AFS_AUTONOMOUS_DEVELOPMENT.md, README and autonomous_implementation workhistory.
+
 ## User requests AFS automation priority over manual numeric trials (2026-10-03)
 
 After questioning repeated number changes/user-run commands, user asks what work

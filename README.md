@@ -1,5 +1,26 @@
 # Scene2Test
 
+## 검토된 기록에서 자동 AFS 탐색 시작하기
+
+최근 같은 조건의 실패·성공 기록을 받아 **장면 선택 → 로봇 실행 → 행동 분석 → 다음 선택**을
+예산 내에서 자동 반복합니다. 매번 수치를 바꾸거나 다음 명령을 입력할 필요가 없습니다.
+새 실험 최대 6회, AFS Luna 요청 최대 6회, 로봇 Luna 호출 최대 60회입니다.
+같은 축 변경은 최대 2회이며 연속 선택을 막고, 명시적 반복은 최대 1회입니다.
+
+아래 명령은 API 키가 설정된 터미널에서 **새 유료 세션 전체**를 시작합니다.
+기존 세션 재개에는 `--session`을 사용하며 이 명령을 다시 실행하지 마세요.
+
+```bash
+cd /workspace/g1_failure/src/physical_ai_test_gen/scene2test
+uv run --no-sync python tools/run_afs_autonomous.py run --live --config config/afs_autonomous_luna.json --run /workspace/g1_failure/runtime/robot_goal_agent/20261003T150653_133405Z --run /workspace/g1_failure/runtime/robot_goal_agent/20261003T154614_537450Z
+```
+
+결과는 `/workspace/g1_failure/runtime/afs_autonomous/<시각>/`에 저장합니다.
+오류·제외에서는 근거를 남기고 중단하며 자동 유료 재시도를 하지 않습니다.
+외부 이력을 쓰는 개발 탐색이지 AFS/Random 비교가 아닙니다. 로봇과 목표 판정은 변경하지 않았습니다.
+[무료 사전 검사·재개·예산·보고서 안내](scene2test/docs/AFS_AUTONOMOUS_DEVELOPMENT.md).
+이 아래의 이전 고정 대조 실험 명령은 과거 워크플로 설명이며, 기존 동결 suite를 새 코드로 재개하지 마세요.
+
 생성 환경에서 G1 경로 추종·단계별 GPU 검증: [G1 Navigation 가이드](scene2test/docs/G1_NAVIGATION.md).
 정확한 지도·위치를 사용하는 정적 환경 기준선이며 LLM/센서 기반 자율주행과 구분합니다.
 
