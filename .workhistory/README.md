@@ -152,3 +152,7 @@
 - 2026-10-16: [과제 목표 대비 현황·자동 탐색 개념 검증과 정량 목표의 구분·유형 범위 및 본 평가 우선순위](2026-10-16_project_status_against_goals.md)
 
 - 2026-10-17: [평가 지표 정의 재확인·FDR 분모와 반복·상대 Gain·6종 Coverage 및 안전 사건 구분](2026-10-17_evaluation_metric_definitions.md)
+
+- 2026-10-17: [FDR와 다양성 공동 달성 우선·Gain 후순위·기존 보고서와 유형 근거 보존 확인](2026-10-17_fdr_diversity_priority_and_evidence.md)
+
+- 2026-10-17: [경계 정밀화 후순위·허용 범위의 폭넓은 실패 발견 우선·기존 작은 변화의 목적 구분](2026-10-17_broad_discovery_priority.md)

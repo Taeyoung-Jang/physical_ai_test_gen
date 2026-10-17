@@ -1,5 +1,35 @@
 # Scene2Test workspace memory
 
+## Broad failure discovery before boundary refinement (2026-10-17)
+
+User clarifies earlier small changes intentionally sought failure boundaries and now
+wants that objective set aside. Keep joint FDR>=30% / >=4-of-6 family priority, Gain
+later. Plan initial discovery across the admitted domain, including large changes;
+defer automatic midpoint/local boundary narrowing and repeated fine adjustment.
+Small steps were not intrinsically defective; useful failure relief differs from
+repeatedly easing an already-PASS anchor. Keep evidence grounding, genuine family
+measurement, fixed robot/goal/validity and bounded confirmation of useful discoveries.
+Current code STILL alternates local/hypothesis slots and accepts exactly one changed
+axis: this turn changes plans/docs only, not execution or old frozen sessions. Broad
+single-axis moves need not wait for unimplemented multi-axis proposals. No paid run.
+See broad_discovery_priority history. Preserve width stop and original outcomes.
+
+## FDR and diversity first, Gain later (2026-10-17)
+
+User prioritizes metric1 FDR>=30% and metric3 >=4/6 evidence-backed families TOGETHER;
+metric2 Random-relative Gain follows afterward. Do not require more Random runs now.
+Saved evidence remains: completed 20260929T163123 pilot AFS6/6 FAIL (5 unique scenes,
+one repeat), one operational obstacle_interference attribution at attempt00004,
+five failures unclassified; coverage null/partial, lower bound1/6, NOT four families.
+Latest autonomous 20261003T165928 new-only5PASS/1FAIL has descriptive FDR1/6 and no
+primary family; its FAIL has three NOT_DETECTED and three UNSUPPORTED rules.
+Robot conditions differ (6225836a... vs eb42efe3...), so never pool those results.
+Both representative reports and raw logs/MP4 remain; seven selected report hashes
+rechecked. Existing evidence is reusable, not joint target achievement. Current
+three-rule support needs genuine measurement/scene expansion, not label invention.
+This turn records priority/evidence only: no code/evaluator/DB/budget changes or paid
+execution; preserve width stop and all originals. See fdr_diversity_priority_and_evidence history.
+
 ## First autonomous AFS live session completed and reviewed (2026-10-03)
 
 User-run runtime/afs_autonomous/20261003T165928_663622Z is COMPLETE:6 VALID attempts,
