@@ -32,9 +32,19 @@ class SearchBudget(StrictRecord):
     min_axis_change_fraction: float = Field(default=0.1, gt=0, le=1)
     reproposal_policy: Literal["stop", "bounded-rejection-v1"] = "stop"
     taxonomy_profile: Literal["scene-default", "expanded-ten-v1"] = "scene-default"
+    exploration_policy: Literal["legacy", "breadth-v1"] = "legacy"
 
     @model_validator(mode="after")
     def check_target(self):
+        if self.exploration_policy == "breadth-v1" and (
+            self.selection_policy != "failure-branch-v3"
+            or self.taxonomy_profile != "expanded-ten-v1"
+            or self.reproposal_policy != "bounded-rejection-v1"
+            or self.min_axis_change_fraction >= 0.3
+        ):
+            raise ValueError(
+                "breadth-v1 requires expanded branch, bounded rejection and min change < .3"
+            )
         if (
             self.taxonomy_profile != "scene-default"
             and self.selection_policy != "failure-branch-v3"
@@ -60,17 +70,23 @@ class SearchBudget(StrictRecord):
 
 
 def accounting(attempts, axes, budget):
-    counts = {axis: sum(a["candidate"]["axis"] == axis for a in attempts) for axis in axes}
+    from .breadth_policy import candidate_axes
+
+    counts = {axis: sum(axis in candidate_axes(a["candidate"]) for a in attempts) for axis in axes}
     last = next(
-        (a["candidate"]["axis"] for a in reversed(attempts) if a["candidate"]["axis"] is not None),
-        None,
+        (
+            candidate_axes(a["candidate"])
+            for a in reversed(attempts)
+            if candidate_axes(a["candidate"])
+        ),
+        [],
     )
     blocked = {
         axis: "axis_attempt_budget"
         if count >= budget.max_attempts_per_axis
         else "previous_probe_axis_cooldown"
         for axis, count in counts.items()
-        if count >= budget.max_attempts_per_axis or axis == last
+        if count >= budget.max_attempts_per_axis or axis in last
     }
     return {
         "axis_attempts": counts,
@@ -81,7 +97,7 @@ def accounting(attempts, axes, budget):
 
 
 def bind(candidate, memory):
-    """Resolve a concrete verified anchor and ensure only one parameter can change."""
+    """Bind a verified anchor; allow two declared changes only in breadth candidates."""
     candidate = deepcopy(candidate)
     if candidate["stage"] == "repeat":
         anchor = candidate["evidence"]["case_id"]
@@ -95,9 +111,18 @@ def bind(candidate, memory):
     if set(target) != set(base):
         raise ValueError("candidate scene domain mismatch")
     changed = [k for k in base if target[k] != base[k]]
-    if len(changed) != (0 if candidate["stage"] == "repeat" else 1):
+    breadth = "exploration" in candidate
+    expected = candidate["exploration"]["changed_axes"] if breadth else None
+    if breadth and (set(changed) != set(expected) or not 1 <= len(changed) <= 2):
+        raise ValueError("combination differs from its validated changes")
+    if not breadth and len(changed) != (0 if candidate["stage"] == "repeat" else 1):
         raise ValueError("expected an explicit repeat or exactly one changed scene parameter")
-    candidate.update(anchor_case_id=anchor, axis=changed[0] if changed else None)
+    candidate.update(
+        anchor_case_id=anchor,
+        axis=candidate["evidence"]["axis"] if breadth else (changed[0] if changed else None),
+    )
+    if breadth:
+        candidate["changed_axes"] = expected
     return candidate
 
 
@@ -192,6 +217,22 @@ def selection(memory, attempts, budget, schema):
             from .branch_anchors import branch_catalog
 
             branch_catalog(memory, ctx)
+        if budget.exploration_policy == "breadth-v1":
+            from .breadth_policy import allocation
+
+            ctx["exploration_allocation"] = allocation(attempts, audit["selectable_axes"])
+            ctx["branch_contract"].update(
+                version="breadth-branch-v1",
+                max_changed_parameters=2,
+                derived_coordinates=(
+                    "Declared parameters can remap multiple coordinates; no independence claim"
+                ),
+            )
+            ctx["search_selection"]["ranking"] = (
+                "required factor group and change form; switch after repeated PASS; "
+                "missing measured family, intent, family attempts, factor attempts, "
+                "novelty, proposal order"
+            )
     return None, ctx
 
 
@@ -200,7 +241,11 @@ def selected_probe(raw, ctx, memory):
     # original response: do not silently discard an out-of-quota proposal.
     proposal = b.endpoint_proposal(raw, ctx)
     b.validate(proposal, ctx)
-    if any(s.axis not in ctx["development_search"]["selectable_axes"] for s in proposal.spaces):
+    if any(
+        axis not in ctx["development_search"]["selectable_axes"]
+        for s in proposal.spaces
+        for axis, _ in (b.point_changes(s) if isinstance(s, b.PointSpace) else [(s.axis, s.low)])
+    ):
         raise ValueError("proposal uses a cooled-down or exhausted axis")
     if "failure_objective" in ctx:
         objective = ctx["failure_objective"]
@@ -237,4 +282,16 @@ def selected_probe(raw, ctx, memory):
             "unchanged_parameters_verified": True,
             "claim": ctx["branch_contract"]["claim"],
         }
+        if "exploration" in candidate:
+            changed = candidate["changed_axes"]
+            candidate["branch_audit"].update(
+                changed_axes=changed,
+                before={k: anchor["parameters"][k] for k in changed},
+                after={k: candidate["parameters"][k] for k in changed},
+                changed_axis=axis if len(changed) == 1 else None,
+                claim=(
+                    "One or two declared changes from an observed anchor; "
+                    "no causal independence claim"
+                ),
+            )
     return candidate

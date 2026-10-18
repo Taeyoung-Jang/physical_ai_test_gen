@@ -12,6 +12,8 @@
 
 ## 이력 목록
 
+- [2026-10-18 환경 요소 실행 배정과 두 요소 조합 탐색 구현](2026-10-18_breadth_allocation_and_combinations.md)
+
 - [2026-10-18 환경 변화 폭과 실제 실행 편중 검토](2026-10-18_scene_variation_breadth_review.md)
 
 - [2026-10-18 확장 10종 AFS 완료: 실패율 50%, 실패 유형 3종](2026-10-18_expanded_afs_live_complete_review.md)

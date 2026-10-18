@@ -200,8 +200,33 @@ class ExpandedBranchProposal(BaseModel):
     spaces: list[ExpandedBranchPoint] = Field(min_length=1, max_length=4)
 
 
+class AxisChange(BaseModel):
+    model_config = ConfigDict(extra="forbid", strict=True, allow_inf_nan=False)
+    axis: PointAxis
+    value: float
+
+
+class BreadthPoint(ExpandedBranchPoint):
+    # Required even for singles ([]), matching the strict structured-output contract.
+    extra_changes: list[AxisChange] = Field(max_length=1)
+
+
+class BreadthProposal(BaseModel):
+    model_config = ConfigDict(extra="forbid", strict=True, allow_inf_nan=False)
+    context_sha256: str
+    spaces: list[BreadthPoint] = Field(min_length=1, max_length=4)
+
+
+def point_changes(space):
+    return [(space.axis, space.value)] + [
+        (c.axis, c.value) for c in getattr(space, "extra_changes", [])
+    ]
+
+
 def endpoint_proposal(raw, ctx):
     if ctx.get("development_search", {}).get("selection_policy") == "failure-branch-v3":
+        if ctx["development_search"].get("budget", {}).get("exploration_policy") == "breadth-v1":
+            return BreadthProposal.model_validate(raw)
         cls = (
             ExpandedBranchProposal
             if (
@@ -474,6 +499,14 @@ def validate(proposal, ctx):
         key = (s.mode, s.axis, *values)
         if isinstance(s, BranchPoint):
             key = (*key, s.anchor_case_id)
+        if isinstance(s, BreadthPoint):
+            changes = point_changes(s)
+            if len({a for a, _ in changes}) != len(changes):
+                raise ValueError("duplicate axis in combination")
+            for axis, value in changes:
+                if axis not in axes or not axes[axis][0] <= value <= axes[axis][1]:
+                    raise ValueError("combination axis/value outside frozen scene domain")
+            key = (s.mode, s.anchor_case_id, tuple(sorted(changes)))
         if key in seen_spaces:
             raise ValueError("duplicate experimental space")
         seen_spaces.add(key)

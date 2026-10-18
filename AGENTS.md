@@ -1,5 +1,29 @@
 # Scene2Test workspace memory
 
+## Opt-in breadth execution allocation and two-axis combinations implemented (2026-10-18)
+
+New exploration_policy=breadth-v1 ONLY with expanded failure-branch-v3 + bounded
+rejection + minchange<.3; legacy default unchanged. Explicit least-used eligible
+factor-group allocation (floor,object physics,obstacle geometry,layout,human),
+small/large/combination cycle. Small>=configuredmin and<.3 fullrange;large>=.3;
+combo2distinct axes from2groups,each>=minimum. Required extra_changes=[] or one
+second axis; existing schemas reject it. Same unmixed PASS/FAIL anchor role,evidence,
+full-scene duplicate,bounds,per-axisquota/cooldown remain;charge BOTH combo axes/groups.
+Two consecutive valid PASSes on same predictedfamily pause it nextslot;sharedgroup
+switch when alternatives available. Allocation mismatch bounded rejection within
+same frozen requestcap,not Random/slotfallback or ambiguous resend. Missing measured
+family priority within slot; novelty before proposal order. Audit all eligible ranks,
+changed_axes,normalizedchanges,before/after,group/formcounts;fixed scene BEFORE robot.
+New afs_breadth_luna config12valid/16attempts/20AFS/4peraxis/0repeat/Luna300s/history4;
+max160robotcalls for inherited10callrobot. This is NEW budget,NOT extension of old
+COMPLETE sessions. No robot/evaluator/goal/threshold/model/token/simcap changes.
+Actual6valid134620 archives pass read-only developmentplan/current e8ec8119condition;
+initialfloor/small,request~206KB,missing5supportedtypes.27newCPUtests pass inclcombo
+savedresponse resume(noresend),allguard/quotas/PASSswitch/report;performanceunmeasured.
+FinalrelatedCPU303pass(107.81s),Ruff/format7files+diffcheckclean.
+No paid/API/GPU/robot/runtimeDBrun,oldarchive/outcome/budget edits or commit/push.
+See AFS_BREADTH_SEARCH.md and breadth_allocation_and_combinations workhistory.
+
 ## Expanded-ten live session completed with three measured families (2026-10-18)
 
 User-run134620_116429 COMPLETE/valid_rollout_target_complete/pendingnull:7attempts,

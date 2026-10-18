@@ -136,10 +136,16 @@ def request(
         and ctx.get("development_search", {}).get("budget", {}).get("taxonomy_profile")
         == "expanded-ten-v1"
     )
+    breadth = (
+        ctx.get("development_search", {}).get("budget", {}).get("exploration_policy")
+        == "breadth-v1"
+    )
     if directed and not autonomous:
         raise ValueError("failure-directed context requires autonomous endpoint policy")
     schema = (
-        b.ExpandedBranchProposal
+        b.BreadthProposal
+        if breadth
+        else b.ExpandedBranchProposal
         if expanded
         else b.BranchProposal
         if branch
@@ -157,6 +163,8 @@ def request(
     for definition in schema["$defs"].values():
         properties = definition["properties"]
         properties["axis"]["enum"] = selectable
+        if "evidence_refs" not in properties:
+            continue  # AxisChange shares the axis enum but has no hypothesis fields.
         properties["evidence_refs"]["items"]["enum"] = b.evidence_ids(ctx)
         if directed:
             objective = ctx["failure_objective"]
@@ -271,6 +279,39 @@ form a NEW evidence-grounded proposal, not a resend or an invented robot result.
 Remaining requests include the next request. Every rejected proposal costs an AFS
 slot but is not a robot attempt, PASS or FAIL. No quota, minimum change, duplicate
 guard or goal rule is relaxed. Infrastructure/schema errors still stop for review.
+"""
+    if breadth:
+        body["instructions"] = (
+            body["instructions"]
+            .replace(
+                "Change\nexactly one parameter from that anchor",
+                "Change\none or two explicitly declared parameters from that anchor",
+            )
+            .replace(
+                "The host verifies role, evidence, minimum change, "
+                "novelty and unchanged parameters.",
+                "The host verifies role, evidence, per-axis minimum change, "
+                "novelty and all undeclared parameters.",
+            )
+        )
+        body["instructions"] += """
+Breadth-v1 overrides the older single-axis and ranking restrictions above.
+Read exploration_allocation: EVERY candidate must include required_group and match
+required_form. These are execution slots, not predicted or measured failure types.
+small: one changed axis, normalized change >= min_axis_change_fraction and < .3.
+large: one changed axis, normalized change >= .3. Normalization uses FULL axis bounds.
+combination: two distinct changed axes from DIFFERENT factor groups, each meeting
+the minimum change. axis/value is the first; extra_changes contains the second.
+For single-axis candidates extra_changes MUST be []. Do not change anything else.
+Explain the joint mechanism and a plausible alternative; interactions are not causal proof.
+Keep useful small probes, broad challenges and combinations; do not maximize severity blindly.
+After two consecutive valid PASSes on the same predicted family, do not propose that
+family in the next slot. Use paused_after_two_passes and recent measured behavior.
+Within this slot the host ranks missing measured family, intent, fewer family attempts,
+fewer factor-group attempts, novelty, then your proposal order. Novelty is not risk.
+Propose alternative in-bounds scenes within this allocation, not robot commands.
+No candidate means a recorded bounded rejection, never a silent change of slot,
+random substitution, weaker robot, changed goal/evaluator, or live-scene intervention.
 """
     if expanded:
         body["instructions"] += """

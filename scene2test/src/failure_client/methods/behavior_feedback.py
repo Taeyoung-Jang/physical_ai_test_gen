@@ -223,7 +223,12 @@ def choose_probe(raw, ctx, memory):
             base = anchor["parameters"]
             stagnant = similar_failures(memory, base, axes)
         for value in b.endpoint_values(space):
-            params = {**base, space.axis: value}
+            changes = (
+                b.point_changes(space)
+                if isinstance(space, b.BreadthPoint)
+                else [(space.axis, value)]
+            )
+            params = {**base, **dict(changes)}
             detail = {
                 "space": index,
                 "axis": space.axis,
@@ -234,14 +239,25 @@ def choose_probe(raw, ctx, memory):
                     else ctx.get("search_selection", {}).get("anchor_case_id")
                 ),
                 "base_value": base[space.axis],
+                **({"changes": dict(changes)} if isinstance(space, b.BreadthPoint) else {}),
             }
             minimum = ctx.get("development_search", {}).get("min_axis_change_fraction", 0)
-            lo, hi = axes[space.axis]
-            if abs(value - base[space.axis]) / (hi - lo) + 1e-12 < minimum:
+            if any(
+                abs(v - base[a]) / (axes[a][1] - axes[a][0]) + 1e-12 < minimum for a, v in changes
+            ):
                 rejected.append(
                     {**detail, "reason": "discovery_step_too_small", "minimum_fraction": minimum}
                 )
                 continue
+            features = None
+            if "exploration_allocation" in ctx:
+                from .breadth_policy import describe, reject
+
+                features = describe(changes, base, axes)
+                reason = reject(features, space.model_dump(), ctx["exploration_allocation"])
+                if reason:
+                    rejected.append({**detail, "reason": reason, "exploration": features})
+                    continue
             matches = [
                 c["case_id"]
                 for c in memory["cases"]
@@ -264,6 +280,7 @@ def choose_probe(raw, ctx, memory):
                     "boundary_confirmed": False,
                     "space_index": index,
                     "novelty": min(distance(params, old, axes) for old in seen),
+                    **({"exploration": features} if features is not None else {}),
                     **(
                         {"anchor_case_id": anchor["case_id"], "anchor_evidence_id": anchor_ref}
                         if anchor is not None
@@ -292,7 +309,14 @@ def choose_probe(raw, ctx, memory):
                 c["novelty"],
             )
 
-        chosen = max(options, key=rank)
+        if "exploration_allocation" in ctx:
+            from .breadth_policy import rank as breadth_rank
+
+            chosen = max(
+                options, key=lambda c: breadth_rank(c, objective, ctx["exploration_allocation"])
+            )
+        else:
+            chosen = max(options, key=rank)
     elif policy == "hypothesis-v2":
         modes = selection["mode_priority"]
         chosen = max(
@@ -318,6 +342,17 @@ def choose_probe(raw, ctx, memory):
         "interpretation": "Untested endpoints and causal claims remain unconfirmed",
     }
     if policy == "failure-directed-v2":
+        if "exploration_allocation" in ctx:
+            chosen["selection_audit"]["exploration_allocation"] = ctx["exploration_allocation"]
+            chosen["selection_audit"]["breadth_comparison"] = [
+                {
+                    "space_index": c["space_index"],
+                    "exploration": c["exploration"],
+                    "rank": list(breadth_rank(c, objective, ctx["exploration_allocation"])),
+                    "selected": c is chosen,
+                }
+                for c in options
+            ]
         if "anchor_catalog" in ctx:
             chosen["selection_audit"].update(
                 anchor_case_id=chosen["anchor_case_id"],

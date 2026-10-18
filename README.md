@@ -1,5 +1,9 @@
 # Scene2Test
 
+새 [환경 요소 배정·작은 변경·큰 변경·두 요소 조합 탐색](scene2test/docs/AFS_BREADTH_SEARCH.md)은
+`afs_breadth_luna.json`으로 별도 세션을 시작합니다. 미발견 유형 우선 선택과 연속 PASS 후 전환을
+적용하며, 유효 12개·최대 16회 실험·AFS 20요청입니다. 기존 완료 세션과 아래 구버전 설정은 보존합니다.
+
 실패 유형을6종에서10종으로 확장했습니다.
 [판정 기준·기존 실험 재분석 명령](scene2test/docs/EXPANDED_FAILURE_TYPES.md)을 참조하세요.
 확장 유형을 [AFS 환경 선택에도 연결했습니다](scene2test/docs/AFS_EXPANDED_TEN.md).

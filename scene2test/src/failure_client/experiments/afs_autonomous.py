@@ -392,7 +392,18 @@ class AutonomousAFS:
         candidate["proposal_id"] = row["id"]
         row["candidate"] = candidate
         self.state.update(selected=candidate, pending=None, status="READY", reason=None)
-        self._save("proposal_validated", {"id": row["id"], "axis": candidate["axis"]})
+        self._save(
+            "proposal_validated",
+            {
+                "id": row["id"],
+                "axis": candidate["axis"],
+                **(
+                    {"changed_axes": candidate["changed_axes"]}
+                    if "changed_axes" in candidate
+                    else {}
+                ),
+            },
+        )
 
     def _observe(self, attempt):
         directory = self.root / "attempts" / attempt["id"]
@@ -553,7 +564,18 @@ class AutonomousAFS:
             self.state.update(
                 selected=None, pending={"kind": "rollout", "index": len(self.state["attempts"]) - 1}
             )
-            self._save("rollout_intent", {"id": attempt["id"], "axis": candidate["axis"]})
+            self._save(
+                "rollout_intent",
+                {
+                    "id": attempt["id"],
+                    "axis": candidate["axis"],
+                    **(
+                        {"changed_axes": candidate["changed_axes"]}
+                        if "changed_axes" in candidate
+                        else {}
+                    ),
+                },
+            )
             directory = self.root / "attempts" / attempt["id"]
             self.runner(self.cfg, directory, candidate["parameters"])
             launched += 1
@@ -617,6 +639,7 @@ class AutonomousAFS:
                 **metric_options(self.cfg.scene_schema, self.budget.taxonomy_profile),
             ),
             "scheduler": accounting(attempts, axes, self.budget),
+            **self._breadth_summary(attempts, axes),
             "new_execution_costs": costs(rows, len(attempts)),
             "inherited_history_costs": costs(self.plan["history"], len(self.plan["history"])),
             "inherited_afs_selection_costs": {
@@ -633,6 +656,23 @@ class AutonomousAFS:
                 (a.get("receipt") or {}).get("wall_s") is None for a in attempts
             ),
             "limits": LIMITS,
+        }
+
+    def _breadth_summary(self, attempts, axes):
+        if self.budget.exploration_policy != "breadth-v1":
+            return {}
+        from collections import Counter
+
+        from failure_client.methods.breadth_policy import allocation
+
+        selectable = accounting(attempts, axes, self.budget)["selectable_axes"]
+        forms = Counter(a["candidate"]["exploration"]["form"] for a in attempts)
+        return {
+            "exploration_allocation": {
+                **allocation(attempts, selectable),
+                "form_attempts": dict(forms),
+                "next_slot_is_executable": self.state["status"] == "READY",
+            }
         }
 
     def report(self):
@@ -686,6 +726,9 @@ class AutonomousAFS:
                 }
                 if "branch_audit" in c:
                     detail["branch_audit"] = c["branch_audit"]
+                if "exploration" in c:
+                    detail["exploration"] = c["exploration"]
+                    detail["changed_axes"] = c["changed_axes"]
                 if self.budget.reproposal_policy == "bounded-rejection-v1":
                     detail["endpoint_selection_audit"] = c.get("selection_audit")
                 links = []
