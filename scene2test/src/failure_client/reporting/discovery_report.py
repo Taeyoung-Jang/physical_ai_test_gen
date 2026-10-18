@@ -70,6 +70,13 @@ def write_discovery_report(
         )
     memory_link = ""
     taxonomy_section = ""
+    analysis_section = ""
+    if "analysis_scope" in metrics:
+        analysis_section = (
+            "<h2>기존 6종과 확장 10종 사후 분석</h2><pre>"
+            + escape(json.dumps(metrics["analysis_scope"], indent=2, ensure_ascii=False))
+            + "</pre>"
+        )
     if any(r.taxonomy for r in records):
         taxonomy = [{"source": r.source.path, **r.taxonomy} for r in records]
         (output / "taxonomy.json").write_text(
@@ -164,7 +171,8 @@ def write_discovery_report(
 <style>body{{font:16px system-ui;margin:2rem}}td,th{{padding:.4rem;border:1px solid #ccc}}
 table{{border-collapse:collapse}}pre{{white-space:pre-wrap}}</style>
 <h1>실패 발견 지표: {escape(campaign_id)}</h1>
-<p>목표: FDR ≥ 30%, Random 대비 상대 향상 ≥ 20%, 실패 유형 ≥ 4/6.</p>
+<p>목표: FDR ≥ 30%, Random 대비 상대 향상 ≥ 20%,
+실패 유형 ≥ 4/{metrics["targets"]["family_denominator"]}.</p>
 <p>현재 우선 목표는 같은 표본에서 FDR ≥ 30%와 근거 있는 유형 ≥ 4종을 함께 관측하는 것입니다.
 joint_fdr_diversity_target_observed는 해당 표본의 관측값이며 일반화된 성능 보장은 아닙니다.</p>
 <p>접촉·낙상은 사건이며 목표 실패와 별개입니다. null은 미측정/계산 불가이지 0이 아닙니다.</p>
@@ -176,6 +184,7 @@ joint_fdr_diversity_target_observed는 해당 표본의 관측값이며 일반�
 {campaign_section}
 {search_section}
 {taxonomy_section}
+{analysis_section}
 <h2>제외 기록</h2><ul>{exclusions}</ul>
 {memory_link}
 <h2>해석 범위</h2><ul>{notes}</ul>

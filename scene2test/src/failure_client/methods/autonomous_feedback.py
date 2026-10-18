@@ -30,9 +30,12 @@ class SearchBudget(StrictRecord):
     ] = "alternating-v1"
     valid_rollout_target: int | None = Field(default=None, ge=1, le=60)
     min_axis_change_fraction: float = Field(default=0.1, gt=0, le=1)
+    reproposal_policy: Literal["stop", "bounded-rejection-v1"] = "stop"
 
     @model_validator(mode="after")
     def check_target(self):
+        if self.reproposal_policy != "stop" and self.selection_policy != "failure-branch-v3":
+            raise ValueError("bounded reproposal requires explicit failure-branch-v3 mode")
         if (
             self.selection_policy == "alternating-v1"
             and max(self.max_attempts, self.max_afs_requests) > 16

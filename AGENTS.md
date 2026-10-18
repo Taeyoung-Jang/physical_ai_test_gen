@@ -1,5 +1,78 @@
 # Scene2Test workspace memory
 
+## Ten-family expansion and offline reanalysis implemented (2026-10-18)
+
+User approved expansion after real simulations, first definitions/detectors plus
+saved-run reanalysis, NOT new paid simulation. Blueprint now targets4of10 alongside
+FDR30%/Gain20%. ExistingFAMILIES6/default metrics/profiles retained; new explicit
+EXPANDED_FAMILIES10 and expanded-goal-behavior-v1 add fall,locomotion_stall,
+manipulation_failure,goal_completion_failure. Eight operational rules supported;
+unreachable/perception remain unsupported. PASS/excluded never get failure primary.
+Unique legacy primary preserved; legacy ambiguity unchanged. Else new priority
+fall>goalcompletion>stall>manipulation selects1; others diagnostic only,not cause.
+Fall sustained sampled G1Z<.45 or tilt>=60 for.5s,gap<=.25. Stall uses>=2s actual
+execution/recent10s/net<=.05/excursion<=.1,not inference,stop/turn/arrival/roundtrip.
+Manip last accepted tool result perobject failed/rejected; later success supersedes.
+Completion only final fullrate insidegoal with contract-matching incomplete dwell;
+NOT everybudgetFAIL. Missing staysUNKNOWN. Legacy6rules/thresholds unchanged.
+tools/reanalyze_failure_types.py --session/--run validates archives and emits NEW
+reports with old6 and expanded10 metrics. Actual081720 sixnewrollouts reanalyzed at
+runtime/failure_type_reanalysis/20261018T130328_693125Z:3PASS3FAIL/FDR50% unchanged;
+1primarygoal_completion_failure atattempt3(.218747m,dwell.655/1s); manipulation
+rejection sameepisode diagnostic only. Other2FAIL unclassified; no4type achievement.
+436source+5newreport artifact hashes match. 223related CPU tests passed incl11new,
+Ruff/format/diff checks clean. No API/GPU/robot/new simulation/oldDB/outcome rewrite,
+commit/push/GIF. Retrospective new counts are NOT prospective discovery/Gain.
+Current liveAFS still uses6-family contract: integrating expanded feedback/selection
+is NEXT stage, not yet done. Frozen sessions cannot resume newsource. See
+EXPANDED_FAILURE_TYPES.md and expanded_ten_family_reanalysis history/command.
+
+## Branch AFS live session completed with FDR50 and no measured families (2026-10-18)
+
+User-run081720_637822 session COMPLETE/valid_rollout_target_complete/pendingnull:
+6uniqueVALID scenes,3PASS3FAIL,0excluded;observedFDR50%,not joint4families or Gain.
+All6 verified unmixed PASS anchors/one-axis changes. Sequence: box1->.5PASS;
+fromthatPASS obstacle2.7->0PASS; fromnewPASS obstacle1.7->0FAIL; fromfirstPASS
+width4->3.2FAIL; fromsecondPASS box.5->0FAIL; fromsecondPASS obstacle2sizeY.5->.8PASS.
+Thus no latest-FAIL accumulation; no causal independence claim.6AFS requests with
+3/3/3/2/2/2 alternatives,0whole/partialrejections: live reproposal path not exercised.
+AllFAIL budget10: attempt2 final.423851m/stalledtrue/only1recentblocked,not2;
+attempt3 final.218747m inside but dwell.655/1s; push rejected unsupported_box_face,
+no physical push proof;11whole non-support contacts but0qualifyingrecentcontacts.
+Attempt4 final.979180m/fullgoalcovertrue but stalledfalse/range.27989m,0recentblocked.
+3unclassified,4supported rulesNOT_DETECTED,human no terminalexposure; no relabeling.
+436newrollout+460report+18proposal hashes verified;6MP4decoded/GIF0. Robot57calls
+but54actions,completeusage1796453in128011out;AFS6/398599in26382out. Inherited43robot
+calls1281340in107606out separate,priorAFScostunknown. Samee8ec8119condition.
+Reviewonly,no code/evaluator/DB/budget/outcomechange or paidrun/commit/push.
+Completed target: do not spend2remainingAFSslots/extend frozen session. Next priority
+review6-family versus terminal/sequence contract +family-aware executed allocation
+(human proposed once,neverselected), not more blind paid runs or relaxed labels.
+See branch_afs_live_review workhistory for actual actions/costs/artifacts/limits.
+
+## Bounded candidate reproposal implemented after duplicate live proposal (2026-10-18)
+
+User-run075715 session spent1AFS/62945in1534out,0robot: obstacle2 lateral.7->-.7
+from PASS recreated earlier PASS exactly across20axes, not min-step/cooldown.
+Matchingcase5bdb9fe0...; original218sessionfiles SHA256 unchanged by offline replay.
+New SearchBudget.reproposal_policy defaults stop; bounded-rejection-v1 opt-in only
+for failure-branch-v3, enabled in afs_failure_branch_luna.json. No budget increase:
+8AFS/8attempts/6valid. Completed valid-schema proposals with no eligible endpoint
+get typed NoEligibleEndpoint diagnostics, hashed rejection.json/events, next-context
+recent4 rejection feedback and explicit observed single-axis forbidden endpoints.
+Ask2..4 alternatives; one valid point is accepted, only1executes. Mixed valid/bad
+endpoints select valid without new call. All-rejected requests consume AFS cap but
+no robot attempt/FAIL. Cap stops afs_request_budget. API/schema/ref/context/drift
+errors still stop; NEVER resend ambiguous calls or relax filters/Random fallback.
+Pending/selected response context stays stable until dispatch; resume tests cover
+saved duplicate response and committed rejection without resend. HTML shows reasons.
+Related212 CPU tests pass; real2PASS+3FAIL offline plan passes same e8ec8119 condition.
+No new API/GPU/robot/runtime session, old DB/outcome edits or commit/push. Existing
+075715 is frozen, no source drift bypass/recovery prepared; future run starts NEW
+budget. Prior1request remains separate spent cost, two-session max1+8=9 requests.
+Actual new policy discovery quality unverified, no FDR/4families/Gain achievement.
+See AFS_BRANCH_ANCHORS.md and bounded_candidate_reproposal workhistory.
+
 ## PASS anchor branching and read-only phase audit implemented (2026-10-18)
 
 New opt-in failure-branch-v3 requires anchor_case_id/rationale and actual anchor

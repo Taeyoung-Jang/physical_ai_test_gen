@@ -17,7 +17,7 @@ from .test_afs_contrast import Robot, fingerprint, source
 from .test_failure_directed import point, proposal
 
 
-def engine(tmp_path):
+def engine(tmp_path, **budget_options):
     paths = [
         source(tmp_path / "pass", scene=GoalRegionFixture(box_lateral_fraction=1.0)),
         source(
@@ -26,8 +26,13 @@ def engine(tmp_path):
             scene=GoalRegionFixture(box_lateral_fraction=0.25),
         ),
     ]
-    budget = SearchBudget(
-        selection_policy="failure-branch-v3", max_attempts=3, valid_rollout_target=2
+    budget = SearchBudget.model_validate(
+        {
+            "selection_policy": "failure-branch-v3",
+            "max_attempts": 3,
+            "valid_rollout_target": 2,
+            **budget_options,
+        }
     )
     root = AutonomousAFS.create(tmp_path / "session", paths, budget, fingerprint_fn=fingerprint)
     return AutonomousAFS(root, runner=Robot(), fingerprint_fn=fingerprint)

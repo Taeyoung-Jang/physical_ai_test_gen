@@ -194,6 +194,14 @@ def proposal_request(ctx, model):
     )
 
 
+class NoEligibleEndpoint(ValueError):
+    """Completed, valid proposal with only explicitly rejected endpoints."""
+
+    def __init__(self, rejections):
+        self.rejections = rejections
+        super().__init__("proposal has no novel non-cooled-down endpoint; no automatic fallback")
+
+
 def choose_probe(raw, ctx, memory):
     proposal = (
         b.endpoint_proposal(raw, ctx)
@@ -216,20 +224,36 @@ def choose_probe(raw, ctx, memory):
             stagnant = similar_failures(memory, base, axes)
         for value in b.endpoint_values(space):
             params = {**base, space.axis: value}
+            detail = {
+                "space": index,
+                "axis": space.axis,
+                "value": value,
+                "anchor_case_id": (
+                    anchor["case_id"]
+                    if anchor is not None
+                    else ctx.get("search_selection", {}).get("anchor_case_id")
+                ),
+                "base_value": base[space.axis],
+            }
             minimum = ctx.get("development_search", {}).get("min_axis_change_fraction", 0)
             lo, hi = axes[space.axis]
             if abs(value - base[space.axis]) / (hi - lo) + 1e-12 < minimum:
                 rejected.append(
-                    {"space": index, "value": value, "reason": "discovery_step_too_small"}
+                    {**detail, "reason": "discovery_step_too_small", "minimum_fraction": minimum}
                 )
                 continue
-            if any(distance(params, old, axes) < 1e-8 for old in seen):
-                rejected.append({"space": index, "value": value, "reason": "already_observed"})
+            matches = [
+                c["case_id"]
+                for c in memory["cases"]
+                if distance(params, parameters(c), axes) < 1e-8
+            ]
+            if matches:
+                rejected.append(
+                    {**detail, "reason": "already_observed", "matching_case_ids": matches}
+                )
                 continue
             if stagnant >= 3 and distance(params, base, axes) <= 0.05:
-                rejected.append(
-                    {"space": index, "value": value, "reason": "similar_failure_cooldown"}
-                )
+                rejected.append({**detail, "reason": "similar_failure_cooldown"})
                 continue
             options.append(
                 {
@@ -248,7 +272,7 @@ def choose_probe(raw, ctx, memory):
                 }
             )
     if not options:
-        raise ValueError("proposal has no novel non-cooled-down endpoint; no automatic fallback")
+        raise NoEligibleEndpoint(rejected)
     selection = ctx.get("search_selection", {})
     policy = selection.get("policy", "novelty-v1")
     if policy == "failure-directed-v2":

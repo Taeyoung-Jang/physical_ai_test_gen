@@ -12,6 +12,12 @@
 
 ## 이력 목록
 
+- [2026-10-18 실패 유형 10종 확장과 기존 실험 재분석](2026-10-18_expanded_ten_family_reanalysis.md)
+
+- [2026-10-18 성공 기준 분기 AFS 실제 탐색 결과 검토](2026-10-18_branch_afs_live_review.md)
+
+- [2026-10-18 중복 후보 진단과 고정 예산 재제안](2026-10-18_bounded_candidate_reproposal.md)
+
 - [2026-10-18 성공 기준 분기 AFS와 전체 행동 진단](2026-10-18_branch_anchors_and_phase_audit.md)
 
 - [2026-10-18 실패 지향 AFS 첫 실제 세션 검토](2026-10-18_failure_directed_live_review.md)

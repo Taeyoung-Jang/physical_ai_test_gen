@@ -40,6 +40,23 @@ def branch_catalog(memory, ctx):
         intent_priority=[i for i in objective["intent_priority"] if i in allowed],
     )
     ctx["anchor_catalog"] = catalog
+    # Explicit tabulation avoids relying on comparing every full scene in prose.
+    # Include observed cases even when their detailed behavior is outside history_limit;
+    # these are already present in case_memory, not newly invented behavior evidence.
+    ctx["observed_single_axis_endpoints"] = [
+        {
+            "anchor_case_id": anchor["case_id"],
+            "axis": changed[0],
+            "value": old[changed[0]],
+            "matching_case_id": case["case_id"],
+            "observed_role": case["role"],
+        }
+        for anchor in catalog
+        for case in memory["cases"]
+        for old in [parameters(case)]
+        for changed in [[k for k, v in anchor["parameters"].items() if old[k] != v]]
+        if len(changed) == 1
+    ]
     ctx["branch_contract"] = {
         "version": "failure-branch-v3",
         "challenge_and_transfer": "unmixed observed PASS anchor",

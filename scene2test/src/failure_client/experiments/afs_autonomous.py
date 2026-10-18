@@ -37,6 +37,7 @@ from failure_client.methods.autonomous_feedback import (
     selected_probe,
     selection,
 )
+from failure_client.methods.behavior_feedback import NoEligibleEndpoint
 from failure_client.reporting.discovery_metrics import calculate_discovery_metrics
 from failure_client.reporting.search_diagnostics import experiment_reviews, search_diagnostics
 from failure_client.storage.research_store import ResearchStore
@@ -304,7 +305,24 @@ class AutonomousAFS:
         return build_failure_memory(self._records())
 
     def _selection(self):
-        return selection(self._memory(), self.state["attempts"], self.budget, self.cfg.scene_schema)
+        candidate, ctx = selection(
+            self._memory(), self.state["attempts"], self.budget, self.cfg.scene_schema
+        )
+        if ctx is not None and self.budget.reproposal_policy == "bounded-rejection-v1":
+            # Only finalized rejections enter the NEXT context. The pending response
+            # and validated candidate must not change their own context on resume.
+            dispatched = {a["candidate"].get("proposal_id") for a in self.state["attempts"]}
+            ctx["proposal_feedback"] = {
+                "policy": self.budget.reproposal_policy,
+                "remaining_requests": self.budget.max_afs_requests
+                - sum("rejection" in p or p["id"] in dispatched for p in self.state["proposals"]),
+                "rejected_proposals": [
+                    {"proposal_id": p["id"], **p["rejection"]}
+                    for p in self.state["proposals"]
+                    if "rejection" in p
+                ][-4:],
+            }
+        return candidate, ctx
 
     def _proposal(self, ctx):
         directory = self.root / "proposals" / f"proposal_{len(self.state['proposals']):05d}"
@@ -356,7 +374,23 @@ class AutonomousAFS:
         ):
             raise ValueError("saved proposal request changed")
         raw = provider.extract_proposal(response)
-        candidate = selected_probe(raw, ctx, self._memory())
+        try:
+            candidate = selected_probe(raw, ctx, self._memory())
+        except NoEligibleEndpoint as exc:
+            if self.budget.reproposal_policy != "bounded-rejection-v1":
+                raise
+            rejection = {
+                "reason": "no_eligible_endpoint",
+                "endpoints": exc.rejections,
+                "robot_launched": False,
+                "budget_consumed": "one AFS request; no rollout intent",
+            }
+            atomic_json(directory / "rejection.json", rejection)
+            row["artifacts"]["rejection.json"] = _hash_file(directory / "rejection.json")
+            row["rejection"] = rejection
+            self.state.update(selected=None, pending=None, status="READY", reason=None)
+            self._save("proposal_rejected", {"id": row["id"], **rejection})
+            return
         candidate["proposal_id"] = row["id"]
         row["candidate"] = candidate
         self.state.update(selected=candidate, pending=None, status="READY", reason=None)
@@ -493,6 +527,8 @@ class AutonomousAFS:
                         self._save("selection_budget_stop")
                         return self.summary()
                     self._proposal(ctx)
+                    if self.state["selected"] is None:
+                        continue  # A completed rejected proposal consumed an AFS slot.
                 else:
                     self.state["selected"] = candidate
                     self._save("local_candidate_selected", {"axis": candidate["axis"]})
@@ -571,6 +607,8 @@ class AutonomousAFS:
             "valid_rollout_target": self.budget.valid_rollout_target,
             "robot_api_call_upper_bound": self.plan["robot_api_call_upper_bound"],
             "afs_requests_attempted": len(proposals),
+            "afs_proposals_rejected": sum("rejection" in p for p in proposals),
+            "afs_requests_remaining": max(0, self.budget.max_afs_requests - len(proposals)),
             "pass": sum(r["status"] == "VALID" and r["task_outcome"] == "PASS" for r in rows),
             "fail": sum(r["status"] == "VALID" and r["task_outcome"] == "FAIL" for r in rows),
             "excluded": sum(r["status"] != "VALID" for r in rows),
@@ -625,6 +663,13 @@ class AutonomousAFS:
             atomic_json(output / "search_diagnostics.json", diagnostics)
             atomic_json(output / "hypothesis_reviews.json", reviews)
             sections = []
+            for p in self.state["proposals"]:
+                if "rejection" in p:
+                    sections.append(
+                        f"<h2>{escape(p['id'])} · 후보 거절 · 로봇 미실행</h2><pre>"
+                        + escape(json.dumps(p["rejection"], indent=2, ensure_ascii=False))
+                        + "</pre>"
+                    )
             for a in self.state["attempts"]:
                 c, r = a["candidate"], a.get("episode", {})
                 label = (
@@ -641,6 +686,8 @@ class AutonomousAFS:
                 }
                 if "branch_audit" in c:
                     detail["branch_audit"] = c["branch_audit"]
+                if self.budget.reproposal_policy == "bounded-rejection-v1":
+                    detail["endpoint_selection_audit"] = c.get("selection_audit")
                 links = []
                 for name, title in (("report.html", "로봇 행동 보고서"), ("rollout.mp4", "MP4")):
                     if (self.root / "attempts" / a["id"] / "rollout" / name).is_file():

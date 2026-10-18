@@ -1,6 +1,7 @@
 {
   "schema_version": "autonomous-afs-budget-v1",
   "selection_policy": "failure-branch-v3",
+  "reproposal_policy": "bounded-rejection-v1",
   "max_attempts": 8,
   "valid_rollout_target": 6,
   "max_afs_requests": 8,

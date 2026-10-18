@@ -252,6 +252,18 @@ also cite other supplied episodes as motivation. A PASS anchor is an observation
 not a guarantee that its scene always succeeds. Branching does not prove causality.
 The host verifies role, evidence, minimum change, novelty and unchanged parameters.
 Both anchor and candidate are fixed before rollout; AFS never edits a live scene.
+Propose 2 to 4 distinct alternative points, preferably across different eligible
+axes, in preferred order. The host still executes at most ONE eligible point.
+Check observed_single_axis_endpoints: each listed anchor/axis/value would recreate
+an already observed FULL scene and must NOT be proposed, even if its detailed
+behavior is outside history_limit. Also compare the full case_memory; do not
+mistake a previously successful scene for an untested challenge.
+If proposal_feedback is present, its rejected_proposals explain completed requests
+that yielded no eligible point. Avoid those exact anchor/axis/value combinations;
+form a NEW evidence-grounded proposal, not a resend or an invented robot result.
+Remaining requests include the next request. Every rejected proposal costs an AFS
+slot but is not a robot attempt, PASS or FAIL. No quota, minimum change, duplicate
+guard or goal rule is relaxed. Infrastructure/schema errors still stop for review.
 """
     return body
 

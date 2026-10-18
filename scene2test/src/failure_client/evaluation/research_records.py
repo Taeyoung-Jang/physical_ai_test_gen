@@ -13,6 +13,10 @@ Family = Literal[
     "goal_occupied",
     "human_safety_risk",
     "perception_error",
+    "fall",
+    "locomotion_stall",
+    "manipulation_failure",
+    "goal_completion_failure",
 ]
 FAMILIES = (
     "collision",
@@ -21,6 +25,12 @@ FAMILIES = (
     "goal_occupied",
     "human_safety_risk",
     "perception_error",
+)
+EXPANDED_FAMILIES = FAMILIES + (
+    "fall",
+    "locomotion_stall",
+    "manipulation_failure",
+    "goal_completion_failure",
 )
 
 
