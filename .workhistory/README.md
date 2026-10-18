@@ -12,6 +12,8 @@
 
 ## 이력 목록
 
+- [2026-10-18 성공 기준 분기 AFS와 전체 행동 진단](2026-10-18_branch_anchors_and_phase_audit.md)
+
 - [2026-10-18 실패 지향 AFS 첫 실제 세션 검토](2026-10-18_failure_directed_live_review.md)
 
 - [2026-10-18 실패 지향 행동 기반 AFS 선택 개선](2026-10-18_failure_directed_selection.md)

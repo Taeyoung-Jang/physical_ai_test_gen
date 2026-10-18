@@ -127,11 +127,20 @@ def request(
         raise ValueError("behavior AFS selection policy does not match context schema")
     expected = b.digest(ctx)
     autonomous = selection_policy == "autonomous_development_endpoint"
-    directed = ctx.get("development_search", {}).get("selection_policy") == "failure-directed-v2"
+    branch = ctx.get("development_search", {}).get("selection_policy") == "failure-branch-v3"
+    directed = (
+        branch or ctx.get("development_search", {}).get("selection_policy") == "failure-directed-v2"
+    )
     if directed and not autonomous:
         raise ValueError("failure-directed context requires autonomous endpoint policy")
     schema = (
-        b.FailureProposal if directed else b.EndpointProposal if autonomous else b.Proposal
+        b.BranchProposal
+        if branch
+        else b.FailureProposal
+        if directed
+        else b.EndpointProposal
+        if autonomous
+        else b.Proposal
     ).model_json_schema()
     selectable = list(b.context_axes(ctx))
     if autonomous:
@@ -147,6 +156,8 @@ def request(
             properties["behavior_refs"]["items"]["enum"] = objective["behavior_evidence_ids"]
             properties["intent"]["enum"] = objective["allowed_intents"]
             properties["target_family"]["enum"] = objective["supported_targets"]
+            if branch:
+                properties["anchor_case_id"]["enum"] = [c["case_id"] for c in ctx["anchor_catalog"]]
     schema["properties"]["context_sha256"]["enum"] = [expected]
     body = provider.request_body({"context_sha256": expected, "context": ctx}, schema)
     body.update(
@@ -212,6 +223,35 @@ Scene values are frozen BEFORE rollout; after termination the next scene may cha
 Read failure_objective.recent_hypothesis_results: a PASS means that proposal did
 not produce goal failure, not that the test was invalid. Refine or transfer the
 hypothesis using actual behavior; a FAIL still does not prove its predicted cause.
+"""
+    if branch:
+        # Remove legacy latest-base/local-slot instructions for the new mode;
+        # do not rely on an override to resolve conflicting selection contracts.
+        body["instructions"] = (
+            body["instructions"]
+            .replace(
+                selection_instructions,
+                "Selection policy: failure-branch-v3. One novel point per rollout; "
+                "no local/repeat slots. Follow the explicit branch contract below.",
+            )
+            .replace(
+                "from latest.parameters can threaten goal completion",
+                "from the selected anchor's parameters can threaten goal completion",
+            )
+        )
+        body["instructions"] += """
+Failure-branch-v3 overrides ALL latest.parameters base assumptions above.
+For EACH point select anchor_case_id from anchor_catalog and explain anchor_rationale.
+challenge/mechanism_transfer MUST use an unmixed observed PASS anchor, so an old
+FAIL scene is not silently inherited. relief MUST use an unmixed observed FAIL anchor.
+Mixed outcomes, excluded/incomplete episodes and arbitrary scene resets are forbidden.
+Use the selected anchor's parameters and scene_graph, not latest's graph. Change
+exactly one parameter from that anchor; latest is only the most recent observation.
+behavior_refs must include actual episode evidence from the selected anchor; you may
+also cite other supplied episodes as motivation. A PASS anchor is an observation,
+not a guarantee that its scene always succeeds. Branching does not prove causality.
+The host verifies role, evidence, minimum change, novelty and unchanged parameters.
+Both anchor and candidate are fixed before rollout; AFS never edits a live scene.
 """
     return body
 

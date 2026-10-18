@@ -169,7 +169,20 @@ class FailureProposal(BaseModel):
     spaces: list[FailurePoint] = Field(min_length=1, max_length=4)
 
 
+class BranchPoint(FailurePoint):
+    anchor_case_id: str = Field(min_length=1)
+    anchor_rationale: str = Field(min_length=1, max_length=2000)
+
+
+class BranchProposal(BaseModel):
+    model_config = ConfigDict(extra="forbid", strict=True, allow_inf_nan=False)
+    context_sha256: str
+    spaces: list[BranchPoint] = Field(min_length=1, max_length=4)
+
+
 def endpoint_proposal(raw, ctx):
+    if ctx.get("development_search", {}).get("selection_policy") == "failure-branch-v3":
+        return BranchProposal.model_validate(raw)
     cls = (
         FailureProposal
         if ctx.get("development_search", {}).get("selection_policy") == "failure-directed-v2"
@@ -431,6 +444,8 @@ def validate(proposal, ctx):
                 f"allowed=[{lo}, {hi}]; require an in-bounds value or low < high"
             )
         key = (s.mode, s.axis, *values)
+        if isinstance(s, BranchPoint):
+            key = (*key, s.anchor_case_id)
         if key in seen_spaces:
             raise ValueError("duplicate experimental space")
         seen_spaces.add(key)

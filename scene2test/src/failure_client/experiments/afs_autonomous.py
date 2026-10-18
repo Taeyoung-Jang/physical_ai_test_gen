@@ -123,7 +123,7 @@ def development_plan(paths, budget=None, *, fingerprint_fn=None):
     # strategy slots and its default AFS model have no meaning in this session.
     cfg = {"scene_schema": cfg["scene_schema"], "robot": cfg["robot"]}
     rows = [e["record"] for e in memory["episodes"].values()]
-    if budget.selection_policy in {"discovery-v1", "failure-directed-v2"}:
+    if budget.selection_policy in {"discovery-v1", "failure-directed-v2", "failure-branch-v3"}:
         rows = [
             classify_record(
                 EpisodeRecord.model_validate(r), profile=profile_for_scene(cfg["scene_schema"])
@@ -639,6 +639,8 @@ class AutonomousAFS:
                     "exclusion_reason": r.get("exclusion_reason"),
                     "measures": r.get("measures"),
                 }
+                if "branch_audit" in c:
+                    detail["branch_audit"] = c["branch_audit"]
                 links = []
                 for name, title in (("report.html", "로봇 행동 보고서"), ("rollout.mp4", "MP4")):
                     if (self.root / "attempts" / a["id"] / "rollout" / name).is_file():

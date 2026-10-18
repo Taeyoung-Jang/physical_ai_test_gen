@@ -14,6 +14,11 @@ def prediction_review(attempt):
     return {
         "attempt_id": attempt["id"],
         "axis": attempt["candidate"].get("axis"),
+        **(
+            {"branch_audit": attempt["candidate"]["branch_audit"]}
+            if "branch_audit" in attempt["candidate"]
+            else {}
+        ),
         "intent": question.get("intent"),
         "predicted_family": question.get("target_family"),
         "failure_prediction": question.get("failure_prediction", "")[:600],

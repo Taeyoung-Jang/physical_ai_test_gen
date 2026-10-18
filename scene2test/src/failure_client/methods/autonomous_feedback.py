@@ -25,9 +25,9 @@ class SearchBudget(StrictRecord):
     history_limit: int = Field(default=4, ge=2, le=8)
     afs_model: str = Field(default="gpt-6-luna", min_length=1)
     afs_timeout_s: float = Field(default=300.0, gt=0, le=600)
-    selection_policy: Literal["alternating-v1", "discovery-v1", "failure-directed-v2"] = (
-        "alternating-v1"
-    )
+    selection_policy: Literal[
+        "alternating-v1", "discovery-v1", "failure-directed-v2", "failure-branch-v3"
+    ] = "alternating-v1"
     valid_rollout_target: int | None = Field(default=None, ge=1, le=60)
     min_axis_change_fraction: float = Field(default=0.1, gt=0, le=1)
 
@@ -39,7 +39,11 @@ class SearchBudget(StrictRecord):
         ):
             raise ValueError("legacy alternating budgets remain limited to 16")
         if self.valid_rollout_target is not None:
-            if self.selection_policy not in {"discovery-v1", "failure-directed-v2"}:
+            if self.selection_policy not in {
+                "discovery-v1",
+                "failure-directed-v2",
+                "failure-branch-v3",
+            }:
                 raise ValueError("valid target requires a discovery policy")
             if self.valid_rollout_target > self.max_attempts:
                 raise ValueError("valid target exceeds attempt cap")
@@ -92,7 +96,11 @@ def selection(memory, attempts, budget, schema):
     """LLM first; at most one local step between LLM hypotheses; no local starvation."""
     axes = list(parameters(memory["cases"][0]))
     audit = accounting(attempts, axes, budget)
-    discovery = budget.selection_policy in {"discovery-v1", "failure-directed-v2"}
+    discovery = budget.selection_policy in {
+        "discovery-v1",
+        "failure-directed-v2",
+        "failure-branch-v3",
+    }
     if budget.selection_policy == "discovery-v1" and audit["selectable_axes"]:
         least = min(audit["axis_attempts"][a] for a in audit["selectable_axes"])
         audit["selectable_axes"] = [
@@ -143,7 +151,7 @@ def selection(memory, attempts, budget, schema):
             policy="hypothesis-v2",
             mode_priority=["cross_mechanism", "success_probe", "boundary_probe"],
         )
-    if budget.selection_policy == "failure-directed-v2":
+    if budget.selection_policy in {"failure-directed-v2", "failure-branch-v3"}:
         from failure_client.methods.failure_objective import failure_objective
 
         new_valid = sum(a.get("episode", {}).get("status") == "VALID" for a in attempts)
@@ -167,6 +175,10 @@ def selection(memory, attempts, budget, schema):
                 "axis attempts, proposal order, novelty"
             ),
         )
+        if budget.selection_policy == "failure-branch-v3":
+            from .branch_anchors import branch_catalog
+
+            branch_catalog(memory, ctx)
     return None, ctx
 
 
@@ -190,6 +202,26 @@ def selected_probe(raw, ctx, memory):
                 raise ValueError("target family is unsupported in this domain")
             if space.mode != ("success_probe" if space.intent == "relief" else "cross_mechanism"):
                 raise ValueError("proposal mode contradicts failure-search intent")
+            if "anchor_catalog" in ctx:
+                from .branch_anchors import checked_anchor
+
+                checked_anchor(space, ctx)
     candidate = bind(choose_probe(raw, ctx, memory), memory)
     candidate["scheduler"] = ctx["development_search"]
+    if "anchor_catalog" in ctx:
+        anchor = next(
+            c for c in ctx["anchor_catalog"] if c["case_id"] == candidate["anchor_case_id"]
+        )
+        axis = candidate["axis"]
+        candidate["branch_audit"] = {
+            "anchor_case_id": anchor["case_id"],
+            "anchor_outcome": anchor["observed_outcome"],
+            "anchor_evidence_id": candidate["selection_audit"]["anchor_evidence_id"],
+            "anchor_rationale": candidate["evidence"]["anchor_rationale"],
+            "changed_axis": axis,
+            "before": anchor["parameters"][axis],
+            "after": candidate["parameters"][axis],
+            "unchanged_parameters_verified": True,
+            "claim": ctx["branch_contract"]["claim"],
+        }
     return candidate

@@ -1,5 +1,10 @@
 # Scene2Test
 
+최신 AFS 개발 모드: [성공 기준 분기·실패 행동 진단·실행 명령](scene2test/docs/AFS_BRANCH_ANCHORS.md).
+새 가설은 성공 기록에서 분기하고 실패 완화는 실패 기록에서 분기합니다. 기존 동결
+세션은 보존하며 새 설정 `afs_failure_branch_luna.json`으로 별도 세션을 시작합니다.
+아래의 이전 자동 탐색 예산·명령은 해당 구버전 모드 기준입니다.
+
 ```
 apt-get update && apt-get install -y libegl1 libglvnd0
 ```

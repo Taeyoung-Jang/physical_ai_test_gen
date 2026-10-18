@@ -1,5 +1,27 @@
 # Scene2Test workspace memory
 
+## PASS anchor branching and read-only phase audit implemented (2026-10-18)
+
+New opt-in failure-branch-v3 requires anchor_case_id/rationale and actual anchor
+behavior refs. Challenge/transfer use unmixed observed PASS; relief uses observed
+FAIL; mixed/excluded/unpresented cases rejected. Candidates/min-step are based on
+selected anchor, not latest FAIL; exactly one changed parameter verified. Catalog
+respects presented history_limit. branch_audit persists and feeds next prediction
+review/report. Old modes/robot/evaluator/taxonomy thresholds unchanged. New config
+afs_failure_branch_luna:6valid/8attempts/8AFS,2peraxis,0repeat,10%min-step,Luna300s.
+Actual2PASS+3FAIL offline plan passes same condition e8ec8119...; actual context
+schema/manual contract check keeps box fraction1 from PASS instead of latest.25
+while changing floor friction. Manual check NOT LLM proposal or live result.
+Related202 CPU tests pass incl17new branch/phase tests; no paid/API/GPU/robot run.
+New tools/audit_failure_phases.py compares whole actions with unchanged terminal
+rules; actual4-run report runtime/failure_phase_audit/20261018T074329_464497Z.
+Original3FAIL stay unclassified; excluded human timeout stays INCONCLUSIVE.
+No labels relaxed, old DB/outcomes/budgets changed, commit/push or GIF. Preserve
+all frozen sessions; use NEW separately budgeted branch session, never drift bypass.
+Joint30% FDR/4families is across whole same-goal test set, not one episode; Gain20%
+later. New selection quality remains unmeasured. See AFS_BRANCH_ANCHORS.md and
+branch_anchors_and_phase_audit workhistory for commands, evidence and limits.
+
 ## Failure-directed live session partial results reviewed (2026-10-18)
 
 Session20261018T032610_668533Z:4attempts,3VALID FAIL(BUDGET_EXHAUSTED),1excluded

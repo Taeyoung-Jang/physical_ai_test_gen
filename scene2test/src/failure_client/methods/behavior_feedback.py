@@ -207,6 +207,13 @@ def choose_probe(raw, ctx, memory):
     stagnant = similar_failures(memory, base, axes)
     options, rejected = [], []
     for index, space in enumerate(proposal.spaces):
+        anchor = None
+        if "anchor_catalog" in ctx:
+            from .branch_anchors import checked_anchor
+
+            anchor, anchor_ref = checked_anchor(space, ctx)
+            base = anchor["parameters"]
+            stagnant = similar_failures(memory, base, axes)
         for value in b.endpoint_values(space):
             params = {**base, space.axis: value}
             minimum = ctx.get("development_search", {}).get("min_axis_change_fraction", 0)
@@ -233,6 +240,11 @@ def choose_probe(raw, ctx, memory):
                     "boundary_confirmed": False,
                     "space_index": index,
                     "novelty": min(distance(params, old, axes) for old in seen),
+                    **(
+                        {"anchor_case_id": anchor["case_id"], "anchor_evidence_id": anchor_ref}
+                        if anchor is not None
+                        else {}
+                    ),
                 }
             )
     if not options:
@@ -282,6 +294,11 @@ def choose_probe(raw, ctx, memory):
         "interpretation": "Untested endpoints and causal claims remain unconfirmed",
     }
     if policy == "failure-directed-v2":
+        if "anchor_catalog" in ctx:
+            chosen["selection_audit"].update(
+                anchor_case_id=chosen["anchor_case_id"],
+                anchor_evidence_id=chosen["anchor_evidence_id"],
+            )
         chosen["selection_audit"]["failure_objective"] = ctx["failure_objective"]
         chosen["selection_audit"]["eligible_predictions"] = [
             {
