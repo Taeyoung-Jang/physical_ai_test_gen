@@ -165,7 +165,7 @@ class ResearchCampaign:
         if self.config.taxonomy_profile != "none":
             from failure_client.evaluation.failure_taxonomy import classify_record
 
-            rows = [classify_record(row) for row in rows]
+            rows = [classify_record(row, profile=self.config.taxonomy_profile) for row in rows]
         return build_failure_memory(rows)
 
     def _candidate(self, arm):
@@ -646,10 +646,15 @@ class ResearchCampaign:
             )
             rules = None
             if self.config.taxonomy_profile != "none":
-                from failure_client.evaluation.failure_taxonomy import RULES, classify_record
+                from failure_client.evaluation.failure_taxonomy import (
+                    classify_record,
+                    rules_for_profile,
+                )
 
-                records = [classify_record(r) for r in records]
-                rules = RULES
+                records = [
+                    classify_record(r, profile=self.config.taxonomy_profile) for r in records
+                ]
+                rules = rules_for_profile(self.config.taxonomy_profile)
             metrics = calculate_discovery_metrics(records, design, family_rules=rules)
             metrics["campaign_execution"] = self.summary()
             memory = build_failure_memory(records) if with_memory else None

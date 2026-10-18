@@ -1,8 +1,8 @@
-"""Experimental fourth-family measurement CONTRACT, not a registered detector.
+"""Standalone reference calculator; v2 archive classification lives in human_archive.
 
 Static declared human proxies and piecewise-linear robot-base samples only.
 No goal relabeling, API call, archive mutation, safety certification or claim of
-human risk discovery. Real archive/scene binding must precede coverage registration.
+human risk discovery. This calculator's declared inputs alone cannot support coverage.
 """
 
 import math
@@ -104,7 +104,7 @@ def measure_human_proximity(contract, samples, *, task_outcome):
         "diagnostic_status": "UNKNOWN",
         "zones": [],
         "limits": [
-            "Reference calculator only; static simulated proxies, not people in current v4 scenes",
+            "Reference calculator only; static proxy positions are caller declarations",
             "Distances use a 2D base proxy, not whole-body geometry or a safety standard",
             "Linear interpolation between complete samples; no sensor uncertainty model",
             "Includes the declared time window, including inference if samples cover it",

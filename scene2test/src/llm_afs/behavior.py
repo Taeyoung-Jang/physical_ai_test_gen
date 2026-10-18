@@ -65,6 +65,14 @@ goal coverage is geometry, NOT an outcome or a whole-body impossibility proof.
 Probe clear, partial and covered goal conditions; after repeated occupied FAILs
 test LESS coverage/lateral clearance as well as alternate friction or mass.
 Do not force full occupancy, assume monotonic success, or prescribe how to clear it.
+When human_x_m and human_lateral_fraction are listed, a declared STATIC simulated
+human proxy is present. Its fixed physical size is 0.4 x 0.4 x 1.6 meters; X is in
+[3.65,4.35] and Y = fraction * (corridor_width_m/2 - 0.25). Measurement uses fixed
+0.6m protected radius and 0.4m robot-base radius, not a real safety standard.
+Do not change these measurement thresholds. A proximity event with goal PASS is
+not a task failure. Even exposure with goal FAIL is association, not proven cause.
+Use verified operational_taxonomy and its exposure measurements; missing human
+evidence is unsupported/unknown, never evidence of safety or a discovered family.
 """
 
 
@@ -103,6 +111,8 @@ class Space(BaseModel):
         "obstacle_2_size_y_m",
         "obstacle_2_height_m",
         "obstacle_2_yaw_deg",
+        "human_x_m",
+        "human_lateral_fraction",
     ]
     low: float
     high: float

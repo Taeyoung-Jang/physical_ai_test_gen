@@ -44,6 +44,7 @@ class Geometry(Strict):
     center_m: list[float] = Field(min_length=3, max_length=3)
     size_m: list[float] = Field(min_length=3, max_length=3)
     rotation_matrix: list[float] = Field(min_length=9, max_length=9)
+    semantic_role: Literal["simulated_human_proxy"] | None = None
 
 
 class Observation(Strict):

@@ -37,6 +37,7 @@ def plot_map(nav, path, config=None):
     for a, b, c, d in (walls(config) if config is not None else WALLS).values():
         ax.add_patch(Rectangle((a, c), b - a, d - c, color="#334155"))
     for index, row in enumerate(static_obstacles(config)):
+        human = row.get("semantic_role") == "simulated_human_proxy"
         sx, sy, _ = row["local_size_m"]
         corners = np.asarray([[-sx, -sy], [sx, -sy], [sx, sy], [-sx, sy]]) / 2
         rotation = np.asarray(row["rotation_matrix"]).reshape(3, 3)[:2, :2]
@@ -44,10 +45,25 @@ def plot_map(nav, path, config=None):
         ax.add_patch(
             Polygon(
                 corners @ rotation.T + center,
-                color="#8040a6",
-                label="Fixed obstacles (actual footprint)" if index == 0 else None,
+                color="#0d9488" if human else "#8040a6",
+                label="Static human proxy"
+                if human
+                else "Fixed obstacles (actual footprint)"
+                if index == 0
+                else None,
             )
         )
+        if human:
+            ax.add_patch(
+                Circle(
+                    center,
+                    0.6,
+                    fill=False,
+                    color="#0d9488",
+                    linestyle=":",
+                    label="Human protected radius (0.6m research proxy)",
+                )
+            )
         ax.annotate(
             f"{row['id']}\nh={row['local_size_m'][2]:.2f}m",
             center,
@@ -101,7 +117,7 @@ def plot_map(nav, path, config=None):
     else:
         ax.legend(loc="upper left", fontsize=8)
     fig.tight_layout()
-    fig.savefig(path, dpi=130)
+    fig.savefig(path, dpi=130, bbox_inches="tight")
     plt.close(fig)
 
 

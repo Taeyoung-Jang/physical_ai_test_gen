@@ -11,14 +11,20 @@ import math
 from pathlib import Path
 
 from clear_path import fixture
-from clear_path.contracts import CorridorFixture, GoalRegionFixture, ObstacleFixture, parse_fixture
+from clear_path.contracts import (
+    CorridorFixture,
+    GoalRegionFixture,
+    HumanFixture,
+    ObstacleFixture,
+    parse_fixture,
+)
 from clear_path.scene_space import SCHEMAS, axes_for_schema
 from robot_vlm.task_outcome import digest, task_contract
 
-from .failure_taxonomy import PROFILE, RULES
+from .failure_taxonomy import HUMAN_PROFILE, PROFILE, rules_for_profile
 from .research_records import FAMILIES
 
-VERSION = "failure-domain-readiness-v2"
+VERSION = "failure-domain-readiness-v3"
 
 
 def _distance(point, rectangle):
@@ -93,6 +99,17 @@ def initial_envelopes(schema):
                     "derivation": "X band +/- maximum half-diagonal; full corridor Y envelope",
                 }
             )
+    if isinstance(config, HumanFixture):
+        x0, x1 = axes["human_x_m"]
+        h = widths[1] / 2
+        rows.append(
+            {
+                "object_id": "human_proxy_1",
+                "dynamic": False,
+                "xy_envelope_m": [x0 - 0.2, x1 + 0.2, -h + 0.05, h - 0.05],
+                "derivation": "fixed 0.4m proxy; full X/width/lateral domain projection",
+            }
+        )
     return rows
 
 
@@ -108,7 +125,7 @@ def _initial_goal_check(schema, goal):
     config = parse_fixture({"schema_version": schema})
     if isinstance(config, GoalRegionFixture):
         for offset in (1.0, 0.5, 0.0):
-            example = GoalRegionFixture(box_lateral_fraction=offset)
+            example = type(config)(box_lateral_fraction=offset)
             witnesses.append(
                 {
                     "scene_config": example.model_dump(),
@@ -184,21 +201,24 @@ def _sources():
         "clear_path/scene_space.py",
         "clear_path/fixture.py",
         "clear_path/obstacles.py",
+        "clear_path/humans.py",
         "scene_graph.py",
         "robot_vlm/task_outcome.py",
         "failure_client/evaluation/failure_taxonomy.py",
         "failure_client/evaluation/research_records.py",
         "failure_client/evaluation/domain_readiness.py",
         "failure_client/evaluation/human_proximity.py",
+        "failure_client/evaluation/human_archive.py",
     ]
     return {p: hashlib.sha256((src / p).read_bytes()).hexdigest() for p in paths}
 
 
-def audit_domain(schema="clear-path-obstacles-v3"):
+def audit_domain(schema="clear-path-obstacles-v3", *, taxonomy_profile=PROFILE):
     if schema not in SCHEMAS:
         raise ValueError("domain readiness requires a reviewed scene schema")
     config = parse_fixture({"schema_version": schema})
     axes = axes_for_schema(schema)
+    rules = rules_for_profile(taxonomy_profile)
     # Budgets have no bearing on this initial-geometry audit. Only read the goal.
     goal = task_contract(fixture.GOAL, 10, None)["goal"]
     initial = _initial_goal_check(schema, goal)
@@ -270,23 +290,34 @@ def audit_domain(schema="clear-path-obstacles-v3"):
             ),
         },
     }
+    if isinstance(config, HumanFixture):
+        rows["human_safety_risk"].update(
+            scene_control_status="DECLARED_STATIC_HUMAN_PROXY",
+            development_status="MANIFEST_BOUND_MEASUREMENT_AVAILABLE",
+            relevant_axes=["human_x_m", "human_lateral_fraction", *geometry_axes],
+            observations=["manifest-bound human geometry", "base trajectory", "terminal exposure"],
+            gap=(
+                "Use goal-behavior-v2; validate live positive/negative evidence; "
+                "exposure is not causation"
+            ),
+        )
     for name, row in rows.items():
         row.update(
             family=name,
-            rule_status="IMPLEMENTED_OPERATIONAL" if name in RULES else "UNSUPPORTED",
-            rule_version=RULES.get(name),
+            rule_status="IMPLEMENTED_OPERATIONAL" if name in rules else "UNSUPPORTED",
+            rule_version=rules.get(name),
             observed_failure_count=None,
             observed_status="NOT_MEASURED",
             causal_status="NOT_ASSESSED",
         )
-    count = len(set(RULES) & set(FAMILIES))
+    count = len(set(rules) & set(FAMILIES))
     report = {
         "schema_version": VERSION,
         "scene_schema": schema,
         "axes": axes,
         "axis_count": len(axes),
         "goal": goal,
-        "taxonomy_profile": PROFILE,
+        "taxonomy_profile": taxonomy_profile,
         "families": [rows[f] for f in FAMILIES],
         "initial_goal_occupancy": initial,
         "static_map_probes": _map_probes(schema),
@@ -314,10 +345,12 @@ def audit_domain(schema="clear-path-obstacles-v3"):
             },
             {
                 "id": "fourth_family_contract",
-                "kind": "CONTRACT_AND_REFERENCE_CALCULATOR_ONLY",
+                "kind": "IMPLEMENTED_REQUIRES_LIVE_VALIDATION"
+                if taxonomy_profile == HUMAN_PROFILE and isinstance(config, HumanFixture)
+                else "AVAILABLE_IN_SEPARATE_V5_PROFILE",
                 "reason": (
-                    "Human proximity contract is experimental; implement and validate "
-                    "scene/trace binding before registration. It must not relabel goal PASS"
+                    "V5 scene/trace binding and v2 rule are implemented; validate real evidence. "
+                    "Human exposure must not relabel goal PASS"
                 ),
             },
             {
@@ -335,7 +368,7 @@ def audit_domain(schema="clear-path-obstacles-v3"):
             "Static source-bound capability audit; not six-family measurement of a campaign",
             "No robot actions, physical integration, GPU inference or paid API calls",
             "No labels, budgets, archived outcomes or frozen campaigns are modified",
-            "Current goal-agent v1/v2/v3/v4 only; separate maze/terrain backends are not included",
+            "Goal-agent v1 through v5 only; separate maze/terrain backends are not included",
             "Initial geometry cannot predict all post-action states of movable objects",
         ],
         "scene_kind": "corridor" if isinstance(config, CorridorFixture) else "box_and_bay",

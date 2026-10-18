@@ -62,6 +62,18 @@ class GoalRegionFixture(ObstacleFixture):
     box_goal_x_m: float = Field(default=7.0, ge=6.8, le=7.5)
 
 
+class HumanFixture(GoalRegionFixture):
+    """One declared STATIC human proxy in a disjoint X band; no new joints.
+
+    Physical dimensions and measurement thresholds are fixed, never AFS axes.
+    Protected regions may overlap routes; physical objects initially do not overlap.
+    """
+
+    schema_version: Literal["clear-path-human-v5"] = "clear-path-human-v5"
+    human_x_m: float = Field(default=4.0, ge=3.65, le=4.35)
+    human_lateral_fraction: float = Field(default=0.7, ge=-1.0, le=1.0)
+
+
 def parse_fixture(value=None):
     if value is None:
         return Fixture()
@@ -73,6 +85,7 @@ def parse_fixture(value=None):
         "clear-path-corridor-v2": CorridorFixture,
         "clear-path-obstacles-v3": ObstacleFixture,
         "clear-path-goal-region-v4": GoalRegionFixture,
+        "clear-path-human-v5": HumanFixture,
     }.get(value.get("schema_version"), Fixture)
     return cls.model_validate(value)
 

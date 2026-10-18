@@ -39,6 +39,10 @@ def write_discovery_report(
         "unique_failure_scenes",
         "repeated_scene_failures",
         "failure_discovery_rate",
+        "discovered_family_count",
+        "observed_family_coverage_lower_bound",
+        "unclassified_failures",
+        "joint_fdr_diversity_target_observed",
         "failure_diversity_coverage",
         "coverage_status",
     )
@@ -161,6 +165,8 @@ def write_discovery_report(
 table{{border-collapse:collapse}}pre{{white-space:pre-wrap}}</style>
 <h1>실패 발견 지표: {escape(campaign_id)}</h1>
 <p>목표: FDR ≥ 30%, Random 대비 상대 향상 ≥ 20%, 실패 유형 ≥ 4/6.</p>
+<p>현재 우선 목표는 같은 표본에서 FDR ≥ 30%와 근거 있는 유형 ≥ 4종을 함께 관측하는 것입니다.
+joint_fdr_diversity_target_observed는 해당 표본의 관측값이며 일반화된 성능 보장은 아닙니다.</p>
 <p>접촉·낙상은 사건이며 목표 실패와 별개입니다. null은 미측정/계산 불가이지 0이 아닙니다.</p>
 <p>활성 유형 규칙: {escape(str(metrics.get("supported_family_rules", {})))}.
 미지원/근거 부족 유형은 UNKNOWN/UNSUPPORTED이며, 사건과 원인 확정은 다릅니다.

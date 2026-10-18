@@ -132,6 +132,15 @@ def _summary(records, family_rules):
         "diversity_target_observed": (
             True if measured and len(families) >= 4 else False if measured and not partial else None
         ),
+        "joint_fdr_diversity_target_observed": (
+            False
+            if rate is not None and rate < 0.30
+            else True
+            if measured and rate is not None and len(families) >= 4
+            else False
+            if measured and not partial
+            else None
+        ),
         "coverage_status": "partial_operational_rules"
         if partial
         else "measured"

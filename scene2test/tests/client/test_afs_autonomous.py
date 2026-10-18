@@ -11,7 +11,11 @@ from jsonschema import validate
 
 from clear_path.contracts import GoalRegionFixture
 from failure_client.evaluation.goal_run_reader import read_json
-from failure_client.experiments.afs_autonomous import AutonomousAFS, development_plan
+from failure_client.experiments.afs_autonomous import (
+    AutonomousAFS,
+    development_plan,
+    proposal_request_digest,
+)
 from failure_client.experiments.local_goal_adapter import atomic_json
 from failure_client.methods.autonomous_feedback import SearchBudget, selected_probe, selection
 from llm_afs.behavior_request import request
@@ -148,6 +152,61 @@ def test_crash_after_saved_response_recovers_without_second_call(tmp_path, monke
     resumed.run(live=True, max_new_attempts=1)
     assert len(proposer.calls) == len(robot.calls) == 1
     assert resumed.summary()["selection_costs"]["input_tokens"]["observed"] == 123
+
+
+def test_later_response_resumes_after_sorted_database_roundtrip(tmp_path, monkeypatch):
+    engine, robot, proposer = setup(tmp_path, budget=SearchBudget(max_repeats=0), v4=True)
+    engine.run(live=True, max_new_attempts=1)
+
+    def crash(_):
+        raise RuntimeError("after later response saved")
+
+    monkeypatch.setattr(engine, "_finish_proposal", crash)
+    with pytest.raises(RuntimeError, match="later response"):
+        engine.run(live=True, max_new_attempts=1)
+    assert len(proposer.calls) == 2 and len(robot.calls) == 1
+    resumed = reload(engine, robot, proposer)
+    selection_before_sort = resumed._selection
+
+    def restored_selection():
+        candidate, context = selection_before_sort()
+        # A DB snapshot sorts nested dict keys; values and context digest are unchanged.
+        return candidate, json.loads(json.dumps(context, sort_keys=True))
+
+    monkeypatch.setattr(resumed, "_selection", restored_selection)
+    result = resumed.run(live=True, max_new_attempts=1)
+    assert result["attempted"] == 2
+    assert len(proposer.calls) == len(robot.calls) == 2
+    assert result["selection_costs"]["input_tokens"]["observed"] == 246
+
+
+@pytest.mark.parametrize("field", ["model", "instructions", "schema", "content", "input_order"])
+def test_request_normalization_preserves_every_semantic_guard(field):
+    body = {
+        "model": "synthetic",
+        "instructions": "fixed",
+        "text": {"format": {"schema": {"type": "object"}}},
+        "input": [{"role": "user", "content": '{"context":{"b":2,"a":1}}'}],
+    }
+    sorted_body = copy.deepcopy(body)
+    sorted_body["input"][0]["content"] = '{"context":{"a":1,"b":2}}'
+    assert proposal_request_digest(body) == proposal_request_digest(sorted_body)
+    changed = copy.deepcopy(sorted_body)
+    if field in {"model", "instructions"}:
+        changed[field] = "different"
+    elif field == "schema":
+        changed["text"]["format"]["schema"]["type"] = "array"
+    elif field == "content":
+        changed["input"][0]["content"] = '{"context":{"a":1,"b":3}}'
+    else:
+        changed["input"].insert(0, {"role": "system", "content": "{}"})
+    assert proposal_request_digest(body) != proposal_request_digest(changed)
+
+
+@pytest.mark.parametrize("text", ['{"a":1,"a":2}', '{"a":NaN}', "not JSON"])
+def test_request_normalization_rejects_ambiguous_json(text):
+    with pytest.raises(ValueError):
+        proposal_request_digest({"input": [{"content": text}]})
 
 
 def test_timeout_unknown_cost_never_resend_and_secret_redacted(tmp_path, monkeypatch):

@@ -39,6 +39,7 @@ COPY_FILES = {
     "terminal_state.json",
     "scene_graph.json",
     "navigation_map.json",
+    "human_proxies.json",
 }
 COPY_PATTERN = re.compile(r"(?:observation|skill|tool)_\d{3}\.json|camera_\d{3}\.png")
 SECRET_KEYS = {

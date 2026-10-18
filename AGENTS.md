@@ -1,5 +1,54 @@
 # Scene2Test workspace memory
 
+## Human scene and joint measurement first implementation (2026-10-18)
+
+User authorized implementation. Added opt-in clear-path-human-v5 (v4 plus human X
+3.65..4.35 and lateral fraction,20 axes) with a fixed0.4x0.4x1.6m static proxy in
+a disjoint band. Shared XML/map/graph/robot geometry role and human_proxies.json
+manifest/source provenance; G1 joints unchanged. goal-behavior-v2 explicitly adds
+human_safety_risk to original3 rule versions; default v1 retains3. Verified scene
+config/XML/graph/metadata/audited qpos layout, complete terminal sampled5s window,
+<=.25s gaps/termination lag and fixed .4m base/.6m protected radius, .5s continuous
+exposure required. PASS retains diagnostic; exclusions/missing/overlapping labels
+stay conservative. This is temporal association, not cause or real safety standard.
+Standalone caller-declared calculator still cannot count as a family. Actual new
+human/G1/VLM rollout evidence remains absent. Domain audit supports explicit profile
+and v5 envelopes; inventory4 is NOT observed4/6. AFS schema/host both allow20 axes,
+measured human evidence enters compact feedback; memory bundles preserve metadata.
+Joint FDR/diversity observed field and family count/lower bound/unclassified FAIL
+appear in common JSON/CSV/HTML reports; partial coverage stays null.
+Fixed autonomous resume request comparison via parsed strict nested JSON while
+retaining whole-body model/instructions/schema/values/list order guards and original
+artifact hashes. Sorted second-response crash reproduced failure before fix; recovery
+after fix uses saved response with no resend. Source changes require new controls;
+never migrate/resume old frozen robot conditions by bypassing drift.
+Final related CPU/synthetic tests347 passed; Ruff and diff checks pass. Two CPU
+actual G1 composition previews at runtime/human_scene_validation/20261018T003120_486877Z
+(29 actuators, no robot/API/GPU runs, PNGs inspected, GIF0). No four-family discovery
+or FDR performance achievement claimed. Still pending: discovery-only scheduler,
+family-aware allocation,20-valid/24-attempt independent campaign and live smoke.
+Existing autonomous local/midpoint scheduling is still present; current implementation
+is first bundle per docs/HUMAN_SCENE_MEASUREMENT.md. No commit/push or archive/DB edits.
+
+## Joint FDR and diversity delivery plan (2026-10-17)
+
+User requested replanning, not implementation or paid execution. Current plan is
+docs/FDR_DIVERSITY_DELIVERY_PLAN.md: validate three existing operational families,
+integrate declared static human proxy/manifest-bound traces as fourth candidate,
+then discovery-only AFS (no automatic midpoint), precise evidence, resume fix and
+joint reporting; offline tests, bounded development smoke, frozen evaluation follow.
+Human exposure plus PASS stays a safety event, not failure; ambiguous/missing labels
+stay UNKNOWN, no guaranteed fourth family or causal claim. Unreachable/perception
+remain deferred. All four types must have distinct verified failed-scene evidence.
+Proposed—not approved—budgets: smoke<=8 attempts; first evaluation20 valid<=24 attempts,
+6 FAIL+4 families milestone; expand to3 predeclared seeds60 valid<=72 attempts,
+18 FAIL+4 families at total60, with all per-seed results. Max10 robot calls/episode
+implies240/720 robot calls and<=24/72 AFS requests; no token/sim caps. No external
+development history in evaluation, no result-driven seed selection/early success stop.
+Current autonomous max_attempts<=16/attempt-only requires versioned implementation,
+not config editing alone. Gain/precise boundaries/old width resumes remain deferred.
+Only plan, roadmap and history changed; no code, outcomes, DB, budgets or live runs.
+
 ## Broad failure discovery before boundary refinement (2026-10-17)
 
 User clarifies earlier small changes intentionally sought failure boundaries and now

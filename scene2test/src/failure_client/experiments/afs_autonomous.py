@@ -7,6 +7,7 @@ Ambiguous calls are never resent; saved evidence can be collected on resume.
 import json
 import os
 import time
+from copy import deepcopy
 from datetime import UTC, datetime
 from html import escape
 from pathlib import Path
@@ -17,8 +18,14 @@ from failure_client.archive.regression_cases import (
     export_failure_memory,
 )
 from failure_client.evaluation.behavior_measures import verify_episode_files
-from failure_client.evaluation.failure_taxonomy import classify_record
-from failure_client.evaluation.goal_run_reader import _hash_file, read_goal_run, read_json
+from failure_client.evaluation.failure_taxonomy import classify_record, profile_for_scene
+from failure_client.evaluation.goal_run_reader import (
+    _constant,
+    _hash_file,
+    _pairs,
+    read_goal_run,
+    read_json,
+)
 from failure_client.evaluation.research_records import EpisodeRecord, RunInput
 from failure_client.methods.autonomous_feedback import (
     SearchBudget,
@@ -51,6 +58,23 @@ LIMITS = [
 
 def stamp():
     return datetime.now(UTC).strftime("%Y%m%dT%H%M%S_%fZ")
+
+
+def proposal_request_digest(body):
+    """Compare the whole request, parsing only its declared JSON text payload.
+
+    Retain list order and every model/schema/instruction/transport value. DB sorting
+    can change dict insertion order inside JSON strings without changing their meaning.
+    Originals remain untouched; malformed/duplicate/nonfinite JSON is rejected.
+    """
+    normalized = deepcopy(body)
+    for message in normalized["input"]:
+        if not isinstance(message.get("content"), str):
+            raise ValueError("expected a JSON text proposal request")
+        message["content"] = json.loads(
+            message["content"], object_pairs_hook=_pairs, parse_constant=_constant
+        )
+    return digest(normalized)
 
 
 def fingerprint(config):
@@ -290,7 +314,9 @@ class AutonomousAFS:
         body = request(
             ctx, self.budget.afs_model, selection_policy="autonomous_development_endpoint"
         )
-        if body != read_json(directory / "request.json"):
+        if proposal_request_digest(body) != proposal_request_digest(
+            read_json(directory / "request.json")
+        ):
             raise ValueError("saved proposal request changed")
         raw = provider.extract_proposal(response)
         candidate = selected_probe(raw, ctx, self._memory())
@@ -340,7 +366,7 @@ class AutonomousAFS:
                 }
             )
         if record.status == "VALID":
-            record = classify_record(record)
+            record = classify_record(record, profile=profile_for_scene(self.cfg.scene_schema))
         attempt.update(episode=record.model_dump(), receipt=receipt)
         self.state.update(
             pending=None,

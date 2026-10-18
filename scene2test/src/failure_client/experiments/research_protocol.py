@@ -36,6 +36,7 @@ class CampaignConfig(StrictRecord):
         "clear-path-corridor-v2",
         "clear-path-obstacles-v3",
         "clear-path-goal-region-v4",
+        "clear-path-human-v5",
     ] = "clear-path-fixture-v1"
     seeds: list[int] = Field(default_factory=lambda: [17], min_length=1, max_length=20)
     valid_budget_per_seed: int = Field(default=8, ge=2, le=128)
@@ -46,7 +47,7 @@ class CampaignConfig(StrictRecord):
     afs_timeout_s: float = Field(default=300.0, ge=1, le=600)
     history_limit: int = Field(default=8, ge=2, le=16)
     selection_policy: Literal["novelty-v1", "hypothesis-v2"] = "hypothesis-v2"
-    taxonomy_profile: Literal["none", "goal-behavior-v1"] = "none"
+    taxonomy_profile: Literal["none", "goal-behavior-v1", "goal-behavior-v2"] = "none"
     # A fixed pilot allocation, not ratios tuned after seeing the evaluation seed.
     strategy_cycle: list[Literal["llm", "boundary", "exploration", "repeat"]] = Field(
         default_factory=lambda: ["llm", "boundary", "exploration", "repeat"]
@@ -80,6 +81,8 @@ class CampaignConfig(StrictRecord):
                 else "independent-uniform-full-seventeen-axis-obstacles-v3"
                 if self.scene_schema == "clear-path-obstacles-v3"
                 else "independent-uniform-full-eighteen-axis-goal-region-v4"
+                if self.scene_schema == "clear-path-goal-region-v4"
+                else "independent-uniform-full-twenty-axis-human-v5"
             ),
             "cold_start": "paired scene draws, separately executed and charged to each arm",
             "strategy_cycle": self.strategy_cycle,

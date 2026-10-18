@@ -15,6 +15,7 @@ import numpy as np
 from PIL import Image, ImageDraw
 
 from clear_path import audit, fixture
+from clear_path.humans import human_geometry, human_scene
 from simulation_server.groot_locomotion import G1OnnxController
 
 from . import goal_policy as policy_module
@@ -93,6 +94,7 @@ def run(
     data = controller.data
     dt = model.opt.timestep
     world = {model.geom(n).id for n in fixture.world_geom_names(config)}
+    human_roles = {row["id"]: row["semantic_role"] for row in human_geometry(config)}
 
     def current_geometry():
         return [
@@ -101,6 +103,7 @@ def run(
                 center_m=data.geom_xpos[g].tolist(),
                 size_m=(2 * model.geom_size[g]).tolist(),
                 rotation_matrix=data.geom_xmat[g].tolist(),
+                semantic_role=human_roles.get(model.geom(g).name),
             )
             for g in sorted(world)
         ]
@@ -108,6 +111,8 @@ def run(
     # Evaluation artifacts only; no reference path is supplied to the policy.
     write(root / "scene_graph.json", fixture.graph(config))
     write(root / "navigation_map.json", fixture.navigation_map(config))
+    if human_roles:
+        write(root / "human_proxies.json", human_scene(config))
     foot = {
         g for g in range(model.ngeom) if "ankle_roll" in model.body(int(model.geom_bodyid[g])).name
     }
@@ -203,6 +208,7 @@ def run(
                 "fixture_obstacles": audit.sha256(
                     Path(__file__).parents[1] / "clear_path/obstacles.py"
                 ),
+                "fixture_humans": audit.sha256(Path(__file__).parents[1] / "clear_path/humans.py"),
                 "navigation_tools": audit.sha256(Path(navigation_tools.__file__)),
                 "execution_feedback": audit.sha256(
                     Path(__file__).with_name("execution_feedback.py")

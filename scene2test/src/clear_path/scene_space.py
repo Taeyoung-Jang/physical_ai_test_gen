@@ -31,15 +31,23 @@ OBSTACLE_AXES = {
 }
 
 GOAL_REGION_AXES = {**OBSTACLE_AXES, "box_goal_x_m": (6.8, 7.5)}
+HUMAN_AXES = {
+    **GOAL_REGION_AXES,
+    "human_x_m": (3.65, 4.35),
+    "human_lateral_fraction": (-1.0, 1.0),
+}
 SCHEMAS = (
     "clear-path-fixture-v1",
     "clear-path-corridor-v2",
     "clear-path-obstacles-v3",
     "clear-path-goal-region-v4",
+    "clear-path-human-v5",
 )
 
 
 def axes_for_schema(schema="clear-path-fixture-v1"):
+    if schema == "clear-path-human-v5":
+        return dict(HUMAN_AXES)
     if schema == "clear-path-goal-region-v4":
         return dict(GOAL_REGION_AXES)
     if schema == "clear-path-obstacles-v3":

@@ -10,7 +10,8 @@ import numpy as np
 
 from scene_graph import ObjectNode, Relation, SceneGraph, SupportSurface
 
-from .contracts import CorridorFixture, GoalRegionFixture, ObstacleFixture
+from .contracts import CorridorFixture, GoalRegionFixture, HumanFixture, ObstacleFixture
+from .humans import human_scene
 from .obstacles import static_obstacles
 
 SPAWN = (1.0, 0.0)
@@ -172,7 +173,9 @@ def navigation_map(config, box_xy=None, *, hypothetical=False):
         current = parents[current]
     return {
         "schema_version": (
-            "clear-path-map-v4"
+            "clear-path-map-v5"
+            if isinstance(config, HumanFixture)
+            else "clear-path-map-v4"
             if isinstance(config, GoalRegionFixture)
             else "clear-path-map-v3"
             if isinstance(config, ObstacleFixture)
@@ -218,7 +221,7 @@ def graph(config):
     objects += [
         ObjectNode(
             row["id"],
-            "obstacle",
+            "human_zone" if row.get("semantic_role") == "simulated_human_proxy" else "obstacle",
             row["center_m"],
             row["world_aabb_size_m"],
             movable=False,
@@ -230,6 +233,15 @@ def graph(config):
                 "rotation_matrix": row["rotation_matrix"],
                 "yaw_deg": row["yaw_deg"],
                 "sliding_friction": 1.0,
+                **(
+                    {
+                        "semantic_role": row["semantic_role"],
+                        "protected_radius_m": 0.6,
+                        "mujoco_geom_name": row["id"],
+                    }
+                    if "semantic_role" in row
+                    else {}
+                ),
             },
         )
         for row in static_obstacles(config)
@@ -306,6 +318,9 @@ def graph(config):
                 {"initial_goal_relation": initial_goal_relation(config)}
                 if isinstance(config, GoalRegionFixture)
                 else {}
+            ),
+            **(
+                {"human_proximity": human_scene(config)} if isinstance(config, HumanFixture) else {}
             ),
         },
     ).to_dict()
@@ -399,7 +414,7 @@ def world_xml(config, robot_source=None):
             size=" ".join(str(v / 2) for v in row["local_size_m"]),
             quat=" ".join(map(str, row["quaternion_wxyz"])),
             friction="1 .005 .0001",
-            rgba=".5 .25 .65 1",
+            rgba=row.get("rgba", ".5 .25 .65 1"),
         )
     start = box_start(config)
     body = ET.SubElement(wb, "body", name="clear_box", pos=f"{start[0]} {start[1]} .35")

@@ -17,7 +17,7 @@ from failure_client.archive.regression_cases import (
     export_failure_memory,
 )
 from failure_client.evaluation.behavior_measures import verify_episode_files
-from failure_client.evaluation.failure_taxonomy import classify_record
+from failure_client.evaluation.failure_taxonomy import classify_record, profile_for_scene
 from failure_client.evaluation.goal_run_reader import _hash_file, read_goal_run, read_json
 from failure_client.evaluation.research_records import EpisodeRecord, RunInput
 from failure_client.storage.research_store import ResearchStore
@@ -328,7 +328,10 @@ class BehaviorRegression:
                 }
             )
         if record.status == "VALID":
-            record = classify_record(record)
+            schema = read_json(directory / "rollout/protocol.json")["scene_config"].get(
+                "schema_version"
+            )
+            record = classify_record(record, profile=profile_for_scene(schema))
         attempt.update(
             episode=record.model_dump(), receipt=receipt, protocol_differences=comparison
         )

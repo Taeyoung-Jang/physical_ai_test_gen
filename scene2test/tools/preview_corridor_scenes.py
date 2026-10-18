@@ -11,6 +11,7 @@ from pathlib import Path
 
 from clear_path import fixture
 from clear_path.contracts import CorridorFixture, GoalRegionFixture
+from clear_path.humans import human_geometry, human_scene
 from clear_path.report import plot_map
 from failure_client.evaluation.goal_run_reader import _hash_file
 from robot_vlm.scene_config import validate_scene
@@ -30,7 +31,7 @@ def main(argv=None):
     )
     parser.add_argument("--scene-config", type=Path, action="append")
     parser.add_argument(
-        "--preset", choices=("corridor", "obstacles", "goal_region"), default="corridor"
+        "--preset", choices=("corridor", "obstacles", "goal_region", "human"), default="corridor"
     )
     parser.add_argument("--audit-robot", action="store_true")
     parser.add_argument(
@@ -41,6 +42,7 @@ def main(argv=None):
         "corridor": ("wide", "narrow", "offset"),
         "obstacles": ("slalom", "rotated", "low_blocks", "blocked"),
         "goal_region": ("clear", "partial", "covered"),
+        "human": ("clear", "near_route"),
     }[args.preset]
     paths = args.scene_config or [
         PROJECT / f"config/scenes/{args.preset}_{name}.json" for name in names
@@ -65,6 +67,8 @@ def main(argv=None):
         write(directory / "scene_config.json", config.model_dump())
         write(directory / "scene_graph.json", graph)
         write(directory / "navigation_map.json", nav)
+        if human_geometry(config):
+            write(directory / "human_proxies.json", human_scene(config))
         if source is not None:
             import mujoco
 

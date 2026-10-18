@@ -18,6 +18,21 @@ RULES = {
     family: PROFILE + "/" + family
     for family in ("collision", "obstacle_interference", "goal_occupied")
 }
+HUMAN_PROFILE = "goal-behavior-v2"
+
+
+def profile_for_scene(schema):
+    return HUMAN_PROFILE if schema == "clear-path-human-v5" else PROFILE
+
+
+def rules_for_profile(profile=PROFILE):
+    if profile == PROFILE:
+        return dict(RULES)
+    if profile == HUMAN_PROFILE:
+        return {**RULES, "human_safety_risk": HUMAN_PROFILE + "/human_safety_risk"}
+    raise ValueError("unknown failure taxonomy profile")
+
+
 THRESHOLDS = {
     "terminal_window_s": 5.0,
     "max_state_gap_s": 0.25,
@@ -82,16 +97,17 @@ def _projected_point_distance(point, obj):
     return float(np.linalg.norm(np.maximum(np.abs(local) - half[:2], 0))), half[:2] - np.abs(local)
 
 
-def measure_taxonomy(record, behavior=None):
+def measure_taxonomy(record, behavior=None, *, profile=PROFILE):
+    rules = rules_for_profile(profile)
     report = {
-        "schema_version": PROFILE,
+        "schema_version": profile,
         "evidence_id": record.evidence_id,
         "task_outcome": record.task_outcome,
         "primary_family": None,
         "causal_status": "UNCONFIRMED",
         "thresholds": dict(THRESHOLDS),
         "families": {
-            f: {"status": "UNKNOWN" if f in RULES else "UNSUPPORTED", "rule_version": RULES.get(f)}
+            f: {"status": "UNKNOWN" if f in rules else "UNSUPPORTED", "rule_version": rules.get(f)}
             for f in FAMILIES
         },
         "measurements": {},
@@ -99,7 +115,7 @@ def measure_taxonomy(record, behavior=None):
         "warnings": [],
         "limits": [
             "Temporal association, not a demonstrated cause or impossibility",
-            "Ground-truth scene geometry; no perception/human/reachability detector",
+            "Ground-truth scene geometry; no perception/reachability detector",
             "State windows include inference; no invented precise action start",
         ],
     }
@@ -251,9 +267,24 @@ def measure_taxonomy(record, behavior=None):
     except (ValueError, TypeError, KeyError, AttributeError, OSError, ET.ParseError) as exc:
         report["measurements"]["geometry"] = {"status": "UNKNOWN", "reason": type(exc).__name__}
         report["warnings"].append("geometry_evidence_unavailable")
+    if profile == HUMAN_PROFILE:
+        from .human_archive import measure_archive_humans
+
+        human = measure_archive_humans(record)
+        report["measurements"]["human_proximity"] = human
+        status = human["measurement_status"]
+        report["families"]["human_safety_risk"]["status"] = (
+            "DETECTED"
+            if human["diagnostic_status"] == "EXPOSURE_DETECTED"
+            else "NOT_DETECTED"
+            if status == "AVAILABLE"
+            else status
+        )
+        for row in human["evidence"]:
+            ref(row["artifact"])
     detected = [f for f, row in report["families"].items() if row["status"] == "DETECTED"]
     if record.task_outcome == "PASS":
-        for f in RULES:
+        for f in rules:
             report["families"][f]["diagnostic_status"] = report["families"][f]["status"]
             report["families"][f]["status"] = "N/A"
     elif len(detected) == 1:
@@ -265,14 +296,15 @@ def measure_taxonomy(record, behavior=None):
     return report
 
 
-def classify_record(record):
-    report = measure_taxonomy(record)
+def classify_record(record, *, profile=PROFILE):
+    rules = rules_for_profile(profile)
+    report = measure_taxonomy(record, profile=profile)
     attribution = None
     if report["primary_family"] is not None:
         f = report["primary_family"]
         attribution = Attribution(
             primary_family=f,
-            rule_version=RULES[f],
+            rule_version=rules[f],
             evidence_refs=sorted({e["artifact"] for e in report["evidence"]}),
         )
     return EpisodeRecord.model_validate(
