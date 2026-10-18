@@ -12,6 +12,14 @@
 
 ## 이력 목록
 
+- [2026-10-18 환경 변화 폭과 실제 실행 편중 검토](2026-10-18_scene_variation_breadth_review.md)
+
+- [2026-10-18 확장 10종 AFS 완료: 실패율 50%, 실패 유형 3종](2026-10-18_expanded_afs_live_complete_review.md)
+
+- [2026-10-18 10종 AFS 첫 실제 분류와 API 제외 검토](2026-10-18_expanded_afs_live_partial_review.md)
+
+- [2026-10-18 확장 10종 측정과 AFS 환경 선택 연결](2026-10-18_expanded_types_afs_connection.md)
+
 - [2026-10-18 실패 유형 10종 확장과 기존 실험 재분석](2026-10-18_expanded_ten_family_reanalysis.md)
 
 - [2026-10-18 성공 기준 분기 AFS 실제 탐색 결과 검토](2026-10-18_branch_afs_live_review.md)

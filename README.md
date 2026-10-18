@@ -2,9 +2,10 @@
 
 실패 유형을6종에서10종으로 확장했습니다.
 [판정 기준·기존 실험 재분석 명령](scene2test/docs/EXPANDED_FAILURE_TYPES.md)을 참조하세요.
-현재는 별도 사후 분석이며, 기존 live AFS의 유형 선택 계약은 후속 연결 전까지 유지합니다.
+확장 유형을 [AFS 환경 선택에도 연결했습니다](scene2test/docs/AFS_EXPANDED_TEN.md).
+새10종 탐색은 `afs_expanded_ten_luna.json`, 기존6종 탐색은 `afs_failure_branch_luna.json`을 사용합니다.
 
-최신 AFS 개발 모드: [성공 기준 분기·실패 행동 진단·실행 명령](scene2test/docs/AFS_BRANCH_ANCHORS.md).
+기존6종 AFS 개발 모드: [성공 기준 분기·실패 행동 진단·실행 명령](scene2test/docs/AFS_BRANCH_ANCHORS.md).
 새 가설은 성공 기록에서 분기하고 실패 완화는 실패 기록에서 분기합니다. 기존 동결
 세션은 보존하며 새 설정 `afs_failure_branch_luna.json`으로 별도 세션을 시작합니다.
 현재 설정은 중복 후보의 거절 이유를 받아 남은 AFS8요청 예산 안에서 재제안합니다.

@@ -180,9 +180,37 @@ class BranchProposal(BaseModel):
     spaces: list[BranchPoint] = Field(min_length=1, max_length=4)
 
 
+class ExpandedBranchPoint(BranchPoint):
+    target_family: Literal[
+        "collision",
+        "obstacle_interference",
+        "goal_occupied",
+        "human_safety_risk",
+        "fall",
+        "locomotion_stall",
+        "manipulation_failure",
+        "goal_completion_failure",
+        "unclassified",
+    ]
+
+
+class ExpandedBranchProposal(BaseModel):
+    model_config = ConfigDict(extra="forbid", strict=True, allow_inf_nan=False)
+    context_sha256: str
+    spaces: list[ExpandedBranchPoint] = Field(min_length=1, max_length=4)
+
+
 def endpoint_proposal(raw, ctx):
     if ctx.get("development_search", {}).get("selection_policy") == "failure-branch-v3":
-        return BranchProposal.model_validate(raw)
+        cls = (
+            ExpandedBranchProposal
+            if (
+                ctx.get("development_search", {}).get("budget", {}).get("taxonomy_profile")
+                == "expanded-ten-v1"
+            )
+            else BranchProposal
+        )
+        return cls.model_validate(raw)
     cls = (
         FailureProposal
         if ctx.get("development_search", {}).get("selection_policy") == "failure-directed-v2"

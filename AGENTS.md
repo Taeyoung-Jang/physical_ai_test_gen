@@ -1,5 +1,68 @@
 # Scene2Test workspace memory
 
+## Expanded-ten live session completed with three measured families (2026-10-18)
+
+User-run134620_116429 COMPLETE/valid_rollout_target_complete/pendingnull:7attempts,
+6uniqueVALID,3PASS3FAIL,1excluded;new-onlyFDR50%,3primarytypes(goal_occupied,
+goal_completion_failure,manipulation_failure),0unclassified. NOT4types/Gain claim.
+One primary per distinct failed scene;3FAIL can provide at most3types. Coverage
+null/partial,observed lowerbound3/10;unreachable/perception unsupported. All7
+candidates from unmixed presented PASS anchors,exactly1axis changed. Attempt2
+obstacle1sizeY.5->.8 FAIL final.206025m/dwell.54of1s,NOT predicted collision.
+Attempt4 width4->3.2 FAIL final.440355m/push unsupported_box_face,NOT physical
+pushing incapacity or predicted locomotionstall. Attempt0 originalgoal_occupied
+unchanged. Attempt1 first-call header timeout remains excluded,0actions/unknownusage;
+resume advanced next candidate,not retry. Human lateral1->.2 actuallytested PASS,
+not whole-route safety proof. Final6valid goal met:do NOTspend1remainingAFSslot or
+extend frozen session. Next separatelybudgeted larger discovery/familyallocation,
+not labelsrelaxation or blind completed resume.481rollout+521report+21proposal
+hashes match;7MP4fullydecoded/GIF0. Robot61calls/57actions,60usageknown+1unknown,
+observed1979590in116873out;AFS7/503474in33504out. Inherited57robot/1796453in128011out
+separate,priorAFScostunknown. Samee8ec8119condition. Reviewonly,no paid/API/robot,
+code/evaluator/DB/outcome/budgetchange or commit/push. See expanded_afs_live_complete_review
+workhistory;earlierpartialnote below is historical and superseded for currentstatus.
+
+## Expanded live first goal occupied and excluded first-call timeout reviewed (2026-10-18)
+
+User-run134620_116429:NEEDS_ATTENTION/excluded_rollout/pendingnull,2attempts,
+1VALID FAIL/1excluded;new-onlyFDR1/1=100%smallinterim,1primarygoal_occupied,noGain/
+joint4typesclaim. Attempt0 fromunmixedPASS4cf81... boxlateral.5->0;10actions
+navigate8/move1/push1,final1.044812m/dwell0. Terminalstalledtrue range.012524m,
+excursion.028541m+fullgoalcover verifyUNCHANGED legacyrule,notpredictedlabel.
+Lastpush rejectedalignment_out_of_range(gap1.0443,heading-.4002,face-1.5708);
+distance.18valid/noalignmentattempt/no physicalpushproof. Secondarymanipdiagnostic
+doesnotaddfamily. Attempt1 SAMEPASSanchor obstacle2lateral0->-.7,notFAILaccumulation;
+firstrobotcall0headersReadTimeout300setting/301.0466elapsed,0actions/unknownusage.
+NotrobotFAIL,not newtype; no providerrootcauseproof/retry. Proposal1contextmeasured
+goalcompletion(import)+goaloccupied(new),missing6supported; actualfeedbackliveworks,
+new-onlyremains1type.101newrollout+305reporthashesmatch;source0drift/fullenvironment
+fingerprintmatches.2MP4decoded/GIF0. Robot11calls10actions/10usageknown1unknown,
+327955in34055outobserved;AFS2/139222in10015out;inheritedrobot57costsseparate.
+Reviewonly,no code/DB/outcome/budgetchanges/newpaidrun/commit/push.6attempt/AFSslots
+remain,5morevalidneeded. SAMEsessionresume--continue-after-exclusion noweligible,
+advancesnextsceneNOTretryexcludedscene;doNOTfreshconfigrestart or raise timeout.
+See expanded_afs_live_partial_review workhistory forcommand/diagnostics/evidence.
+
+## Expanded ten-type measurement connected to AFS selection (2026-10-18)
+
+New explicit SearchBudget.taxonomy_profile scene-default(default) or expanded-ten-v1
+(branch-v3only) shares classify_for_search/metric_options for history import,observe,
+failure_objective and new-only metrics. New config afs_expanded_ten_luna.json keeps
+6valid/8attempt/8AFS,2peraxis,0repeat,min10%,Luna300s,boundedreproposal;old configs6types.
+ExpandedBranchPoint/Proposal accepts4newtargets;old schemas retain enums. Request
+and host restrict to8supported targets+unclassified;unreachable/perception unsupported.
+Next context includes measured primary/diagnostics/statuses/expanded evidence. Existing
+missing-measured-family/target-count rank now uses10profile; predictions never labels.
+Imported history notnew denominator. Budget,goal,robot,thresholds unchanged. 230related
+CPUtests pass incl7new: schema/host,oldmodeguard,rank,observe/summary/resume,prediction
+fall vs observedcompletion separation. Real081720 sixrollout plan passes samee8ec8119.
+Actual reanalysis-memory context:1measuredgoalcompletion,7missing supported families;
+manual contract check selects missingfall over knowngoalcompletion. NOT LLM proposal,
+live fall or quality improvement;request202219UTF8bytes nottokens/wirecapture/cost.
+No API/GPU/robot/simulation/newsession/oldDB/outcomeedits/commit/push. Old frozen
+sessions preserved; future separate run uses NEW10config. Actualdiscovery quality
+unverified,no4types/Gain claim. DocsAFS_EXPANDED_TEN.md+historycontaincommands.
+
 ## Ten-family expansion and offline reanalysis implemented (2026-10-18)
 
 User approved expansion after real simulations, first definitions/detectors plus

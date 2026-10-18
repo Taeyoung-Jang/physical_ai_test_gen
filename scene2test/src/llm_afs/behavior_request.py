@@ -131,10 +131,17 @@ def request(
     directed = (
         branch or ctx.get("development_search", {}).get("selection_policy") == "failure-directed-v2"
     )
+    expanded = (
+        branch
+        and ctx.get("development_search", {}).get("budget", {}).get("taxonomy_profile")
+        == "expanded-ten-v1"
+    )
     if directed and not autonomous:
         raise ValueError("failure-directed context requires autonomous endpoint policy")
     schema = (
-        b.BranchProposal
+        b.ExpandedBranchProposal
+        if expanded
+        else b.BranchProposal
         if branch
         else b.FailureProposal
         if directed
@@ -264,6 +271,24 @@ form a NEW evidence-grounded proposal, not a resend or an invented robot result.
 Remaining requests include the next request. Every rejected proposal costs an AFS
 slot but is not a robot attempt, PASS or FAIL. No quota, minimum change, duplicate
 guard or goal rule is relaxed. Infrastructure/schema errors still stop for review.
+"""
+    if expanded:
+        body["instructions"] += """
+The explicit expanded-ten-v1 measurement profile is active: four distinct PRIMARY
+types across the WHOLE set of comparable failed scenes, never four labels in one
+episode. Read failure_objective.measured_discovered_families, supported_targets,
+missing_supported_families, target_attempt_counts and behavior_observations.measured_types.
+Do not keep seeking already observed goal-completion shortfalls alone. Offer
+evidence-grounded alternatives targeting different supported observations within
+the existing scene axes; no new skills, robot commands or budget changes.
+The host ranks missing MEASURED families and target attempt counts, not just axes.
+Fall requires sustained pose evidence; near-tilt is not a fall. Locomotion stall
+requires actual execution without movement, NOT inference waits, goal hold or a
+completed staging target. Manipulation failure may be a tool rejection, NOT proof
+of insufficient pushing strength. Goal completion failure requires final inside-goal
+pose with insufficient dwell, NOT all budget exhaustion. Unreachable/perception
+remain unsupported. Diagnostic secondary events are not extra family discoveries.
+Never convert your prediction to the observed type; future host measurements decide.
 """
     return body
 

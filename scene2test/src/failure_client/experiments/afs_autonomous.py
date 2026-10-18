@@ -18,11 +18,6 @@ from failure_client.archive.regression_cases import (
     export_failure_memory,
 )
 from failure_client.evaluation.behavior_measures import verify_episode_files
-from failure_client.evaluation.failure_taxonomy import (
-    classify_record,
-    profile_for_scene,
-    rules_for_profile,
-)
 from failure_client.evaluation.goal_run_reader import (
     _constant,
     _hash_file,
@@ -31,6 +26,7 @@ from failure_client.evaluation.goal_run_reader import (
     read_json,
 )
 from failure_client.evaluation.research_records import EpisodeRecord, RunInput
+from failure_client.evaluation.taxonomy_profiles import classify_for_search, metric_options
 from failure_client.methods.autonomous_feedback import (
     SearchBudget,
     accounting,
@@ -126,8 +122,10 @@ def development_plan(paths, budget=None, *, fingerprint_fn=None):
     rows = [e["record"] for e in memory["episodes"].values()]
     if budget.selection_policy in {"discovery-v1", "failure-directed-v2", "failure-branch-v3"}:
         rows = [
-            classify_record(
-                EpisodeRecord.model_validate(r), profile=profile_for_scene(cfg["scene_schema"])
+            classify_for_search(
+                EpisodeRecord.model_validate(r),
+                cfg["scene_schema"],
+                budget.taxonomy_profile,
             ).model_dump()
             for r in rows
         ]
@@ -437,7 +435,9 @@ class AutonomousAFS:
                 }
             )
         if record.status == "VALID":
-            record = classify_record(record, profile=profile_for_scene(self.cfg.scene_schema))
+            record = classify_for_search(
+                record, self.cfg.scene_schema, self.budget.taxonomy_profile
+            )
         attempt.update(episode=record.model_dump(), receipt=receipt)
         self.state.update(
             pending=None,
@@ -614,7 +614,7 @@ class AutonomousAFS:
             "excluded": sum(r["status"] != "VALID" for r in rows),
             "new_only_discovery_metrics": calculate_discovery_metrics(
                 [EpisodeRecord.model_validate(r) for r in rows],
-                family_rules=rules_for_profile(profile_for_scene(self.cfg.scene_schema)),
+                **metric_options(self.cfg.scene_schema, self.budget.taxonomy_profile),
             ),
             "scheduler": accounting(attempts, axes, self.budget),
             "new_execution_costs": costs(rows, len(attempts)),

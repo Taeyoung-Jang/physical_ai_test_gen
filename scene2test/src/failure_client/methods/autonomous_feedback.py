@@ -31,9 +31,15 @@ class SearchBudget(StrictRecord):
     valid_rollout_target: int | None = Field(default=None, ge=1, le=60)
     min_axis_change_fraction: float = Field(default=0.1, gt=0, le=1)
     reproposal_policy: Literal["stop", "bounded-rejection-v1"] = "stop"
+    taxonomy_profile: Literal["scene-default", "expanded-ten-v1"] = "scene-default"
 
     @model_validator(mode="after")
     def check_target(self):
+        if (
+            self.taxonomy_profile != "scene-default"
+            and self.selection_policy != "failure-branch-v3"
+        ):
+            raise ValueError("expanded taxonomy requires explicit failure-branch-v3 mode")
         if self.reproposal_policy != "stop" and self.selection_policy != "failure-branch-v3":
             raise ValueError("bounded reproposal requires explicit failure-branch-v3 mode")
         if (
@@ -169,7 +175,11 @@ def selection(memory, attempts, budget, schema):
             remaining_valid_target=remaining_target,
         )
         ctx["failure_objective"] = failure_objective(
-            memory, attempts, schema, ctx["latest"]["evidence"]
+            memory,
+            attempts,
+            schema,
+            ctx["latest"]["evidence"],
+            taxonomy_profile=budget.taxonomy_profile,
         )
         ctx["search_selection"].update(
             policy="failure-directed-v2",
