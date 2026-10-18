@@ -12,6 +12,18 @@
 
 ## 이력 목록
 
+- [2026-10-18 실패 지향 AFS 첫 실제 세션 검토](2026-10-18_failure_directed_live_review.md)
+
+- [2026-10-18 실패 지향 행동 기반 AFS 선택 개선](2026-10-18_failure_directed_selection.md)
+
+- [2026-10-18 발견 모드 첫 유효 성공 결과](2026-10-18_discovery_first_valid_pass_review.md)
+
+- [2026-10-18 로봇 API 시간 초과 오프라인 진단](2026-10-18_robot_api_offline_diagnostics.md)
+
+- [2026-10-18 단일 값 환경 제안과 동일 끝점 복구](2026-10-18_single_point_proposal_recovery.md)
+
+- [2026-10-18 발견 중심 AFS 선택과 유효 표본 예산](2026-10-18_discovery_selection_and_valid_budget.md)
+
 | 날짜 (UTC) | 제목 | 기록 |
 |---|---|---|
 | 2026-09-03 | Server/Client 연동, 산출물 영상화, GR00T-WBC GPU 보행 통합 | [2026-09-03_server_client_gpu_locomotion.md](2026-09-03_server_client_gpu_locomotion.md) |

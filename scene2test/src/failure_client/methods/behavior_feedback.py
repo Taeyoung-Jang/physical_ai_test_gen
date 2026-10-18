@@ -195,7 +195,11 @@ def proposal_request(ctx, model):
 
 
 def choose_probe(raw, ctx, memory):
-    proposal = b.Proposal.model_validate(raw)
+    proposal = (
+        b.endpoint_proposal(raw, ctx)
+        if "development_search" in ctx
+        else b.Proposal.model_validate(raw)
+    )
     b.validate(proposal, ctx)
     axes = b.context_axes(ctx)
     base = ctx["latest"]["parameters"]
@@ -203,8 +207,15 @@ def choose_probe(raw, ctx, memory):
     stagnant = similar_failures(memory, base, axes)
     options, rejected = [], []
     for index, space in enumerate(proposal.spaces):
-        for value in (space.low, space.high):
+        for value in b.endpoint_values(space):
             params = {**base, space.axis: value}
+            minimum = ctx.get("development_search", {}).get("min_axis_change_fraction", 0)
+            lo, hi = axes[space.axis]
+            if abs(value - base[space.axis]) / (hi - lo) + 1e-12 < minimum:
+                rejected.append(
+                    {"space": index, "value": value, "reason": "discovery_step_too_small"}
+                )
+                continue
             if any(distance(params, old, axes) < 1e-8 for old in seen):
                 rejected.append({"space": index, "value": value, "reason": "already_observed"})
                 continue
@@ -228,7 +239,25 @@ def choose_probe(raw, ctx, memory):
         raise ValueError("proposal has no novel non-cooled-down endpoint; no automatic fallback")
     selection = ctx.get("search_selection", {})
     policy = selection.get("policy", "novelty-v1")
-    if policy == "hypothesis-v2":
+    if policy == "failure-directed-v2":
+        objective = ctx["failure_objective"]
+        priorities = objective["intent_priority"]
+        axis_counts = ctx["development_search"]["axis_attempts"]
+
+        def rank(c):
+            prediction = c["evidence"]
+            family = prediction["target_family"]
+            return (
+                -priorities.index(prediction["intent"]),
+                family in objective["missing_supported_families"],
+                -objective["target_attempt_counts"].get(family, 0),
+                -axis_counts[prediction["axis"]],
+                -c["space_index"],
+                c["novelty"],
+            )
+
+        chosen = max(options, key=rank)
+    elif policy == "hypothesis-v2":
         modes = selection["mode_priority"]
         chosen = max(
             options, key=lambda c: (-modes.index(c["strategy"]), -c["space_index"], c["novelty"])
@@ -252,6 +281,17 @@ def choose_probe(raw, ctx, memory):
         ],
         "interpretation": "Untested endpoints and causal claims remain unconfirmed",
     }
+    if policy == "failure-directed-v2":
+        chosen["selection_audit"]["failure_objective"] = ctx["failure_objective"]
+        chosen["selection_audit"]["eligible_predictions"] = [
+            {
+                "space_index": c["space_index"],
+                "intent": c["evidence"]["intent"],
+                "target_family": c["evidence"]["target_family"],
+                "rank": list(rank(c)),
+            }
+            for c in options
+        ]
     return chosen
 
 

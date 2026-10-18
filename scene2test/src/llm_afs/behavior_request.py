@@ -126,14 +126,27 @@ def request(
     if ctx.get("schema_version") != context_schema:
         raise ValueError("behavior AFS selection policy does not match context schema")
     expected = b.digest(ctx)
-    schema = b.Proposal.model_json_schema()
-    schema["$defs"]["Space"]["properties"]["axis"]["enum"] = list(b.context_axes(ctx))
-    if selection_policy == "autonomous_development_endpoint":
+    autonomous = selection_policy == "autonomous_development_endpoint"
+    directed = ctx.get("development_search", {}).get("selection_policy") == "failure-directed-v2"
+    if directed and not autonomous:
+        raise ValueError("failure-directed context requires autonomous endpoint policy")
+    schema = (
+        b.FailureProposal if directed else b.EndpointProposal if autonomous else b.Proposal
+    ).model_json_schema()
+    selectable = list(b.context_axes(ctx))
+    if autonomous:
         selectable = ctx["development_search"]["selectable_axes"]
         if not selectable or not set(selectable) <= set(b.context_axes(ctx)):
             raise ValueError("invalid autonomous selectable axes")
-        schema["$defs"]["Space"]["properties"]["axis"]["enum"] = selectable
-    schema["$defs"]["Space"]["properties"]["evidence_refs"]["items"]["enum"] = b.evidence_ids(ctx)
+    for definition in schema["$defs"].values():
+        properties = definition["properties"]
+        properties["axis"]["enum"] = selectable
+        properties["evidence_refs"]["items"]["enum"] = b.evidence_ids(ctx)
+        if directed:
+            objective = ctx["failure_objective"]
+            properties["behavior_refs"]["items"]["enum"] = objective["behavior_evidence_ids"]
+            properties["intent"]["enum"] = objective["allowed_intents"]
+            properties["target_family"]["enum"] = objective["supported_targets"]
     schema["properties"]["context_sha256"]["enum"] = [expected]
     body = provider.request_body({"context_sha256": expected, "context": ctx}, schema)
     body.update(
@@ -143,6 +156,63 @@ def request(
         + selection_instructions
         + "\nCopy context_sha256 from the request exactly; never compute or invent it.",
     )
+    if autonomous:
+        body["instructions"] += """
+For the next independent experiment, prefer a concrete point: axis + value,
+with no low/high fields. Legacy range proposals remain accepted ONLY with
+low < high, both in allowed_axes. Equal endpoints are invalid ranges; use value.
+The host selects at most one point or range endpoint, applying the same quotas,
+minimum change, duplicate checks and evidence requirements. A point is not exempt.
+Environment selection occurs BEFORE a rollout. Once it starts, AFS must not change
+the scene or issue robot commands. Only after termination may it propose a new scene.
+"""
+    if ctx.get("development_search", {}).get("selection_policy") == "discovery-v1":
+        body["instructions"] += """
+Discovery-v1 overrides the alternating/local policy above: EVERY slot requests
+a new LLM hypothesis; no host midpoint or repeat is scheduled. Selectable axes
+are the least-used eligible axes, not a guarantee of failure-family diversity.
+Each eligible endpoint must change its axis by at least
+development_search.min_axis_change_fraction of the FULL allowed axis range.
+Seek broad, behavior-grounded challenges and different plausible mechanisms,
+not increasingly severe copies of one failure or relief of an already easy PASS.
+Success-side tests remain useful when all comparable evidence is FAIL. Never
+invent a family label: supported rules, unknowns and goal outcomes stay separate.
+No eligible endpoint stops transparently, without Random substitution or retry.
+"""
+    if directed:
+        body["instructions"] += """
+Failure-directed-v2 OVERRIDES alternating slots and range/mode ranking above.
+Your objective is to discover goal NONCOMPLETION and distinct measured failure
+associations, not merely change routes, maximize parameter distance or produce PASS.
+PASS is useful evidence: examine how it succeeded and propose a concrete challenge
+to that observed strategy, or transfer to another plausible mechanism. A clear
+successful route is not evidence that the robot is already weak; distinguish a
+new conjecture from measured difficulty. Do not force actions, weaken the robot,
+change its goal/budget/evaluator, or assign the eventual goal verdict yourself.
+Return concrete points only, with intent, target_family, behavior_refs,
+vulnerability, failure_prediction and change_rationale. Explain WHY the direction
+from latest.parameters can threaten goal completion, what recorded behavior
+motivates this, and how a future PASS would falsify/refine it. A hypothesis merely
+about a different path or unchanged easy navigation is insufficient justification.
+behavior_refs must name actual supplied episode evidence IDs, also in evidence_refs.
+No calibrated failure probability is requested. target_family is a prediction,
+NOT coverage. Use unclassified for plausible mechanisms outside known detectors.
+The host ranks intent_priority, missing MEASURED supported family, fewer attempts
+targeting that family, fewer axis attempts, your proposal order, then novelty.
+This is a disclosed heuristic, not verification that a proposal is truly difficult.
+All eligible axes remain available except cooldown/quotas: axis diversity alone
+must not override a promising failure hypothesis. Minimum full-axis change applies.
+No automatic repeat or midpoint slots. Relief is permitted only by allowed_intents,
+after actual comparable FAIL evidence, with cooldown. It tests recovery to success,
+not an increasingly severe copy of a known failure. Prefer alternative mechanisms
+over repeatedly increasing mass or severity. Never use timeout/excluded runs as FAIL.
+Static no_path is not a goal verdict; contacts/exposure with PASS are not failures.
+Human measurement is terminal five seconds, not whole-route safety coverage.
+Scene values are frozen BEFORE rollout; after termination the next scene may change.
+Read failure_objective.recent_hypothesis_results: a PASS means that proposal did
+not produce goal failure, not that the test was invalid. Refine or transfer the
+hypothesis using actual behavior; a FAIL still does not prove its predicted cause.
+"""
     return body
 
 

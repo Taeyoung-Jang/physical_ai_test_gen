@@ -83,6 +83,78 @@ def reload(engine, robot, proposer):
     return AutonomousAFS(engine.root, runner=robot, proposer=proposer, fingerprint_fn=fingerprint)
 
 
+def test_discovery_skips_local_slots_and_stops_at_valid_target(tmp_path):
+    budget = SearchBudget(
+        selection_policy="discovery-v1",
+        max_attempts=6,
+        valid_rollout_target=3,
+        max_attempts_per_axis=1,
+    )
+    engine, robot, proposer = setup(tmp_path, budget=budget, v4=True)
+    summary = engine.run(live=True)
+    assert summary["status"] == "COMPLETE"
+    assert summary["reason"] == "valid_rollout_target_complete"
+    assert len(robot.calls) == len(proposer.calls) == summary["valid"] == 3
+    assert summary["scheduler"]["repeats"] == 0
+    attempts = engine.state["attempts"]
+    assert len({a["candidate"]["axis"] for a in attempts}) == 3
+    assert all(a["candidate"]["stage"] == "discovery" for a in attempts)
+    for body in proposer.calls:
+        assert "EVERY slot" in body["instructions"]
+        ctx = json.loads(body["input"][0]["content"])["context"]
+        assert ctx["development_search"]["slot"] == "hypothesis"
+    before = len(robot.calls), len(proposer.calls)
+    assert reload(engine, robot, proposer).run(live=True)["status"] == "COMPLETE"
+    assert before == (len(robot.calls), len(proposer.calls))
+    assert summary["new_only_discovery_metrics"]["groups"][0]["valid_rollouts"] == 3
+
+
+def test_discovery_exclusion_consumes_cap_not_valid_target(tmp_path):
+    budget = SearchBudget(selection_policy="discovery-v1", max_attempts=2, valid_rollout_target=2)
+    engine, robot, proposer = setup(tmp_path, budget=budget, robot=Robot(excluded=True))
+    result = engine.run(live=True)
+    assert result["status"] == "NEEDS_ATTENTION" and result["valid"] == 0
+    robot.excluded = False
+    result = reload(engine, robot, proposer).run(live=True, continue_after_exclusion=True)
+    assert result["status"] == "TARGET_NOT_REACHED"
+    assert result["valid"] == 1 and result["excluded"] == 1
+    assert len(robot.calls) == 2
+    assert reload(engine, robot, proposer).run(live=True)["status"] == "TARGET_NOT_REACHED"
+    assert len(robot.calls) == 2
+
+
+def test_discovery_rejects_small_change_without_retry(tmp_path):
+    engine, robot, proposer = setup(tmp_path, budget=SearchBudget(selection_policy="discovery-v1"))
+    _, ctx = engine._selection()
+    body = request(ctx, "synthetic", selection_policy="autonomous_development_endpoint")
+    from llm_afs.provider import extract_proposal
+
+    raw = extract_proposal(proposer(body))
+    axis = raw["spaces"][0]["axis"]
+    base = ctx["latest"]["parameters"][axis]
+    lo, hi = ctx["allowed_axes"][axis]
+    raw["spaces"][0].update(low=base + (hi - lo) * 0.01, high=base + (hi - lo) * 0.02)
+    with pytest.raises(ValueError, match="no novel"):
+        selected_probe(raw, ctx, engine._memory())
+    assert not robot.calls
+
+
+def test_discovery_large_budget_is_opt_in():
+    assert (
+        SearchBudget(
+            selection_policy="discovery-v1",
+            max_attempts=24,
+            max_afs_requests=24,
+            valid_rollout_target=20,
+        ).max_attempts
+        == 24
+    )
+    with pytest.raises(ValueError, match="legacy"):
+        SearchBudget(max_attempts=24)
+    with pytest.raises(ValueError, match="exceeds"):
+        SearchBudget(selection_policy="discovery-v1", valid_rollout_target=7)
+
+
 def test_bounded_loop_mixed_repeat_axis_diversity_and_report(tmp_path):
     engine, robot, proposer = setup(tmp_path, v4=True)
     hashes = [(r["source"]["path"], r["artifact_hashes"]) for r in engine.plan["history"]]

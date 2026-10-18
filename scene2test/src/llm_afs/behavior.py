@@ -128,6 +128,60 @@ class Proposal(BaseModel):
     spaces: list[Space] = Field(min_length=1, max_length=4)
 
 
+PointAxis = Space.model_fields["axis"].annotation
+PointMode = Space.model_fields["mode"].annotation
+
+
+class PointSpace(BaseModel):
+    """A concrete scene value; never a command to mutate a running simulation."""
+
+    model_config = ConfigDict(extra="forbid", strict=True, allow_inf_nan=False)
+    mode: PointMode
+    axis: PointAxis
+    value: float
+    evidence_refs: list[str] = Field(min_length=1, max_length=8)
+    hypothesis: str = Field(min_length=1, max_length=2000)
+    alternative: str = Field(min_length=1, max_length=2000)
+    falsification: str = Field(min_length=1, max_length=2000)
+
+
+class EndpointProposal(BaseModel):
+    model_config = ConfigDict(extra="forbid", strict=True, allow_inf_nan=False)
+    context_sha256: str
+    spaces: list[PointSpace | Space] = Field(min_length=1, max_length=4)
+
+
+class FailurePoint(PointSpace):
+    mode: Literal["cross_mechanism", "success_probe"]
+    intent: Literal["challenge", "mechanism_transfer", "relief"]
+    target_family: Literal[
+        "collision", "obstacle_interference", "goal_occupied", "human_safety_risk", "unclassified"
+    ]
+    behavior_refs: list[str] = Field(min_length=1, max_length=8)
+    vulnerability: str = Field(min_length=1, max_length=2000)
+    failure_prediction: str = Field(min_length=1, max_length=2000)
+    change_rationale: str = Field(min_length=1, max_length=2000)
+
+
+class FailureProposal(BaseModel):
+    model_config = ConfigDict(extra="forbid", strict=True, allow_inf_nan=False)
+    context_sha256: str
+    spaces: list[FailurePoint] = Field(min_length=1, max_length=4)
+
+
+def endpoint_proposal(raw, ctx):
+    cls = (
+        FailureProposal
+        if ctx.get("development_search", {}).get("selection_policy") == "failure-directed-v2"
+        else EndpointProposal
+    )
+    return cls.model_validate(raw)
+
+
+def endpoint_values(space):
+    return (space.value,) if isinstance(space, PointSpace) else (space.low, space.high)
+
+
 def verified_files(root):
     root = Path(root).resolve()
     entries = read(root / "manifest.json")["artifacts"]
@@ -369,9 +423,14 @@ def validate(proposal, ctx):
         if s.axis not in axes:
             raise ValueError("axis not enabled in frozen scene domain")
         lo, hi = axes[s.axis]
-        if not lo <= s.low < s.high <= hi:
-            raise ValueError("nonempty range within approved bounds required")
-        key = (s.mode, s.axis, s.low, s.high)
+        values = endpoint_values(s)
+        valid = lo <= values[0] <= hi if isinstance(s, PointSpace) else lo <= s.low < s.high <= hi
+        if not valid:
+            raise ValueError(
+                f"invalid scene proposal: axis={s.axis}, values={values}, "
+                f"allowed=[{lo}, {hi}]; require an in-bounds value or low < high"
+            )
+        key = (s.mode, s.axis, *values)
         if key in seen_spaces:
             raise ValueError("duplicate experimental space")
         seen_spaces.add(key)

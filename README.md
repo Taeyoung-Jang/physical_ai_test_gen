@@ -1,5 +1,10 @@
 # Scene2Test
 
+```
+apt-get update && apt-get install -y libegl1 libglvnd0
+```
+
+
 ## 검토된 기록에서 자동 AFS 탐색 시작하기
 
 최근 같은 조건의 실패·성공 기록을 받아 **장면 선택 → 로봇 실행 → 행동 분석 → 다음 선택**을

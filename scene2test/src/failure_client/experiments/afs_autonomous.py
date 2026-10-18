@@ -18,7 +18,11 @@ from failure_client.archive.regression_cases import (
     export_failure_memory,
 )
 from failure_client.evaluation.behavior_measures import verify_episode_files
-from failure_client.evaluation.failure_taxonomy import classify_record, profile_for_scene
+from failure_client.evaluation.failure_taxonomy import (
+    classify_record,
+    profile_for_scene,
+    rules_for_profile,
+)
 from failure_client.evaluation.goal_run_reader import (
     _constant,
     _hash_file,
@@ -33,6 +37,7 @@ from failure_client.methods.autonomous_feedback import (
     selected_probe,
     selection,
 )
+from failure_client.reporting.discovery_metrics import calculate_discovery_metrics
 from failure_client.reporting.search_diagnostics import experiment_reviews, search_diagnostics
 from failure_client.storage.research_store import ResearchStore
 from llm_afs import provider
@@ -118,6 +123,13 @@ def development_plan(paths, budget=None, *, fingerprint_fn=None):
     # strategy slots and its default AFS model have no meaning in this session.
     cfg = {"scene_schema": cfg["scene_schema"], "robot": cfg["robot"]}
     rows = [e["record"] for e in memory["episodes"].values()]
+    if budget.selection_policy in {"discovery-v1", "failure-directed-v2"}:
+        rows = [
+            classify_record(
+                EpisodeRecord.model_validate(r), profile=profile_for_scene(cfg["scene_schema"])
+            ).model_dump()
+            for r in rows
+        ]
     if len({r["policy_origin"] for r in rows}) != 1:
         raise ValueError("mixed mock/live origins")
     plan = {
@@ -235,6 +247,31 @@ class AutonomousAFS:
             or read_json(self.root / "protocol.json") != expected
         ):
             raise ValueError("frozen autonomous session protocol mismatch")
+        if (
+            self.state["lock"].get("recovery_sha256")
+            and digest(read_json(self.root / "recovery.json"))
+            != self.state["lock"]["recovery_sha256"]
+        ):
+            raise ValueError("point recovery audit mismatch")
+
+    def _proposal_raw(self, row):
+        directory = self.root / "proposals" / row["id"]
+        raw = provider.extract_proposal(read_json(directory / "response.json"))
+        if row.get("recovery"):
+            from .point_recovery import normalize_equal_ranges
+
+            if not self.state["lock"].get("recovery_sha256"):
+                raise ValueError("unbound proposal recovery")
+            audit = read_json(self.root / "recovery.json")
+            fixed = read_json(directory / "normalized_proposal.json")
+            if (
+                normalize_equal_ranges(raw) != fixed
+                or digest(fixed) != audit["normalized_proposal_sha256"]
+                or any(row["artifacts"].get(k) != v for k, v in audit["original_artifacts"].items())
+            ):
+                raise ValueError("recovered proposal differs from original response")
+            return fixed
+        return raw
 
     def _verify_evidence(self):
         for row in self.plan["history"]:
@@ -432,6 +469,16 @@ class AutonomousAFS:
             )
         launched = 0
         while len(self.state["attempts"]) < self.budget.max_attempts:
+            valid = sum(
+                a.get("episode", {}).get("status") == "VALID" for a in self.state["attempts"]
+            )
+            if (
+                self.budget.valid_rollout_target is not None
+                and valid >= self.budget.valid_rollout_target
+            ):
+                self.state.update(status="COMPLETE", reason="valid_rollout_target_complete")
+                self._save("complete")
+                return self.summary()
             if max_new_attempts is not None and launched >= max_new_attempts:
                 break
             self._fresh()
@@ -458,9 +505,7 @@ class AutonomousAFS:
                 )
                 if candidate != row["candidate"] or ctx is None:
                     raise ValueError("saved hypothesis no longer eligible")
-                raw = provider.extract_proposal(
-                    read_json(self.root / "proposals" / row["id"] / "response.json")
-                )
+                raw = self._proposal_raw(row)
                 expected = {**selected_probe(raw, ctx, self._memory()), "proposal_id": row["id"]}
                 if expected != candidate:
                     raise ValueError("saved candidate selection mismatch")
@@ -482,9 +527,19 @@ class AutonomousAFS:
                 return self.summary()
         if len(self.state["attempts"]) == self.budget.max_attempts:
             excluded = any(a["episode"]["status"] != "VALID" for a in self.state["attempts"])
+            valid = sum(a["episode"]["status"] == "VALID" for a in self.state["attempts"])
+            target = self.budget.valid_rollout_target
             self.state.update(
-                status="COMPLETE_WITH_EXCLUSIONS" if excluded else "COMPLETE",
-                reason="fixed_attempt_budget_complete",
+                status=(
+                    "TARGET_NOT_REACHED"
+                    if target is not None and valid < target
+                    else "COMPLETE_WITH_EXCLUSIONS"
+                    if excluded
+                    else "COMPLETE"
+                ),
+                reason="attempt_cap_before_valid_target"
+                if target is not None and valid < target
+                else "fixed_attempt_budget_complete",
             )
             self._save("complete")
         return self.summary()
@@ -507,13 +562,22 @@ class AutonomousAFS:
             "status": self.state["status"],
             "reason": self.state["reason"],
             "pending": self.state["pending"],
+            "recovery": read_json(self.root / "recovery.json")
+            if self.state["lock"].get("recovery_sha256")
+            else None,
             "budget": self.plan["budget"],
             "attempted": len(attempts),
+            "valid": sum(r["status"] == "VALID" for r in rows),
+            "valid_rollout_target": self.budget.valid_rollout_target,
             "robot_api_call_upper_bound": self.plan["robot_api_call_upper_bound"],
             "afs_requests_attempted": len(proposals),
             "pass": sum(r["status"] == "VALID" and r["task_outcome"] == "PASS" for r in rows),
             "fail": sum(r["status"] == "VALID" and r["task_outcome"] == "FAIL" for r in rows),
             "excluded": sum(r["status"] != "VALID" for r in rows),
+            "new_only_discovery_metrics": calculate_discovery_metrics(
+                [EpisodeRecord.model_validate(r) for r in rows],
+                family_rules=rules_for_profile(profile_for_scene(self.cfg.scene_schema)),
+            ),
             "scheduler": accounting(attempts, axes, self.budget),
             "new_execution_costs": costs(rows, len(attempts)),
             "inherited_history_costs": costs(self.plan["history"], len(self.plan["history"])),

@@ -1,5 +1,117 @@
 # Scene2Test workspace memory
 
+## Failure-directed live session partial results reviewed (2026-10-18)
+
+Session20261018T032610_668533Z:4attempts,3VALID FAIL(BUDGET_EXHAUSTED),1excluded
+api_timeout; NEEDS_ATTENTION/pendingnull,4attempt/AFS slots remain,validtarget6.
+269 rollout hashes match;4MP4decode/GIF0. FDR3/3=100% observed but0measured families,
+3unclassified; no joint30%/4types or Gain achievement. Changes sequential: box
+lateral1->.25 FAIL(.748m); obstacle2 .7->0 FAIL(.651m); width4->1.8 FAIL(4.057m);
+human1->0 excluded at6th API after5actions, response-header ReadTimeout300.34s.
+First3 ten actions each. Attempt0 push request rejected alignment_out_of_range,
+no alignment/push motion; gap1.0978/heading.153/face1.571, distance valid.2m; NOT
+float endpoint bug, mass inability or physical pushing validation. Classifier
+conditions not met:0partial goal occupancy;1/2not terminal-stalled; old blocked
+tools outside window, no recent qualifying contact/proximity. Do not relabel.
+Latest-anchor accumulation retains box.25 in subsequent probes: different axes
+NOT independent mechanisms. Next proposal: PASS-anchor branching + taxonomy/phase
+contract review, not blindly spending remaining trials or weakening detectors.
+No code/DB/outcome changes or paid run in review. Robot36calls/35actions,35usage
+known+1unknown, observed1021617in104103out;AFS4/176697in6902out. See
+failure_directed_live_review workhistory. Existing session is frozen/preserved.
+
+## Failure-directed v2 selection implemented (2026-10-18)
+
+User emphasizes PASS valid but AFS must seek goal failures, not merely fill smoke
+budget or change paths. New opt-in failure-directed-v2 requires real episode behavior
+refs, vulnerability vs conjecture, failure_prediction, change_rationale, intent,
+predicted family; point-only schema, old modes/contracts retained. Host ranks intent,
+missing MEASURED family, family-target attempt counts, axis counts, proposal order,
+novelty. Predictions NEVER become measured labels. All eligible axes allowed (not
+v1 least-used-only mask), existing cooldown/quota/min10%/duplicate guards remain.
+Relief only with actual FAIL +3attempt cooldown; priority if noPASS and>=2FAIL;
+otherwise transfer/challenge. Recent4 prediction outcomes feed next request; PASS
+is goal-failure-not-observed, FAIL mechanism unconfirmed, exclusion unresolved.
+Configs afs_failure_directed_luna.json6valid/8attempts, _20_luna20valid/24attempts.
+Robot/goal/evaluator/model/timing unchanged; actual two current PASS archives pass
+offline plan and full20axis request:2real refs,0FAIL,challenge/transfer only,about86KB.
+Remaining attempt vs valid-target counts separated; imported PASS does not consume
+new valid target. Final focused17tests pass after this last metadata change.
+224 related tests passed; no paid/API/GPU/robot/session creation, commit/push.
+Existing recovery session must NOT resume new source; preserve it, use NEW version
+session with reviewed PASS histories. Historical AFS selection costs unknown remain
+separate. New algorithm's actual discovery quality unverified, no30%/4families/Gain
+claim. See AFS_FAILURE_DIRECTED.md and failure_directed_selection history.
+
+## Discovery recovery next probe valid PASS reviewed (2026-10-18)
+
+Session20261018T014205_556509Z_point_recovery attempt1 VALID/PASS,57 artifact hashes
+match, MP4 decodes/GIF0. New point proposal obstacle2 lateral-.7->+.7 ONLY; human
+remains1 at edge, NOT center timeout replay.6navigate_to(7,0), first2*.3s then4*10s,
+no push/other tools,0blocked/non-support contacts recorded. Final.116875m/dwell1s,
+sim81.85 includes waits, holdonly.035s/4callsleft.6HTTP200/complete148993in6773out,
+latencies2.74..22.45s, no proof prior timeout fixed. NewAFS19513in964out; totalAFS2,
+robot7 includes1timeout unknown usage. READY/pendingnull,2attempts/1validPASS/0FAIL/
+1excluded;6attempts/AFSrequests remain,5morevalid needed. Failed center not feedback
+FAIL/anchor. Pipeline works; same-side route-change hypothesis may ease rather than
+challenge, not failure discovery evidence. Do not edit frozen selector mid-session;
+finish smoke then review challenge quality. Review only,no paid run/code/DB edits.
+See discovery_first_valid_pass_review workhistory. Next normal run --live --session
+can use remaining budget; no continue-after-exclusion flag needed for current READY.
+
+## Robot timeout offline comparison added (2026-10-18)
+
+User authorized improvements after recovered human-center attempt0 INCONCLUSIVE.
+Added tools/audit_robot_api.py ONLY plus tests/docs, no robot/search src changes or
+frozen condition edits. Reads verified manifests/journals, source-bound FIRST-call
+reconstruction sizes/hash (NOT wire capture/tokens), transport failure phase, IDs,
+settings; no raw request/image/key export, network/API/robot/retry. Failed request
+82286 reconstructed bytes vs prior clear PASS83343, both high reasoning/image,
+history0. Failure301.03s vs success6.54s; no size blowup proof or provider/root-cause
+claim. Report runtime/robot_api_audit/20261018T024723_577469Z/report.html. See
+ROBOT_API_DIAGNOSTICS.md and robot_api_offline_diagnostics history. Attempt remains
+excluded, unknown usage not zero, no paid resume performed. Continue-after-exclusion
+advances to NEXT axis (center human quota consumed), not retry same scene, budgets
+unchanged. Do not claim timeout fixed or silently change reasoning/timeouts.
+
+## Single point proposal support and explicit offline recovery (2026-10-18)
+
+Autonomous requests now prefer PointSpace axis/value, with legacy strict low<high
+ranges still accepted via EndpointProposal nested anyOf. Other tools keep their
+range-only contracts. Same bounds/evidence/quota/cooldown/min-step/novelty guards;
+no auto-clamping or equal-range repair in normal execution. Prompt fixes scene
+BEFORE rollout, no AFS intervention during execution. recover-point CLI dry-run
+default, --apply creates separate first-proposal-only recovery fork; preserves
+original request/context/response bytes and hashes, records normalized proposal
+and lock-bound audit, inherits spent AFS call/cost/budget, no context rebinding.
+Only explicit equal low/high conversion allowed, no robot/resource/runtime drift
+or generic source bypass. Actual source 20261018T014205_556509Z response proposes
+human_lateral_fraction0; first proposal spent19067in/1162out, zero robot attempts.
+See AFS_DISCOVERY_MODE.md and single_point_proposal_recovery workhistory for status
+and separate live command. No paid robot/API execution in implementation.
+Actual offline recovery now prepared at runtime/afs_autonomous/
+20261018T014205_556509Z_point_recovery: READY/pendingnull/attempts0, selectedhuman
+lateral0, original55file hashes unchanged, candidate pre-dispatch revalidation MATCH.
+Inherited AFS1spent19067in/1162out, <=7new AFS requests left, original8attempt cap.
+261 related tests passed, Ruff/format/diff clean. Next user command run --live
+--session this recovery, NOT fresh original --config/--run or old source resume.
+
+## Discovery selection and valid target budgets implemented (2026-10-18)
+
+New opt-in discovery-v1 reuses autonomous loop, no local/repeat slots; LLM every
+selection, least-used eligible axes, existing cooldown/quota, min10% full axis
+change with audited endpoint rejection. Old alternating-v1 remains default.
+Separate valid_rollout_target and max_attempts; exclusions consume cap and STOP
+for review, never automatically replace/retry. TARGET_NOT_REACHED if cap first.
+Configs smoke6valid/8attempts and20valid/24attempts, <=80/240 robot calls at10 each,
+<=8/24 AFS requests. New-only joint discovery metrics in summary/report; input
+history taxonomy is classified separately for discovery mode. Still reviewed-history
+development, NOT independent AFS/Random/Gain or multi-seed evaluation. Human clear
+20261018T004636_410637Z passes offline plan preflight. No paid/API/robot execution,
+new runtime DB, old outcome/budget edits or commit/push. See AFS_DISCOVERY_MODE.md
+and discovery_selection_and_valid_budget history. Four-family discovery unproven;
+human rule terminal5s scope unchanged. Run smoke before new20 session.
+
 ## Human scene and joint measurement first implementation (2026-10-18)
 
 User authorized implementation. Added opt-in clear-path-human-v5 (v4 plus human X

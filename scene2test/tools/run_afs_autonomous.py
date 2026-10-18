@@ -15,7 +15,8 @@ RUNTIME = Path("/workspace/g1_failure/runtime/afs_autonomous")
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("op", choices=["plan", "init", "run", "status", "report"])
+    parser.add_argument("op", choices=["plan", "init", "run", "status", "report", "recover-point"])
+    parser.add_argument("--apply", action="store_true", help="apply offline point recovery fork")
     parser.add_argument(
         "--run", type=Path, action="append", help="reviewed archive; repeat in observation order"
     )
@@ -34,6 +35,31 @@ def main(argv=None):
     )
     parser.add_argument("--continue-after-exclusion", action="store_true")
     args = parser.parse_args(argv)
+    if args.op == "recover-point":
+        if (
+            not args.session
+            or not args.output_dir
+            or args.live
+            or args.run
+            or args.config
+            or args.max_new_attempts is not None
+            or args.continue_after_exclusion
+        ):
+            parser.error(
+                "recover-point needs --session and new --output-dir; optional --apply only"
+            )
+        from failure_client.experiments.point_recovery import recover_point
+
+        try:
+            result = recover_point(args.session, args.output_dir, apply=args.apply)
+            print("POINT_RECOVERY=" + json.dumps(result, ensure_ascii=False))
+            print("No API or robot executed; original session preserved.")
+            return 0
+        except (Exception, KeyboardInterrupt) as exc:
+            print(f"STOPPED={type(exc).__name__}: {clean(str(exc))}")
+            return 2
+    if args.apply:
+        parser.error("--apply belongs to recover-point only")
     if args.session and (args.run or args.config or args.output_dir):
         parser.error("resume cannot replace history, output or frozen configuration")
     if args.op in {"status", "report"} and not args.session:
