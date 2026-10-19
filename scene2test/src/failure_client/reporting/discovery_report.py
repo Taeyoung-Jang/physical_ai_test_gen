@@ -73,7 +73,9 @@ def write_discovery_report(
     analysis_section = ""
     if "analysis_scope" in metrics:
         analysis_section = (
-            "<h2>기존 6종과 확장 10종 사후 분석</h2><pre>"
+            "<h2>"
+            + escape(metrics["analysis_scope"].get("title", "기존 6종과 확장 10종 사후 분석"))
+            + "</h2><pre>"
             + escape(json.dumps(metrics["analysis_scope"], indent=2, ensure_ascii=False))
             + "</pre>"
         )

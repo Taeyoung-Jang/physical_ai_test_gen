@@ -201,7 +201,9 @@ def calculate_discovery_metrics(
     """family_rules is an in-process detector registry, never a proposal's self-reported label."""
     family_rules = family_rules or {}
     family_inventory = tuple(family_inventory)
-    if family_inventory not in (FAMILIES, EXPANDED_FAMILIES):
+    from failure_client.evaluation.research_records import SYSTEM_FAMILIES
+
+    if family_inventory not in (FAMILIES, EXPANDED_FAMILIES, SYSTEM_FAMILIES):
         raise ValueError("unknown versioned family inventory")
     if not set(family_rules) <= set(family_inventory) or any(
         not isinstance(v, str) or not v for v in family_rules.values()

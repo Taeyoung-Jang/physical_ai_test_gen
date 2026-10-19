@@ -17,6 +17,8 @@ Family = Literal[
     "locomotion_stall",
     "manipulation_failure",
     "goal_completion_failure",
+    "goal_endpoint_rejection",
+    "subgoal_completion_loop",
 ]
 FAMILIES = (
     "collision",
@@ -32,6 +34,7 @@ EXPANDED_FAMILIES = FAMILIES + (
     "manipulation_failure",
     "goal_completion_failure",
 )
+SYSTEM_FAMILIES = EXPANDED_FAMILIES + ("goal_endpoint_rejection", "subgoal_completion_loop")
 
 
 class StrictRecord(BaseModel):

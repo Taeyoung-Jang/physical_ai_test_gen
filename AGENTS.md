@@ -1,5 +1,37 @@
 # Scene2Test workspace memory
 
+## System-interface taxonomy candidates and component separation (2026-10-19)
+
+User approved defining types for Agent/VLA/control stack as well as body failures.
+New opt-in offline system-twelve-v1 adds goal_endpoint_rejection and
+subgoal_completion_loop;FAMILIES6/EXPANDED10/defaultAFS profiles unchanged.
+First requires VALIDFAIL/budget/finaloutside/repeatedexactgoalblocked_endpoint>=2
+and final acceptedaction samegoalblock;second terminal>=3consecutive successful
+navigate subgoalarrivals outside taskgoal,>=2samepoint(.02m). No normaldistinct
+waypoints/singleblocked/PASS/exclusion/missingdata credit. Explicit middle
+stale_rejected notphysicalexecution or missing acceptedtoolresult;trailingreject
+doesnotpromote earlieraction toterminal. Oldprimary/ambiguity retained,newunique
+onlyfallback. Repeatedintentionalturns diagnosticonly,not locomotionstall/newtype.
+failure_layers preserves observedinterfaces+actual recordedAgent/planner/controller
+contract;overallrootcause/Agent/planner/controller/body UNCONFIRMED,VLA notseparately
+instrumented. Direct policy_state_contract diagnostic stores rawline/hash when
+observedversion!=returnedstateversion+stale_rejected;notanotherfamily or FAILcause.
+Actualattempt9 observation4/modeloutput5 confirms interfaceviolation,notVLA/bodyfault.
+tools/reanalyze_system_failures.py accepts explicitruns or latestverifiedreportsnapshot
+includingREADY,verifiesmanifest+savedepisodeidentity,neveropenssourceDB. Newseparate
+report compares10/12,hashesdetectorcode,no sourceverdict/budget edits orprospective
+targetclaim. New12notyetconnectedonlineAFS/schema;newconditionintegration separate.
+120CPUtests pass18.85s,Ruff/format7files+diffclean. No paid/API/GPU/robot/newcampaign,
+commit/push. See docs/EXPANDED_FAILURE_TYPES.md system-layer section. Prior frozen
+session remainspreserved/source-drift;neverdirectresume/bypass aftersourcechange.
+Final actual10attempt snapshot reanalysis saved runtime/system_failure_reanalysis/
+20261019T155051_917992Z/report.html:9VALIDFAIL/1excluded unchanged;old10=3types/
+5unclassified,new12candidateprofile=5types/3unclassified. Onlyattempt6 adds
+subgoal_completion_loop,attempt9 adds goal_endpoint_rejection;attempt9 state4->5
+contractviolation diagnosticonly. attempt3 endpointobservation secondary retains
+manipulationprimary;attempt7 turns diagnosticonly. Original1475filehashesunchanged.
+This is retrospectivecandidateclassification,NOT original4type milestone orGain.
+
 ## One-command trajectory smoke script (2026-10-19)
 
 tools/run_trajectory_smoke.sh --dry-run prints only,no files/API/robot;--live runs
