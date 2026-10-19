@@ -479,19 +479,22 @@ class EvidenceReferenceError(ValueError):
         )
 
 
-def validate(proposal, ctx):
+def validate(proposal, ctx, *, numeric_rejections=False):
     if proposal.context_sha256 != digest(ctx):
         raise ValueError("stale proposal context")
     refs = evidence_ids(ctx)
     seen_spaces = set()
     axes = context_axes(ctx)
-    for s in proposal.spaces:
+    rejected = []
+    if numeric_rejections and not isinstance(proposal, BreadthProposal):
+        raise ValueError("numeric candidate rejection is restricted to breadth proposals")
+    for index, s in enumerate(proposal.spaces):
         if s.axis not in axes:
             raise ValueError("axis not enabled in frozen scene domain")
         lo, hi = axes[s.axis]
         values = endpoint_values(s)
         valid = lo <= values[0] <= hi if isinstance(s, PointSpace) else lo <= s.low < s.high <= hi
-        if not valid:
+        if not valid and not numeric_rejections:
             raise ValueError(
                 f"invalid scene proposal: axis={s.axis}, values={values}, "
                 f"allowed=[{lo}, {hi}]; require an in-bounds value or low < high"
@@ -504,8 +507,27 @@ def validate(proposal, ctx):
             if len({a for a, _ in changes}) != len(changes):
                 raise ValueError("duplicate axis in combination")
             for axis, value in changes:
-                if axis not in axes or not axes[axis][0] <= value <= axes[axis][1]:
+                if axis not in axes:
+                    raise ValueError("combination axis not enabled in frozen scene domain")
+                if not numeric_rejections and not axes[axis][0] <= value <= axes[axis][1]:
                     raise ValueError("combination axis/value outside frozen scene domain")
+            if numeric_rejections:
+                violations = [
+                    {"axis": a, "value": v, "allowed": list(axes[a])}
+                    for a, v in changes
+                    if not axes[a][0] <= v <= axes[a][1]
+                ]
+                if violations:
+                    rejected.append(
+                        {
+                            "space": index,
+                            "axis": s.axis,
+                            "anchor_case_id": s.anchor_case_id,
+                            "reason": "numeric_out_of_bounds",
+                            "changes": dict(changes),
+                            "violations": violations,
+                        }
+                    )
             key = (s.mode, s.anchor_case_id, tuple(sorted(changes)))
         if key in seen_spaces:
             raise ValueError("duplicate experimental space")
@@ -513,6 +535,7 @@ def validate(proposal, ctx):
         unknown = set(s.evidence_refs) - set(refs)
         if unknown:
             raise EvidenceReferenceError(unknown, refs)
+    return rejected
 
 
 def eligible(observation):

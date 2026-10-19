@@ -33,9 +33,15 @@ class SearchBudget(StrictRecord):
     reproposal_policy: Literal["stop", "bounded-rejection-v1"] = "stop"
     taxonomy_profile: Literal["scene-default", "expanded-ten-v1"] = "scene-default"
     exploration_policy: Literal["legacy", "breadth-v1"] = "legacy"
+    feedback_policy: Literal["legacy", "action-diagnostics-v1"] = "legacy"
 
     @model_validator(mode="after")
     def check_target(self):
+        if self.feedback_policy != "legacy" and (
+            self.selection_policy != "failure-branch-v3"
+            or self.taxonomy_profile != "expanded-ten-v1"
+        ):
+            raise ValueError("action diagnostics require explicit expanded branch mode")
         if self.exploration_policy == "breadth-v1" and (
             self.selection_policy != "failure-branch-v3"
             or self.taxonomy_profile != "expanded-ten-v1"
@@ -205,6 +211,7 @@ def selection(memory, attempts, budget, schema):
             schema,
             ctx["latest"]["evidence"],
             taxonomy_profile=budget.taxonomy_profile,
+            feedback_policy=budget.feedback_policy,
         )
         ctx["search_selection"].update(
             policy="failure-directed-v2",
@@ -240,7 +247,7 @@ def selected_probe(raw, ctx, memory):
     # Validate every space, not only the eventual winning endpoint. Preserve the
     # original response: do not silently discard an out-of-quota proposal.
     proposal = b.endpoint_proposal(raw, ctx)
-    b.validate(proposal, ctx)
+    b.validate(proposal, ctx, numeric_rejections=isinstance(proposal, b.BreadthProposal))
     if any(
         axis not in ctx["development_search"]["selectable_axes"]
         for s in proposal.spaces

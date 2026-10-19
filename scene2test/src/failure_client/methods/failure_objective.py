@@ -37,7 +37,15 @@ def prediction_review(attempt):
     }
 
 
-def failure_objective(memory, attempts, schema, evidence, *, taxonomy_profile="scene-default"):
+def failure_objective(
+    memory,
+    attempts,
+    schema,
+    evidence,
+    *,
+    taxonomy_profile="scene-default",
+    feedback_policy="legacy",
+):
     records = [EpisodeRecord.model_validate(e["record"]) for e in memory["episodes"].values()]
     options = metric_options(schema, taxonomy_profile)
     rules = options["family_rules"]
@@ -139,4 +147,66 @@ def failure_objective(memory, attempts, schema, evidence, *, taxonomy_profile="s
                 "Operational observations are not established causes."
             ),
         )
+    if feedback_policy == "action-diagnostics-v1":
+        from .action_diagnostics import action_diagnostics
+
+        current_ids = {
+            a.get("episode", {}).get("evidence_id")
+            for a in attempts
+            if a.get("episode", {}).get("evidence_id")
+        }
+
+        def coverage(rows):
+            measured = calculate_discovery_metrics(rows, **options)
+            return sorted({f for g in measured["groups"] for f in g["discovered_families"]})
+
+        current = coverage([r for r in records if r.evidence_id in current_ids])
+        historical = coverage([r for r in records if r.evidence_id not in current_ids])
+        objective.update(
+            feedback_policy=feedback_policy,
+            coverage_priority_scope="new_session_attempts_only",
+            historical_discovered_families=historical,
+            cumulative_discovered_families=discovered,
+            current_discovered_families=current,
+            measured_discovered_families=current,
+            missing_supported_families=[f for f in targets if f not in current],
+        )
+        goal = memory["cases"][0]["task_contract"]["goal"]
+        diagnostics = {ref: action_diagnostics(memory["episodes"][ref], goal) for ref in shown}
+        for observation in observations:
+            observation["action_diagnostics"] = diagnostics[observation["evidence_id"]]
+        for review in objective["recent_hypothesis_results"]:
+            attempt = next(a for a in attempts if a["id"] == review["attempt_id"])
+            ref = (attempt.get("episode") or {}).get("evidence_id")
+            if ref in memory["episodes"]:
+                review["action_diagnostics"] = action_diagnostics(memory["episodes"][ref], goal)
+        objective["action_diagnostic_scope"] = (
+            "Whole episode diagnostics are separate from terminal-window family rules; "
+            "no new labels, causal attribution, robot commands or metric credit"
+        )
+        pattern_counts = {"historical": Counter(), "current": Counter()}
+        for ref, entry in memory["episodes"].items():
+            row = entry["record"]
+            if row["status"] != "VALID" or row["task_outcome"] != "FAIL":
+                continue
+            d = action_diagnostics(entry, goal)
+            bucket = pattern_counts[
+                "current" if row["evidence_id"] in current_ids else "historical"
+            ]
+            if d.get("blocked_navigation_count", 0):
+                bucket["failed_with_blocked_navigation"] += 1
+            if d.get("staging_arrivals_outside_goal"):
+                bucket["failed_after_staging_arrival_outside_goal"] += 1
+            if d.get("manipulation_engagement") == "NO_TOOL_REQUEST_OBSERVED":
+                bucket["failed_without_manipulation_request"] += 1
+        objective["action_pattern_feedback"] = {
+            "historical_failure_episode_counts": dict(pattern_counts["historical"]),
+            "current_failure_episode_counts": dict(pattern_counts["current"]),
+            "scope": "Overlapping descriptive episode counts, NOT distinct types or causes",
+            "guidance": (
+                "When the same current-set pattern recurs, propose alternatives with a "
+                "different expected action sequence using admissible anchors/scene axes. "
+                "Explain why the intended mechanism should be exercised; do not force actions."
+            ),
+        }
     return objective

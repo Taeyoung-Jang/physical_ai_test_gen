@@ -7,6 +7,12 @@ from typing import Literal
 from . import behavior as b
 from . import provider
 
+NUMERIC_REJECTION_INSTRUCTIONS = """Read allowed_axes bounds for BOTH changes.
+Numeric out-of-bounds values
+reject the entire candidate, not other valid alternatives; no clipping or range expansion.
+Other schema/evidence/context/axis/quota errors still stop the whole response.
+"""
+
 SELECTION_POLICIES = {
     "autonomous_development_endpoint": (
         "behavior-campaign-feedback-v1",
@@ -330,6 +336,27 @@ of insufficient pushing strength. Goal completion failure requires final inside-
 pose with insufficient dwell, NOT all budget exhaustion. Unreachable/perception
 remain unsupported. Diagnostic secondary events are not extra family discoveries.
 Never convert your prediction to the observed type; future host measurements decide.
+"""
+    if breadth:
+        body["instructions"] += NUMERIC_REJECTION_INSTRUCTIONS
+    if ctx.get("failure_objective", {}).get("feedback_policy") == "action-diagnostics-v1":
+        body["instructions"] += """
+Action-diagnostics-v1: the four-type objective is across NEW session attempts only.
+Read current_discovered_families and missing_supported_families for host ranking.
+historical_discovered_families remain useful evidence, not discoveries in this set.
+Use behavior_observations.action_diagnostics and recent_hypothesis_results to review
+WHOLE-episode blocked endpoints, repeated targets, staging arrivals outside the task
+goal and manipulation engagement. Existing action_timeline supplies the full sequence.
+action_pattern_feedback separates historical/current recurrence counts; they overlap
+and are NOT new types. Repeated current patterns call for different expected behavior,
+not merely another numerical value with the same unexercised mechanism.
+An environmental axis change is not evidence its predicted mechanism was exercised.
+Without a push request, object mass/friction changes do not test physical pushing
+capacity. A FAIL with a different or unclassified observation does not confirm your
+predicted mechanism. Revise the hypothesis or choose another admissible anchor/layout
+when repeated navigation patterns mask it. Keep small, large and combination slots.
+These diagnostics are not new failure families. Terminal-window rules and outcome
+stay unchanged; no relaxed thresholds, forced robot action or in-rollout scene edits.
 """
     return body
 

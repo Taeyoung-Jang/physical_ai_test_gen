@@ -4,6 +4,34 @@
 
 이 모드는 검토된 외부 이력을 이용하는 개발 탐색이다. 실패율 30%와 실제 측정된 대표 유형 4종을 목표로 하지만, 실행 배정 자체는 발견 성과나 Random 대비 Gain을 뜻하지 않는다. GPT의 예측 유형은 실제 측정 유형과 분리한다.
 
+## 행동 진단과 신규 집합 기준 선택
+
+새 설정 `config/afs_behavior_diversity_luna.json`은 같은 배정·예산에 `feedback_policy: action-diagnostics-v1`을 추가한다. 기존 `afs_breadth_luna.json`은 기존 선택 의미를 유지한다. 새 모드도 로봇, 목표, 분류 규칙, 토큰·시간 제한을 바꾸지 않는다.
+
+새 모드는 다음을 구분한다.
+
+- `historical_discovered_families`: 외부 참고 이력에서 발견한 유형.
+- `current_discovered_families`: 이번 세션의 실제 유효 실패에서 발견한 유형.
+- `cumulative_discovered_families`: 과거와 신규의 합집합.
+
+호스트의 `missing_supported_families` 우선순위는 이번 세션을 기준으로 계산한다. 과거에 발견했어도 이번 집합에서 아직 발견하지 못한 유형은 선택 기회를 유지한다. 과거 비용이나 발견을 신규 성과 분모에 넣는 것은 아니다.
+
+`behavior_observations.action_diagnostics`와 최근 가설 검토에는 전체 행동의 경로 거절 수, 최초 거절 행동과 근거, 같은 좌표의 반복 거절, 과제 목표 밖에서 끝난 중간 목표 도착, 조작 요청 유무가 들어간다. `action_pattern_feedback`은 이런 행동을 동반한 유효 실패의 횟수를 과거와 신규로 나눈다. 서로 겹치는 진단 통계이며 새로운 실패 유형 수가 아니다. 누락 자료는 0으로 만들지 않고 UNAVAILABLE 또는 부분 관측으로 표시한다.
+
+LLM에는 같은 행동이 반복되면 허용된 다른 기준 장면·배치와 예상 행동을 검토하도록 요청한다. 물체 질량이나 마찰을 바꿨더라도 조작 요청이 없었다면 물리적 밀기 능력을 검증했다고 해석하지 않는다. 이는 진단 기반 제안 지침이지 로봇 행동 강제나 자동 원인 판정이 아니다. 기존 배정, 축 쿼터, 중복·범위 검사와 bounded rejection은 그대로 유지한다. 새 지형이나 사람 이동 기능을 추가한 것은 아니다.
+
+완료된 `20261018T160156_325966Z_numeric_recovery`에는 적용하거나 재개하지 않는다. 다음은 저장된 FAIL과 PASS를 읽는 무료 사전 검사다. DB·API·로봇 실행은 없다.
+
+```bash
+uv run --no-sync python tools/run_afs_autonomous.py plan --config config/afs_behavior_diversity_luna.json --run /workspace/g1_failure/runtime/afs_autonomous/20261018T160156_325966Z_numeric_recovery/attempts/attempt_00000/rollout --run /workspace/g1_failure/runtime/afs_autonomous/20261018T160156_325966Z_numeric_recovery/attempts/attempt_00002/rollout
+```
+
+다음 명령은 API 키가 설정된 터미널에서 **별도 유료 세션**을 시작한다. 신규 유효 12개, 최대 16회 시도, AFS 20요청이며 기준 로봇이 10회 호출이면 최대 160회 로봇 호출이다. 제외 실행에서는 검토를 위해 중단한다. 실제 발견 유형 증가 여부는 이 새 실행에서 확인해야 한다.
+
+```bash
+uv run --no-sync python tools/run_afs_autonomous.py run --live --config config/afs_behavior_diversity_luna.json --run /workspace/g1_failure/runtime/afs_autonomous/20261018T160156_325966Z_numeric_recovery/attempts/attempt_00000/rollout --run /workspace/g1_failure/runtime/afs_autonomous/20261018T160156_325966Z_numeric_recovery/attempts/attempt_00002/rollout
+```
+
 ## 제안과 선택
 
 GPT-6-luna는 근거가 있는 후보들을 제안하고, Python 선택 코드는 사전에 공개한 실행 배정 계약에 맞는 하나를 선택한다. 랜덤 선택이 아니며 코드가 후보의 물리적 실패 가능성을 알아내는 모델도 아니다.
@@ -36,7 +64,7 @@ GPT-6-luna는 근거가 있는 후보들을 제안하고, Python 선택 코드�
 
 범위, 유한 수치, 근거 ID, 기준 장면 역할, 각 축 최소 변화량, 중복 전체 장면, 축 쿼터와 직전 축 제한을 모두 검사한다. 선언하지 않은 파라미터는 변하지 않는다. 통로 폭에 따른 파생 좌표 변경은 있을 수 있다. 조합은 두 축과 두 묶음 모두에 시도 횟수를 부과하되 로봇 실험 한 회로 센다.
 
-맞는 후보가 없으면 원인과 제안을 저장하고 남은 AFS 요청 예산 내에서 새로운 제안을 받는다. 형태나 묶음을 몰래 바꾸거나 Random으로 대체하지 않는다. API 또는 스키마 오류, 모호한 유료 요청은 자동 재시도하지 않는다. 후보 거절도 AFS 예산과 비용을 소비한다.
+숫자 범위를 벗어난 후보는 원래 값과 승인 범위를 기록해 제외하고 유효한 대안은 유지한다. 값을 보정하지 않는다. 맞는 후보가 없으면 원인과 제안을 저장하고 남은 AFS 요청 예산 내에서 새로운 제안을 받는다. 형태나 묶음을 몰래 바꾸거나 Random으로 대체하지 않는다. API·스키마·근거 오류, 모호한 유료 요청은 계속 중단한다. 후보 거절도 AFS 예산과 비용을 소비한다. 이미 중단된 세션은 [저장 응답 복구 안내](AFS_NUMERIC_RECOVERY.md)를 참조한다.
 
 환경은 로봇 실행 전 고정한다. AFS는 실행 중 장면이나 로봇 명령을 바꾸지 않는다. 로봇, 목표, 평가기, 호출 제한과 완료 조건은 기준 이력에서 그대로 상속한다. 새 지형, 계단, 방 구조나 움직이는 사람을 추가한 모드는 아니다.
 

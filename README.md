@@ -1,8 +1,15 @@
 # Scene2Test
 
+최신 [행동 진단과 신규 집합 기준 AFS](scene2test/docs/AFS_BREADTH_SEARCH.md#행동-진단과-신규-집합-기준-선택)는
+`afs_behavior_diversity_luna.json`을 사용합니다. 반복 경로 거절·조작 요청 유무를 다음 제안에 전달하고,
+이번 집합에서 미발견한 유형을 우선합니다. 로봇·목표·분류 기준은 유지하며 별도 새 세션으로 실행합니다.
+
 새 [환경 요소 배정·작은 변경·큰 변경·두 요소 조합 탐색](scene2test/docs/AFS_BREADTH_SEARCH.md)은
 `afs_breadth_luna.json`으로 별도 세션을 시작합니다. 미발견 유형 우선 선택과 연속 PASS 후 전환을
 적용하며, 유효 12개·최대 16회 실험·AFS 20요청입니다. 기존 완료 세션과 아래 구버전 설정은 보존합니다.
+
+숫자 범위를 벗어난 후보는 기록해 제외하고 유효한 대안은 유지합니다.
+이미 중단된 실험은 [저장 응답 복구 안내](scene2test/docs/AFS_NUMERIC_RECOVERY.md)를 사용하세요.
 
 실패 유형을6종에서10종으로 확장했습니다.
 [판정 기준·기존 실험 재분석 명령](scene2test/docs/EXPANDED_FAILURE_TYPES.md)을 참조하세요.

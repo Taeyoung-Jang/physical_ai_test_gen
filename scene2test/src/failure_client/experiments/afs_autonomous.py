@@ -252,6 +252,18 @@ class AutonomousAFS:
             != self.state["lock"]["recovery_sha256"]
         ):
             raise ValueError("point recovery audit mismatch")
+        if self.state["lock"].get("recovery_sha256"):
+            audit = read_json(self.root / "recovery.json")
+            if audit.get("schema_version") == "numeric-candidate-recovery-v1":
+                snapshots = audit.get("source_snapshot_artifacts", {})
+                if set(snapshots) != {
+                    "source_state.json",
+                    "source_ledger.json",
+                    "source_protocol.json",
+                }:
+                    raise ValueError("numeric recovery source snapshot inventory mismatch")
+                if any(_hash_file(self.root / name) != sha for name, sha in snapshots.items()):
+                    raise ValueError("numeric recovery source snapshot changed")
 
     def _proposal_raw(self, row):
         directory = self.root / "proposals" / row["id"]

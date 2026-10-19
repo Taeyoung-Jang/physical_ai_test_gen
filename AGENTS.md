@@ -1,5 +1,89 @@
 # Scene2Test workspace memory
 
+## Opt in action diagnostics and current set coverage priority implemented (2026-10-19)
+
+New feedback_policy=action-diagnostics-v1 requires explicit expanded-ten + branch-v3;
+legacy default retained. New afs_behavior_diversity_luna config keeps breadth12valid/
+16attempt/20AFS/4peraxis/0repeat/Luna300s. Whole verified action windows yield blocked
+navigation/first evidence/repeated endpoints/staging arrivals outside goal/push request
+engagement; unavailable and censored remain distinct, no physical push success claim.
+Past/current/cumulative measured families separated; missing_supported_families ranks
+CURRENT session discoveries only. Existing metrics/rules/robot/goal unchanged. Whole
+behavior feedback and overlapping historical/current pattern counts guide LLM to
+different expected behavior, not new family labels or forced actions/hard gates.
+133 related synthetic CPU tests pass32.29s incl saved response crash/resume no resend;
+Ruff/format/diff clean. Actual7unclassified offline blocked counts2/2/2/3/4/2/2,
+all no push request. Real FAIL0+PASS2 development_plan passes e8ec8119 condition,
+160robotcall upper bound; no session created. Actual whole saved memory request has
+historical3families/current0/missing8,4shown diagnostics,233503UTF8bytes NOT tokens;
+never sent. No paid/API/GPU/robot or old DB/outcome/budget edit/commit/push. Preserve
+COMPLETE160156_numeric_recovery; use NEW config/session, never drift bypass. Discovery
+quality unmeasured. See action_diagnostics_and_current_coverage workhistory and
+AFS_BREADTH_SEARCH.md new section for commands.
+
+## Breadth recovered live search complete with FDR75 but one measured type (2026-10-19)
+
+User-run160156_numeric_recovery now COMPLETE/validtarget12/pendingnull:12uniqueVALID,
+3PASS9FAIL,0excluded,new-onlyFDR75%,primarygoal_completion_failure2episodes=>1type,
+7unclassified;NOTjoint4types/Gain. AllFAIL10callBUDGET_EXHAUSTED;00004final.248276m
+dwell.01of1s,00008final.245359m/dwell.05;00011.251203mOUTSIDE,notcompletiontype.
+Small/large/combo4each;factorgroupsfloor3/object3/geometry3/layout3/human4. All12
+verifiedunmixedPASSbranches,declaredaxesonly,samee8ec8119condition.117actions:
+navigate85/move24/plan8,PUSH0;mass/frictionchangesNOTphysicalmanipulationproof.
+RawAPI120completeusage3908846in263051out,AFS12/883313in43247out;includesold2robot
+attempts/3AFS. Resumeadded10attempts/100robotcalls3248410in226587out,9AFS672004in
+33123out. External60robot/1979590in116873out separate,externalAFScostunknown.
+934rollout+796report+36proposalhashesmatch,12MP4present/GIF0,notdecodedthisreview.
+Earlier bounds recovery works savedcombo00002PASSwithoutAFSresend;knowninvalid1m
+candidate notclamped. Context3/9/11 already gives3knownhistorictypes+5missing;not
+missingfeedback. Executionbreadthworks,mechanismdiversityunproven;review7unclassified
+wholebehavior/terminalmeasurement and historicalnovelty vsnewset4type objective,
+notinventlabels/forceactions/weakenrules/blindpaidruns. Goalmet:doNOTspendremaining
+8AFS/4attemptslots orresumecompletedset. Reviewonly,docs/historychanges,noAPI/robot/
+code/evaluator/DB/outcome/budgetchange/commit/push. See breadth_completed_live_review.
+
+## Numeric outlier candidates no longer discard valid breadth alternatives (2026-10-18)
+
+User authorized fix after160156 boundsstop. BreadthProposal only: numeric bounds
+violations become per-space numeric_out_of_bounds diagnostics(original index/value/
+bounds),valid alternatives retained;no clipping/response rewrite/boundrelax. First
+and second axes checked. Schema/nonfinite/evidence/context/axis/quota/role errors
+still whole-stop;old modes strict. All numeric rejected=>NoEligibleEndpoint bounded
+AFScap,no robot attempt/FAIL/Random. Request adds explicit instruction suffix only.
+New recover-numeric CLI dryrun default,--apply creates separate auditedfork,never
+API/robot. Requires saved complete pendingresponse,all prior attemptsVALID,unchanged
+context/model/schema/settings/history/budget;only explicit sourceallowlist,resources/
+runtime fixed. Preserve originals+pastattempts/proposals/costs+hashedstate/protocol/
+ledger,verifyaudit onresume,savedcandidate revalidatedwithoutresend. No generic drift
+bypass or context rebinding. Actual160156 dryrunpasses:selected first combo width3.6+
+obstacle1Y.65,rejectsecond obstacle2Y1 outside.2.. .8;2attempts/3AFSspent remain,
+target12=>10morevalid,14attempts/17AFSremaining.341relatedCPUtests pass126.50s;
+Ruff/format8files+diffclean. No paid/API/GPU/robot/live result changes/commit/push.
+See AFS_NUMERIC_RECOVERY.md and numeric_candidate_rejection_and_recovery history.
+Actual offline fork now created at160156_325966Z_numeric_recovery:READY/pendingnull,
+selectedcombo3.6/.65,2attempts/3AFSspent preserved. Original552file aggregatehash
+863ffb026c16fe018e5d4dbe6cc8617bf6b1a6d91eec7b34f160243a0ced83f7 unchanged.
+Do not rerun --apply or originalsession;next paidrun uses this recovery --session.
+Actual recovery _fresh + savedraw selected_probe pre-dispatch revalidation MATCH,
+APIkeyremoved,no proposer/runner/livecall;ready2attempts3AFS unchanged.
+
+## Breadth live two valid failures and mixed-validity proposal stop reviewed (2026-10-18)
+
+User-run160156_325966 NEEDS_ATTENTION/execution_or_validation_error,pendingproposal2.
+2VALIDFAIL,0excluded,new-onlyFDR2/2interim,0measuredtypes/2unclassified;no joint/Gain.
+PASS anchors:floor.8->.5 small20.69% FAIL final.460567m;boxfriction.5->1 large34.48%
+FAIL final.414699m,bothdwell0/all8rulesNOT_DETECTED,2unsupported. NOT frictioncausality
+or physicalpushproof. Newfactorallocationexecuted. Proposal2completedLuna response
+has first valid combo(width4->3.6,obstacle1Y.5->.65) and second invalidobstacle2Y1m
+outside.2.. .8. Wholeproposalvalidate stopsBEFORE candidate selection;firstcombo
+passesallhostchecks in read-only singlecandidate offline replay,NOTpersisted/dispatched.
+163rollout+9proposalhashesmatch;robot20/660436in36464out completeusage;AFS3/211309in
+10124out,17requestsremain;2attempts spent,14remain. No blindresume:pendingresponse
+willfailagain. Recommend explicit versionedper-candidate numericrejection +audited
+savedresponse recovery if approved,NOTclamp1to.8/boundrelax/DBclear/resend/costreset.
+No code/evaluator/budget/outcome/archivechange or paid/API/GPU/robot/commit/push.
+See breadth_live_bounds_stop_review workhistory;no recovery prepared this review.
+
 ## Opt-in breadth execution allocation and two-axis combinations implemented (2026-10-18)
 
 New exploration_policy=breadth-v1 ONLY with expanded failure-branch-v3 + bounded

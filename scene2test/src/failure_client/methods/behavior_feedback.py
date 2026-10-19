@@ -208,13 +208,18 @@ def choose_probe(raw, ctx, memory):
         if "development_search" in ctx
         else b.Proposal.model_validate(raw)
     )
-    b.validate(proposal, ctx)
+    numeric_rejected = b.validate(
+        proposal, ctx, numeric_rejections=isinstance(proposal, b.BreadthProposal)
+    )
     axes = b.context_axes(ctx)
     base = ctx["latest"]["parameters"]
     seen = [parameters(c) for c in memory["cases"]]
     stagnant = similar_failures(memory, base, axes)
-    options, rejected = [], []
+    options, rejected = [], list(numeric_rejected)
+    invalid_indices = {r["space"] for r in numeric_rejected}
     for index, space in enumerate(proposal.spaces):
+        if index in invalid_indices:
+            continue
         anchor = None
         if "anchor_catalog" in ctx:
             from .branch_anchors import checked_anchor

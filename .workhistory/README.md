@@ -12,6 +12,16 @@
 
 ## 이력 목록
 
+- [2026-10-19 AFS 행동 진단과 신규 집합 기준 선택 구현](2026-10-19_action_diagnostics_and_current_coverage.md)
+
+- [2026-10-19 미분류 실패 7개와 AFS 개선 우선순위](2026-10-19_unclassified_seven_analysis.md)
+
+- [2026-10-19 환경 요소 배정 탐색 완료 결과 검토](2026-10-19_breadth_completed_live_review.md)
+
+- [2026-10-18 숫자 범위 위반 후보 분리와 저장 응답 복구](2026-10-18_numeric_candidate_rejection_and_recovery.md)
+
+- [2026-10-18 환경 요소 배정 실험의 범위 오류 중단 검토](2026-10-18_breadth_live_bounds_stop_review.md)
+
 - [2026-10-18 환경 요소 실행 배정과 두 요소 조합 탐색 구현](2026-10-18_breadth_allocation_and_combinations.md)
 
 - [2026-10-18 환경 변화 폭과 실제 실행 편중 검토](2026-10-18_scene_variation_breadth_review.md)
