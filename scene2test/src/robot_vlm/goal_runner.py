@@ -30,7 +30,7 @@ from .navigation_completion import DEFAULT, NavigationCompletion, completion_con
 from .policy import Geometry, Observation, PolicyError, validate_fresh
 from .scene_config import validate_scene
 from .task_outcome import GoalEvaluator, digest, task_contract
-from .timing import RequestTiming
+from .timing import CONNECT_RETRIES, RequestTiming, connection_retry_contract
 
 
 def write(path, value):
@@ -138,7 +138,8 @@ def run(
             "output_token_limit_policy": "provider_default_no_client_cap",
             "response_deadline_wall_s": timing.deadline_s,
             "http_read_timeout_s": timing.read_s,
-            "timing_contract": "goal-request-timing-v1; inference counts toward simulation budget",
+            "timing_contract": "goal-request-timing-v2; inference counts toward simulation budget",
+            "connection_retry_policy": connection_retry_contract(),
             "debug_logging": "per-call api_call_NNN.jsonl; UTC and wall elapsed",
             "inference_wait": "robot-internal GT base/yaw hold; stale pose rejected",
             "observation": "RGB + full geometry + GT pose",
@@ -448,6 +449,7 @@ def run(
                     root / f"api_call_{calls:03}.jsonl",
                     obs.state_version,
                     read_timeout_s=timing.read_s,
+                    connect_retries=CONNECT_RETRIES,
                 )
                 future = executor.submit(journal.decide, policy, obs, png)
                 calls += 1

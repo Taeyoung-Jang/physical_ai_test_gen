@@ -5,6 +5,15 @@ from clear_path.fixture import graph
 from failure_client.methods.behavior_feedback import parameters
 
 
+def allowed_anchor_roles(intent, ctx):
+    v4 = ctx["failure_objective"].get("anchor_policy") == "failure-diversity-v4"
+    if intent == "relief":
+        return {"observed_failure"}
+    if intent == "mechanism_transfer" and v4:
+        return {"success_control", "observed_failure"}
+    return {"success_control"}
+
+
 def branch_catalog(memory, ctx):
     shown = set(ctx["failure_objective"]["behavior_evidence_ids"])
     catalog = []
@@ -28,11 +37,7 @@ def branch_catalog(memory, ctx):
         raise ValueError("no unmixed observed PASS/FAIL anchor with supplied behavior evidence")
     objective = ctx["failure_objective"]
     roles = {c["role"] for c in catalog}
-    allowed = [
-        i
-        for i in objective["allowed_intents"]
-        if ("observed_failure" if i == "relief" else "success_control") in roles
-    ]
+    allowed = [i for i in objective["allowed_intents"] if allowed_anchor_roles(i, ctx) & roles]
     if not allowed:
         raise ValueError("no eligible branch: an observed PASS control may be required")
     objective.update(
@@ -67,16 +72,38 @@ def branch_catalog(memory, ctx):
         ),
         "claim": "Separate recorded branches, not causal proof or guaranteed independence",
     }
+    if objective.get("anchor_policy") == "failure-diversity-v4":
+        ctx["branch_contract"].update(
+            anchor_policy="failure-diversity-v4",
+            challenge_and_transfer="challenge: PASS; mechanism_transfer: PASS or FAIL",
+            challenge="unmixed observed PASS anchor",
+            mechanism_transfer=(
+                "unmixed observed PASS or FAIL anchor; different behavior hypothesis"
+            ),
+            cooldown_scope="VALID behavior only; all intents still consume quotas and costs",
+        )
+        for anchor in catalog:
+            anchor["allowed_intents"] = [
+                i for i in allowed if anchor["role"] in allowed_anchor_roles(i, ctx)
+            ]
 
 
 def checked_anchor(space, ctx):
     anchor = next((c for c in ctx["anchor_catalog"] if c["case_id"] == space.anchor_case_id), None)
     if anchor is None:
         raise ValueError("unknown, mixed, excluded or unpresented anchor")
-    expected = "observed_failure" if space.intent == "relief" else "success_control"
-    if anchor["role"] != expected:
+    if anchor["role"] not in allowed_anchor_roles(space.intent, ctx):
         raise ValueError("new-mechanism/challenge requires PASS; relief requires FAIL")
-    refs = [r for r in space.behavior_refs if r in anchor["evidence_ids"]]
+    declared = getattr(space, "anchor_behavior_refs", space.behavior_refs)
+    if hasattr(space, "anchor_behavior_refs") and (
+        not set(declared) <= set(anchor["evidence_ids"])
+        or not set(declared) <= set(space.evidence_refs)
+        or len(set(declared)) != len(declared)
+    ):
+        raise ValueError(
+            "anchor_behavior_refs must name selected anchor evidence and evidence_refs"
+        )
+    refs = [r for r in declared if r in anchor["evidence_ids"]]
     if not refs:
         raise ValueError("proposal must cite actual behavior from its selected anchor")
     return anchor, refs[0]

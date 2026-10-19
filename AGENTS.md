@@ -1,5 +1,181 @@
 # Scene2Test workspace memory
 
+## One-command trajectory smoke script (2026-10-19)
+
+tools/run_trajectory_smoke.sh --dry-run prints only,no files/API/robot;--live runs
+fresh10callcontrol using originalattempt4scene,currentretryrobotcode,then verified
+VALIDPASS/FAIL+manifest gate,then new trajectory AFS atmost1request/1newattempt.
+Total invocation<=20robotpolicycalls+1AFS;notfull12validbudget. New timestampPIDroot
+runtime/trajectory_feedback;run.log retained and projectzz_log replacedlatest.
+Explicitlive/keyrequired,existingoutputrefused,stageerrors/excludedcontrolstop,
+noautomaticwholeepisoderetry/resume. Same TCP pre-send retry policy retained.
+Script rerun starts freshpaidcontrol,notoldsessioncontinuation. Source/outputenv
+AFS_TRAJECTORY_SOURCE_SCENE/AFS_TRAJECTORY_OUTPUT_DIR;fixedtrajectoryconfig.
+Tests fakeuv+isolatedproject so actualzz_log preserved;embeddedPython+Bash syntax
+checked. No paid/API/robot executed by Codex while preparing script.
+
+## Trajectory and prediction-gap feedback opt-in implemented (2026-10-19)
+
+User approved feedback-only first stage,NOT host ranking change or paid execution.
+SearchBudget.pattern_feedback defaults off;trajectory-v1 requires cause-review-v3.
+New trajectory_feedback.py summarizes goal-endpoint block/repetition,accepted actual
+progress>=.05m peraction(summaryheuristic only),stagingarrival,manipulationrequest/
+toolrejection,action-result goalentry/dwell+finalexit,last3actions/fullratefinalstate.
+Missing/partial absence staysUNKNOWN;localrejectedpush still request,notphysicalproof.
+Predicted type compared to fixed detectorstatus+gateobservations+actualprimary;
+NOT_DETECTED notcausalrefutation and unclassifiedFAIL staysFAIL. LLM existing
+change_rationale/measurement_plan asked why environmental change yields different
+behavior;no newschema/extraLLMcall/rankbonus/hardban/label or goal/budget changes.
+All supplied-memory episodes accumulated beyond historylimit,condition/taskbudget/
+origin/current-historical separated;groups<=8/currentfirst,reps<=2,checks<=4.
+Aggregate unseen provenance notnew permittedanchor/ref;alloldguardssurvive.
+Context+selectionaudit/HTML savefeedback. New afs_trajectory_luna.json freshdev
+proposal12valid/16attempts/20AFS/4peraxis/0repeats/Luna,NOToldsessionextension.
+Actual readonly7archive comparison:10call5VALIDFAIL allblockedgoal+progressbudget
+pattern;15call2diagnostics separategroup,attempt5entry.19sdwell/finaloutside.
+587originalfilehashesunchanged. Pure actual10callcontext built4details/all5summary,
+three predicted goaloccupied/collision/obstacleinterference NOT_DETECTED;request
+285719UTF8bytes(notwiretokens/cost),nooutputtokencap/API/robot. No4types/Gainclaim.
+Regression167CPUtests pass48.60s;final15trajectorytests pass9.39s inclsavedresponse
+resume/noresend,defaultoff,partialdata,conditionbudgetsplit,hostunchanged,audit.
+Ruff/format/diffclean. No runtimefork/newsession/paid/API/GPU/robot/commit/push.
+Old frozen campaigns alreadydrift aftertransportretry:never directlyresume or bypass.
+See AFS_REFERENCE_RECOVERY_AND_EVALUATION.md trajectory section. Next new-condition
+development execution must be explicitly prepared; discovery quality notliveverified.
+
+## Goal GPT pre-send connection retries implemented (2026-10-19)
+
+User approved2retries after budget15diagnostic attempt4 DNS ConnectError at13th
+API selection(12actions); INCONCLUSIVE preserved,attempt5 notlaunched. New goal
+Journal opt-in connect_retries2: atmost3TCPattempts,samebody/clientID,backoff1/2s.
+Only ConnectError/ConnectTimeout+trace connection.connect_tcp.failed+no send/response
+allows retry. TLS/untraced/ambiguous/write/read/HTTP/schema errors stop unchanged.
+Other legacy journals/no-journalcall remain0retry. Record per-attempt redacted
+failure/retryschedule and final connection_attempts/retry_count/failurehistory.
+Notextra robot actions/modelusage estimates. Goal protocol pre-send-tcp-retry-v1,
+timingv2; HTTPread unchanged,runner deadline read+53 insteadread+30 allows23s
+connection/backoff overhead. Goal/budget/token/simcaps unchanged; waitingphysics
+unchanged. Existing frozen campaigns now source-drift:never bypass or directresume.
+New budget15 diagnosis must use freshoutput;no paid/API/GPU/robot run this turn.
+See docs/ROBOT_API_DIAGNOSTICS.md and tests/test_robot_connection_retry.py.
+Final CPU regression117passed/3explicitGPUskipped29.18s(PYTHONPATH=.:src required
+for existing tests package imports); Ruff/format7files and diffcheck clean.
+
+## Timeout-aware development continuation implemented (2026-10-19)
+
+independent_luna_v2 seed17 has2VALIDFAIL cold starts(manipulation_failure,
+human_safety_risk),1excluded firstrobotcall api_timeout,3attempts/1AFSspent.
+Old PASS-only transfer plus excluded-relief cooldown can deadlock with noPASS.
+New opt-in anchor_policy=failure-diversity-v4 allows mechanism_transfer from
+VALIDPASS/FAIL,challenge PASS-only,relief FAIL-only. Exclusions still consume
+attempts/axisquota/cost but do not create/age VALID behavior cooldown. Exact
+excluded scene forbidden automatic replay. Predictions never measured labels.
+Per-invocation max_new_afs_requests added; continuation CLI defaults1AFS/1attempt.
+prepare_continuation default dryrun; --apply creates separate audited development
+fork,keeps original state/ledger/proposals/evidence and spent budgets,requires
+pendingnull/finalized requests/API-timeout exclusion; only explicit sourceallowlist,
+robot resources/runtime unchanged. Not original prospective evaluation,not Gain.
+Actual dryrun passed:17 remaining21attempts/23AFS/18validneeded;29/43 unchanged
+24attempts/24AFS/20validneeded. No API/robot run. Related151CPUtests passed43.13s;
+final10continuation tests passed14.86s. See docs/AFS_REFERENCE_RECOVERY_AND_EVALUATION.md.
+New tools/run_discovery_continuation.py; never directly resume old frozen v2 with
+new sources or reset its budgets. Development output target independent_luna_v2_development.
+Actual --apply completed at that target: original251files hashes unchanged;
+new seed17 NEEDS_ATTENTION/excluded_rollout preserved deliberately,allowedintents
+mechanism_transfer+relief,excludedscene1notreplayed. Resume ONLY new development
+CLI --live --continue-after-exclusion --max-new-attempts1 --max-new-afs-requests1.
+No paid execution performed; do not rerun prepare --apply on existing destination.
+
+## Failure intent and mode output schema aligned (2026-10-19)
+
+User approved preventive fix after independent_luna_v1 proposal0 stopped before
+robot: all3saved candidates relief+cross_mechanism; requiredsuccess_probe. Shared
+FAILURE_INTENT_MODES now feeds request schema and unchanged-semantics host guard.
+Directed profiles bind candidate objects via refs/nested anyOf: relief=>success_probe,
+challenge/transfer=>cross_mechanism; relief-only schema mode has singletonenum.
+Prompt states exact allowedpairs including combinations; detailed hosterror names
+intent/requiredmode/gotmode. Old nondirected range/local contracts unchanged.
+No normalization/filtering/reproposal/threshold/budget/model/token/simcap changes.
+Actual savedresponse passesOLDschema/rejectedNEWschema, sameLuna/nocap;224original
+campaignfile hashes unchanged by read-only replay. Existing2coldFAIL/1AFSspent remain
+frozen; no oldDB/response/protocol/budget edits or driftbypass. Cannot resumev1with
+samecommand aftersourcechange; future newversionfreeze or separatelyreviewedrecovery,
+NOT automaticallycreated. Final141CPUtests pass39.07s,Ruff/format4files+diffclean.
+No paid/API/robot/newcampaign/commit/push. Tests and scope recorded in
+AFS_REFERENCE_RECOVERY_AND_EVALUATION intent/mode section.
+
+## Independent cold start evaluation runner implemented (2026-10-19)
+
+User approved next implementation, not paid execution. New independent_discovery.py
+DiscoveryEvaluation/IndependentSeed + tools/run_discovery_evaluation.py init/run/
+status/report. Separate independent mode/request policy; per-seed empty history,
+only own new episodes in AFS context. Controls bind config/provenance only. Fixed
+uniform seed/index bootstrap attempts charged to valid/attempt/cost metrics;
+exclusions STOP and explicit continuation advances, never resends. All bootstrap
+excluded=>no_valid_cold_start_evidence; allFAIL uses existing relief rules, absence
+of eligible anchor=>no_eligible_observed_anchor, no external PASS/Random fallback.
+Coldstarts count in form-cycle index, not single-axis quota; reports disclose it.
+Manifest v2 binds condition/geometry/origin/environment+driver hashes; old prep v1
+must re-freeze. Seed DBs bind manifest; no recovery history or cross-seed import.
+Predeclared sequential seeds, global invocation attempt limit, fixed valid target,
+no metric-success early stop. All seed metrics and primary union reported; joint
+target-at-complete remainsnull until alltargetscomplete; Gain deferred. No threshold/
+robot/goal/model/token/simcap edits. Actual archived PASS read-only plan passes same
+e8ec8119 condition, empty evalhistory,60valid/72attempt/720robot/72AFS upperbounds.
+Final121CPUtests pass32.06s; Ruff/format8files+diffclean. All6 distinct bootstrap
+configs compile; actual-environment /tmp offline init/report READY/0attempt/0AFS.
+See independent_discovery_runner workhistory. No paid/API/GPU/robot/newruntimecampaign/
+oldarchiveDB/outcome/budget edit/commit/push. Next newfreeze/init then one bounded
+live coldstart, not old frozen-session resume. See AFS_REFERENCE_RECOVERY_AND_EVALUATION.
+
+## Reference roles recovery readiness and evaluation preparation (2026-10-19)
+
+User approved all planned work start, not paid runs. cause-review-v3 opt-in/new
+afs_reference_roles_luna: explicit anchor_behavior_refs checked against selected
+anchor and evidence_refs; analysis_evidence_id/behavior_refs can cite differentFAIL.
+Legacy/v2 unchanged; same12valid/16attempt/20AFS/Luna300s. v3 sees human-goal domain
+constraint. recover-anchor-refs defaultdryrun, --apply newauditedfork only: append
+unique anchor ID ALREADY in evidence_refs to missingbehavior_refs; no value/role/
+analysis/context rebinding or APIresend. Source state/ledger/protocol/hash/model/
+usage/priorVALID/budget/resources/runtime bound; explicit sourceallowlist,nodeletion.
+Actual040453 dryrun passes first human_lateral0;3attempts4AFS spent preserved,
+9morevalid/13attempt/16AFS remain; NO actualfork/API/robot created. Fork staysv2,
+NOT silentv3 migration. Originals+normalizedhash verified onresume. New readiness
+audit10families/8rules,conditionsseparate:humanX3.65..4.35 vsgoalX7/r.25/exposure1
+=>goalpose+humanexposure PROVEN_DISJOINT with1.4m gap; NOT wholefamily impossible.
+Latest3FAIL audit still1manipulationtype. New evaluation plan/freeze manifest only:
+seeds17/29/43,20valid/24attempt each,total60/72,720robotcalls/72AFS proposed,
+external evaluation history EMPTY; actual4controlarchive planpasses e8ec8119.
+execution_readiness BLOCKED_INDEPENDENT_COLD_START_RUNNER_REQUIRED: independent
+runner NOT yetimplemented; re-freeze after driver code. New human domain NOT built.
+Regression PASS+latestmanipFAIL plan2repeats each=>4attempts/40calls,notexecuted.
+152relatedCPUtests pass36.26s,Ruff/format/diffchecks. No paid/API/GPU/robot orsource
+archiveDB/outcome/budget edits/commit/push. See AFS_REFERENCE_RECOVERY_AND_EVALUATION
+docs and reference_roles_recovery_and_evaluation_prep workhistory. FDR/4types/Gain
+final evaluation remains unachieved; no development-history pooling or goal relabel.
+
+## Opt in LLM episode review and detector contracts implemented (2026-10-19)
+
+After031027 live3VALIDFAIL/1api_timeout excluded/0types, user approved retrospective
+LLM analysis + detector exclusions. New feedback_policy=cause-review-v2 only with
+expanded branch+breadth, config afs_cause_review_luna keeps12valid/16attempt/20AFS/
+4peraxis/0repeat/Luna300s/history4. SAME request returns episode_reviews BEFORE spaces:
+facts/actionversions, hypothesis, alternative, uncertainty, nexttest implication.
+Latest shown episode+shownFAIL required; PASS analyzed as strategy, exclusions notFAIL.
+Each candidate cites reviewed evidence + measurement_plan. Host checks IDs/outcomes/
+versions/reflinks, not prose truth or causal certainty. Eight detector requirements/
+exclusions/thresholds + actual measured terminal gates/humancontract supplied. Explicit
+box_only/not_applicable collision plan individually rejected; valid alternatives kept,
+allrejected uses existing boundedAFScap, no robotattempt/FAIL/Random. unknown remains
+uncertain. Reviews saved in rawresponse/selectionaudit/report, never metric labels.
+146related syntheticCPUtests pass incl savedresponse resume no resend; real latest
+3FAIL+priorPASS read-only plan passes e8ec8119 condition, no session/API/robot created.
+No model/robot/goal/evaluator/threshold/tokencap changes. No extra analysis API call,
+but more output can cost tokens. Actual discovery improvement unmeasured. Preserve
+frozen031027 and COMPLETE numeric_recovery; newconfig/session only, no drift bypass.
+No paid/API/GPU/robot/archiveDB/budget/outcomechange/commit/push. See cause_review_and_
+detector_contract workhistory, AFS_BREADTH_SEARCH docs for freeplan/livecommands.
+
 ## Opt in action diagnostics and current set coverage priority implemented (2026-10-19)
 
 New feedback_policy=action-diagnostics-v1 requires explicit expanded-ten + branch-v3;

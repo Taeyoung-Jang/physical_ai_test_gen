@@ -17,7 +17,16 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "op",
-        choices=["plan", "init", "run", "status", "report", "recover-point", "recover-numeric"],
+        choices=[
+            "plan",
+            "init",
+            "run",
+            "status",
+            "report",
+            "recover-point",
+            "recover-numeric",
+            "recover-anchor-refs",
+        ],
     )
     parser.add_argument("--apply", action="store_true", help="apply offline recovery fork")
     parser.add_argument(
@@ -38,7 +47,7 @@ def main(argv=None):
     )
     parser.add_argument("--continue-after-exclusion", action="store_true")
     args = parser.parse_args(argv)
-    if args.op in {"recover-point", "recover-numeric"}:
+    if args.op in {"recover-point", "recover-numeric", "recover-anchor-refs"}:
         if (
             not args.session
             or not args.output_dir
@@ -49,13 +58,24 @@ def main(argv=None):
             or args.continue_after_exclusion
         ):
             parser.error("recovery needs --session and new --output-dir; optional --apply only")
+        from failure_client.experiments.anchor_ref_recovery import recover_anchor_refs
         from failure_client.experiments.numeric_recovery import recover_numeric
         from failure_client.experiments.point_recovery import recover_point
 
         try:
-            recover = recover_point if args.op == "recover-point" else recover_numeric
+            recover = {
+                "recover-point": recover_point,
+                "recover-numeric": recover_numeric,
+                "recover-anchor-refs": recover_anchor_refs,
+            }[args.op]
             result = recover(args.session, args.output_dir, apply=args.apply)
-            prefix = "POINT_RECOVERY=" if args.op == "recover-point" else "NUMERIC_RECOVERY="
+            prefix = (
+                "ANCHOR_REF_RECOVERY="
+                if args.op == "recover-anchor-refs"
+                else "POINT_RECOVERY="
+                if args.op == "recover-point"
+                else "NUMERIC_RECOVERY="
+            )
             print(prefix + json.dumps(result, ensure_ascii=False))
             print("No API or robot executed; original session preserved.")
             return 0

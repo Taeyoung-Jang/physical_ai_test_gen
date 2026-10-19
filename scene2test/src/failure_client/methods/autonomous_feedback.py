@@ -33,10 +33,27 @@ class SearchBudget(StrictRecord):
     reproposal_policy: Literal["stop", "bounded-rejection-v1"] = "stop"
     taxonomy_profile: Literal["scene-default", "expanded-ten-v1"] = "scene-default"
     exploration_policy: Literal["legacy", "breadth-v1"] = "legacy"
-    feedback_policy: Literal["legacy", "action-diagnostics-v1"] = "legacy"
+    feedback_policy: Literal[
+        "legacy", "action-diagnostics-v1", "cause-review-v2", "cause-review-v3"
+    ] = "legacy"
+    anchor_policy: Literal["pass-control-v3", "failure-diversity-v4"] = "pass-control-v3"
+    pattern_feedback: Literal["off", "trajectory-v1"] = "off"
 
     @model_validator(mode="after")
     def check_target(self):
+        if self.pattern_feedback != "off" and self.feedback_policy != "cause-review-v3":
+            raise ValueError("trajectory feedback requires cause-review-v3")
+        if self.anchor_policy == "failure-diversity-v4" and (
+            self.selection_policy != "failure-branch-v3"
+            or self.feedback_policy != "cause-review-v3"
+            or self.exploration_policy != "breadth-v1"
+        ):
+            raise ValueError("failure-diversity-v4 requires reviewed breadth branch mode")
+        if (
+            self.feedback_policy in {"cause-review-v2", "cause-review-v3"}
+            and self.exploration_policy != "breadth-v1"
+        ):
+            raise ValueError("cause review requires explicit breadth-v1 mode")
         if self.feedback_policy != "legacy" and (
             self.selection_policy != "failure-branch-v3"
             or self.taxonomy_profile != "expanded-ten-v1"
@@ -84,6 +101,10 @@ def accounting(attempts, axes, budget):
             candidate_axes(a["candidate"])
             for a in reversed(attempts)
             if candidate_axes(a["candidate"])
+            and (
+                budget.anchor_policy != "failure-diversity-v4"
+                or a.get("episode", {}).get("status") == "VALID"
+            )
         ),
         [],
     )
@@ -212,7 +233,15 @@ def selection(memory, attempts, budget, schema):
             ctx["latest"]["evidence"],
             taxonomy_profile=budget.taxonomy_profile,
             feedback_policy=budget.feedback_policy,
+            anchor_policy=budget.anchor_policy,
+            pattern_feedback=budget.pattern_feedback,
         )
+        if budget.anchor_policy == "failure-diversity-v4":
+            ctx["excluded_scene_parameters"] = [
+                a["candidate"]["parameters"]
+                for a in attempts
+                if a.get("episode", {}).get("status") == "INCONCLUSIVE"
+            ]
         ctx["search_selection"].update(
             policy="failure-directed-v2",
             ranking=(
@@ -248,6 +277,10 @@ def selected_probe(raw, ctx, memory):
     # original response: do not silently discard an out-of-quota proposal.
     proposal = b.endpoint_proposal(raw, ctx)
     b.validate(proposal, ctx, numeric_rejections=isinstance(proposal, b.BreadthProposal))
+    if isinstance(proposal, b.ReviewedBreadthProposal):
+        from .cause_review import validate_reviews
+
+        validate_reviews(proposal, ctx)
     if any(
         axis not in ctx["development_search"]["selectable_axes"]
         for s in proposal.spaces
@@ -265,13 +298,28 @@ def selected_probe(raw, ctx, memory):
                 raise ValueError("relief requires comparable FAIL evidence and relief cooldown")
             if space.target_family not in objective["supported_targets"]:
                 raise ValueError("target family is unsupported in this domain")
-            if space.mode != ("success_probe" if space.intent == "relief" else "cross_mechanism"):
-                raise ValueError("proposal mode contradicts failure-search intent")
+            expected_mode = b.FAILURE_INTENT_MODES[space.intent]
+            if space.mode != expected_mode:
+                raise ValueError(
+                    "proposal mode contradicts failure-search intent: "
+                    f"intent={space.intent} requires mode={expected_mode}; got mode={space.mode}"
+                )
             if "anchor_catalog" in ctx:
                 from .branch_anchors import checked_anchor
 
                 checked_anchor(space, ctx)
     candidate = bind(choose_probe(raw, ctx, memory), memory)
+    if "trajectory_feedback" in ctx.get("failure_objective", {}):
+        candidate["selection_audit"]["trajectory_feedback"] = ctx["failure_objective"][
+            "trajectory_feedback"
+        ]
+    if isinstance(proposal, b.ReviewedBreadthProposal):
+        candidate["selection_audit"]["llm_episode_reviews"] = [
+            review.model_dump() for review in proposal.episode_reviews
+        ]
+        candidate["selection_audit"]["review_claim"] = (
+            "LLM hypotheses only; evidence/outcome references checked, causal truth not verified"
+        )
     candidate["scheduler"] = ctx["development_search"]
     if "anchor_catalog" in ctx:
         anchor = next(

@@ -40,9 +40,12 @@ def exception_detail(exc):
 
 
 class Journal:
-    def __init__(self, path, version, *, read_timeout_s=30.0):
+    def __init__(self, path, version, *, read_timeout_s=30.0, connect_retries=0):
+        if type(connect_retries) is not int or not 0 <= connect_retries <= 2:
+            raise ValueError("connect_retries must be 0..2")
         self.path, self.version = path, version
         self.read_timeout_s = read_timeout_s
+        self.connect_retries = connect_retries
         self.client_request_id = str(uuid4())
         self.started = time.monotonic()
 

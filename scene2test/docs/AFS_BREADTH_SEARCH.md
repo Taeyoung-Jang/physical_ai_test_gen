@@ -6,6 +6,32 @@
 
 ## 행동 진단과 신규 집합 기준 선택
 
+### LLM의 지난 결과 분석과 검출 조건 검토
+
+`config/afs_cause_review_luna.json`은 `feedback_policy: cause-review-v2`를 사용한다. 기존에는 LLM이 취약점·대안·반증 조건을 제안했지만 지난 실패 분석을 별도 결과물로 제출하지는 않았다. 새 모드에서는 **같은 AFS 응답 안에서 지난 결과 분석을 먼저 출력한 뒤 후보를 제안**한다. 별도 분석용 API 호출은 추가하지 않지만 분석 텍스트에 따른 토큰 비용은 증가할 수 있다.
+
+필수 `episode_reviews`에는 최신 제시 에피소드와 제시된 FAIL의 관측 사실, 행동 번호, 유력 가설, 다른 설명, 불확실성, 다음 테스트에 반영할 점이 들어간다. PASS만 있으면 성공 전략을 검토한다. 제외·시간 초과는 목표 실패로 분석하지 않는다. 각 후보는 분석한 에피소드를 명시적으로 참조하고 `measurement_plan`에 예상 검출 근거와 제외 조건을 설명한다. 원본 응답과 선택 감사의 `llm_episode_reviews`에 분석을 보존한다.
+
+LLM에는 기존 8개 지원 유형의 검출 조건·제외 조건·규칙 버전과 실제 종료 구간 관측값을 전달한다. 예를 들어 충돌은 종료 정체와 조건을 충족한 비상자 접촉을 함께 요구하며 `clear_box_geom`과 바닥 접촉은 제외한다. 상자 접촉만 예상하면서 충돌을 겨냥한다고 명시한 후보는 기록해 제외하고 유효 대안을 유지한다. 모두 제외되면 기존 고정 AFS 요청 예산 내 bounded rejection을 사용하며 로봇 시도나 FAIL로 세지 않는다. 근거 ID·관측 결과·행동 번호·스키마가 잘못된 분석은 계속 중단한다.
+
+호스트는 자유 텍스트의 사실성이나 원인을 자동으로 검증하지 않는다. 불확실한 원인도 허용하며, LLM 분석이 실제 유형·목표 결과·성과 집계를 덮어쓰지 않는다. 원형 경로 계획기 거절을 실제 충돌 또는 전역 도달 불가능으로 바꾸지 않는다. 기존 action-diagnostics-v1과 legacy 계약은 유지한다.
+
+새 모드는 별도 세션용이다. 중단된 `20261019T031027_016099Z`와 완료된 과거 세션을 새 소스로 우회 재개하지 않는다. 아래는 성공 기준 1개와 최신 유효 실패 3개를 재사용하는 무료 사전 검사이며, 제외된 attempt_00003은 입력하지 않는다.
+
+```bash
+uv run --no-sync python tools/run_afs_autonomous.py plan --config config/afs_cause_review_luna.json --run /workspace/g1_failure/runtime/afs_autonomous/20261018T160156_325966Z_numeric_recovery/attempts/attempt_00002/rollout --run /workspace/g1_failure/runtime/afs_autonomous/20261019T031027_016099Z/attempts/attempt_00000/rollout --run /workspace/g1_failure/runtime/afs_autonomous/20261019T031027_016099Z/attempts/attempt_00001/rollout --run /workspace/g1_failure/runtime/afs_autonomous/20261019T031027_016099Z/attempts/attempt_00002/rollout
+```
+
+다음 명령은 API 키가 설정된 터미널에서 **새 유료 세션**을 시작한다. Luna, 유효 12개 목표, 최대 16회 시도·AFS 20요청, 기준 로봇 10회 호출이면 로봇 최대 160회다. 기존 세션에 이미 쓴 비용을 취소하거나 새 세션 성과에 합산하지 않는다.
+
+```bash
+uv run --no-sync python tools/run_afs_autonomous.py run --live --config config/afs_cause_review_luna.json --run /workspace/g1_failure/runtime/afs_autonomous/20261018T160156_325966Z_numeric_recovery/attempts/attempt_00002/rollout --run /workspace/g1_failure/runtime/afs_autonomous/20261019T031027_016099Z/attempts/attempt_00000/rollout --run /workspace/g1_failure/runtime/afs_autonomous/20261019T031027_016099Z/attempts/attempt_00001/rollout --run /workspace/g1_failure/runtime/afs_autonomous/20261019T031027_016099Z/attempts/attempt_00002/rollout
+```
+
+구조화 출력의 모든 객체는 추가 필드를 금지하고 모든 속성을 필수로 둔다. 분석을 후보보다 먼저 받도록 속성 순서를 지정했다. API 형식은 [OpenAI Structured Outputs 문서](https://developers.openai.com/api/docs/guides/structured-outputs)에 따른다. 이는 분석 내용의 정확성이나 발견 성과를 보장하지 않는다.
+
+### 기존 행동 진단 모드
+
 새 설정 `config/afs_behavior_diversity_luna.json`은 같은 배정·예산에 `feedback_policy: action-diagnostics-v1`을 추가한다. 기존 `afs_breadth_luna.json`은 기존 선택 의미를 유지한다. 새 모드도 로봇, 목표, 분류 규칙, 토큰·시간 제한을 바꾸지 않는다.
 
 새 모드는 다음을 구분한다.

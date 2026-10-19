@@ -27,10 +27,10 @@ def broad_engine(tmp_path, **options):
     )
 
 
-def point_for_slot(ctx):
+def point_for_slot(ctx, intent="challenge"):
     slot = ctx["exploration_allocation"]
     axis = slot["group_axes"][slot["required_group"]][0]
-    p, anchor = branch_point(ctx, axis=axis)
+    p, anchor = branch_point(ctx, axis=axis, intent=intent)
     lo, hi = ctx["allowed_axes"][axis]
     if slot["required_form"] == "small":
         delta = 0.2 * (hi - lo)

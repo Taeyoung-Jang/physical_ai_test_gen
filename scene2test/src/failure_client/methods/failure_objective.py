@@ -45,6 +45,8 @@ def failure_objective(
     *,
     taxonomy_profile="scene-default",
     feedback_policy="legacy",
+    anchor_policy="pass-control-v3",
+    pattern_feedback="off",
 ):
     records = [EpisodeRecord.model_validate(e["record"]) for e in memory["episodes"].values()]
     options = metric_options(schema, taxonomy_profile)
@@ -54,13 +56,22 @@ def failure_objective(
     successes = sum(r.task_outcome == "PASS" for r in records)
     failures = sum(r.task_outcome == "FAIL" for r in records)
     shown = [e["id"] for e in evidence if e["id"] in memory["episodes"]]
+    behavior_attempts = (
+        [a for a in attempts if a.get("episode", {}).get("status") == "VALID"]
+        if anchor_policy == "failure-diversity-v4"
+        else attempts
+    )
     recent_relief = any(
-        a["candidate"].get("evidence", {}).get("intent") == "relief" for a in attempts[-3:]
+        a["candidate"].get("evidence", {}).get("intent") == "relief" for a in behavior_attempts[-3:]
     )
     relief_allowed = failures > 0 and not recent_relief
     intents = ["mechanism_transfer", "challenge"]
     if relief_allowed:
-        intents = ["relief"] + intents if successes == 0 and failures >= 2 else intents + ["relief"]
+        intents = (
+            ["relief"] + intents
+            if successes == 0 and failures >= 2 and anchor_policy != "failure-diversity-v4"
+            else intents + ["relief"]
+        )
     counts = Counter(a["candidate"].get("evidence", {}).get("target_family") for a in attempts)
     observations = []
     for ref in shown:
@@ -102,6 +113,10 @@ def failure_objective(
     targets = [f for f in rules if f != "human_safety_risk" or schema == "clear-path-human-v5"]
     objective = {
         "version": "failure-directed-v2",
+        "anchor_policy": anchor_policy,
+        "behavior_cooldown_scope": "valid_episodes_only"
+        if anchor_policy == "failure-diversity-v4"
+        else "attempt_intents",
         "targets": {"fdr": 0.3, "distinct_measured_families": 4},
         "scope": (
             "Reviewed plus new comparable VALID episodes guide development selection; "
@@ -147,7 +162,7 @@ def failure_objective(
                 "Operational observations are not established causes."
             ),
         )
-    if feedback_policy == "action-diagnostics-v1":
+    if feedback_policy in {"action-diagnostics-v1", "cause-review-v2", "cause-review-v3"}:
         from .action_diagnostics import action_diagnostics
 
         current_ids = {
@@ -209,4 +224,32 @@ def failure_objective(
                 "Explain why the intended mechanism should be exercised; do not force actions."
             ),
         }
+        if feedback_policy in {"cause-review-v2", "cause-review-v3"}:
+            from .cause_review import review_contract
+
+            objective["cause_review_contract"] = review_contract(ctx_evidence=evidence, rules=rules)
+            for observation in observations:
+                row = memory["episodes"][observation["evidence_id"]]["record"]
+                measured = row.get("taxonomy", {}).get("measurements", {})
+                contacts = measured.get("non_support_contacts", {})
+                recent_contacts = contacts.get("terminal_navigation_contacts")
+                blocked = measured.get("blocked_tools")
+                observation["detector_observations"] = {
+                    "terminal_progress": measured.get("terminal_progress"),
+                    "recent_blocked_tools": len(blocked) if blocked is not None else None,
+                    "qualifying_recent_contacts": (
+                        len(recent_contacts) if recent_contacts is not None else None
+                    ),
+                    "geometry": measured.get("geometry"),
+                    "human_proximity_contract": measured.get("human_proximity", {}).get("contract"),
+                    "claim": "Existing measured gates; unknown stays unknown, not LLM labels",
+                }
+        if feedback_policy == "cause-review-v3":
+            from failure_client.evaluation.discovery_readiness import audit_discovery
+
+            objective["domain_constraints"] = audit_discovery(schema)["human_goal_compatibility"]
+    if pattern_feedback == "trajectory-v1":
+        from .trajectory_feedback import feedback
+
+        objective["trajectory_feedback"] = feedback(memory, attempts, shown)
     return objective

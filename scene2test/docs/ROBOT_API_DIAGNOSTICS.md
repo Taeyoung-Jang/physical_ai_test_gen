@@ -1,5 +1,32 @@
 # 로봇 API 응답 지연 오프라인 진단
 
+## 목표 로봇 호출의 연결 전 재시도 (2026-10-19)
+
+새 `run_robot_goal_agent.py` 실행에는 `pre-send-tcp-retry-v1`을 적용한다.
+최초 연결 이후 **최대 2회 추가 재시도**하며 대기는 1초, 2초다.
+`ConnectError`/`ConnectTimeout`이면서 trace에 `connection.connect_tcp.failed`가
+기록되고 전송 또는 응답 흔적이 없는 경우에만 허용한다. TLS 실패, trace가 없는
+불명확한 연결 오류, 전송/읽기 오류, HTTP 오류 및 잘못된 응답은 재시도하지 않는다.
+이는 [OpenAI 공식 문서의 전송 전 실패 확인 원칙](https://developers.openai.com/api/reference/ruby)에
+따른 제한적 로컬 구현이며 SDK 기본 재시도를 함께 켜지 않는다.
+
+동일 정책 호출 안에서 같은 입력과 client request ID를 유지한다. 연결 시도는
+추가 로봇 행동이 아니며 행동 예산을 늘리지 않는다. per-call JSONL에는 연결 시도,
+실패 단계와 비밀 제거된 예외, 재시도 대기를 남긴다. 최종 diagnostic에는
+`connection_attempts`, `retry_count`, `connection_failures`가 남는다.
+이는 토큰 사용량이나 모델 실행 횟수를 추정한 값이 아니다.
+
+HTTP read 제한은 기존 값 그대로다. 실행기 wall deadline은 연결 재시도 20초와
+backoff 3초를 포함하도록 기존 read+30초에서 **read+53초**로 변경한다.
+read=300초이면 353초다. 이 대기 중에도 기존 물리 시뮬레이션/hold 규칙은 유지되며,
+토큰·시뮬레이션 상한이나 목표·판정 규칙을 추가/변경하지 않는다.
+다른 legacy runner와 journal 없는 직접 호출은 기본 재시도 0회를 유지한다.
+
+새 protocol에 재시도 정책과 timing v2를 기록하고 소스 해시도 달라지므로 기존
+동결 AFS/독립/개발 캠페인을 그대로 재개하거나 drift를 우회하지 않는다.
+새 예산 진단은 원본 `scene_config.json`을 읽어 새 출력 디렉터리에서 실행한다.
+기존 INCONCLUSIVE는 보존하며 자동으로 장면 전체를 재실행하지 않는다.
+
 `tools/audit_robot_api.py`는 보존된 실험 아카이브만 읽어 API 전송 단계와 첫 요청
 구성을 비교한다. API 키·네트워크 호출·렌더러·로봇 실행이 필요하지 않으며, 실험 결과나
 고정 세션을 변경하지 않는다. 원본 manifest를 검증하고 별도 JSON/HTML/manifest를 만든다.

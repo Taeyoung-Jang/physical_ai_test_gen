@@ -29,7 +29,7 @@ MIGRATION_FILES = {
 }
 
 
-def recover_numeric(source, output, *, apply=False, fingerprint_fn=None):
+def recover_numeric(source, output, *, apply=False, fingerprint_fn=None, reference_repair=False):
     """Preserve all spent attempts/requests; never invoke proposer/runner or alter source."""
     from .afs_autonomous import (
         MODE,
@@ -121,10 +121,24 @@ def recover_numeric(source, output, *, apply=False, fingerprint_fn=None):
             )
         raw = provider.extract_proposal(response)
         memory = build_failure_memory(scratch._records())
-        chosen = selected_probe(raw, ctx, memory)
+        normalized = None
+        if reference_repair:
+            from .anchor_ref_recovery import normalize_anchor_refs
+
+            try:
+                selected_probe(raw, ctx, memory)
+            except ValueError as exc:
+                if str(exc) != "proposal must cite actual behavior from its selected anchor":
+                    raise ValueError(
+                        "source did not stop solely for anchor behavior reference"
+                    ) from exc
+            else:
+                raise ValueError("source proposal already valid")
+            normalized = normalize_anchor_refs(raw, ctx)
+        chosen = selected_probe(normalized if reference_repair else raw, ctx, memory)
         rejected = chosen["selection_audit"]["rejected"]
         numeric = [r for r in rejected if r["reason"] == "numeric_out_of_bounds"]
-        if not numeric:
+        if not numeric and not reference_repair:
             raise ValueError(
                 "numeric recovery requires an out-of-bounds candidate and valid alternative"
             )
@@ -147,10 +161,25 @@ def recover_numeric(source, output, *, apply=False, fingerprint_fn=None):
             for k in sorted(before["source_hashes"].keys() | after["source_hashes"].keys())
             if before["source_hashes"].get(k) != after["source_hashes"].get(k)
         }
-        if set(changes) - MIGRATION_FILES:
+        allowed_changes = MIGRATION_FILES | (
+            {
+                "src/failure_client/experiments/anchor_ref_recovery.py",
+                "src/failure_client/methods/branch_anchors.py",
+                "src/failure_client/methods/failure_objective.py",
+                "src/failure_client/evaluation/discovery_readiness.py",
+                "src/failure_client/experiments/discovery_evaluation.py",
+            }
+            if reference_repair
+            else set()
+        )
+        if set(changes) - allowed_changes:
             raise ValueError("unrelated source drift cannot be recovered")
+        if reference_repair and any(v["after"] is None for v in changes.values()):
+            raise ValueError("source deletion cannot be recovered")
         audit = {
-            "schema_version": "numeric-candidate-recovery-v1",
+            "schema_version": "anchor-behavior-ref-recovery-v1"
+            if reference_repair
+            else "numeric-candidate-recovery-v1",
             "claim": "operator_assisted_development_continuation",
             "source": str(source),
             "source_revision": snapshot["revision"],
@@ -166,6 +195,9 @@ def recover_numeric(source, output, *, apply=False, fingerprint_fn=None):
             "preserved_attempts": len(old["attempts"]),
             "preserved_afs_requests": len(old["proposals"]),
         }
+        if reference_repair:
+            audit["normalized_proposal_sha256"] = b.digest(normalized)
+            audit["repair_scope"] = "append unique already-cited anchor ID to behavior_refs only"
         if not apply:
             return {"audit": audit, "candidate": chosen, "applied": False}
         output.mkdir(parents=True, exist_ok=False)
@@ -196,6 +228,18 @@ def recover_numeric(source, output, *, apply=False, fingerprint_fn=None):
             reason=None,
         )
         state["proposals"][-1]["candidate"] = chosen
-        ResearchStore(output).save(state, -1, "explicit_numeric_candidate_recovery", audit)
+        if reference_repair:
+            target = output / "proposals" / row["id"] / "normalized_proposal.json"
+            atomic_json(target, normalized)
+            state["proposals"][-1]["recovery"] = "anchor_behavior_refs"
+            state["proposals"][-1]["artifacts"]["normalized_proposal.json"] = _hash_file(target)
+        ResearchStore(output).save(
+            state,
+            -1,
+            "explicit_anchor_reference_recovery"
+            if reference_repair
+            else "explicit_numeric_candidate_recovery",
+            audit,
+        )
     engine = AutonomousAFS(output, fingerprint_fn=fingerprint_fn)
     return {"audit": audit, "applied": True, "session": str(output), "summary": engine.summary()}

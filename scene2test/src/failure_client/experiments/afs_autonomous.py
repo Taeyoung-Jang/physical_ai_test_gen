@@ -179,12 +179,15 @@ def ensure_not_running(directory):
 
 
 class AutonomousAFS:
+    mode = MODE
+    request_policy = "autonomous_development_endpoint"
+
     def __init__(self, root, *, runner=None, proposer=None, fingerprint_fn=None, on_event=None):
         self.root = Path(root).resolve()
         if not (self.root / "protocol.json").is_file():
             raise ValueError("initialize an autonomous development session first")
         protocol = read_json(self.root / "protocol.json")
-        if protocol.get("lock", {}).get("plan", {}).get("mode") != MODE or protocol.get(
+        if protocol.get("lock", {}).get("plan", {}).get("mode") != self.mode or protocol.get(
             "lock_sha256"
         ) != digest(protocol.get("lock")):
             # Reject old suites before opening (or creating tables in) their DB.
@@ -241,7 +244,7 @@ class AutonomousAFS:
     def _verify_lock(self):
         expected = {"lock": self.state["lock"], "lock_sha256": digest(self.state["lock"])}
         if (
-            self.state.get("schema_version") != MODE
+            self.state.get("schema_version") != self.mode
             or self.state["lock_sha256"] != expected["lock_sha256"]
             or read_json(self.root / "protocol.json") != expected
         ):
@@ -254,7 +257,10 @@ class AutonomousAFS:
             raise ValueError("point recovery audit mismatch")
         if self.state["lock"].get("recovery_sha256"):
             audit = read_json(self.root / "recovery.json")
-            if audit.get("schema_version") == "numeric-candidate-recovery-v1":
+            if audit.get("schema_version") in {
+                "numeric-candidate-recovery-v1",
+                "anchor-behavior-ref-recovery-v1",
+            }:
                 snapshots = audit.get("source_snapshot_artifacts", {})
                 if set(snapshots) != {
                     "source_state.json",
@@ -269,14 +275,20 @@ class AutonomousAFS:
         directory = self.root / "proposals" / row["id"]
         raw = provider.extract_proposal(read_json(directory / "response.json"))
         if row.get("recovery"):
-            from .point_recovery import normalize_equal_ranges
-
             if not self.state["lock"].get("recovery_sha256"):
                 raise ValueError("unbound proposal recovery")
             audit = read_json(self.root / "recovery.json")
             fixed = read_json(directory / "normalized_proposal.json")
+            if row["recovery"] == "anchor_behavior_refs":
+                from .anchor_ref_recovery import normalize_anchor_refs
+
+                normalized = normalize_anchor_refs(raw, read_json(directory / "context.json"))
+            else:
+                from .point_recovery import normalize_equal_ranges
+
+                normalized = normalize_equal_ranges(raw)
             if (
-                normalize_equal_ranges(raw) != fixed
+                normalized != fixed
                 or digest(fixed) != audit["normalized_proposal_sha256"]
                 or any(row["artifacts"].get(k) != v for k, v in audit["original_artifacts"].items())
             ):
@@ -334,11 +346,12 @@ class AutonomousAFS:
             }
         return candidate, ctx
 
+    def _selection_stop_reason(self, ctx):
+        return "no_selectable_axis" if ctx is None else "afs_request_budget"
+
     def _proposal(self, ctx):
         directory = self.root / "proposals" / f"proposal_{len(self.state['proposals']):05d}"
-        body = request(
-            ctx, self.budget.afs_model, selection_policy="autonomous_development_endpoint"
-        )
+        body = request(ctx, self.budget.afs_model, selection_policy=self.request_policy)
         directory.mkdir(parents=True, exist_ok=False)
         atomic_json(directory / "context.json", ctx)
         atomic_json(directory / "request.json", body)
@@ -376,9 +389,7 @@ class AutonomousAFS:
             or digest(ctx) != digest(read_json(directory / "context.json"))
         ):
             raise ValueError("saved proposal context is stale")
-        body = request(
-            ctx, self.budget.afs_model, selection_policy="autonomous_development_endpoint"
-        )
+        body = request(ctx, self.budget.afs_model, selection_policy=self.request_policy)
         if proposal_request_digest(body) != proposal_request_digest(
             read_json(directory / "request.json")
         ):
@@ -472,7 +483,14 @@ class AutonomousAFS:
             {"id": attempt["id"], "status": record.status, "outcome": record.task_outcome},
         )
 
-    def run(self, *, live=False, max_new_attempts=None, continue_after_exclusion=False):
+    def run(
+        self,
+        *,
+        live=False,
+        max_new_attempts=None,
+        continue_after_exclusion=False,
+        max_new_afs_requests=None,
+    ):
         if not live:
             raise ValueError("explicit --live required for API and robot execution")
         if self.plan["execution_origin"] != "openai_api" and isinstance(
@@ -485,10 +503,14 @@ class AutonomousAFS:
             type(max_new_attempts) is not int or max_new_attempts < 0
         ):
             raise ValueError("max_new_attempts must be nonnegative")
+        if max_new_afs_requests is not None and (
+            type(max_new_afs_requests) is not int or max_new_afs_requests < 1
+        ):
+            raise ValueError("max_new_afs_requests must be positive")
         with self.store.exclusive():
             self.state, self.revision = self.store.load()
             try:
-                return self._run(max_new_attempts, continue_after_exclusion)
+                return self._run(max_new_attempts, continue_after_exclusion, max_new_afs_requests)
             except BaseException as exc:
                 error = {
                     "type": type(exc).__name__,
@@ -506,7 +528,8 @@ class AutonomousAFS:
                 self._save("attention_required", error)
                 raise
 
-    def _run(self, max_new_attempts, continue_after_exclusion):
+    def _run(self, max_new_attempts, continue_after_exclusion, max_new_afs_requests=None):
+        initial_requests = len(self.state["proposals"])
         self._fresh()
         pending = self.state["pending"]
         if pending:
@@ -545,9 +568,15 @@ class AutonomousAFS:
                     if ctx is None or len(self.state["proposals"]) >= self.budget.max_afs_requests:
                         self.state.update(
                             status="BUDGET_EXHAUSTED",
-                            reason=("no_selectable_axis" if ctx is None else "afs_request_budget"),
+                            reason=self._selection_stop_reason(ctx),
                         )
                         self._save("selection_budget_stop")
+                        return self.summary()
+                    if max_new_afs_requests is not None and (
+                        len(self.state["proposals"]) - initial_requests >= max_new_afs_requests
+                    ):
+                        self.state.update(status="READY", reason="invocation_afs_limit")
+                        self._save("invocation_afs_limit")
                         return self.summary()
                     self._proposal(ctx)
                     if self.state["selected"] is None:
@@ -628,7 +657,7 @@ class AutonomousAFS:
         axes = self.cfg.design()["axes"]
         return {
             "session": str(self.root),
-            "mode": MODE,
+            "mode": self.mode,
             "status": self.state["status"],
             "reason": self.state["reason"],
             "pending": self.state["pending"],

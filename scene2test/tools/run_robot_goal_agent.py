@@ -76,7 +76,8 @@ def main():
         p.error(str(exc))
     print(
         f"TIMING: HTTP read={timing.read_s}s; runner deadline={timing.deadline_s}s; "
-        f"simulation={simulation_label} (includes inference waits); automatic retries=0",
+        f"simulation={simulation_label} (includes inference waits); "
+        "pre-send TCP retries<=2 (1s/2s backoff); ambiguous/post-send retries=0",
         flush=True,
     )
     print(f"NAVIGATION_COMPLETION={args.navigation_completion}; post-budget grace=0s", flush=True)

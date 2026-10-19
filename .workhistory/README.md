@@ -12,6 +12,12 @@
 
 ## 이력 목록
 
+- [2026-10-19 외부 이력 없는 독립 AFS 평가 실행기](2026-10-19_independent_discovery_runner.md)
+
+- [2026-10-19 AFS 근거 분리와 제한적 복구 및 평가 준비](2026-10-19_reference_roles_recovery_and_evaluation_prep.md)
+
+- [2026-10-19 LLM의 지난 결과 분석과 실패 검출 조건 연결](2026-10-19_cause_review_and_detector_contract.md)
+
 - [2026-10-19 AFS 행동 진단과 신규 집합 기준 선택 구현](2026-10-19_action_diagnostics_and_current_coverage.md)
 
 - [2026-10-19 미분류 실패 7개와 AFS 개선 우선순위](2026-10-19_unclassified_seven_analysis.md)

@@ -1,4 +1,4 @@
-"""Categorized, secret-safe API diagnostics; no retries or raw response persistence."""
+"""Secret-safe diagnostics; opt-in bounded proven pre-send TCP retries only."""
 
 import hashlib
 import json
@@ -12,6 +12,7 @@ from pydantic import ValidationError
 
 from .debug_log import CURRENT, clean, exception_detail
 from .policy import PolicyError
+from .timing import CONNECT_RETRY_DELAYS_S
 
 
 class DiagnosticError(PolicyError):
@@ -25,10 +26,15 @@ def call(body, parse, *, transport=None):
     journal = CURRENT.get()
     read_timeout = journal.read_timeout_s if journal else 30.0
     client_id = journal.client_request_id if journal else str(uuid4())
+    max_retries = journal.connect_retries if journal else 0
     key = os.getenv("OPENAI_API_KEY")
     info = {
         "stage": "credentials",
         "retry_attempted": False,
+        "retry_count": 0,
+        "connection_attempts": 0,
+        "connection_failures": [],
+        "max_connect_retries": max_retries,
         "client_request_id": client_id,
         "http_timeout_s": read_timeout,
         "http_timeouts_s": {"read": read_timeout, "connect": 10, "write": 10, "pool": 5},
@@ -62,13 +68,20 @@ def call(body, parse, *, transport=None):
         max_output_tokens=body.get("max_output_tokens"),
     )
 
+    send_started = False
+
     def trace(event, details):
+        nonlocal send_started
+        if ".send_" in event:
+            send_started = True
         info["last_transport_event"] = event
         if event.endswith(".failed"):
             info["failed_transport_event"] = event
         emit("transport", transport_event=event)
 
     def received(response):
+        nonlocal send_started
+        send_started = True
         info["http_status"] = response.status_code
         info["request_id"] = identifier(
             response.headers.get("x-request-id"), r"[A-Za-z0-9_-]{1,200}"
@@ -82,12 +95,46 @@ def call(body, parse, *, transport=None):
             follow_redirects=False,
             event_hooks={"response": [received]},
         ) as client:
-            response = client.post(
-                "https://api.openai.com/v1/responses",
-                json=body,
-                headers={"Authorization": f"Bearer {key}", "X-Client-Request-Id": client_id},
-                extensions={"trace": trace},
-            )
+            for attempt in range(max_retries + 1):
+                send_started = False
+                info.pop("last_transport_event", None)
+                info.pop("failed_transport_event", None)
+                info["connection_attempts"] = attempt + 1
+                emit("connection_attempt_started", attempt=attempt + 1)
+                try:
+                    response = client.post(
+                        "https://api.openai.com/v1/responses",
+                        json=body,
+                        headers={
+                            "Authorization": f"Bearer {key}",
+                            "X-Client-Request-Id": client_id,
+                        },
+                        extensions={"trace": trace},
+                    )
+                    break
+                except (httpx.ConnectError, httpx.ConnectTimeout) as exc:
+                    eligible = (
+                        info.get("failed_transport_event") == "connection.connect_tcp.failed"
+                        and not send_started
+                    )
+                    failure = {
+                        "attempt": attempt + 1,
+                        "exception_type": type(exc).__name__,
+                        "exception_chain": exception_detail(exc),
+                        "failed_transport_event": info.get("failed_transport_event"),
+                        "proven_pre_send": eligible,
+                        "retry_scheduled": eligible and attempt < max_retries,
+                        "elapsed_wall_s": time.monotonic() - started,
+                    }
+                    info["connection_failures"].append(failure)
+                    emit("connection_attempt_failed", **failure)
+                    if not eligible or attempt >= max_retries:
+                        raise
+                    delay = CONNECT_RETRY_DELAYS_S[attempt]
+                    info["retry_attempted"] = True
+                    info["retry_count"] = attempt + 1
+                    emit("connection_retry_scheduled", retry=attempt + 1, delay_s=delay)
+                    time.sleep(delay)
     except httpx.TimeoutException as exc:
         info["exception_type"] = type(exc).__name__
         info["exception_chain"] = exception_detail(exc)

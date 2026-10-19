@@ -220,6 +220,13 @@ def choose_probe(raw, ctx, memory):
     for index, space in enumerate(proposal.spaces):
         if index in invalid_indices:
             continue
+        if isinstance(space, b.ReviewedBreadthPoint):
+            from .cause_review import plan_conflict
+
+            conflict = plan_conflict(space)
+            if conflict:
+                rejected.append({"space": index, "axis": space.axis, "reason": conflict})
+                continue
         anchor = None
         if "anchor_catalog" in ctx:
             from .branch_anchors import checked_anchor
@@ -246,6 +253,9 @@ def choose_probe(raw, ctx, memory):
                 "base_value": base[space.axis],
                 **({"changes": dict(changes)} if isinstance(space, b.BreadthPoint) else {}),
             }
+            if params in ctx.get("excluded_scene_parameters", []):
+                rejected.append({**detail, "reason": "excluded_scene_requires_explicit_replay"})
+                continue
             minimum = ctx.get("development_search", {}).get("min_axis_change_fraction", 0)
             if any(
                 abs(v - base[a]) / (axes[a][1] - axes[a][0]) + 1e-12 < minimum for a, v in changes

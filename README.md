@@ -1,5 +1,14 @@
 # Scene2Test
 
+새 [근거 역할 분리·감사 복구·유형 관측 범위·평가 준비](scene2test/docs/AFS_REFERENCE_RECOVERY_AND_EVALUATION.md)를 추가했습니다.
+신규 개발 모드는 `afs_reference_roles_luna.json`입니다. `recover-anchor-refs`는 기본 무료 dry-run이며,
+독립 평가 실행기는 seed별 초기 장면과 새 탐색 이력을 분리하며 `run_discovery_evaluation.py`로 실행합니다.
+CPU 모의 검증과 실제 자료의 무료 계획을 통과했으며, 새 유료 평가·4종 달성을 뜻하지 않습니다.
+
+최신 [LLM의 지난 결과 분석과 검출 조건 검토](scene2test/docs/AFS_BREADTH_SEARCH.md#llm의-지난-결과-분석과-검출-조건-검토)는
+`afs_cause_review_luna.json`을 사용합니다. 한 AFS 응답에서 지난 결과를 분석한 뒤 다음 환경을 제안하며,
+LLM의 원인 가설과 실제 실패 유형 판정은 분리합니다. 이전 세션을 수정하지 않고 별도 세션으로 실행합니다.
+
 최신 [행동 진단과 신규 집합 기준 AFS](scene2test/docs/AFS_BREADTH_SEARCH.md#행동-진단과-신규-집합-기준-선택)는
 `afs_behavior_diversity_luna.json`을 사용합니다. 반복 경로 거절·조작 요청 유무를 다음 제안에 전달하고,
 이번 집합에서 미발견한 유형을 우선합니다. 로봇·목표·분류 기준은 유지하며 별도 새 세션으로 실행합니다.

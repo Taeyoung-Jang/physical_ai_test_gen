@@ -1,6 +1,7 @@
 """Host-computed context binding and explicit trusted-local legacy recovery."""
 
 import json
+from copy import deepcopy
 from pathlib import Path
 from typing import Literal
 
@@ -14,6 +15,22 @@ Other schema/evidence/context/axis/quota errors still stop the whole response.
 """
 
 SELECTION_POLICIES = {
+    "independent_evaluation_endpoint": (
+        "behavior-campaign-feedback-v1",
+        """Selection policy: independent-evaluation-endpoint-v1.
+Only newly executed episodes from THIS predeclared seed are supplied. There is no
+external warm history or access to other seeds. Uniform cold starts have already
+consumed attempt slots and valid outcomes count in the evaluation denominator.
+Seek goal failures and missing measured primary families under the frozen rules.
+The host executes at most ONE eligible novel candidate per response. The explicit
+branch, breadth allocation and cause-review contracts below govern selection.
+All requests, attempts and exclusions consume their frozen caps. No local midpoint,
+automatic repeat, random fallback, or metric-success early stop is scheduled.
+Scene proposals are fixed BEFORE execution; do not command the robot or change its
+goal, policy, evaluator, thresholds, model or call budget. Predicted families and
+causal hypotheses never become measured labels. Random-relative Gain is deferred.
+""",
+    ),
     "autonomous_development_endpoint": (
         "behavior-campaign-feedback-v1",
         """Selection policy: autonomous-development-endpoint-v1.
@@ -113,6 +130,47 @@ by this proposal. The boundary_probe label alone does not trigger midpoint selec
 }
 
 
+def _bind_intent_modes(schema, intents, *, ctx=None):
+    """Bind whole candidates using nested anyOf, not unsupported if/then or allOf.
+
+    Preserve previously bound evidence, axis, anchor and taxonomy restrictions.
+    """
+    if not intents or any(i not in b.FAILURE_INTENT_MODES for i in intents):
+        raise ValueError("nonempty supported failure-search intents required")
+    items = schema["properties"]["spaces"]["items"]
+    ref = items.get("$ref", "")
+    if not ref.startswith("#/$defs/"):
+        raise ValueError("expected a single directed candidate definition")
+    name = ref.removeprefix("#/$defs/")
+    template = schema["$defs"][name]
+    references = []
+    v4 = ctx and ctx.get("failure_objective", {}).get("anchor_policy") == "failure-diversity-v4"
+    groups = (
+        [(b.FAILURE_INTENT_MODES[i], [i]) for i in intents]
+        if v4
+        else [
+            (mode, [i for i in intents if b.FAILURE_INTENT_MODES[i] == mode])
+            for mode in dict.fromkeys(b.FAILURE_INTENT_MODES[i] for i in intents)
+        ]
+    )
+    for mode, group_intents in groups:
+        candidate = deepcopy(template)
+        candidate["properties"]["mode"]["enum"] = [mode]
+        candidate["properties"]["intent"]["enum"] = group_intents
+        if v4:
+            candidate["properties"]["anchor_case_id"]["enum"] = [
+                a["case_id"]
+                for a in ctx["anchor_catalog"]
+                if group_intents[0] in a["allowed_intents"]
+            ]
+        variant_name = name if not references else f"{name}IntentMode{len(references)}"
+        schema["$defs"][variant_name] = candidate
+        references.append({"$ref": f"#/$defs/{variant_name}"})
+    schema["properties"]["spaces"]["items"] = (
+        references[0] if len(references) == 1 else {"anyOf": references}
+    )
+
+
 def request(
     ctx,
     model,
@@ -123,6 +181,7 @@ def request(
         "campaign_hypothesis_endpoint",
         "anchored_contrast_endpoint",
         "autonomous_development_endpoint",
+        "independent_evaluation_endpoint",
     ] = "standalone_suite",
 ):
     """Bind both evidence and the caller's actual candidate-selection instructions."""
@@ -132,7 +191,15 @@ def request(
     if ctx.get("schema_version") != context_schema:
         raise ValueError("behavior AFS selection policy does not match context schema")
     expected = b.digest(ctx)
-    autonomous = selection_policy == "autonomous_development_endpoint"
+    autonomous = selection_policy in {
+        "autonomous_development_endpoint",
+        "independent_evaluation_endpoint",
+    }
+    if selection_policy == "independent_evaluation_endpoint" and (
+        ctx.get("development_search", {}).get("mode") != "independent-afs-discovery-v1"
+        or ctx.get("development_search", {}).get("external_history") is not False
+    ):
+        raise ValueError("independent evaluation requires an isolated seed context")
     branch = ctx.get("development_search", {}).get("selection_policy") == "failure-branch-v3"
     directed = (
         branch or ctx.get("development_search", {}).get("selection_policy") == "failure-directed-v2"
@@ -146,10 +213,16 @@ def request(
         ctx.get("development_search", {}).get("budget", {}).get("exploration_policy")
         == "breadth-v1"
     )
+    feedback = ctx.get("development_search", {}).get("budget", {}).get("feedback_policy")
+    reviewed = feedback in {"cause-review-v2", "cause-review-v3"}
     if directed and not autonomous:
         raise ValueError("failure-directed context requires autonomous endpoint policy")
     schema = (
-        b.BreadthProposal
+        b.RoleSeparatedProposal
+        if feedback == "cause-review-v3"
+        else b.ReviewedBreadthProposal
+        if reviewed
+        else b.BreadthProposal
         if breadth
         else b.ExpandedBranchProposal
         if expanded
@@ -161,6 +234,11 @@ def request(
         if autonomous
         else b.Proposal
     ).model_json_schema()
+    if reviewed:
+        # Structured Outputs follows property order: ask for reviews before candidates.
+        order = ("context_sha256", "episode_reviews", "spaces")
+        schema["properties"] = {k: schema["properties"][k] for k in order}
+        schema["required"] = list(order)
     selectable = list(b.context_axes(ctx))
     if autonomous:
         selectable = ctx["development_search"]["selectable_axes"]
@@ -168,7 +246,18 @@ def request(
             raise ValueError("invalid autonomous selectable axes")
     for definition in schema["$defs"].values():
         properties = definition["properties"]
-        properties["axis"]["enum"] = selectable
+        if "axis" in properties:
+            properties["axis"]["enum"] = selectable
+        if reviewed and "evidence_id" in properties:
+            properties["evidence_id"]["enum"] = ctx["failure_objective"]["behavior_evidence_ids"]
+        if reviewed and "analysis_evidence_id" in properties:
+            properties["analysis_evidence_id"]["enum"] = ctx["failure_objective"][
+                "behavior_evidence_ids"
+            ]
+        if "anchor_behavior_refs" in properties:
+            properties["anchor_behavior_refs"]["items"]["enum"] = ctx["failure_objective"][
+                "behavior_evidence_ids"
+            ]
         if "evidence_refs" not in properties:
             continue  # AxisChange shares the axis enum but has no hypothesis fields.
         properties["evidence_refs"]["items"]["enum"] = b.evidence_ids(ctx)
@@ -179,6 +268,8 @@ def request(
             properties["target_family"]["enum"] = objective["supported_targets"]
             if branch:
                 properties["anchor_case_id"]["enum"] = [c["case_id"] for c in ctx["anchor_catalog"]]
+    if directed:
+        _bind_intent_modes(schema, ctx["failure_objective"]["allowed_intents"], ctx=ctx)
     schema["properties"]["context_sha256"]["enum"] = [expected]
     body = provider.request_body({"context_sha256": expected, "context": ctx}, schema)
     body.update(
@@ -212,6 +303,16 @@ invent a family label: supported rules, unknowns and goal outcomes stay separate
 No eligible endpoint stops transparently, without Random substitution or retry.
 """
     if directed:
+        body["instructions"] += (
+            "\nExact intent/mode contract: choose only an allowed_intents value and its "
+            "matching mode below. This overrides generic mode descriptions, including for "
+            "two-axis combinations. A combination does NOT imply cross_mechanism.\n"
+            + "\n".join(
+                f"intent={intent} MUST use mode={b.FAILURE_INTENT_MODES[intent]}"
+                for intent in ctx["failure_objective"]["allowed_intents"]
+            )
+            + "\nNever pair relief with cross_mechanism or challenge/transfer with success_probe.\n"
+        )
         body["instructions"] += """
 Failure-directed-v2 OVERRIDES alternating slots and range/mode ranking above.
 Your objective is to discover goal NONCOMPLETION and distinct measured failure
@@ -339,7 +440,11 @@ Never convert your prediction to the observed type; future host measurements dec
 """
     if breadth:
         body["instructions"] += NUMERIC_REJECTION_INSTRUCTIONS
-    if ctx.get("failure_objective", {}).get("feedback_policy") == "action-diagnostics-v1":
+    if ctx.get("failure_objective", {}).get("feedback_policy") in {
+        "action-diagnostics-v1",
+        "cause-review-v2",
+        "cause-review-v3",
+    }:
         body["instructions"] += """
 Action-diagnostics-v1: the four-type objective is across NEW session attempts only.
 Read current_discovered_families and missing_supported_families for host ranking.
@@ -357,6 +462,85 @@ predicted mechanism. Revise the hypothesis or choose another admissible anchor/l
 when repeated navigation patterns mask it. Keep small, large and combination slots.
 These diagnostics are not new failure families. Terminal-window rules and outcome
 stay unchanged; no relaxed thresholds, forced robot action or in-rollout scene edits.
+"""
+    if reviewed:
+        body["instructions"] += """
+Cause-review-v2: perform a concise retrospective analysis AND propose scenes in
+this SAME response. No separate analysis API call or robot action is requested.
+Read failure_objective.cause_review_contract, including detector requirements,
+exclusions and required_evidence_ids. Return episode_reviews covering those IDs.
+Separate observed_facts (brief conclusions with observation_versions) from a leading
+hypothesis, alternative_explanation, uncertainty and next_test_implication. Explain
+how the observed strategy failed or succeeded; do not repeat only the changed axis
+or BUDGET_EXHAUSTED. Unknown causes are valid: never invent evidence or certainty.
+Copy observed_outcome from supplied evidence. Excluded/timeouts are NOT goal FAILs.
+Every candidate must cite an episode_review via analysis_evidence_id, also in its
+behavior_refs and evidence_refs, and connect change_rationale to that review.
+measurement_plan must explain what qualifying observation could occur and address
+the target detector's exclusions. Collision EXCLUDES clear_box_geom and clear_floor:
+knee-to-box contact alone cannot qualify. A box-only collision plan is rejected by
+the host, without changing labels, clipping values or substituting a Random scene.
+non_box_world means a different world obstacle, not proof of an eventual collision.
+Use unclassified when the hypothesis lies outside supported detectors. Your reviews
+are search hypotheses only, NEVER measured primary types or causal ground truth.
+"""
+    if feedback == "cause-review-v3":
+        body["instructions"] = body["instructions"].replace(
+            "behavior_refs must include actual episode evidence from the selected anchor; you may\n"
+            "also cite other supplied episodes as motivation.",
+            "anchor_behavior_refs must cite the selected anchor; behavior_refs cite the "
+            "reviewed observations motivating the hypothesis.",
+        )
+        body["instructions"] += """
+Role-separated references (cause-review-v3): anchor_behavior_refs MUST cite the
+selected anchor_catalog entry's evidence_ids, and also occur in evidence_refs.
+behavior_refs and analysis_evidence_id cite observations motivating the hypothesis;
+they may refer to a DIFFERENT failed episode. Do not substitute that failed episode
+for the PASS anchor or pretend it succeeded. Example: anchor A/PASS, review B/FAIL:
+anchor_behavior_refs=[A], behavior_refs=[B], analysis_evidence_id=B,
+evidence_refs=[A,B]. Use only actual supplied IDs, not literal A or B.
+Read failure_objective.domain_constraints. In the current static human X band,
+goal-region poses and human exposure regions are disjoint. A near-goal failure
+does not become a human-risk observation merely by moving an intermediate proxy.
+This does NOT prove the human family impossible: the robot may terminate near it.
+Do not enlarge bounds or weaken detectors; distinguish a needed new domain from
+a supported in-domain candidate, and explain uncertainty about behavior engagement.
+"""
+    if ctx.get("failure_objective", {}).get("anchor_policy") == "failure-diversity-v4":
+        body["instructions"] = body["instructions"].replace(
+            "challenge/mechanism_transfer MUST use an unmixed observed PASS anchor, so an old\n"
+            "FAIL scene is not silently inherited. relief MUST use an unmixed observed "
+            "FAIL anchor.",
+            "challenge requires an unmixed PASS anchor; mechanism_transfer may use an unmixed "
+            "PASS or FAIL anchor. relief requires an unmixed FAIL anchor.",
+        )
+        body["instructions"] += """
+Failure-diversity-v4: PASS is NOT a prerequisite for new-mechanism discovery.
+Read each anchor_catalog entry's allowed_intents. From a FAIL anchor, explain a
+different behavior hypothesis and its competing explanation; do not simply amplify
+the already observed failure. Prefer currently missing supported observations.
+Valid relief results trigger relief cooldown, but mechanism_transfer remains possible.
+INCONCLUSIVE attempts consume costs/quotas, not behavior-based cooldown. They supply
+no PASS/FAIL evidence. Do not recreate excluded_scene_parameters: any replay needs
+separate explicit approval. No automatic API retry, scene reset or outcome relabeling.
+Predicted types and different axes are not measured discoveries or causal proof.
+"""
+    if "trajectory_feedback" in ctx.get("failure_objective", {}):
+        body["instructions"] += """
+Read failure_objective.trajectory_feedback before proposing new environments.
+Compare the observed sequence, repeated goal-endpoint blocks, actual movement,
+manipulation engagement/rejections and goal entry/exit/dwell, not just changed axes.
+NOT_DETECTED is not causal falsification; an unclassified FAIL is still a valid FAIL.
+Use cumulative pattern counts beyond the displayed recent episodes, but keep each
+condition/task-budget group and historical/current scope separate. Never merge
+10-call search with 15-call diagnosis or use cross-seed data. Counts are not types.
+For a recurring pattern, explain in existing change_rationale why the environment
+change might yield a different observation, and give a distinguishing measurement
+in measurement_plan. Merely changing target_family is not sufficient reasoning.
+Small changes remain useful; no automatic pattern rejection or ranking bonus.
+Use ONLY the existing allowed evidence/anchor IDs; aggregate provenance is not
+permission to cite unpresented episodes. No extra API, robot commands, budget change,
+detector relaxation, automatic scene replay or outcome/family relabeling.
 """
     return body
 
