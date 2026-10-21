@@ -1,0 +1,69 @@
+{
+  "scope": "Implement and prepare equal-domain AFS/Random comparison; no paid execution",
+  "domain_version": "bounded-scene-domain-v1",
+  "domain_id": "ed4e7577757c8f6adaa1a26ffbf6f643c5b7563acb01ed724a4517112e29ebfd",
+  "config": "scene2test/config/paired_navigation_domain_luna.json",
+  "changed_bounds": {
+    "corridor_width_m": [3.6, 4.0],
+    "box_lateral_fraction": [0.85, 1.0],
+    "floor_friction": [0.5, 1.1]
+  },
+  "other_axes": "17 original full physical ranges retained",
+  "scope_limit": "Navigation subdomain, not the original full-domain benchmark or four-original-family milestone; goal-box occupancy opportunities intentionally reduced",
+  "enforcement": [
+    "Exact full physical axis inventory, finite strict subranges, no expansion or singleton ranges",
+    "Manifest/design/arm/context/domain_id binding",
+    "Random draws and both paid cold-start schedules",
+    "LLM allowed_axes and numeric candidate rejection",
+    "Change-fraction/novelty normalization and saved-response resume verification",
+    "Final full-scene parameter check before intent/robot dispatch in both arms"
+  ],
+  "campaign": "/workspace/g1_failure/runtime/paired_discovery/luna_navigation_domain_20261021_v1",
+  "prepared_status": "READY",
+  "prepared_report": "/workspace/g1_failure/runtime/paired_discovery/luna_navigation_domain_20261021_v1/reports/20261021T114302_254514Z/report.html",
+  "actual_frozen_preflight": "All six arm configs equal; frozen environment equals one freshly computed identical config fingerprint; all saved evidence verified; READY, zero attempts/proposals, pending null, external histories empty",
+  "new_attempts": 0,
+  "new_afs_requests": 0,
+  "seeds": [101, 211, 307],
+  "valid_per_arm_per_seed": 6,
+  "attempts_per_arm_per_seed": 8,
+  "cold_starts_per_arm_per_seed": 2,
+  "valid_total": 36,
+  "attempt_cap_total": 48,
+  "robot_policy_call_upper_bound": 480,
+  "afs_request_upper_bound": 24,
+  "model": "gpt-6-luna",
+  "service_tier": "default",
+  "per_episode_robot_call_cap": 10,
+  "external_evaluation_history": [],
+  "controls": "Two verified new goal-clearance PASS archives bind settings only; no copied/free successes or selection history",
+  "offline_geometry_audit": {
+    "random_slots_including_unused": 24,
+    "all_in_declared_domain": true,
+    "min_goal_center_box_projection_distance_m": 0.5136218859468599,
+    "over_0_4_m": 24,
+    "rejected_or_resampled": 0,
+    "claim": "Projected initial box gap only, not complete path/physical feasibility or outcome prediction"
+  },
+  "run_script": "scene2test/tools/run_navigation_comparison.sh",
+  "script_default": "dry-run, no writes/API/robot",
+  "explicit_live": "One batch toward fixed caps; stop on exclusion/errors; no automatic acknowledgement/replacement/retry/reset",
+  "verification": {
+    "related_cpu_tests_passed": 175,
+    "seconds": 90.50,
+    "ruff": "passed",
+    "bash_syntax": "passed",
+    "git_diff_check": "passed"
+  },
+  "paid_execution_performed": false,
+  "limits": [
+    "No outcome-based test-set selection, draw rejection or seed replacement",
+    "No guarantee of AFS advantage; existing FDR/Gain goals remain unachieved until measured",
+    "No robot policy, goal, evaluator, threshold, model or paid episode budget change",
+    "Search keeps latest reviewed breadth/trajectory policy; both methods use equal domains and robot budgets",
+    "AFS extra selection cost reported separately; all paid cold starts count",
+    "Original six and system twelve scoring separate; no post-hoc metric replacement",
+    "Small fixed-budget descriptive comparison, no statistical superiority claim",
+    "No paid API, GPU, robot, credential access, original archive/DB/result/budget edits, commit or push"
+  ]
+}

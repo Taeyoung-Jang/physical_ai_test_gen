@@ -24,6 +24,7 @@ class SearchBudget(StrictRecord):
     max_repeats: int = Field(default=1, ge=0, le=4)
     history_limit: int = Field(default=4, ge=2, le=8)
     afs_model: str = Field(default="gpt-6-luna", min_length=1)
+    afs_service_tier: Literal["flex", "default"] | None = None
     afs_timeout_s: float = Field(default=300.0, gt=0, le=600)
     selection_policy: Literal[
         "alternating-v1", "discovery-v1", "failure-directed-v2", "failure-branch-v3"
@@ -33,6 +34,7 @@ class SearchBudget(StrictRecord):
     reproposal_policy: Literal["stop", "bounded-rejection-v1"] = "stop"
     taxonomy_profile: Literal["scene-default", "expanded-ten-v1"] = "scene-default"
     exploration_policy: Literal["legacy", "breadth-v1"] = "legacy"
+    factor_allocation: Literal["balanced-v1", "behavior-relevance-v1"] = "balanced-v1"
     feedback_policy: Literal[
         "legacy", "action-diagnostics-v1", "cause-review-v2", "cause-review-v3"
     ] = "legacy"
@@ -41,6 +43,12 @@ class SearchBudget(StrictRecord):
 
     @model_validator(mode="after")
     def check_target(self):
+        if self.factor_allocation == "behavior-relevance-v1" and (
+            self.exploration_policy != "breadth-v1"
+            or self.feedback_policy != "cause-review-v3"
+            or self.pattern_feedback != "trajectory-v1"
+        ):
+            raise ValueError("behavior-relevance-v1 requires reviewed trajectory breadth mode")
         if self.pattern_feedback != "off" and self.feedback_policy != "cause-review-v3":
             raise ValueError("trajectory feedback requires cause-review-v3")
         if self.anchor_policy == "failure-diversity-v4" and (
@@ -153,7 +161,7 @@ def bind(candidate, memory):
     return candidate
 
 
-def selection(memory, attempts, budget, schema):
+def selection(memory, attempts, budget, schema, *, scene_domain=None):
     """LLM first; at most one local step between LLM hypotheses; no local starvation."""
     axes = list(parameters(memory["cases"][0]))
     audit = accounting(attempts, axes, budget)
@@ -196,6 +204,7 @@ def selection(memory, attempts, budget, schema):
         history_limit=budget.history_limit,
         remaining=budget.max_attempts - len(attempts),
         scene_schema=schema,
+        scene_domain=scene_domain,
     )
     ctx["development_search"] = {
         "mode": "autonomous-development-v1",
@@ -254,9 +263,15 @@ def selection(memory, attempts, budget, schema):
 
             branch_catalog(memory, ctx)
         if budget.exploration_policy == "breadth-v1":
-            from .breadth_policy import allocation
+            from .breadth_policy import allocation, behavior_relevance
 
-            ctx["exploration_allocation"] = allocation(attempts, audit["selectable_axes"])
+            ctx["exploration_allocation"] = allocation(
+                attempts,
+                audit["selectable_axes"],
+                relevance=behavior_relevance(memory)
+                if budget.factor_allocation == "behavior-relevance-v1"
+                else None,
+            )
             ctx["branch_contract"].update(
                 version="breadth-branch-v1",
                 max_changed_parameters=2,

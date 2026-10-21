@@ -12,6 +12,7 @@ def main():
     p.add_argument("--scene-config", type=Path, help="AFS scene JSON; environment fields only")
     p.add_argument("--enable-push", action="store_true", help="experimental short physical push")
     p.add_argument("--model", default="gpt-6-astra")
+    p.add_argument("--service-tier", choices=["flex", "default"], default=None)
     p.add_argument("--max-calls", type=int, default=10)
     p.add_argument(
         "--navigation-completion",
@@ -103,9 +104,17 @@ def main():
     if args.enable_push:
         from robot_vlm.push_policy import PushMock, PushPolicy
 
-        policy = PushPolicy(model=args.model) if args.live else PushMock()
+        policy = (
+            PushPolicy(model=args.model, service_tier=args.service_tier)
+            if args.live
+            else PushMock()
+        )
     else:
-        policy = GoalPolicy(model=args.model) if args.live else GoalMock()
+        policy = (
+            GoalPolicy(model=args.model, service_tier=args.service_tier)
+            if args.live
+            else GoalMock()
+        )
     try:
         result = run(
             root,

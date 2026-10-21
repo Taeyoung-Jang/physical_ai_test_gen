@@ -119,7 +119,10 @@ class PolicyError(RuntimeError):
 
 
 class OpenAIPolicy:
-    def __init__(self, *, model=MODEL, transport=None):
+    def __init__(self, *, model=MODEL, transport=None, service_tier=None):
+        if service_tier not in (None, "flex", "default"):
+            raise ValueError("service_tier must be omitted, flex or default")
+        self.service_tier = service_tier
         self.model, self.transport = model, transport
 
     def decide(self, observation, png):
@@ -130,9 +133,10 @@ class OpenAIPolicy:
             command = VelocityEnvelope.model_validate(value).command
             return Action.model_validate(command.model_dump())
 
-        return call(
-            request_body(observation, png, model=self.model), parse, transport=self.transport
-        )
+        body = request_body(observation, png, model=self.model)
+        if self.service_tier is not None:
+            body["service_tier"] = self.service_tier
+        return call(body, parse, transport=self.transport)
 
 
 class MockPolicy:

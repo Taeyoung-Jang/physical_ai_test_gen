@@ -117,3 +117,41 @@ def test_failure_after_retry_does_not_reuse_previous_trace(tmp_path, monkeypatch
     with pytest.raises(DiagnosticError):
         invoke(tmp_path, monkeypatch, handler)
     assert len(seen) == 2
+
+
+def test_recorded_response_header_timeout_is_not_a_connection_retry(tmp_path, monkeypatch):
+    """Replay the observed transport event order without a network call or 300s wait."""
+    seen = []
+
+    def handler(req):
+        seen.append(req)
+        trace = req.extensions["trace"]
+        for event in (
+            "connection.connect_tcp.started",
+            "connection.connect_tcp.complete",
+            "connection.start_tls.complete",
+            "http11.send_request_headers.started",
+            "http11.send_request_headers.complete",
+            "http11.send_request_body.complete",
+            "http11.receive_response_headers.started",
+            "http11.receive_response_headers.failed",
+        ):
+            trace(event, {})
+        raise httpx.ReadTimeout("The read operation timed out", request=req)
+
+    with pytest.raises(DiagnosticError) as err:
+        invoke(tmp_path, monkeypatch, handler)
+    assert len(seen) == 1
+    d = err.value.diagnostic
+    assert d["code"] == "api_timeout" and d["exception_type"] == "ReadTimeout"
+    assert d["failed_transport_event"] == "http11.receive_response_headers.failed"
+    assert d["max_connect_retries"] == 2 and d["retry_count"] == 0
+    rows = [json.loads(line) for line in (tmp_path / "trace.jsonl").read_text().splitlines()]
+    assert not any(r["event"] == "connection_retry_scheduled" for r in rows)
+
+
+@pytest.mark.parametrize("value", [-1, 3, 1.0, True])
+def test_invalid_connect_retry_limits_refused_before_dispatch(tmp_path, value):
+    with pytest.raises(ValueError, match="connect_retries"):
+        Journal(tmp_path / "unused.jsonl", 0, read_timeout_s=300, connect_retries=value)
+    assert not (tmp_path / "unused.jsonl").exists()

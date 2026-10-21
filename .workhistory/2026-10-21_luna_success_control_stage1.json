@@ -1,0 +1,31 @@
+{
+  "request": "Stage one: verify a previously successful scene twice using current Luna",
+  "source": "/workspace/g1_failure/runtime/afs_autonomous/20261018T160156_325966Z_numeric_recovery/attempts/attempt_00002/rollout",
+  "source_verification": {
+    "status": "VALID",
+    "task_outcome": "PASS",
+    "termination_reason": "GOAL_REACHED",
+    "final_goal_distance_m": 0.19415046669369332,
+    "required_goal_radius_m": 0.25,
+    "recorded_goal_dwell_s": 0.9999999999990905,
+    "required_goal_dwell_s": 1.0,
+    "mp4_present": true
+  },
+  "prepared_suite": "/workspace/g1_failure/runtime/behavior_regression/luna_success_control_20261021_v1",
+  "prepared_report": "reports/20261021T075257_257223Z/report.html",
+  "model": "gpt-6-luna",
+  "service_tier": "default",
+  "attempt_cap": 2,
+  "robot_policy_call_upper_bound": 20,
+  "afs_request_upper_bound": 0,
+  "offline_source_resource_runtime_preflight": "PASS",
+  "actual_new_attempts": 0,
+  "paid_execution_performed": false,
+  "execution_blocker": "Credential probe rejected by auto-review. No workaround or repeated credential access attempted; user-terminal run command supplied.",
+  "limits": [
+    "Current-code versioned replay, not exact old-code replay",
+    "No source scene, task, call budget, robot code, detector or metric changes",
+    "No inference about missing or available credentials",
+    "No success guarantee; excluded attempts stop and consume budget"
+  ]
+}

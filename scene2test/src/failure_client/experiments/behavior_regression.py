@@ -30,7 +30,9 @@ from .local_goal_adapter import LocalGoalRunner, atomic_json
 from .research_protocol import PROJECT, CampaignConfig, RobotSettings, environment_fingerprint
 
 
-def replay_plan(paths, *, repeats=2, model=None, groot_root=None, navigation_completion=None):
+def replay_plan(
+    paths, *, repeats=2, model=None, groot_root=None, navigation_completion=None, service_tier=None
+):
     if type(repeats) is not int or not 1 <= repeats <= 10:
         raise ValueError("repeats must be 1..10; exclusions consume attempts")
     if not paths or len(paths) > 32:
@@ -48,6 +50,7 @@ def replay_plan(paths, *, repeats=2, model=None, groot_root=None, navigation_com
         protocol = protocols[0]
         robot = RobotSettings(
             model=model or protocol["model"],
+            service_tier=service_tier if service_tier is not None else protocol.get("service_tier"),
             max_calls=protocol["max_calls"],
             max_seconds=protocol["max_simulation_s"],
             response_timeout=float(protocol["http_read_timeout_s"]),
@@ -90,7 +93,7 @@ def replay_plan(paths, *, repeats=2, model=None, groot_root=None, navigation_com
         "limits": [
             "Goal, scene, task budget, push availability and timeout are fixed per baseline",
             "Current code is a versioned comparison, not exact old-code replay; "
-            "model and navigation-completion overrides are explicit",
+            "model, service-tier and navigation-completion overrides are explicit",
             "Remote model/physics repeats need not be deterministic; "
             "changes are observations, not significance",
             "Excluded attempts consume budget; no replacement or automatic paid retry",
@@ -120,8 +123,20 @@ def memory_paths(path):
 
 def regression_fingerprint(config):
     value = environment_fingerprint(config)
+    value["source_hashes"]["tools/run_factor_calibration.py"] = _hash_file(
+        PROJECT / "tools/run_factor_calibration.py"
+    )
+    value["source_hashes"]["tools/run_goal_clearance_control.py"] = _hash_file(
+        PROJECT / "tools/run_goal_clearance_control.py"
+    )
     value["source_hashes"]["tools/run_behavior_regression.py"] = _hash_file(
         PROJECT / "tools/run_behavior_regression.py"
+    )
+    value["source_hashes"]["tools/run_sol_flex_regression.py"] = _hash_file(
+        PROJECT / "tools/run_sol_flex_regression.py"
+    )
+    value["source_hashes"]["tools/run_sol_standard_regression.py"] = _hash_file(
+        PROJECT / "tools/run_sol_standard_regression.py"
     )
     value["source_hashes"]["tools/run_afs_contrast.py"] = _hash_file(
         PROJECT / "tools/run_afs_contrast.py"
@@ -274,6 +289,8 @@ class BehaviorRegression:
                 "http_read_timeout_s": cfg.robot.response_timeout,
                 "policy_origin": self.state["lock"]["execution_origin"],
             }
+            if cfg.robot.service_tier is not None:
+                expected["service_tier"] = cfg.robot.service_tier
             if (
                 any(p.get(k) != v for k, v in expected.items())
                 or profile_from_protocol(p) != cfg.robot.navigation_completion
@@ -463,11 +480,12 @@ class BehaviorRegression:
                 }
             )
             if plan.get("mode") == CONTRAST_MODE:
+                axis = case["changed_axis"] or plan["axis"]
                 rows[-1].update(
                     contrast_role=case["contrast_role"],
                     changed_axis=case["changed_axis"],
-                    reference_value=plan["reference_scene"][plan["axis"]],
-                    tested_value=case["scene"][plan["axis"]],
+                    reference_value=plan["reference_scene"][axis] if case["changed_axis"] else None,
+                    tested_value=case["scene"][axis] if case["changed_axis"] else None,
                     comparison=(
                         "PENDING"
                         if not complete
@@ -580,9 +598,13 @@ class BehaviorRegression:
                 page += '<p><a href="behavior/index.html">행동 근거·반복 결과·관측 경계</a></p>'
                 from .afs_paired_contrast import comparison_report
 
-                page += comparison_report(
-                    output, self.state["lock"]["plan"], self.state["attempts"], memory
-                )
+                if self.state["lock"]["plan"].get("design") not in {
+                    "one-factor-at-a-time-v1",
+                    "single-probe-validation-v1",
+                }:
+                    page += comparison_report(
+                        output, self.state["lock"]["plan"], self.state["attempts"], memory
+                    )
             page += (
                 "<p>반복 관측이며 통계적 성능 개선/퇴행의 확정은 아닙니다. "
                 "원본 평가와 AFS 예산은 변경하지 않습니다.</p>"

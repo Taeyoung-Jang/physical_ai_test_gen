@@ -1,0 +1,28 @@
+{
+  "scope": "Enable independent full-domain Random environment exploration; no paid execution",
+  "implementation": [
+    "Explicit Random-only design and arm ledger using the existing durable paired runner",
+    "Dedicated Random-only CLI, zero public AFS budget and guarded proposer entry",
+    "Predeclared seeds 29/43/71, four attempts and four valid target per seed",
+    "Planned scene values and marginal parameter-bin distributions in saved reports",
+    "Common twelve-family scoring and separate original-six scoring, no Gain claim"
+  ],
+  "prepared_campaign": "/workspace/g1_failure/runtime/random_environment/luna_full_domain_v1",
+  "robot_policy_call_upper_bound": 120,
+  "afs_request_upper_bound": 0,
+  "paid_execution_performed": false,
+  "offline_validation": {
+    "compiled_scene_graphs": 12,
+    "seed_environment_freeze_checks": 3,
+    "new_random_tests": 8,
+    "paired_regression_tests": 11,
+    "other_related_regression_tests": 114
+  },
+  "limits": [
+    "Uniform parameter draws inside the existing topology and bounds, not new venues",
+    "Not matched-change Random; no AFS superiority or prospective milestone claim",
+    "Independent uniform draws do not guarantee balanced marginal or joint coverage",
+    "Exclusions consume attempts and stop; no automatic retry or free replacement",
+    "Original completed experiments, report snapshot, outcomes and budgets are preserved"
+  ]
+}

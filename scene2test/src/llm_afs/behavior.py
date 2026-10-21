@@ -503,6 +503,13 @@ def context(latest, history=()):
 
 def context_axes(ctx):
     supplied = ctx["allowed_axes"]
+    if "scene_domain" in ctx:
+        from clear_path.search_domain import checked_domain
+
+        axes = checked_domain(ctx["scene_domain"])
+        if set(supplied) != set(axes) or any(tuple(supplied[k]) != v for k, v in axes.items()):
+            raise ValueError("proposal context differs from frozen bounded scene domain")
+        return axes
     for schema in SCHEMAS:
         axes = axes_for_schema(schema)
         if set(supplied) == set(axes) and all(tuple(supplied[k]) == v for k, v in axes.items()):

@@ -24,6 +24,7 @@ def main(argv=None):
             "--memory", type=Path, help="memory.json index; original archives must exist"
         )
         sub.add_argument("--repeats", type=int, default=2)
+        sub.add_argument("--service-tier", choices=["flex", "default"], default=None)
         sub.add_argument(
             "--model", help="explicit version comparison override; otherwise retain source model"
         )
@@ -53,6 +54,7 @@ def main(argv=None):
                 paths,
                 repeats=args.repeats,
                 model=args.model,
+                service_tier=args.service_tier,
                 groot_root=args.groot_root,
                 navigation_completion=args.navigation_completion,
             )

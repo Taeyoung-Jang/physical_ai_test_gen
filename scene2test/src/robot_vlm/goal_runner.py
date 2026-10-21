@@ -130,6 +130,11 @@ def run(
             "task_contract_sha256": digest(contract),
             "policy_origin": origin,
             "model": getattr(policy, "model", None),
+            **(
+                {"service_tier": policy.service_tier}
+                if getattr(policy, "service_tier", None)
+                else {}
+            ),
             "prompt_version": push_prompt_version if enable_push else policy_module.PROMPT_VERSION,
             "max_calls": max_calls,
             "max_simulation_s": requested_max_seconds,

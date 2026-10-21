@@ -11,6 +11,7 @@ import random
 from clear_path.contracts import parse_fixture
 from clear_path.fixture import graph
 from clear_path.scene_space import axes_for_parameters, axes_for_schema
+from clear_path.search_domain import checked_domain
 from failure_client.methods.base import CandidateObservation
 from failure_client.methods.search_evidence import behavior_signature, compact_evidence
 from llm_afs import behavior as b
@@ -21,9 +22,10 @@ def seeded(seed, *parts):
     return random.Random(int(b.digest([seed, *parts]), 16))
 
 
-def uniform_scene(seed, *parts, schema="clear-path-fixture-v1"):
+def uniform_scene(seed, *parts, schema="clear-path-fixture-v1", domain=None):
     rng = seeded(seed, *parts)
-    return {k: rng.uniform(*bounds) for k, bounds in axes_for_schema(schema).items()}
+    axes = axes_for_schema(schema) if domain is None else checked_domain(domain, schema)
+    return {k: rng.uniform(*bounds) for k, bounds in axes.items()}
 
 
 def parameters(case):
@@ -69,13 +71,18 @@ def feedback_context(
     remaining,
     scene_schema="clear-path-fixture-v1",
     selection_policy="hypothesis-v2",
+    scene_domain=None,
 ):
     if selection_policy not in ("novelty-v1", "hypothesis-v2"):
         raise ValueError("unknown campaign selection policy")
     cases = memory["cases"]
     if not cases or any(c["parameters"] is None for c in cases):
         raise ValueError("verified scene evidence required")
-    axes = axes_for_schema(scene_schema)
+    axes = (
+        axes_for_schema(scene_schema)
+        if scene_domain is None
+        else checked_domain(scene_domain, scene_schema)
+    )
     if any(c["parameters"].get("schema_version") != scene_schema for c in cases):
         raise ValueError("feedback must use the frozen scene schema")
     episodes = list(memory["episodes"].values())
@@ -143,6 +150,7 @@ def feedback_context(
         modes = ["cross_mechanism", "success_probe", "boundary_probe"]
     return {
         "schema_version": "behavior-campaign-feedback-v1",
+        **({"scene_domain": scene_domain} if scene_domain is not None else {}),
         "latest": {"parameters": parameters(latest_case), "evidence": evidence},
         "scene_graph": graph(parse_fixture(latest_case["parameters"])),
         "task_contract": latest_case["task_contract"],

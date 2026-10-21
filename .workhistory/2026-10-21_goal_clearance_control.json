@@ -1,0 +1,38 @@
+{
+  "scope": "Prepare the next sequential development validation, not the final AFS/Random evaluation",
+  "suite": "/workspace/g1_failure/runtime/goal_clearance_control/luna_clear_goal_20261021_v1",
+  "report": "/workspace/g1_failure/runtime/goal_clearance_control/luna_clear_goal_20261021_v1/reports/20261021T111254_278938Z/report.html",
+  "prepared_status": "READY",
+  "attempts": 0,
+  "pending": null,
+  "baseline_paths": [
+    "/workspace/g1_failure/runtime/factor_calibration/luna_oat_20261021_v1/attempts/attempt_00000/rollout",
+    "/workspace/g1_failure/runtime/factor_calibration/luna_oat_20261021_v1/attempts/attempt_00001/rollout"
+  ],
+  "historical_control": {"pass": 1, "fail": 1, "calls": 19},
+  "changed_axis": "box_lateral_fraction",
+  "before": 0.5,
+  "after": 1.0,
+  "derived_box_y_m": 1.2,
+  "design": "single-probe-validation-v1",
+  "new_max_attempts": 2,
+  "new_robot_policy_call_upper_bound": 20,
+  "afs_calls": 0,
+  "model": "gpt-6-luna",
+  "service_tier": "default",
+  "per_episode_call_budget": 10,
+  "offline_planner_preflight": "2/2 path_found after in-memory box-only relocation; recorded planner hash matches; saved observation hashes checked",
+  "tests": {"cpu_pass": 76, "seconds": 31.47, "ruff": "passed"},
+  "paid_execution_performed": false,
+  "automatic_final_comparison": false,
+  "next_step": "Inspect two outcomes and behavior, then separately specify/freeze a common development-derived domain and held-out paired comparison",
+  "limits": [
+    "No measured PASS, causal effect or AFS advantage claimed at preparation",
+    "No new control repeat or historical cost reset",
+    "No robot/goal/evaluator/model/budget change",
+    "Exclusion consumes an attempt and stops; no automatic replacement or paid retry",
+    "No outcome-driven repeated resets until PASS",
+    "No old frozen-session resume or source-drift bypass",
+    "No API, GPU, robot, credential access, commit or push"
+  ]
+}

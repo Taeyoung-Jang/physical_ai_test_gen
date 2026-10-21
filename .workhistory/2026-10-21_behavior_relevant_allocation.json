@@ -1,0 +1,28 @@
+{
+  "task": "Implement priority 1: stop forcing object physics allocation without observed manipulation requests",
+  "policy": "SearchBudget.factor_allocation=behavior-relevance-v1",
+  "default": "balanced-v1 unchanged",
+  "evidence": "Verified supplied VALID PASS/FAIL action windows; partial absence remains UNKNOWN; excluded episodes do not supply relevance",
+  "changes": [
+    "Defer object physics from mandatory rotation only when all supplied valid histories have complete actions without manipulation requests",
+    "Keep all shared/selectable scene axes and optional two-factor interaction probes",
+    "Restore eligibility on observed manipulation request including local tool rejection, without physical-success or causal claims",
+    "Save relevance status/evidence IDs and mandatory/optional groups in context, selection audit and summary",
+    "Integrate with independent/paired summaries and new standalone development config"
+  ],
+  "actual_readonly_replay": {
+    "source_report": "/workspace/g1_failure/runtime/paired_discovery/luna_navigation_domain_20261021_v1/reports/20261021T155622_397709Z",
+    "101": "object_physics -> obstacle_geometry",
+    "211": "object_physics -> layout",
+    "307": "object_physics -> obstacle_geometry",
+    "original_db_opened": false,
+    "claim": "Allocation-only replay, not counterfactual robot outcomes or measured improvement"
+  },
+  "tests": {
+    "related_cpu": "108 passed in 63.76 seconds",
+    "new_feature_cpu": "14 passed in 12.34 seconds",
+    "coverage": ["default unchanged", "incomplete data UNKNOWN", "request restoration", "exclusion accounting", "optional interactions", "schema/host/audit/summary", "saved-response resume without resend", "paired seed isolation and Random unchanged"]
+  },
+  "not_changed": ["robot", "outcome/detector thresholds", "Random sampling", "shared domain", "retry/timeout", "frozen original campaign", "near-boundary scoring", "candidate risk ranking"],
+  "execution": {"paid_api": false, "robot": false, "gpu": false, "new_runtime_campaign": false, "commit_push": false}
+}

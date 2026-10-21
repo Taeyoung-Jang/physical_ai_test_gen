@@ -1,0 +1,46 @@
+{
+  "purpose": "Prepare bounded single-factor development calibration after Random saturation and mixed baseline replay",
+  "baseline": {
+    "suite": "/workspace/g1_failure/runtime/behavior_regression/luna_success_control_20261021_v1",
+    "valid": 2,
+    "pass": 1,
+    "fail": 1,
+    "robot_calls": 20,
+    "selection": "both observed outcomes retained, not PASS-only"
+  },
+  "design": "one-factor-at-a-time-v1",
+  "new_suite": "/workspace/g1_failure/runtime/factor_calibration/luna_oat_20261021_v1",
+  "prepared_status": "READY",
+  "prepared_attempts": 0,
+  "prepared_report": "/workspace/g1_failure/runtime/factor_calibration/luna_oat_20261021_v1/reports/20261021T084636_066204Z/report.html",
+  "preserved_unused_draft": "/workspace/g1_failure/runtime/factor_calibration/luna_oat_v1",
+  "draft_warning": "pre-final-source preparation, do not run or bypass frozen source checks",
+  "new_cases": [
+    {"axis": null, "role": "shared control", "repeats": 2},
+    {"axis": "corridor_width_m", "from": 3.6, "to": 2.8, "repeats": 2},
+    {"axis": "floor_friction", "from": 0.8, "to": 0.5, "repeats": 2},
+    {"axis": "human_lateral_fraction", "from": 0.2, "to": -0.8, "repeats": 2}
+  ],
+  "max_attempts": 8,
+  "robot_policy_call_upper_bound": 80,
+  "afs_requests": 0,
+  "execution_order": "case-major, fixed before new outcomes",
+  "verification": {
+    "cpu_tests": 68,
+    "seconds": 37.23,
+    "test_files": ["test_factor_calibration.py", "test_afs_contrast.py", "test_behavior_regression.py", "test_afs_paired_contrast.py"],
+    "ruff": "passed",
+    "git_diff_check": "passed"
+  },
+  "paid_execution_performed": false,
+  "limits": [
+    "No robot, goal, detector, budget or model changes",
+    "No causal or statistical superiority claim; small development sample",
+    "Width changes derived coordinates; one declared parameter is not physical independence",
+    "No interaction/full-domain coverage or Random-relative Gain claim",
+    "Exclusions stop, consume attempts and are not automatically replaced",
+    "Saved receipt resumption does not resend; completed suites do not launch more trials",
+    "Inherited baseline costs remain separate; no old evaluation reset or resume",
+    "No credential access, paid API, GPU, robot, commit or push"
+  ]
+}

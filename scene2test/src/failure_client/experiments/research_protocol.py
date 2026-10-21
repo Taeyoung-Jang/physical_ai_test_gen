@@ -20,6 +20,7 @@ PROJECT = Path(__file__).resolve().parents[3]
 
 class RobotSettings(StrictRecord):
     model: str = Field(default="gpt-6-astra", min_length=1)
+    service_tier: Literal["flex", "default"] | None = None
     groot_root: str = "/workspace/g1_failure/src/GR00T-WholeBodyControl"
     max_calls: int = Field(default=10, ge=1, le=20)
     max_seconds: float | None = Field(default=None, ge=3)

@@ -145,10 +145,16 @@ class IndependentSeed(AutonomousAFS):
         )
         if "exploration_allocation" in result:
             from failure_client.methods.autonomous_feedback import accounting
-            from failure_client.methods.breadth_policy import allocation
+            from failure_client.methods.breadth_policy import allocation, behavior_relevance
 
             result["exploration_allocation"].update(
-                allocation(attempts, accounting(attempts, axes, self.budget)["selectable_axes"])
+                allocation(
+                    attempts,
+                    accounting(attempts, axes, self.budget)["selectable_axes"],
+                    relevance=behavior_relevance(self._memory())
+                    if self.budget.factor_allocation == "behavior-relevance-v1"
+                    else None,
+                )
             )
         return result
 

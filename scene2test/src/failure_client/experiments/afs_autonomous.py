@@ -328,7 +328,11 @@ class AutonomousAFS:
 
     def _selection(self):
         candidate, ctx = selection(
-            self._memory(), self.state["attempts"], self.budget, self.cfg.scene_schema
+            self._memory(),
+            self.state["attempts"],
+            self.budget,
+            self.cfg.scene_schema,
+            scene_domain=self.plan.get("scene_domain"),
         )
         if ctx is not None and self.budget.reproposal_policy == "bounded-rejection-v1":
             # Only finalized rejections enter the NEXT context. The pending response
@@ -351,7 +355,12 @@ class AutonomousAFS:
 
     def _proposal(self, ctx):
         directory = self.root / "proposals" / f"proposal_{len(self.state['proposals']):05d}"
-        body = request(ctx, self.budget.afs_model, selection_policy=self.request_policy)
+        body = request(
+            ctx,
+            self.budget.afs_model,
+            selection_policy=self.request_policy,
+            service_tier=self.budget.afs_service_tier,
+        )
         directory.mkdir(parents=True, exist_ok=False)
         atomic_json(directory / "context.json", ctx)
         atomic_json(directory / "request.json", body)
@@ -378,9 +387,21 @@ class AutonomousAFS:
         if not path.is_file():
             raise RuntimeError("ambiguous proposal intent without saved response; never resend")
         response = read_json(path)
-        row.update(usage=response.get("usage"), returned_model=response.get("model"))
+        row.update(
+            usage=response.get("usage"),
+            returned_model=response.get("model"),
+            requested_service_tier=self.budget.afs_service_tier,
+            returned_service_tier=response.get("service_tier"),
+        )
         row["artifacts"]["response.json"] = _hash_file(path)
         self._save("proposal_response_collected", {"id": row["id"]})
+        if (
+            self.budget.afs_service_tier is not None
+            and response.get("service_tier") != self.budget.afs_service_tier
+        ):
+            raise ValueError(
+                "AFS response service_tier does not confirm requested tier; never resend"
+            )
         self._fresh()
         candidate, ctx = self._selection()
         if (
@@ -389,7 +410,12 @@ class AutonomousAFS:
             or digest(ctx) != digest(read_json(directory / "context.json"))
         ):
             raise ValueError("saved proposal context is stale")
-        body = request(ctx, self.budget.afs_model, selection_policy=self.request_policy)
+        body = request(
+            ctx,
+            self.budget.afs_model,
+            selection_policy=self.request_policy,
+            service_tier=self.budget.afs_service_tier,
+        )
         if proposal_request_digest(body) != proposal_request_digest(
             read_json(directory / "request.json")
         ):
@@ -599,6 +625,10 @@ class AutonomousAFS:
                     raise ValueError("saved candidate selection mismatch")
             elif scheduled != candidate:
                 raise ValueError("saved local candidate no longer eligible")
+            if self.plan.get("scene_domain") is not None:
+                from clear_path.search_domain import check_parameters
+
+                check_parameters(candidate["parameters"], self.plan["scene_domain"])
             self.cfg.scene(candidate["parameters"])  # strict scene compilation before intent
             attempt = {"id": f"attempt_{len(self.state['attempts']):05d}", "candidate": candidate}
             self.state["attempts"].append(attempt)
@@ -654,7 +684,12 @@ class AutonomousAFS:
                 "observed": sum(valid) if valid else None,
                 "missing_requests": len(proposals) - len(valid),
             }
-        axes = self.cfg.design()["axes"]
+        if self.plan.get("scene_domain") is not None:
+            from clear_path.search_domain import checked_domain
+
+            axes = checked_domain(self.plan["scene_domain"], self.cfg.scene_schema)
+        else:
+            axes = self.cfg.design()["axes"]
         return {
             "session": str(self.root),
             "mode": self.mode,
@@ -704,13 +739,19 @@ class AutonomousAFS:
             return {}
         from collections import Counter
 
-        from failure_client.methods.breadth_policy import allocation
+        from failure_client.methods.breadth_policy import allocation, behavior_relevance
 
         selectable = accounting(attempts, axes, self.budget)["selectable_axes"]
         forms = Counter(a["candidate"]["exploration"]["form"] for a in attempts)
         return {
             "exploration_allocation": {
-                **allocation(attempts, selectable),
+                **allocation(
+                    attempts,
+                    selectable,
+                    relevance=behavior_relevance(self._memory())
+                    if self.budget.factor_allocation == "behavior-relevance-v1"
+                    else None,
+                ),
                 "form_attempts": dict(forms),
                 "next_slot_is_executable": self.state["status"] == "READY",
             }

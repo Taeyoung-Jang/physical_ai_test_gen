@@ -175,6 +175,7 @@ def request(
     ctx,
     model,
     *,
+    service_tier=None,
     selection_policy: Literal[
         "standalone_suite",
         "campaign_single_endpoint",
@@ -196,7 +197,8 @@ def request(
         "independent_evaluation_endpoint",
     }
     if selection_policy == "independent_evaluation_endpoint" and (
-        ctx.get("development_search", {}).get("mode") != "independent-afs-discovery-v1"
+        ctx.get("development_search", {}).get("mode")
+        not in {"independent-afs-discovery-v1", "paired-trajectory-discovery-v1"}
         or ctx.get("development_search", {}).get("external_history") is not False
     ):
         raise ValueError("independent evaluation requires an isolated seed context")
@@ -272,6 +274,10 @@ def request(
         _bind_intent_modes(schema, ctx["failure_objective"]["allowed_intents"], ctx=ctx)
     schema["properties"]["context_sha256"]["enum"] = [expected]
     body = provider.request_body({"context_sha256": expected, "context": ctx}, schema)
+    if service_tier not in (None, "flex", "default"):
+        raise ValueError("service_tier must be omitted, flex or default")
+    if service_tier is not None:
+        body["service_tier"] = service_tier
     body.update(
         model=model,
         instructions=b.INSTRUCTIONS
@@ -419,6 +425,20 @@ fewer factor-group attempts, novelty, then your proposal order. Novelty is not r
 Propose alternative in-bounds scenes within this allocation, not robot commands.
 No candidate means a recorded bounded rejection, never a silent change of slot,
 random substitution, weaker robot, changed goal/evaluator, or live-scene intervention.
+"""
+        if ctx["development_search"]["budget"].get("factor_allocation") == "behavior-relevance-v1":
+            body["instructions"] += """
+Behavior-relevance-v1 overrides balanced factor allocation only. Read the saved
+behavior_relevance evidence and deferred_mandatory_groups in exploration_allocation.
+Without manipulation requests in complete supplied VALID action records, object
+mass/friction is not a mandatory group. It remains available as optional exploration
+in combinations with the required group; if required_group is null, no group is
+required. The change-form, quota, evidence, bounds and duplicate guards still apply.
+UNKNOWN is not absence. A manipulation request, even a rejected one, restores group
+eligibility but does NOT prove physical engagement or that mass/friction caused failure.
+Explain how the changed environment can affect the observed behavior. Merely naming
+a different failure family or changing an unused object property is weak evidence.
+This allocation heuristic is not a calibrated risk estimate or a family detector.
 """
     if expanded:
         body["instructions"] += """

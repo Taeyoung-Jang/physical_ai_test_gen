@@ -29,6 +29,7 @@ def call(body, parse, *, transport=None):
     max_retries = journal.connect_retries if journal else 0
     key = os.getenv("OPENAI_API_KEY")
     info = {
+        "requested_service_tier": body.get("service_tier"),
         "stage": "credentials",
         "retry_attempted": False,
         "retry_count": 0,
@@ -198,6 +199,14 @@ def call(body, parse, *, transport=None):
         else None
     )
     info["stage"] = "response_status"
+    tier = value.get("service_tier")
+    info["returned_service_tier"] = (
+        tier
+        if tier is None or isinstance(tier, str) and tier in {"flex", "default", "auto", "priority"}
+        else "unknown"
+    )
+    if body.get("service_tier") in {"flex", "default"} and tier != body["service_tier"]:
+        fail("api_service_tier_mismatch")
     if value.get("status") != "completed":
         details = value.get("incomplete_details") or {}
         code = details.get("reason") if isinstance(details, dict) else None
@@ -275,6 +284,8 @@ def call(body, parse, *, transport=None):
         "response_id": info.get("response_id"),
         "model": identifier(value.get("model"), r"[A-Za-z0-9_.:-]{1,100}"),
         "requested_model": body["model"],
+        "requested_service_tier": body.get("service_tier"),
+        "returned_service_tier": info["returned_service_tier"],
         "usage": info["usage"],
         "origin": "openai_api",
         "diagnostic": info,

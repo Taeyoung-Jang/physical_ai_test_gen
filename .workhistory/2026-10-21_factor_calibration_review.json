@@ -1,0 +1,65 @@
+{
+  "scope": "Read-only review of completed calibration and prior Random geometry; no new paid trials",
+  "calibration_snapshot": "/workspace/g1_failure/runtime/factor_calibration/luna_oat_20261021_v1/reports/20261021T094214_370327Z",
+  "verification": {
+    "calibration_report_manifest_and_saved_raw_episode_identity": "8/8 verified using snapshot_paths; no source database opened",
+    "random_snapshot": "/workspace/g1_failure/runtime/random_environment/luna_full_domain_v1/reports/20261021T064211_330297Z",
+    "random_report_manifest": "all artifacts verified",
+    "random_geometry_inputs": "12 saved episodes: observation_000.json, scene.xml, protocol.json and result.json hashes match snapshot episode records",
+    "planner_source": "navigation_tools.py SHA256 matches all 20 recorded protocols",
+    "planner_replay": "offline pure function over saved observations; no simulation/API/robot"
+  },
+  "outcomes": {"attempted": 8, "valid": 8, "pass": 1, "fail": 7, "excluded": 0, "robot_calls": 79, "accepted_actions": 78, "afs_calls": 0},
+  "episodes": [
+    {"id": 0, "condition": "control", "outcome": "FAIL", "final_distance_m": 0.527109668883527, "pattern": "10 navigate actions; six short navigation slices; late staging arrival, no raw move correction"},
+    {"id": 1, "condition": "control", "outcome": "PASS", "final_distance_m": 0.17269789651882816, "pattern": "plan_path blocked; four 10s navigations then three direct moves; goal reached during ninth call, eight accepted actions"},
+    {"id": 2, "condition": "width2.8", "outcome": "FAIL", "final_distance_m": 4.989619992800627, "pattern": "three no_path and one goal blocked endpoint; later four direct moves"},
+    {"id": 3, "condition": "width2.8", "outcome": "FAIL", "final_distance_m": 4.408786579805631, "pattern": "three no_path and one goal blocked endpoint; later four direct moves"},
+    {"id": 4, "condition": "floor0.5", "outcome": "FAIL", "final_distance_m": 0.9686111099348221, "pattern": "two goal endpoint blocks, late approach; final move not push"},
+    {"id": 5, "condition": "floor0.5", "outcome": "FAIL", "final_distance_m": 0.5780992184180698, "pattern": "three endpoint blocks; two late direct moves; no push request"},
+    {"id": 6, "condition": "human-0.8", "outcome": "FAIL", "final_distance_m": 0.3300164099737167, "pattern": "staging then turn and two direct moves; never entered goal"},
+    {"id": 7, "condition": "human-0.8", "outcome": "FAIL", "final_distance_m": 0.37922263226925496, "pattern": "north/south route switch, late endpoint block, two turns and final adjustment; no push request"}
+  ],
+  "common_findings": {
+    "all_failures": "BUDGET_EXHAUSTED, outside original radius0.25, final dwell0; sampled goal entries0",
+    "push_requests": 0,
+    "stale_action_version_mismatches": 0,
+    "saved_six_family_primary": "all seven failures unclassified; supported rules NOT_DETECTED",
+    "existing_new_rule_checks": "Pure expanded/system observation helpers with complete saved action windows found no fall, locomotion_stall, manipulation_failure, goal_completion_failure, goal_endpoint_rejection or subgoal_completion_loop; no label added",
+    "provider_waits": "attempt0 first completed call ~200.07s; attempt4 last completed call ~158.86s. Both valid, not timeouts; waiting physics can affect pose; no causal attribution",
+    "width_confounds": "box center Y0.6->0.4 and human Y0.31->0.23 from derived geometry; one declared axis, not isolated physical changes"
+  },
+  "geometry_bottleneck": {
+    "calibration_initial_goal_center_planner_blocked": "8/8",
+    "calibration_actual_goal_endpoint_block_observed": "8/8, including PASS",
+    "random_initial_goal_center_planner_blocked": "12/12",
+    "random_sufficient_whole_goal_disk_block_certificate": "11/12; remaining one also center blocked, no whole-disk conclusion",
+    "box_size_m": [0.8, 1.1, 0.7],
+    "planner_endpoint_radius_m": 0.4,
+    "planner_grid_radius_before_cell_padding_m": 0.5,
+    "goal_radius_m": 0.25,
+    "control_goal_center_to_box_projection_distance_m": 0.05,
+    "control_whole_disk_certificate": "Distance to a rectangle is 1-Lipschitz; every goal-disk point has box distance <=0.05+0.25=0.30<0.40, so static endpoint checker rejects the whole goal region",
+    "control_replay": "[7,0] and [7,-0.2] blocked_endpoint; [7,-0.5] path_found",
+    "narrow_replay": "[3.3,-0.85] no_path versus path_found at control; [7,-0.5] blocked_endpoint",
+    "interpretation": "Conservative planner/task-region mismatch, not physical impossibility. Actual PASS uses direct move. This is neither a new measured family nor proof of a planner/body/VLA defect."
+  },
+  "hypothetical_control_offline_only": {
+    "reference": "calibration attempt0 initial saved observation",
+    "one_declared_parameter": "box_lateral_fraction 0.5->1.0 at unchanged corridor width3.6",
+    "derived_box_center_y_m": "0.6->1.2",
+    "procedure": "deep copy observation in memory and change only box Y; no scene source file write or physics run",
+    "same_planner_goal_status": "path_found at [7,0]",
+    "claim": "Only static planner connectivity; no measured PASS, robot dynamics or manipulation feasibility validation"
+  },
+  "recommended_next_work_not_executed": [
+    "Offline classify the common environment domain by goal clearance and planner route status; keep flags separate from verdicts",
+    "Prepare a navigation-capable shared control with box outside goal approach; validate before increasing paid discovery budget",
+    "Separate navigation and goal-adjacent-object development strata and predeclare the same test domain/mixture for both methods",
+    "Freeze a new held-out paired evaluation after development; keep strong full-domain Uniform Random baseline, independent seeds, equal episode budgets and separate AFS cost accounting",
+    "If changing robot budget-awareness or goal-region navigation, treat it as a new robot condition and apply equally to AFS and Random; no silent patch or frozen-session resume",
+    "Preserve original FDR/Gain goals; diversity and cost are predeclared secondary measures, not post-hoc replacements"
+  ],
+  "claim_boundary": "AFS advantage remains unproven. If Random FDR=1, maximum possible relative FDR gain is0. For 20percent relative gain, Random FDR must be <=1/1.2, but this is a mathematical ceiling, not permission to tune a test set for a desired outcome.",
+  "mutations": "Only this review record and workspace memory; no implementation, source verdict, source archive, source database, budget, model or evaluator edits; no paid execution"
+}

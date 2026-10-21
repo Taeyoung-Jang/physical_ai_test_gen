@@ -24,6 +24,65 @@ from llm_afs.behavior_request import request
 from robot_vlm.task_outcome import digest
 
 MODE = "anchored_scene_contrast_v1"
+FACTOR_DESIGN = "one-factor-at-a-time-v1"
+PROBE_DESIGN = "single-probe-validation-v1"
+
+
+def probe_validation_plan(paths, *, axis, value, repeats=2):
+    """Repeat only the changed scene; historical control evidence is not a new trial."""
+    plan = contrast_plan(paths, axis=axis, values=[value], repeats=repeats)
+    plan["cases"] = plan["cases"][1:]
+    plan.update(
+        design=PROBE_DESIGN,
+        max_attempts=repeats,
+        robot_api_call_upper_bound=repeats
+        * plan["cases"][0]["target_config"]["robot"]["max_calls"],
+        selection={"origin": "operator_control_validation", "stage": "repeat"},
+    )
+    plan["limits"].append(
+        "Only the changed candidate is repeated; no contemporaneous control or causal comparison"
+    )
+    validate_plan(plan)
+    return plan
+
+
+def factor_plan(paths, *, probes, repeats=2):
+    """Shared control and distinct single-axis probes; no inference or execution."""
+    if not 1 <= len(probes) <= 4 or len({p["axis"] for p in probes}) != len(probes):
+        raise ValueError("select 1..4 distinct factor axes")
+    plan = contrast_plan(paths, axis=probes[0]["axis"], values=[], repeats=repeats)
+    reference = plan["cases"][0]
+    for probe in probes:
+        axis, value = probe["axis"], probe["value"]
+        if axis not in axes_for_parameters(reference["scene"]) or value == reference["scene"][axis]:
+            raise ValueError("factor must change a supported scene axis")
+        case = deepcopy(reference)
+        case["scene"][axis] = value
+        case.update(
+            case_id=digest([MODE, plan["anchor_case_id"], axis, value]),
+            contrast_role="single_axis_probe",
+            changed_axis=axis,
+        )
+        plan["cases"].append(case)
+    plan.update(
+        design=FACTOR_DESIGN,
+        factors=deepcopy(probes),
+        selection={"origin": "operator_factor_calibration", "stage": "discovery"},
+        max_attempts=len(plan["cases"]) * repeats,
+        robot_api_call_upper_bound=sum(
+            c["target_config"]["robot"]["max_calls"] * repeats for c in plan["cases"]
+        ),
+        execution_order="case-major: control repeats, then each factor's repeats",
+    )
+    plan["limits"].extend(
+        [
+            "One factor level each; no interactions or full-domain coverage measured",
+            "Small repeated development sample; no causal effect or calibrated success-rate claim",
+            "Fixed case-major order can confound time/provider variation with factor differences",
+        ]
+    )
+    validate_plan(plan)
+    return plan
 
 
 def evidence(paths):
@@ -123,14 +182,32 @@ def validate_plan(plan):
         raise ValueError("contrast attempt budget invalid")
     if len({c["case_id"] for c in cases}) != len(cases):
         raise ValueError("duplicate contrast case")
+    factor = plan.get("design") == FACTOR_DESIGN
+    probe_only = plan.get("design") == PROBE_DESIGN
+    if plan.get("design") is not None and not (factor or probe_only):
+        raise ValueError("unknown contrast design")
+    if probe_only and len(cases) != 1:
+        raise ValueError("probe validation requires exactly one candidate")
+    if factor:
+        probes = plan["factors"]
+        if len(probes) != len(cases) - 1 or len({p["axis"] for p in probes}) != len(probes):
+            raise ValueError("factor matrix mismatch")
     for i, case in enumerate(cases):
         cfg = CampaignConfig.model_validate(case["target_config"])
         params = {k: case["scene"][k] for k in axes_for_parameters(reference)}
         if cfg.scene(params).model_dump() != case["scene"]:
             raise ValueError("unsupported scene settings would change at execution")
         changed = {k for k in reference if case["scene"].get(k) != reference[k]}
-        if changed != (set() if i == 0 else {plan["axis"]}):
+        axis = plan["factors"][i - 1]["axis"] if factor and i else plan["axis"]
+        is_probe = i != 0 or probe_only
+        if changed != ({axis} if is_probe else set()):
             raise ValueError("contrast must preserve every other scene parameter")
+        if case["changed_axis"] != (axis if is_probe else None) or case["contrast_role"] != (
+            "single_axis_probe" if is_probe else "control_repeat"
+        ):
+            raise ValueError("contrast role/axis mismatch")
+        if factor and i and case["scene"][axis] != plan["factors"][i - 1]["value"]:
+            raise ValueError("factor value mismatch")
         if (
             case["expected_condition_id"] != history[0].condition_id
             or any(r["condition_id"] != history[0].condition_id for r in case["baselines"])
