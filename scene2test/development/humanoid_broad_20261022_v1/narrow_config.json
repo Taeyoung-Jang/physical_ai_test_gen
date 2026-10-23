@@ -1,0 +1,122 @@
+{
+  "schema_version": "paired-trajectory-design-v1",
+  "purpose": "random-environment-sweep",
+  "methods": [
+    "random"
+  ],
+  "seeds": [
+    62001
+  ],
+  "valid_per_arm": 4,
+  "attempts_per_arm": 4,
+  "afs_requests_per_seed": 0,
+  "cold_start_per_arm": 0,
+  "target_families_twelve": 4,
+  "search": {
+    "schema_version": "autonomous-afs-budget-v1",
+    "selection_policy": "failure-branch-v3",
+    "taxonomy_profile": "expanded-ten-v1",
+    "exploration_policy": "breadth-v1",
+    "feedback_policy": "cause-review-v3",
+    "anchor_policy": "failure-diversity-v4",
+    "pattern_feedback": "trajectory-v1",
+    "reproposal_policy": "bounded-rejection-v1",
+    "max_attempts": 4,
+    "valid_rollout_target": 4,
+    "max_afs_requests": 1,
+    "max_attempts_per_axis": 4,
+    "max_repeats": 0,
+    "min_axis_change_fraction": 0.1,
+    "history_limit": 4,
+    "afs_model": "gpt-6-luna",
+    "afs_service_tier": "default",
+    "afs_timeout_s": 300.0
+  },
+  "scene_domain": {
+    "schema_version": "bounded-scene-domain-v1",
+    "scene_schema": "clear-path-human-v5",
+    "scope": "Development difficulty audit, not held-out AFS superiority evaluation. Width thirds jointly restore the original full domain; all other axes retain original bounds. No geometry/outcome rejection or resampling.",
+    "axes": {
+      "box_mass_kg": [
+        0.2,
+        10.0
+      ],
+      "box_friction": [
+        0.05,
+        1.5
+      ],
+      "floor_friction": [
+        0.05,
+        1.5
+      ],
+      "corridor_width_m": [
+        1.6,
+        2.4
+      ],
+      "box_lateral_fraction": [
+        -1.0,
+        1.0
+      ],
+      "obstacle_1_x_m": [
+        2.25,
+        2.75
+      ],
+      "obstacle_1_lateral_fraction": [
+        -1.0,
+        1.0
+      ],
+      "obstacle_1_size_x_m": [
+        0.2,
+        0.8
+      ],
+      "obstacle_1_size_y_m": [
+        0.2,
+        0.8
+      ],
+      "obstacle_1_height_m": [
+        0.1,
+        1.2
+      ],
+      "obstacle_1_yaw_deg": [
+        -90.0,
+        90.0
+      ],
+      "obstacle_2_x_m": [
+        5.25,
+        5.75
+      ],
+      "obstacle_2_lateral_fraction": [
+        -1.0,
+        1.0
+      ],
+      "obstacle_2_size_x_m": [
+        0.2,
+        0.8
+      ],
+      "obstacle_2_size_y_m": [
+        0.2,
+        0.8
+      ],
+      "obstacle_2_height_m": [
+        0.1,
+        1.2
+      ],
+      "obstacle_2_yaw_deg": [
+        -90.0,
+        90.0
+      ],
+      "box_goal_x_m": [
+        6.8,
+        7.5
+      ],
+      "human_x_m": [
+        3.65,
+        4.35
+      ],
+      "human_lateral_fraction": [
+        -1.0,
+        1.0
+      ]
+    }
+  }
+}

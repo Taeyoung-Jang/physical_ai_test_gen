@@ -5,6 +5,7 @@ import json
 import math
 import time
 from concurrent.futures import ThreadPoolExecutor
+from contextlib import nullcontext
 from html import escape
 from importlib.metadata import version
 from pathlib import Path
@@ -15,6 +16,9 @@ import numpy as np
 from PIL import Image, ImageDraw
 
 from clear_path import audit, fixture
+from clear_path.contracts import CrossingHumanFixture
+from clear_path.human_motion import CrossingRuntime
+from clear_path.humans import human_geometry, human_scene
 from simulation_server.groot_locomotion import G1OnnxController
 
 from . import goal_policy as policy_module
@@ -29,7 +33,7 @@ from .navigation_completion import DEFAULT, NavigationCompletion, completion_con
 from .policy import Geometry, Observation, PolicyError, validate_fresh
 from .scene_config import validate_scene
 from .task_outcome import GoalEvaluator, digest, task_contract
-from .timing import RequestTiming
+from .timing import CONNECT_RETRIES, RequestTiming, connection_retry_contract
 
 
 def write(path, value):
@@ -92,7 +96,11 @@ def run(
     controller.data = audit.initial_data(model, source)
     data = controller.data
     dt = model.opt.timestep
+    crossing = (
+        CrossingRuntime(config, model, data) if isinstance(config, CrossingHumanFixture) else None
+    )
     world = {model.geom(n).id for n in fixture.world_geom_names(config)}
+    human_roles = {row["id"]: row["semantic_role"] for row in human_geometry(config)}
 
     def current_geometry():
         return [
@@ -101,13 +109,22 @@ def run(
                 center_m=data.geom_xpos[g].tolist(),
                 size_m=(2 * model.geom_size[g]).tolist(),
                 rotation_matrix=data.geom_xmat[g].tolist(),
+                semantic_role=human_roles.get(model.geom(g).name),
             )
             for g in sorted(world)
         ]
 
+    def behavior_feedback():
+        result = observer.observation()
+        if crossing is not None and crossing.last is not None:
+            result = {**result, "human_motion": crossing.last}
+        return result
+
     # Evaluation artifacts only; no reference path is supplied to the policy.
     write(root / "scene_graph.json", fixture.graph(config))
     write(root / "navigation_map.json", fixture.navigation_map(config))
+    if human_roles:
+        write(root / "human_proxies.json", human_scene(config))
     foot = {
         g for g in range(model.ngeom) if "ankle_roll" in model.body(int(model.geom_bodyid[g])).name
     }
@@ -115,7 +132,15 @@ def run(
     selected_geom = model.geom("clear_box_geom").id
     hands = push_execution.hand_geoms(model) if enable_push else set()
     active_push = None
-    origin = "openai_api" if not isinstance(policy, policy_module.GoalMock) else "mock"
+    api_provider = getattr(policy, "api_provider", "openai")
+    origin = (
+        "mock"
+        if isinstance(policy, policy_module.GoalMock)
+        else "openrouter_api"
+        if api_provider == "openrouter"
+        else "openai_api"
+    )
+    paid_origin = origin in {"openai_api", "openrouter_api"}
     write(
         root / "protocol.json",
         {
@@ -124,7 +149,24 @@ def run(
             "task_contract": contract,
             "task_contract_sha256": digest(contract),
             "policy_origin": origin,
+            **(
+                {
+                    "api_provider": "openrouter",
+                    "api_endpoint": "https://openrouter.ai/api/v1/chat/completions",
+                    "routing": {"allow_fallbacks": False, "require_parameters": True},
+                    "service_tier_policy": (
+                        "omitted; OpenAI direct default/flex contract not asserted"
+                    ),
+                }
+                if api_provider == "openrouter"
+                else {}
+            ),
             "model": getattr(policy, "model", None),
+            **(
+                {"service_tier": policy.service_tier}
+                if getattr(policy, "service_tier", None)
+                else {}
+            ),
             "prompt_version": push_prompt_version if enable_push else policy_module.PROMPT_VERSION,
             "max_calls": max_calls,
             "max_simulation_s": requested_max_seconds,
@@ -133,7 +175,8 @@ def run(
             "output_token_limit_policy": "provider_default_no_client_cap",
             "response_deadline_wall_s": timing.deadline_s,
             "http_read_timeout_s": timing.read_s,
-            "timing_contract": "goal-request-timing-v1; inference counts toward simulation budget",
+            "timing_contract": "goal-request-timing-v2; inference counts toward simulation budget",
+            "connection_retry_policy": connection_retry_contract(),
             "debug_logging": "per-call api_call_NNN.jsonl; UTC and wall elapsed",
             "inference_wait": "robot-internal GT base/yaw hold; stale pose rejected",
             "observation": "RGB + full geometry + GT pose",
@@ -149,6 +192,14 @@ def run(
             "controller_condition": "arm_ik_gait_push_align_v4" if enable_push else "original_gait",
             "scene_revision": fixture.identity(config),
             "scene_config": config.model_dump(),
+            **(
+                {
+                    "human_motion": human_scene(config)["motion"],
+                    "dynamic_navigation_geometry": "refresh current geometry at each follower step",
+                }
+                if crossing is not None
+                else {}
+            ),
             "execution_provider": controller.execution_provider,
             "physics_timestep_s": float(dt),
             "runtime_versions": {
@@ -194,6 +245,11 @@ def run(
                 "timing": audit.sha256(Path(__file__).with_name("timing.py")),
                 "debug_log": audit.sha256(Path(__file__).with_name("debug_log.py")),
                 "api_transport": audit.sha256(Path(__file__).with_name("api_transport.py")),
+                **(
+                    {"openrouter": audit.sha256(Path(__file__).with_name("openrouter.py"))}
+                    if api_provider == "openrouter"
+                    else {}
+                ),
                 "wire_contract": audit.sha256(Path(__file__).with_name("wire_contract.py")),
                 "runner": audit.sha256(Path(__file__)),
                 "policy": audit.sha256(Path(policy_module.__file__)),
@@ -202,6 +258,16 @@ def run(
                 "fixture": audit.sha256(Path(fixture.__file__)),
                 "fixture_obstacles": audit.sha256(
                     Path(__file__).parents[1] / "clear_path/obstacles.py"
+                ),
+                "fixture_humans": audit.sha256(Path(__file__).parents[1] / "clear_path/humans.py"),
+                **(
+                    {
+                        "human_motion": audit.sha256(
+                            Path(__file__).parents[1] / "clear_path/human_motion.py"
+                        )
+                    }
+                    if crossing is not None
+                    else {}
                 ),
                 "navigation_tools": audit.sha256(Path(navigation_tools.__file__)),
                 "execution_feedback": audit.sha256(
@@ -251,6 +317,9 @@ def run(
             (root / "decisions.jsonl").open("x") as decisions,
             (root / "contacts.jsonl").open("x") as contacts,
             (root / "events.jsonl").open("x") as events,
+            (
+                (root / "human_motion.jsonl").open("x") if crossing is not None else nullcontext()
+            ) as human_log,
         ):
             observer = BehaviorEvents(events)
 
@@ -261,6 +330,8 @@ def run(
                         -controller.upper_target, -0.8 * dt, 0.8 * dt
                     )
                 controller.command[:] = command
+                if crossing is not None:
+                    crossing.before_step(armed=phase != "settle")
                 controller.step()
                 mujoco.mj_forward(model, data)
                 if (
@@ -281,6 +352,10 @@ def run(
                 if np.any(data.xfrc_applied) or np.any(data.qfrc_applied):
                     reason, terminated, valid = "EXTERNAL_FORCE_ERROR", True, False
                     return
+                if crossing is not None:
+                    sample = crossing.after_step(world)
+                    sample["phase"] = phase
+                    human_log.write(json.dumps(sample, allow_nan=False) + "\n")
                 hand_contact, peak_force = False, 0.0
                 conditions = {}
                 for ci, c in enumerate(data.contact):
@@ -408,7 +483,7 @@ def run(
                     camera_fovy_deg=float(model.cam_fovy[cid]),
                     camera_xyz_m=data.cam_xpos[cid].tolist(),
                     camera_rotation_matrix=data.cam_xmat[cid].tolist(),
-                    behavior_feedback=observer.observation(),
+                    behavior_feedback=behavior_feedback(),
                     geometry=current_geometry(),
                 )
                 write(root / f"observation_{calls:03}.json", obs.model_dump())
@@ -442,6 +517,7 @@ def run(
                     root / f"api_call_{calls:03}.jsonl",
                     obs.state_version,
                     read_timeout_s=timing.read_s,
+                    connect_retries=CONNECT_RETRIES,
                 )
                 future = executor.submit(journal.decide, policy, obs, png)
                 calls += 1
@@ -599,7 +675,7 @@ def run(
                             reason=feedback.get("reason"),
                             skill="push_object",
                         )
-                    feedback["behavior_feedback"] = observer.observation()
+                    feedback["behavior_feedback"] = behavior_feedback()
                     write(root / f"skill_{obs.state_version:03}.json", feedback)
                     policy.feedback(action, feedback)
                     decisions.write(
@@ -629,6 +705,7 @@ def run(
                                 "yaw_rad": yaw(data),
                                 "simulation_time_s": float(data.time),
                                 "geometry": current_geometry(),
+                                "behavior_feedback": behavior_feedback(),
                             }
                         )
 
@@ -646,7 +723,10 @@ def run(
                     tool_result = navigation_tools.plan(current, action.target_xy_m)
                     if action.action == "navigate_to":
                         follower = navigation_tools.NavigationSession(
-                            current, action.target_xy_m, tool_result
+                            current,
+                            action.target_xy_m,
+                            tool_result,
+                            dynamic_geometry=crossing is not None,
                         )
                     write(root / f"tool_{obs.state_version:03}.json", tool_result)
                 if action.action == "request_skill":
@@ -742,7 +822,7 @@ def run(
                 tool_result["actual_base_xyz_m"] = data.qpos[:3].tolist()
                 tool_result["terminal_reason"] = reason if terminated else None
                 tool_result["simulation_time_s"] = float(data.time)
-                tool_result["behavior_feedback"] = observer.observation()
+                tool_result["behavior_feedback"] = behavior_feedback()
                 policy.feedback(action, tool_result)
                 decisions.write(
                     json.dumps(
@@ -802,6 +882,8 @@ def run(
             video.close()
         if error_diagnostic is not None:
             write(root / "failure_diagnostic.json", error_diagnostic)
+        if crossing is not None:
+            write(root / "human_motion_summary.json", crossing.summary())
         if np.isfinite(data.qpos).all() and np.isfinite(data.qvel).all():
             write(
                 root / "terminal_state.json",
@@ -858,16 +940,14 @@ def run(
         "reason": reason,
         "error_diagnostic": error_diagnostic,
         "calls_attempted": calls,
-        "api_calls_attempted": calls if origin == "openai_api" else 0,
+        "api_calls_attempted": calls if paid_origin else 0,
         "policy_origin": origin,
         "duration_s": float(data.time),
         "goal_distance_m": float(np.linalg.norm(data.qpos[:2] - fixture.GOAL))
         if np.isfinite(data.qpos[:2]).all()
         else None,
-        "live_actions_accepted": accepted if origin == "openai_api" else 0,
-        "autonomous_task_success_validated": origin == "openai_api"
-        and valid
-        and reason == "GOAL_REACHED",
+        "live_actions_accepted": accepted if paid_origin else 0,
+        "autonomous_task_success_validated": paid_origin and valid and reason == "GOAL_REACHED",
         "note": "Mock proves wiring only; not VLM evidence"
         if origin == "mock"
         else "Goal outcome under the recorded robot, task and budget; events are not task verdicts",

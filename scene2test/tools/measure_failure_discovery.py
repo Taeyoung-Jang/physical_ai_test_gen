@@ -26,12 +26,20 @@ def main(argv=None):
         help="opt-in evidence-backed temporal association rules",
     )
     parser.add_argument(
+        "--taxonomy-profile",
+        choices=("goal-behavior-v1", "goal-behavior-v2"),
+        default="goal-behavior-v1",
+        help="v2 adds verified static-human proximity",
+    )
+    parser.add_argument(
         "--with-memory", action="store_true", help="P1 time evidence and case export"
     )
     parser.add_argument(
         "--bundle-video", action="store_true", help="copy MP4; requires --with-memory"
     )
     args = parser.parse_args(argv)
+    if args.taxonomy_profile != "goal-behavior-v1" and not args.with_taxonomy:
+        parser.error("--taxonomy-profile requires --with-taxonomy")
     if args.bundle_video and not args.with_memory:
         parser.error("--bundle-video requires --with-memory")
     stamp = datetime.now(UTC).strftime("%Y%m%dT%H%M%S_%fZ")
@@ -50,10 +58,13 @@ def main(argv=None):
         records = [read_goal_run(r) for r in config.runs]
         rules = None
         if args.with_taxonomy:
-            from failure_client.evaluation.failure_taxonomy import RULES, classify_record
+            from failure_client.evaluation.failure_taxonomy import (
+                classify_record,
+                rules_for_profile,
+            )
 
-            records = [classify_record(r) for r in records]
-            rules = RULES
+            records = [classify_record(r, profile=args.taxonomy_profile) for r in records]
+            rules = rules_for_profile(args.taxonomy_profile)
         metrics = calculate_discovery_metrics(records, config.design, family_rules=rules)
         memory = None
         if args.with_memory:

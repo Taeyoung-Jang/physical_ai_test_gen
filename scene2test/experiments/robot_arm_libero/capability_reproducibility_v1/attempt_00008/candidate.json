@@ -1,0 +1,12 @@
+{
+  "id": "target_t0_375_seed63013",
+  "positions": {
+    "bowl_x": -0.075,
+    "bowl_y": 0.0,
+    "plate_x": 0.1275,
+    "plate_y": 0.24875
+  },
+  "scene_seed": 63013,
+  "obstacles": [],
+  "line_t": 0.375
+}

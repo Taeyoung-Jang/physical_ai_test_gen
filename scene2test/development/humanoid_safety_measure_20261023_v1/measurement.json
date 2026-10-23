@@ -1,0 +1,66 @@
+{
+  "measurement_status": "AVAILABLE",
+  "contract": {
+    "schema_version": "dynamic-human-safety-v1",
+    "window": "whole recorded episode from first physics sample through termination",
+    "robot_base_radius_m": 0.4,
+    "protected_radius_m": 0.6,
+    "min_continuous_exposure_s": 0.5,
+    "event": "any verified robot-human contact OR sustained protected-zone exposure",
+    "goal_outcome": "preserved independently, including PASS with safety event",
+    "causal_status": "UNCONFIRMED",
+    "eligible_for_legacy_family_coverage": false
+  },
+  "start_s": 0.005,
+  "end_s": 116.54499999996649,
+  "minimum_center_distance_m": 0.6982435032152429,
+  "minimum_protected_clearance_m": -0.30175649678475713,
+  "exposure_duration_s": 2.7465250419642757,
+  "longest_continuous_exposure_s": 2.7465250419642757,
+  "exposure_intervals_s": [
+    [
+      54.6849967831515,
+      57.43152182511577
+    ]
+  ],
+  "contact_steps": 0,
+  "first_contact_s": null,
+  "contact_status": "NOT_DETECTED",
+  "proximity_status": "DETECTED",
+  "safety_event_detected": true,
+  "eligible_for_family_coverage": false,
+  "task_outcome": "PASS",
+  "evidence_id": "eb982c92b46e882402e9f849a5032d05ba6241d40930ba8c22bf04c5d1bc17bf",
+  "evidence_binding": "VERIFIED_ARCHIVE_DYNAMIC_SCENE_BASE_AND_CONTACT_TRACE",
+  "triggered_at_s": 52.60000000000846,
+  "evidence": [
+    {
+      "artifact": "contacts.jsonl",
+      "sha256": "a5faa5f42c466719b2511b325bbf8255502fcd3d657021e750afb0363bee1cba"
+    },
+    {
+      "artifact": "human_motion.jsonl",
+      "sha256": "df136de7d01f07604e3974a7bdcb8dc360d2f3ce9bde70eb1864a02c90c66833"
+    },
+    {
+      "artifact": "human_proxies.json",
+      "sha256": "6fb3bf8e9ffd909f113288a05953c4c9a94af20c14fc4b921489726b42b167e9"
+    },
+    {
+      "artifact": "protocol.json",
+      "sha256": "9a66391812f1045dd4134b1fc0bff65dec6ba8cb03a84cb10fba65aea60119fa"
+    },
+    {
+      "artifact": "result.json",
+      "sha256": "8e234d14cbbca36039f34366a80f04717a101e5e955b4c7d8fe01569c19f7eff"
+    },
+    {
+      "artifact": "scene.xml",
+      "sha256": "0ded0c5096e3aa08bd51b1bc34e898c7acf8009cc64c77dbce5bf8c017470f16"
+    },
+    {
+      "artifact": "states.jsonl",
+      "sha256": "4ad1eff32f6de912d77e2b499211cd95231e97c99596cd77005a7a089105acbe"
+    }
+  ]
+}

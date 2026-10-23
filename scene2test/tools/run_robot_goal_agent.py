@@ -9,9 +9,12 @@ from pathlib import Path
 def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--live", action="store_true")
+    p.add_argument("--dry-run", action="store_true", help="print settings; no credentials/GPU/API")
     p.add_argument("--scene-config", type=Path, help="AFS scene JSON; environment fields only")
     p.add_argument("--enable-push", action="store_true", help="experimental short physical push")
     p.add_argument("--model", default="gpt-6-astra")
+    p.add_argument("--api-provider", choices=["openai", "openrouter"], default="openai")
+    p.add_argument("--service-tier", choices=["flex", "default"], default=None)
     p.add_argument("--max-calls", type=int, default=10)
     p.add_argument(
         "--navigation-completion",
@@ -47,6 +50,10 @@ def main():
         "--run-dir", type=Path, help="exact NEW output directory for durable campaign attempts"
     )
     args = p.parse_args()
+    if args.api_provider == "openrouter" and (
+        args.service_tier is not None or "/" not in args.model
+    ):
+        p.error("OpenRouter requires --model provider/model and no --service-tier")
     import json
 
     from robot_vlm.scene_config import validate_scene
@@ -76,7 +83,8 @@ def main():
         p.error(str(exc))
     print(
         f"TIMING: HTTP read={timing.read_s}s; runner deadline={timing.deadline_s}s; "
-        f"simulation={simulation_label} (includes inference waits); automatic retries=0",
+        f"simulation={simulation_label} (includes inference waits); "
+        "pre-send TCP retries<=2 (1s/2s backoff); ambiguous/post-send retries=0",
         flush=True,
     )
     print(f"NAVIGATION_COMPLETION={args.navigation_completion}; post-budget grace=0s", flush=True)
@@ -86,8 +94,30 @@ def main():
     print(
         f"NAVIGATION_FOLLOWER={FOLLOWER_VERSION}; EXECUTION_FEEDBACK={motion_version}", flush=True
     )
-    if args.live and not os.getenv("OPENAI_API_KEY"):
-        p.error("set OPENAI_API_KEY locally; do not put it in command arguments")
+    if args.dry_run:
+        print(
+            "PLAN="
+            + json.dumps(
+                {
+                    "api_provider": args.api_provider,
+                    "model": args.model,
+                    "service_tier": args.service_tier,
+                    "live_requested": args.live,
+                    "episodes": 1,
+                    "policy_call_upper_bound": args.max_calls,
+                    "api_call_upper_bound": args.max_calls if args.live else 0,
+                    "scene_config": config.model_dump(),
+                    "push_enabled": args.enable_push,
+                    "output_root": str(args.output_root),
+                    "credentials_checked": False,
+                    "executed": False,
+                }
+            )
+        )
+        return
+    key_env = "OPENROUTER_API_KEY" if args.api_provider == "openrouter" else "OPENAI_API_KEY"
+    if args.live and not os.getenv(key_env):
+        p.error(f"set {key_env} locally; do not put it in command arguments")
     os.environ.setdefault("MUJOCO_GL", "egl")
     os.environ["SIM_SERVER_ONNX_PROVIDER"] = "cuda"
     from robot_vlm.debug_log import exception_detail
@@ -102,9 +132,21 @@ def main():
     if args.enable_push:
         from robot_vlm.push_policy import PushMock, PushPolicy
 
-        policy = PushPolicy(model=args.model) if args.live else PushMock()
+        policy = (
+            PushPolicy(
+                model=args.model, service_tier=args.service_tier, api_provider=args.api_provider
+            )
+            if args.live
+            else PushMock()
+        )
     else:
-        policy = GoalPolicy(model=args.model) if args.live else GoalMock()
+        policy = (
+            GoalPolicy(
+                model=args.model, service_tier=args.service_tier, api_provider=args.api_provider
+            )
+            if args.live
+            else GoalMock()
+        )
     try:
         result = run(
             root,

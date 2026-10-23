@@ -1,0 +1,13 @@
+{
+  "schema_version": "autonomous-afs-budget-v1",
+  "selection_policy": "discovery-v1",
+  "max_attempts": 8,
+  "valid_rollout_target": 6,
+  "max_afs_requests": 8,
+  "max_attempts_per_axis": 1,
+  "max_repeats": 0,
+  "min_axis_change_fraction": 0.1,
+  "history_limit": 4,
+  "afs_model": "gpt-6-luna",
+  "afs_timeout_s": 300.0
+}

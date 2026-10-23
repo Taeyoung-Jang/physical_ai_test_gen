@@ -1,0 +1,64 @@
+{
+  "config": {
+    "schema_version": "robot-arm-libero-baseline-v1",
+    "purpose": "development_baseline_not_afs_comparison",
+    "upstream_root": "/workspace/g1_failure/src/Isaac-GR00T",
+    "python": "/workspace/g1_failure/src/physical_ai_test_gen/scene2test/experiments/robot_arm_libero/.venv-arm/bin/python",
+    "model_repository": "nvidia/GR00T-N1.7-LIBERO",
+    "model_path": "/workspace/g1_failure/src/physical_ai_test_gen/scene2test/experiments/robot_arm_libero/models/GR00T-N1.7-LIBERO/libero_spatial",
+    "env_name": "libero_sim/pick_up_the_black_bowl_from_table_center_and_place_it_on_the_plate",
+    "suite": "libero_spatial",
+    "seeds": [
+      41001,
+      41002
+    ],
+    "max_episode_steps": 300,
+    "n_action_steps": 8,
+    "n_envs": 1,
+    "environment_changes": [],
+    "sampling": "upstream seeded reset; not official fixed-init-state benchmark protocol",
+    "afs_requests": 0,
+    "model_revision": "2ea293aa20ba7cf5bbf3ba17a5fbcb1a01cbfe21",
+    "libero_config_path": "/workspace/g1_failure/src/physical_ai_test_gen/scene2test/experiments/robot_arm_libero/libero_config"
+  },
+  "source_hashes": {
+    "/workspace/g1_failure/src/Isaac-GR00T/gr00t/eval/rollout_policy.py": "588af9189bd2f9b5acf964e60a30c84bc2445843f7617d012bc5ef410706b13a",
+    "/workspace/g1_failure/src/Isaac-GR00T/gr00t/eval/_horizon_contract.py": "8ac5b52a4133d5957ce0fae28edc71d23ab8f05c8466936c11d873fd59e0d43a",
+    "/workspace/g1_failure/src/Isaac-GR00T/gr00t/eval/sim/LIBERO/libero_env.py": "49a8017517f1f21b7c21bf5f599244189720c83785763e4ab05a3cd0292cf5b1",
+    "/workspace/g1_failure/src/Isaac-GR00T/gr00t/policy/gr00t_policy.py": "ad1183a3ce1ebed6cace4a9cb8c5a123e823a0760ebf46f3694639a5ad1521ec",
+    "/workspace/g1_failure/src/Isaac-GR00T/gr00t/eval/sim/wrapper/multistep_wrapper.py": "8b2e7b8dea5399c1e1b51e9d9419aa32309aa9b46aaad88223d8dae6b3e56237",
+    "/workspace/g1_failure/src/Isaac-GR00T/external_dependencies/LIBERO/libero/libero/bddl_files/libero_spatial/pick_up_the_black_bowl_from_table_center_and_place_it_on_the_plate.bddl": "5e19880ebc844f86b89f63b172aab0b7a89f85b6e6955891f544f0ea7d0795d5",
+    "/workspace/g1_failure/src/physical_ai_test_gen/scene2test/tools/run_robot_arm_baseline.py": "42a48819b38474061c6907ee4f55c06f831924624bd36aa086e2acada03df361",
+    "/workspace/g1_failure/src/physical_ai_test_gen/scene2test/experiments/robot_arm_libero/libero_config/config.yaml": "fb95626d670656b97b3f03ecdd4dbd23df7c3bf3b598c62c1c0d143ad6deb614"
+  },
+  "missing_sources": [],
+  "commands": [
+    [
+      "/workspace/g1_failure/src/physical_ai_test_gen/scene2test/experiments/robot_arm_libero/.venv-arm/bin/python",
+      "/workspace/g1_failure/src/physical_ai_test_gen/scene2test/tools/run_robot_arm_baseline.py",
+      "_worker",
+      "--config",
+      "/workspace/g1_failure/src/physical_ai_test_gen/scene2test/experiments/robot_arm_libero/baseline_v1/config.json",
+      "--output",
+      "/workspace/g1_failure/src/physical_ai_test_gen/scene2test/experiments/robot_arm_libero/baseline_v1",
+      "--index",
+      "0"
+    ],
+    [
+      "/workspace/g1_failure/src/physical_ai_test_gen/scene2test/experiments/robot_arm_libero/.venv-arm/bin/python",
+      "/workspace/g1_failure/src/physical_ai_test_gen/scene2test/tools/run_robot_arm_baseline.py",
+      "_worker",
+      "--config",
+      "/workspace/g1_failure/src/physical_ai_test_gen/scene2test/experiments/robot_arm_libero/baseline_v1/config.json",
+      "--output",
+      "/workspace/g1_failure/src/physical_ai_test_gen/scene2test/experiments/robot_arm_libero/baseline_v1",
+      "--index",
+      "1"
+    ]
+  ],
+  "episodes": 2,
+  "robot_step_upper_bound": 600,
+  "afs_connected": false,
+  "outcomes": null,
+  "note": "Seeded-reset development baseline, not a published benchmark reproduction."
+}

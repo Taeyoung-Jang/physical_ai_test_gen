@@ -1,0 +1,713 @@
+{
+  "schema_version": "clear-path-robot-audit-v1",
+  "robot_actuators": 29,
+  "baseline_nq_nv": [
+    36,
+    35
+  ],
+  "combined_nq_nv": [
+    43,
+    41
+  ],
+  "robot_joint_identity_preserved": true,
+  "gait_observation_equal": true,
+  "gait_observation_size": 86,
+  "joint_mapping": [
+    {
+      "actuator": "left_hip_pitch_joint",
+      "joint": "left_hip_pitch_joint",
+      "qpos_adr": 7,
+      "dof_adr": 6,
+      "range_rad": [
+        -2.5307,
+        2.8798
+      ],
+      "force_range": [
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "actuator": "left_hip_roll_joint",
+      "joint": "left_hip_roll_joint",
+      "qpos_adr": 8,
+      "dof_adr": 7,
+      "range_rad": [
+        -0.5236,
+        2.9671
+      ],
+      "force_range": [
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "actuator": "left_hip_yaw_joint",
+      "joint": "left_hip_yaw_joint",
+      "qpos_adr": 9,
+      "dof_adr": 8,
+      "range_rad": [
+        -2.7576,
+        2.7576
+      ],
+      "force_range": [
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "actuator": "left_knee_joint",
+      "joint": "left_knee_joint",
+      "qpos_adr": 10,
+      "dof_adr": 9,
+      "range_rad": [
+        -0.087267,
+        2.8798
+      ],
+      "force_range": [
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "actuator": "left_ankle_pitch_joint",
+      "joint": "left_ankle_pitch_joint",
+      "qpos_adr": 11,
+      "dof_adr": 10,
+      "range_rad": [
+        -0.87267,
+        0.5236
+      ],
+      "force_range": [
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "actuator": "left_ankle_roll_joint",
+      "joint": "left_ankle_roll_joint",
+      "qpos_adr": 12,
+      "dof_adr": 11,
+      "range_rad": [
+        -0.2618,
+        0.2618
+      ],
+      "force_range": [
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "actuator": "right_hip_pitch_joint",
+      "joint": "right_hip_pitch_joint",
+      "qpos_adr": 13,
+      "dof_adr": 12,
+      "range_rad": [
+        -2.5307,
+        2.8798
+      ],
+      "force_range": [
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "actuator": "right_hip_roll_joint",
+      "joint": "right_hip_roll_joint",
+      "qpos_adr": 14,
+      "dof_adr": 13,
+      "range_rad": [
+        -2.9671,
+        0.5236
+      ],
+      "force_range": [
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "actuator": "right_hip_yaw_joint",
+      "joint": "right_hip_yaw_joint",
+      "qpos_adr": 15,
+      "dof_adr": 14,
+      "range_rad": [
+        -2.7576,
+        2.7576
+      ],
+      "force_range": [
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "actuator": "right_knee_joint",
+      "joint": "right_knee_joint",
+      "qpos_adr": 16,
+      "dof_adr": 15,
+      "range_rad": [
+        -0.087267,
+        2.8798
+      ],
+      "force_range": [
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "actuator": "right_ankle_pitch_joint",
+      "joint": "right_ankle_pitch_joint",
+      "qpos_adr": 17,
+      "dof_adr": 16,
+      "range_rad": [
+        -0.87267,
+        0.5236
+      ],
+      "force_range": [
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "actuator": "right_ankle_roll_joint",
+      "joint": "right_ankle_roll_joint",
+      "qpos_adr": 18,
+      "dof_adr": 17,
+      "range_rad": [
+        -0.2618,
+        0.2618
+      ],
+      "force_range": [
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "actuator": "waist_yaw_joint",
+      "joint": "waist_yaw_joint",
+      "qpos_adr": 19,
+      "dof_adr": 18,
+      "range_rad": [
+        -2.618,
+        2.618
+      ],
+      "force_range": [
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "actuator": "waist_roll_joint",
+      "joint": "waist_roll_joint",
+      "qpos_adr": 20,
+      "dof_adr": 19,
+      "range_rad": [
+        -0.52,
+        0.52
+      ],
+      "force_range": [
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "actuator": "waist_pitch_joint",
+      "joint": "waist_pitch_joint",
+      "qpos_adr": 21,
+      "dof_adr": 20,
+      "range_rad": [
+        -0.52,
+        0.52
+      ],
+      "force_range": [
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "actuator": "left_shoulder_pitch_joint",
+      "joint": "left_shoulder_pitch_joint",
+      "qpos_adr": 22,
+      "dof_adr": 21,
+      "range_rad": [
+        -3.0892,
+        2.6704
+      ],
+      "force_range": [
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "actuator": "left_shoulder_roll_joint",
+      "joint": "left_shoulder_roll_joint",
+      "qpos_adr": 23,
+      "dof_adr": 22,
+      "range_rad": [
+        -1.5882,
+        2.2515
+      ],
+      "force_range": [
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "actuator": "left_shoulder_yaw_joint",
+      "joint": "left_shoulder_yaw_joint",
+      "qpos_adr": 24,
+      "dof_adr": 23,
+      "range_rad": [
+        -2.618,
+        2.618
+      ],
+      "force_range": [
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "actuator": "left_elbow_joint",
+      "joint": "left_elbow_joint",
+      "qpos_adr": 25,
+      "dof_adr": 24,
+      "range_rad": [
+        -1.0472,
+        2.0944
+      ],
+      "force_range": [
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "actuator": "left_wrist_roll_joint",
+      "joint": "left_wrist_roll_joint",
+      "qpos_adr": 26,
+      "dof_adr": 25,
+      "range_rad": [
+        -1.97222,
+        1.97222
+      ],
+      "force_range": [
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "actuator": "left_wrist_pitch_joint",
+      "joint": "left_wrist_pitch_joint",
+      "qpos_adr": 27,
+      "dof_adr": 26,
+      "range_rad": [
+        -1.61443,
+        1.61443
+      ],
+      "force_range": [
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "actuator": "left_wrist_yaw_joint",
+      "joint": "left_wrist_yaw_joint",
+      "qpos_adr": 28,
+      "dof_adr": 27,
+      "range_rad": [
+        -1.61443,
+        1.61443
+      ],
+      "force_range": [
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "actuator": "right_shoulder_pitch_joint",
+      "joint": "right_shoulder_pitch_joint",
+      "qpos_adr": 29,
+      "dof_adr": 28,
+      "range_rad": [
+        -3.0892,
+        2.6704
+      ],
+      "force_range": [
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "actuator": "right_shoulder_roll_joint",
+      "joint": "right_shoulder_roll_joint",
+      "qpos_adr": 30,
+      "dof_adr": 29,
+      "range_rad": [
+        -2.2515,
+        1.5882
+      ],
+      "force_range": [
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "actuator": "right_shoulder_yaw_joint",
+      "joint": "right_shoulder_yaw_joint",
+      "qpos_adr": 31,
+      "dof_adr": 30,
+      "range_rad": [
+        -2.618,
+        2.618
+      ],
+      "force_range": [
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "actuator": "right_elbow_joint",
+      "joint": "right_elbow_joint",
+      "qpos_adr": 32,
+      "dof_adr": 31,
+      "range_rad": [
+        -1.0472,
+        2.0944
+      ],
+      "force_range": [
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "actuator": "right_wrist_roll_joint",
+      "joint": "right_wrist_roll_joint",
+      "qpos_adr": 33,
+      "dof_adr": 32,
+      "range_rad": [
+        -1.97222,
+        1.97222
+      ],
+      "force_range": [
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "actuator": "right_wrist_pitch_joint",
+      "joint": "right_wrist_pitch_joint",
+      "qpos_adr": 34,
+      "dof_adr": 33,
+      "range_rad": [
+        -1.61443,
+        1.61443
+      ],
+      "force_range": [
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "actuator": "right_wrist_yaw_joint",
+      "joint": "right_wrist_yaw_joint",
+      "qpos_adr": 35,
+      "dof_adr": 34,
+      "range_rad": [
+        -1.61443,
+        1.61443
+      ],
+      "force_range": [
+        0.0,
+        0.0
+      ]
+    }
+  ],
+  "palms": [
+    {
+      "side": "left",
+      "arm_joints": [
+        {
+          "actuator": "left_shoulder_pitch_joint",
+          "joint": "left_shoulder_pitch_joint",
+          "qpos_adr": 22,
+          "dof_adr": 21,
+          "range_rad": [
+            -3.0892,
+            2.6704
+          ],
+          "force_range": [
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "actuator": "left_shoulder_roll_joint",
+          "joint": "left_shoulder_roll_joint",
+          "qpos_adr": 23,
+          "dof_adr": 22,
+          "range_rad": [
+            -1.5882,
+            2.2515
+          ],
+          "force_range": [
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "actuator": "left_shoulder_yaw_joint",
+          "joint": "left_shoulder_yaw_joint",
+          "qpos_adr": 24,
+          "dof_adr": 23,
+          "range_rad": [
+            -2.618,
+            2.618
+          ],
+          "force_range": [
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "actuator": "left_elbow_joint",
+          "joint": "left_elbow_joint",
+          "qpos_adr": 25,
+          "dof_adr": 24,
+          "range_rad": [
+            -1.0472,
+            2.0944
+          ],
+          "force_range": [
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "actuator": "left_wrist_roll_joint",
+          "joint": "left_wrist_roll_joint",
+          "qpos_adr": 26,
+          "dof_adr": 25,
+          "range_rad": [
+            -1.97222,
+            1.97222
+          ],
+          "force_range": [
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "actuator": "left_wrist_pitch_joint",
+          "joint": "left_wrist_pitch_joint",
+          "qpos_adr": 27,
+          "dof_adr": 26,
+          "range_rad": [
+            -1.61443,
+            1.61443
+          ],
+          "force_range": [
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "actuator": "left_wrist_yaw_joint",
+          "joint": "left_wrist_yaw_joint",
+          "qpos_adr": 28,
+          "dof_adr": 27,
+          "range_rad": [
+            -1.61443,
+            1.61443
+          ],
+          "force_range": [
+            0.0,
+            0.0
+          ]
+        }
+      ],
+      "palm_collision_geom_ids": [
+        63
+      ],
+      "push_site_world_m": [
+        1.2412748587608078,
+        0.151653468368891,
+        0.8882306773502223
+      ],
+      "position_jacobian_rank_at_initial_pose": 3
+    },
+    {
+      "side": "right",
+      "arm_joints": [
+        {
+          "actuator": "right_shoulder_pitch_joint",
+          "joint": "right_shoulder_pitch_joint",
+          "qpos_adr": 29,
+          "dof_adr": 28,
+          "range_rad": [
+            -3.0892,
+            2.6704
+          ],
+          "force_range": [
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "actuator": "right_shoulder_roll_joint",
+          "joint": "right_shoulder_roll_joint",
+          "qpos_adr": 30,
+          "dof_adr": 29,
+          "range_rad": [
+            -2.2515,
+            1.5882
+          ],
+          "force_range": [
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "actuator": "right_shoulder_yaw_joint",
+          "joint": "right_shoulder_yaw_joint",
+          "qpos_adr": 31,
+          "dof_adr": 30,
+          "range_rad": [
+            -2.618,
+            2.618
+          ],
+          "force_range": [
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "actuator": "right_elbow_joint",
+          "joint": "right_elbow_joint",
+          "qpos_adr": 32,
+          "dof_adr": 31,
+          "range_rad": [
+            -1.0472,
+            2.0944
+          ],
+          "force_range": [
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "actuator": "right_wrist_roll_joint",
+          "joint": "right_wrist_roll_joint",
+          "qpos_adr": 33,
+          "dof_adr": 32,
+          "range_rad": [
+            -1.97222,
+            1.97222
+          ],
+          "force_range": [
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "actuator": "right_wrist_pitch_joint",
+          "joint": "right_wrist_pitch_joint",
+          "qpos_adr": 34,
+          "dof_adr": 33,
+          "range_rad": [
+            -1.61443,
+            1.61443
+          ],
+          "force_range": [
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "actuator": "right_wrist_yaw_joint",
+          "joint": "right_wrist_yaw_joint",
+          "qpos_adr": 35,
+          "dof_adr": 34,
+          "range_rad": [
+            -1.61443,
+            1.61443
+          ],
+          "force_range": [
+            0.0,
+            0.0
+          ]
+        }
+      ],
+      "palm_collision_geom_ids": [
+        93
+      ],
+      "push_site_world_m": [
+        1.2412748587608078,
+        -0.15164346836889098,
+        0.8882306773502223
+      ],
+      "position_jacobian_rank_at_initial_pose": 3
+    }
+  ],
+  "active_finger_joints": [],
+  "walk_onnx_present": true,
+  "source_sha256": {
+    "/workspace/g1_failure/src/GR00T-WholeBodyControl/decoupled_wbc/sim2mujoco/resources/robots/g1/g1_gear_wbc.xml": "3b0b5a1c8299fda85cf328cc2a8df53ccc765ce37f20030175295049947b1a19",
+    "/workspace/g1_failure/src/GR00T-WholeBodyControl/decoupled_wbc/sim2mujoco/resources/robots/g1/g1_gear_wbc.yaml": "31226a224ca8450e89d9ce17d5cb31c052192a9cbfedc8d145f1cb95627ac7a2",
+    "/workspace/g1_failure/src/GR00T-WholeBodyControl/decoupled_wbc/sim2mujoco/resources/robots/g1/meshes/pelvis.STL": "5ba6bbc888e630550140d3c26763f10206da8c8bd30ed886b8ede41c61f57a31",
+    "/workspace/g1_failure/src/GR00T-WholeBodyControl/decoupled_wbc/sim2mujoco/resources/robots/g1/meshes/pelvis_contour_link.STL": "5cc5c2c7a312329e3feeb2b03d3fc09fc29705bd01864f6767e51be959662420",
+    "/workspace/g1_failure/src/GR00T-WholeBodyControl/decoupled_wbc/sim2mujoco/resources/robots/g1/meshes/left_hip_pitch_link.STL": "4725168105ee768ee31638ef22b53f6be2d7641bfd7cfefe803488d884776fa4",
+    "/workspace/g1_failure/src/GR00T-WholeBodyControl/decoupled_wbc/sim2mujoco/resources/robots/g1/meshes/left_hip_roll_link.STL": "91f25922ee8a7c3152790051bebad17b4d9cd243569c38fe340285ff93a97acf",
+    "/workspace/g1_failure/src/GR00T-WholeBodyControl/decoupled_wbc/sim2mujoco/resources/robots/g1/meshes/left_hip_yaw_link.STL": "a16d88aa6ddac8083aa7ad55ed317bea44b1fa003d314fba88965b7ed0f3b55b",
+    "/workspace/g1_failure/src/GR00T-WholeBodyControl/decoupled_wbc/sim2mujoco/resources/robots/g1/meshes/left_knee_link.STL": "8d92b9e3d3a636761150bb8025e32514c4602b91c7028d523ee42b3e632de477",
+    "/workspace/g1_failure/src/GR00T-WholeBodyControl/decoupled_wbc/sim2mujoco/resources/robots/g1/meshes/left_ankle_pitch_link.STL": "d49e3abc6f5b12e532062cd575b87b5ef40cd2a3fc18f54a1ca5bba4f773d51d",
+    "/workspace/g1_failure/src/GR00T-WholeBodyControl/decoupled_wbc/sim2mujoco/resources/robots/g1/meshes/left_ankle_roll_link.STL": "c4092af943141d4d9f74232f3cfa345afc6565f46a077793b8ae0e68b39dc33f",
+    "/workspace/g1_failure/src/GR00T-WholeBodyControl/decoupled_wbc/sim2mujoco/resources/robots/g1/meshes/right_hip_pitch_link.STL": "e4f3c99d7f4a7d34eadbef9461fc66e3486cb5442db1ec50c86317d459f1a9c6",
+    "/workspace/g1_failure/src/GR00T-WholeBodyControl/decoupled_wbc/sim2mujoco/resources/robots/g1/meshes/right_hip_roll_link.STL": "4c254ef66a356f492947f360dd931965477b631e3fcc841f91ccc46d945d54f6",
+    "/workspace/g1_failure/src/GR00T-WholeBodyControl/decoupled_wbc/sim2mujoco/resources/robots/g1/meshes/right_hip_yaw_link.STL": "e479c2936ca2057e9eb2f7dff6c189b7419d7b8484dea0b298cbb36a2a6aa668",
+    "/workspace/g1_failure/src/GR00T-WholeBodyControl/decoupled_wbc/sim2mujoco/resources/robots/g1/meshes/right_knee_link.STL": "63c4008449c9bbe701a6e2b557b7a252e90cf3a5abcf54cee46862b9a69f8ec8",
+    "/workspace/g1_failure/src/GR00T-WholeBodyControl/decoupled_wbc/sim2mujoco/resources/robots/g1/meshes/right_ankle_pitch_link.STL": "15be426539ec1be70246d4d82a168806db64a41301af8b35c197a33348c787a9",
+    "/workspace/g1_failure/src/GR00T-WholeBodyControl/decoupled_wbc/sim2mujoco/resources/robots/g1/meshes/right_ankle_roll_link.STL": "4b66222ea56653e627711b56d0a8949b4920da5df091da0ceb343f54e884e3a5",
+    "/workspace/g1_failure/src/GR00T-WholeBodyControl/decoupled_wbc/sim2mujoco/resources/robots/g1/meshes/waist_yaw_link_rev_1_0.STL": "ec6db442b11f25eed898b5add07940c85d804f300de24dcbd264ccd8be7d554c",
+    "/workspace/g1_failure/src/GR00T-WholeBodyControl/decoupled_wbc/sim2mujoco/resources/robots/g1/meshes/waist_roll_link_rev_1_0.STL": "b67c347a05abc3e8ddae600d98a082bee273bb39f8e651647708b0a7140a8a97",
+    "/workspace/g1_failure/src/GR00T-WholeBodyControl/decoupled_wbc/sim2mujoco/resources/robots/g1/meshes/torso_link_rev_1_0.STL": "11ddb46f2098efbbd8816b1d65893632d8e78be936376c7cdcd6771899ccc723",
+    "/workspace/g1_failure/src/GR00T-WholeBodyControl/decoupled_wbc/sim2mujoco/resources/robots/g1/meshes/logo_link.STL": "8571a0a19bc4916fa55f91449f51d5fdefd751000054865a842449429d5f155b",
+    "/workspace/g1_failure/src/GR00T-WholeBodyControl/decoupled_wbc/sim2mujoco/resources/robots/g1/meshes/head_link.STL": "005fb67fbd3eff94aa8bf4a6e83238174e9f91b6721f7111594322f223724411",
+    "/workspace/g1_failure/src/GR00T-WholeBodyControl/decoupled_wbc/sim2mujoco/resources/robots/g1/meshes/left_shoulder_pitch_link.STL": "f0d1cfd02fcf0d42f95e678eeca33da3afbcc366ffba5c052847773ec4f31d52",
+    "/workspace/g1_failure/src/GR00T-WholeBodyControl/decoupled_wbc/sim2mujoco/resources/robots/g1/meshes/left_shoulder_roll_link.STL": "fb9df21687773522598dc384f1a2945c7519f11cbc8bd372a49170316d6eee88",
+    "/workspace/g1_failure/src/GR00T-WholeBodyControl/decoupled_wbc/sim2mujoco/resources/robots/g1/meshes/left_shoulder_yaw_link.STL": "1aa97e9748e924336567992181f78c7cd0652fd52a4afcca3df6b2ef6f9e712e",
+    "/workspace/g1_failure/src/GR00T-WholeBodyControl/decoupled_wbc/sim2mujoco/resources/robots/g1/meshes/left_elbow_link.STL": "fa752198accd104d5c4c3a01382e45165b944fbbc5acce085059223324e5bed3",
+    "/workspace/g1_failure/src/GR00T-WholeBodyControl/decoupled_wbc/sim2mujoco/resources/robots/g1/meshes/left_wrist_roll_link.STL": "edc387c9a0ba8c2237e9b296d32531426fabeb6f53e58df45c76106bca74148c",
+    "/workspace/g1_failure/src/GR00T-WholeBodyControl/decoupled_wbc/sim2mujoco/resources/robots/g1/meshes/left_wrist_pitch_link.STL": "b251d8e05047f695d0f536cd78c11973cfa4e78d08cfe82759336cc3471de3a9",
+    "/workspace/g1_failure/src/GR00T-WholeBodyControl/decoupled_wbc/sim2mujoco/resources/robots/g1/meshes/left_wrist_yaw_link.STL": "83f8fb3a726bf9613d65dd14f0f447cb918c3c95b3938042a0c9c09749267d3b",
+    "/workspace/g1_failure/src/GR00T-WholeBodyControl/decoupled_wbc/sim2mujoco/resources/robots/g1/meshes/left_hand_palm_link.STL": "23a486b75bd78a9bf03cec25d84d87f97f3dae038cf21a743b6d469b337e4004",
+    "/workspace/g1_failure/src/GR00T-WholeBodyControl/decoupled_wbc/sim2mujoco/resources/robots/g1/meshes/left_hand_thumb_0_link.STL": "a90c721661c0622685488a3c74d1e122c7da89242d3a1daef75edb83422d05e0",
+    "/workspace/g1_failure/src/GR00T-WholeBodyControl/decoupled_wbc/sim2mujoco/resources/robots/g1/meshes/left_hand_thumb_1_link.STL": "445c54a45bc13ce36001556f66bc0f49c83cb40321205ae4d676bb2874325684",
+    "/workspace/g1_failure/src/GR00T-WholeBodyControl/decoupled_wbc/sim2mujoco/resources/robots/g1/meshes/left_hand_thumb_2_link.STL": "3d8dbe5085acfc213d21aa8b0782e89cd79084e9678f3a85fc7b04a86b029db5",
+    "/workspace/g1_failure/src/GR00T-WholeBodyControl/decoupled_wbc/sim2mujoco/resources/robots/g1/meshes/left_hand_middle_0_link.STL": "6b35f2f77211d5a366f0b9a4e47c4ee35e536731266f1a34e9efa12db579b892",
+    "/workspace/g1_failure/src/GR00T-WholeBodyControl/decoupled_wbc/sim2mujoco/resources/robots/g1/meshes/left_hand_middle_1_link.STL": "9e315ebc8a7a0cb98e033985b586b20d81cf8aa761181ae61ce56fcb14077a06",
+    "/workspace/g1_failure/src/GR00T-WholeBodyControl/decoupled_wbc/sim2mujoco/resources/robots/g1/meshes/left_hand_index_0_link.STL": "6b35f2f77211d5a366f0b9a4e47c4ee35e536731266f1a34e9efa12db579b892",
+    "/workspace/g1_failure/src/GR00T-WholeBodyControl/decoupled_wbc/sim2mujoco/resources/robots/g1/meshes/left_hand_index_1_link.STL": "9e315ebc8a7a0cb98e033985b586b20d81cf8aa761181ae61ce56fcb14077a06",
+    "/workspace/g1_failure/src/GR00T-WholeBodyControl/decoupled_wbc/sim2mujoco/resources/robots/g1/meshes/right_shoulder_pitch_link.STL": "24cdb387e0128dfe602770a81c56cdce3a0181d34d039a11d1aaf8819b7b8c02",
+    "/workspace/g1_failure/src/GR00T-WholeBodyControl/decoupled_wbc/sim2mujoco/resources/robots/g1/meshes/right_shoulder_roll_link.STL": "962b97c48f9ce9e8399f45dd9522e0865d19aa9fd299406b2d475a8fc4a53e81",
+    "/workspace/g1_failure/src/GR00T-WholeBodyControl/decoupled_wbc/sim2mujoco/resources/robots/g1/meshes/right_shoulder_yaw_link.STL": "a0b76489271da0c72461a344c9ffb0f0c6e64f019ea5014c1624886c442a2fe5",
+    "/workspace/g1_failure/src/GR00T-WholeBodyControl/decoupled_wbc/sim2mujoco/resources/robots/g1/meshes/right_elbow_link.STL": "1be925d7aa268bb8fddf5362b9173066890c7d32092c05638608126e59d1e2ab",
+    "/workspace/g1_failure/src/GR00T-WholeBodyControl/decoupled_wbc/sim2mujoco/resources/robots/g1/meshes/right_wrist_roll_link.STL": "a7ee9212ff5b94d6cb7f52bb1bbf3f352194d5b598acff74f4c77d340c5b344f",
+    "/workspace/g1_failure/src/GR00T-WholeBodyControl/decoupled_wbc/sim2mujoco/resources/robots/g1/meshes/right_wrist_pitch_link.STL": "d22f8f3b3127f15a63e5be1ee273cd5075786c3142f1c3d9f76cbf43d2a26477",
+    "/workspace/g1_failure/src/GR00T-WholeBodyControl/decoupled_wbc/sim2mujoco/resources/robots/g1/meshes/right_wrist_yaw_link.STL": "bc9dece2d12509707e0057ba2e48df8f3d56db0c79410212963a25e8a50f61a6",
+    "/workspace/g1_failure/src/GR00T-WholeBodyControl/decoupled_wbc/sim2mujoco/resources/robots/g1/meshes/right_hand_palm_link.STL": "86c0b231cc44477d64a6493e5a427ba16617a00738112dd187c652675b086fb9",
+    "/workspace/g1_failure/src/GR00T-WholeBodyControl/decoupled_wbc/sim2mujoco/resources/robots/g1/meshes/right_hand_thumb_0_link.STL": "544298d0ea1088f5b276a10cc6a6a9e533efdd91594955fdc956c46211d07f83",
+    "/workspace/g1_failure/src/GR00T-WholeBodyControl/decoupled_wbc/sim2mujoco/resources/robots/g1/meshes/right_hand_thumb_1_link.STL": "0a9a820da8dd10f298778b714f1364216e8a5976f4fd3a05689ea26327d44bf6",
+    "/workspace/g1_failure/src/GR00T-WholeBodyControl/decoupled_wbc/sim2mujoco/resources/robots/g1/meshes/right_hand_thumb_2_link.STL": "3f1bfb37668e8f61801c8d25f171fa1949e08666be86c67acad7e0079937cc45",
+    "/workspace/g1_failure/src/GR00T-WholeBodyControl/decoupled_wbc/sim2mujoco/resources/robots/g1/meshes/right_hand_middle_0_link.STL": "12ab4300c95e437e834f9aef772b3b431c671bf34338930b52ad11aef73bbd0d",
+    "/workspace/g1_failure/src/GR00T-WholeBodyControl/decoupled_wbc/sim2mujoco/resources/robots/g1/meshes/right_hand_middle_1_link.STL": "c9c34efce4563cacdcfd29fc838a982976d40f5442c71219811dcbbf3923a33d",
+    "/workspace/g1_failure/src/GR00T-WholeBodyControl/decoupled_wbc/sim2mujoco/resources/robots/g1/meshes/right_hand_index_0_link.STL": "12ab4300c95e437e834f9aef772b3b431c671bf34338930b52ad11aef73bbd0d",
+    "/workspace/g1_failure/src/GR00T-WholeBodyControl/decoupled_wbc/sim2mujoco/resources/robots/g1/meshes/right_hand_index_1_link.STL": "c9c34efce4563cacdcfd29fc838a982976d40f5442c71219811dcbbf3923a33d",
+    "/workspace/g1_failure/src/GR00T-WholeBodyControl/decoupled_wbc/sim2mujoco/resources/robots/g1/policy/GR00T-WholeBodyControl-Walk.onnx": "7c82255b6905ffcc4468fa7f8ddcf7b70db168cf1042107ccab887cb6a8e5407"
+  },
+  "push_executor_available": false,
+  "gpu_policy_executed": false,
+  "decision": "Palm/arm target adapter candidate; P2 physical validation required.",
+  "limitations": [
+    "Current legacy controller holds 14 upper joints at zero",
+    "No grasp executor; finger meshes are fixed in this asset",
+    "Jacobian rank does not prove reachability, force control or stable pushing"
+  ]
+}

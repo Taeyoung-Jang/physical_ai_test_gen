@@ -11,7 +11,11 @@ from jsonschema import validate
 
 from clear_path.contracts import GoalRegionFixture
 from failure_client.evaluation.goal_run_reader import read_json
-from failure_client.experiments.afs_autonomous import AutonomousAFS, development_plan
+from failure_client.experiments.afs_autonomous import (
+    AutonomousAFS,
+    development_plan,
+    proposal_request_digest,
+)
 from failure_client.experiments.local_goal_adapter import atomic_json
 from failure_client.methods.autonomous_feedback import SearchBudget, selected_probe, selection
 from llm_afs.behavior_request import request
@@ -77,6 +81,78 @@ def setup(tmp_path, *, budget=None, robot=None, proposer=None, v4=False):
 
 def reload(engine, robot, proposer):
     return AutonomousAFS(engine.root, runner=robot, proposer=proposer, fingerprint_fn=fingerprint)
+
+
+def test_discovery_skips_local_slots_and_stops_at_valid_target(tmp_path):
+    budget = SearchBudget(
+        selection_policy="discovery-v1",
+        max_attempts=6,
+        valid_rollout_target=3,
+        max_attempts_per_axis=1,
+    )
+    engine, robot, proposer = setup(tmp_path, budget=budget, v4=True)
+    summary = engine.run(live=True)
+    assert summary["status"] == "COMPLETE"
+    assert summary["reason"] == "valid_rollout_target_complete"
+    assert len(robot.calls) == len(proposer.calls) == summary["valid"] == 3
+    assert summary["scheduler"]["repeats"] == 0
+    attempts = engine.state["attempts"]
+    assert len({a["candidate"]["axis"] for a in attempts}) == 3
+    assert all(a["candidate"]["stage"] == "discovery" for a in attempts)
+    for body in proposer.calls:
+        assert "EVERY slot" in body["instructions"]
+        ctx = json.loads(body["input"][0]["content"])["context"]
+        assert ctx["development_search"]["slot"] == "hypothesis"
+    before = len(robot.calls), len(proposer.calls)
+    assert reload(engine, robot, proposer).run(live=True)["status"] == "COMPLETE"
+    assert before == (len(robot.calls), len(proposer.calls))
+    assert summary["new_only_discovery_metrics"]["groups"][0]["valid_rollouts"] == 3
+
+
+def test_discovery_exclusion_consumes_cap_not_valid_target(tmp_path):
+    budget = SearchBudget(selection_policy="discovery-v1", max_attempts=2, valid_rollout_target=2)
+    engine, robot, proposer = setup(tmp_path, budget=budget, robot=Robot(excluded=True))
+    result = engine.run(live=True)
+    assert result["status"] == "NEEDS_ATTENTION" and result["valid"] == 0
+    robot.excluded = False
+    result = reload(engine, robot, proposer).run(live=True, continue_after_exclusion=True)
+    assert result["status"] == "TARGET_NOT_REACHED"
+    assert result["valid"] == 1 and result["excluded"] == 1
+    assert len(robot.calls) == 2
+    assert reload(engine, robot, proposer).run(live=True)["status"] == "TARGET_NOT_REACHED"
+    assert len(robot.calls) == 2
+
+
+def test_discovery_rejects_small_change_without_retry(tmp_path):
+    engine, robot, proposer = setup(tmp_path, budget=SearchBudget(selection_policy="discovery-v1"))
+    _, ctx = engine._selection()
+    body = request(ctx, "synthetic", selection_policy="autonomous_development_endpoint")
+    from llm_afs.provider import extract_proposal
+
+    raw = extract_proposal(proposer(body))
+    axis = raw["spaces"][0]["axis"]
+    base = ctx["latest"]["parameters"][axis]
+    lo, hi = ctx["allowed_axes"][axis]
+    raw["spaces"][0].update(low=base + (hi - lo) * 0.01, high=base + (hi - lo) * 0.02)
+    with pytest.raises(ValueError, match="no novel"):
+        selected_probe(raw, ctx, engine._memory())
+    assert not robot.calls
+
+
+def test_discovery_large_budget_is_opt_in():
+    assert (
+        SearchBudget(
+            selection_policy="discovery-v1",
+            max_attempts=24,
+            max_afs_requests=24,
+            valid_rollout_target=20,
+        ).max_attempts
+        == 24
+    )
+    with pytest.raises(ValueError, match="legacy"):
+        SearchBudget(max_attempts=24)
+    with pytest.raises(ValueError, match="exceeds"):
+        SearchBudget(selection_policy="discovery-v1", valid_rollout_target=7)
 
 
 def test_bounded_loop_mixed_repeat_axis_diversity_and_report(tmp_path):
@@ -148,6 +224,61 @@ def test_crash_after_saved_response_recovers_without_second_call(tmp_path, monke
     resumed.run(live=True, max_new_attempts=1)
     assert len(proposer.calls) == len(robot.calls) == 1
     assert resumed.summary()["selection_costs"]["input_tokens"]["observed"] == 123
+
+
+def test_later_response_resumes_after_sorted_database_roundtrip(tmp_path, monkeypatch):
+    engine, robot, proposer = setup(tmp_path, budget=SearchBudget(max_repeats=0), v4=True)
+    engine.run(live=True, max_new_attempts=1)
+
+    def crash(_):
+        raise RuntimeError("after later response saved")
+
+    monkeypatch.setattr(engine, "_finish_proposal", crash)
+    with pytest.raises(RuntimeError, match="later response"):
+        engine.run(live=True, max_new_attempts=1)
+    assert len(proposer.calls) == 2 and len(robot.calls) == 1
+    resumed = reload(engine, robot, proposer)
+    selection_before_sort = resumed._selection
+
+    def restored_selection():
+        candidate, context = selection_before_sort()
+        # A DB snapshot sorts nested dict keys; values and context digest are unchanged.
+        return candidate, json.loads(json.dumps(context, sort_keys=True))
+
+    monkeypatch.setattr(resumed, "_selection", restored_selection)
+    result = resumed.run(live=True, max_new_attempts=1)
+    assert result["attempted"] == 2
+    assert len(proposer.calls) == len(robot.calls) == 2
+    assert result["selection_costs"]["input_tokens"]["observed"] == 246
+
+
+@pytest.mark.parametrize("field", ["model", "instructions", "schema", "content", "input_order"])
+def test_request_normalization_preserves_every_semantic_guard(field):
+    body = {
+        "model": "synthetic",
+        "instructions": "fixed",
+        "text": {"format": {"schema": {"type": "object"}}},
+        "input": [{"role": "user", "content": '{"context":{"b":2,"a":1}}'}],
+    }
+    sorted_body = copy.deepcopy(body)
+    sorted_body["input"][0]["content"] = '{"context":{"a":1,"b":2}}'
+    assert proposal_request_digest(body) == proposal_request_digest(sorted_body)
+    changed = copy.deepcopy(sorted_body)
+    if field in {"model", "instructions"}:
+        changed[field] = "different"
+    elif field == "schema":
+        changed["text"]["format"]["schema"]["type"] = "array"
+    elif field == "content":
+        changed["input"][0]["content"] = '{"context":{"a":1,"b":3}}'
+    else:
+        changed["input"].insert(0, {"role": "system", "content": "{}"})
+    assert proposal_request_digest(body) != proposal_request_digest(changed)
+
+
+@pytest.mark.parametrize("text", ['{"a":1,"a":2}', '{"a":NaN}', "not JSON"])
+def test_request_normalization_rejects_ambiguous_json(text):
+    with pytest.raises(ValueError):
+        proposal_request_digest({"input": [{"content": text}]})
 
 
 def test_timeout_unknown_cost_never_resend_and_secret_redacted(tmp_path, monkeypatch):

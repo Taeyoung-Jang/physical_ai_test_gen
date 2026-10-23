@@ -1,0 +1,9 @@
+{
+  "rollout_import": "PASS",
+  "mujoco_import": "PASS",
+  "mujoco_version": "3.3.1",
+  "task_registration": "PASS",
+  "environment_created": false,
+  "model_inference": false,
+  "robot_rollout": false
+}

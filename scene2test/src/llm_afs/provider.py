@@ -25,8 +25,6 @@ def request_body(context, schema, *, max_output_tokens=None):
     if max_output_tokens is not None and not 512 <= max_output_tokens <= 16384:
         raise ValueError("max_output_tokens must be [512,16384]")
     content = json.dumps(context, ensure_ascii=False, allow_nan=False)
-    if len(content.encode()) > 250_000:
-        raise ValueError("context exceeds 250 KB; select fewer observations explicitly")
     body = {
         "model": MODEL,
         "store": False,
@@ -50,22 +48,66 @@ def request_body(context, schema, *, max_output_tokens=None):
 
 
 def call(body, *, transport=None, timeout=120):
-    key = os.environ.get("OPENAI_API_KEY")
+    api_provider = body.get("api_provider", "openai")
+    if api_provider not in {"openai", "openrouter"}:
+        raise ValueError("unknown AFS API provider")
+    endpoint, key_env, wire_body = "https://api.openai.com/v1/responses", "OPENAI_API_KEY", body
+    if api_provider == "openrouter":
+        from robot_vlm import openrouter
+
+        # The AFS Responses request uses string text; the shared robot adapter
+        # accepts input_text parts. Adapt here to leave the frozen robot untouched.
+        adapted_body = dict(body)
+        adapted_body["input"] = [
+            {
+                **message,
+                "content": (
+                    [{"type": "input_text", "text": message["content"]}]
+                    if isinstance(message["content"], str)
+                    else message["content"]
+                ),
+            }
+            for message in body["input"]
+        ]
+        endpoint, key_env, wire_body = (
+            openrouter.ENDPOINT,
+            openrouter.KEY_ENV,
+            openrouter.request_body(adapted_body),
+        )
+    key = os.environ.get(key_env)
     if not key:
-        raise ValueError("Set OPENAI_API_KEY locally before using --live")
+        raise ValueError(f"Set {key_env} locally before using --live")
     # Fixed official endpoint; credentials are never part of recorded request bodies.
     with httpx.Client(transport=transport, timeout=timeout, follow_redirects=False) as client:
         try:
             response = client.post(
-                "https://api.openai.com/v1/responses",
-                json=body,
+                endpoint,
+                json=wire_body,
                 headers={"Authorization": f"Bearer {key}"},
             )
         except httpx.HTTPError:
             raise RuntimeError("API transport failed; no automatic retry was made") from None
     if response.status_code != 200:
         raise RuntimeError(f"API HTTP {response.status_code}; no automatic retry was made")
-    return response.json()
+    value = response.json()
+    if api_provider == "openrouter":
+        # Preserve even incomplete/invalid paid responses BEFORE the durable host
+        # validates them. Wire adaptation never repairs a proposal or resends it.
+        if not isinstance(value, dict):
+            return {"api_provider": api_provider, "status": "failed", "openrouter_response": value}
+        try:
+            normalized = openrouter.response_value(value)
+        except (ValueError, TypeError, KeyError):
+            normalized = {"status": "failed", "usage": openrouter.normalized_usage(value)}
+        normalized.update(
+            api_provider=api_provider,
+            endpoint=endpoint,
+            routing=dict(openrouter.ROUTING),
+            routed_provider=value.get("provider"),
+            openrouter_response=value,
+        )
+        return normalized
+    return value
 
 
 def extract_proposal(response):

@@ -1,0 +1,14 @@
+{
+  "measurement.json": "94fbcc27a90e0e9409d7dc2b99b46fabdf8a20c72c8a58e104ba786853ade0a7",
+  "receipt.json": "dc5e97d450e27cfeec61525eb914b73ae50303abeb7a6349494d7e4f2dce3b57",
+  "trace.jsonl": "4cb827f75435d16af964dda64d3b1f1247b75220c620143357c9661949ccbea3",
+  "initial_sim_state.json": "66283ff7b3555a781f759eeaaa4fda8a60a268ea70f81dbe42b63a6e532edd8e",
+  "initial_state.json": "f2aae4f4c0d0be108463c7d589b779eb0e82b44430c111f89eb5acf520cce843",
+  "physics.jsonl": "95be359cda67b629114f00507e7382e0daf4ea205857d54db3f4fe998783e731",
+  "scene.xml": "158823748590d7a73e7d4e01b753be10ebffdabaac33578506433392151e9af0",
+  "worker_started.json": "2cba52d7bfd4043eea4f8bd55501e91ea408333b0f919778234f475091370928",
+  "robot_intent.json": "7b92a08a14f8003697267d52bfee12dfaa7ca36b0ee6a7a3c5e3d607226e6940",
+  "candidate.json": "7b92a08a14f8003697267d52bfee12dfaa7ca36b0ee6a7a3c5e3d607226e6940",
+  "manifest.json": "32374f45f459eca4b0f8fc57bd831963524a77e33713cb5ac6921ffe827eaee9",
+  "videos/892524d6-4792-47e3-a3d6-3ba1ea5bac8f_s0.mp4": "894079ea93deab92d64956cc2d5415ba6b9d5e2256df83c3ceb0c2a4c00ee875"
+}

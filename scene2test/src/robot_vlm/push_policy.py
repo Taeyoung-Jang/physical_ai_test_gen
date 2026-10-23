@@ -89,6 +89,7 @@ object clears a route: query the internal planner again using the updated observ
             self.body(observation, png),
             lambda value: PushEnvelope.model_validate(value).command,
             transport=self.transport,
+            api_provider=self.api_provider,
         )
 
 

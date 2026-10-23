@@ -15,7 +15,20 @@ RUNTIME = Path("/workspace/g1_failure/runtime/afs_autonomous")
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("op", choices=["plan", "init", "run", "status", "report"])
+    parser.add_argument(
+        "op",
+        choices=[
+            "plan",
+            "init",
+            "run",
+            "status",
+            "report",
+            "recover-point",
+            "recover-numeric",
+            "recover-anchor-refs",
+        ],
+    )
+    parser.add_argument("--apply", action="store_true", help="apply offline recovery fork")
     parser.add_argument(
         "--run", type=Path, action="append", help="reviewed archive; repeat in observation order"
     )
@@ -34,6 +47,43 @@ def main(argv=None):
     )
     parser.add_argument("--continue-after-exclusion", action="store_true")
     args = parser.parse_args(argv)
+    if args.op in {"recover-point", "recover-numeric", "recover-anchor-refs"}:
+        if (
+            not args.session
+            or not args.output_dir
+            or args.live
+            or args.run
+            or args.config
+            or args.max_new_attempts is not None
+            or args.continue_after_exclusion
+        ):
+            parser.error("recovery needs --session and new --output-dir; optional --apply only")
+        from failure_client.experiments.anchor_ref_recovery import recover_anchor_refs
+        from failure_client.experiments.numeric_recovery import recover_numeric
+        from failure_client.experiments.point_recovery import recover_point
+
+        try:
+            recover = {
+                "recover-point": recover_point,
+                "recover-numeric": recover_numeric,
+                "recover-anchor-refs": recover_anchor_refs,
+            }[args.op]
+            result = recover(args.session, args.output_dir, apply=args.apply)
+            prefix = (
+                "ANCHOR_REF_RECOVERY="
+                if args.op == "recover-anchor-refs"
+                else "POINT_RECOVERY="
+                if args.op == "recover-point"
+                else "NUMERIC_RECOVERY="
+            )
+            print(prefix + json.dumps(result, ensure_ascii=False))
+            print("No API or robot executed; original session preserved.")
+            return 0
+        except (Exception, KeyboardInterrupt) as exc:
+            print(f"STOPPED={type(exc).__name__}: {clean(str(exc))}")
+            return 2
+    if args.apply:
+        parser.error("--apply belongs to recovery operations only")
     if args.session and (args.run or args.config or args.output_dir):
         parser.error("resume cannot replace history, output or frozen configuration")
     if args.op in {"status", "report"} and not args.session:

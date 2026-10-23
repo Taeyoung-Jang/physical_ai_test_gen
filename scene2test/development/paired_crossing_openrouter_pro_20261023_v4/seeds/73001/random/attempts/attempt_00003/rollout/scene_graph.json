@@ -1,0 +1,359 @@
+{
+  "scene_id": "clear_path_1d9da5296561",
+  "support_surfaces": [
+    {
+      "id": "clear_floor",
+      "type": "plane",
+      "height": 0,
+      "bounds": {
+        "x": [
+          0,
+          8
+        ],
+        "y": [
+          -1.0960672118519672,
+          1.0960672118519672
+        ]
+      }
+    }
+  ],
+  "objects": [
+    {
+      "id": "wall_south",
+      "role": "obstacle",
+      "position": [
+        4.0,
+        -1.1460672118519672,
+        0.6
+      ],
+      "size": [
+        8,
+        0.10000000000000009,
+        1.2
+      ],
+      "movable": false,
+      "shape": "block",
+      "extra": {
+        "contact_annotation": "diagnostic_only",
+        "mujoco_geom_name": "wall_south"
+      }
+    },
+    {
+      "id": "wall_north",
+      "role": "obstacle",
+      "position": [
+        4.0,
+        1.1460672118519672,
+        0.6
+      ],
+      "size": [
+        8,
+        0.10000000000000009,
+        1.2
+      ],
+      "movable": false,
+      "shape": "block",
+      "extra": {
+        "contact_annotation": "diagnostic_only",
+        "mujoco_geom_name": "wall_north"
+      }
+    },
+    {
+      "id": "wall_west",
+      "role": "obstacle",
+      "position": [
+        -0.05,
+        0.0,
+        0.6
+      ],
+      "size": [
+        0.1,
+        2.3921344237039346,
+        1.2
+      ],
+      "movable": false,
+      "shape": "block",
+      "extra": {
+        "contact_annotation": "diagnostic_only",
+        "mujoco_geom_name": "wall_west"
+      }
+    },
+    {
+      "id": "wall_east",
+      "role": "obstacle",
+      "position": [
+        8.05,
+        0.0,
+        0.6
+      ],
+      "size": [
+        0.09999999999999964,
+        2.3921344237039346,
+        1.2
+      ],
+      "movable": false,
+      "shape": "block",
+      "extra": {
+        "contact_annotation": "diagnostic_only",
+        "mujoco_geom_name": "wall_east"
+      }
+    },
+    {
+      "id": "obstacle_1",
+      "role": "obstacle",
+      "position": [
+        2.560194780060613,
+        0.23607373639139356,
+        0.14241854461186176
+      ],
+      "size": [
+        0.6215528771353901,
+        0.6595875845378554,
+        0.2848370892237235
+      ],
+      "movable": false,
+      "shape": "block",
+      "extra": {
+        "dynamic": false,
+        "contact_annotation": "diagnostic_only",
+        "size_convention": "world_axis_aligned_bounding_box",
+        "local_size_m": [
+          0.5221434728189189,
+          0.41207981462254323,
+          0.2848370892237235
+        ],
+        "rotation_matrix": [
+          0.5128864032755424,
+          -0.8584564854056831,
+          0.0,
+          0.8584564854056831,
+          0.5128864032755424,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ],
+        "yaw_deg": 59.14371640206468,
+        "sliding_friction": 1.0,
+        "mujoco_geom_name": "obstacle_1"
+      }
+    },
+    {
+      "id": "obstacle_2",
+      "role": "obstacle",
+      "position": [
+        5.662524814955955,
+        0.21318984236553526,
+        0.18333116172887742
+      ],
+      "size": [
+        0.5868580361518065,
+        0.5852172847532322,
+        0.36666232345775485
+      ],
+      "movable": false,
+      "shape": "block",
+      "extra": {
+        "dynamic": false,
+        "contact_annotation": "diagnostic_only",
+        "size_convention": "world_axis_aligned_bounding_box",
+        "local_size_m": [
+          0.5613845168643129,
+          0.5631011312053462,
+          0.36666232345775485
+        ],
+        "rotation_matrix": [
+          0.04325731657140105,
+          0.9990639642000113,
+          0.0,
+          -0.9990639642000113,
+          0.04325731657140105,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ],
+        "yaw_deg": -87.52076472812486,
+        "sliding_friction": 1.0,
+        "mujoco_geom_name": "obstacle_2"
+      }
+    },
+    {
+      "id": "human_proxy_1",
+      "role": "human_zone",
+      "position": [
+        4.105078682661612,
+        0.8460672118519672,
+        0.8
+      ],
+      "size": [
+        0.4,
+        0.4,
+        1.6
+      ],
+      "movable": false,
+      "shape": "block",
+      "extra": {
+        "dynamic": false,
+        "contact_annotation": "diagnostic_only",
+        "size_convention": "world_axis_aligned_bounding_box",
+        "local_size_m": [
+          0.4,
+          0.4,
+          1.6
+        ],
+        "rotation_matrix": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ],
+        "yaw_deg": 0.0,
+        "sliding_friction": 1.0,
+        "semantic_role": "simulated_human_proxy",
+        "protected_radius_m": 0.6,
+        "mujoco_geom_name": "human_proxy_1"
+      }
+    },
+    {
+      "id": "clear_box",
+      "role": "obstacle",
+      "position": [
+        7.466913015558352,
+        -0.281195905042118,
+        0.35
+      ],
+      "size": [
+        0.8,
+        1.1,
+        0.7
+      ],
+      "movable": true,
+      "shape": "block",
+      "extra": {
+        "mass_kg": 4.194356027883516,
+        "sliding_friction": 0.9114478797421273,
+        "dynamic": true,
+        "manipulation_feasibility": "unverified",
+        "mujoco_geom_name": "clear_box_geom"
+      }
+    },
+    {
+      "id": "robot_goal",
+      "role": "destination",
+      "position": [
+        7.0,
+        0.0,
+        0
+      ],
+      "size": [
+        0.2,
+        0.2,
+        0.01
+      ],
+      "movable": false,
+      "shape": "zone",
+      "extra": {
+        "physical_collision": false
+      }
+    }
+  ],
+  "relations": [
+    {
+      "type": "on",
+      "source": "clear_box",
+      "target": "clear_floor"
+    },
+    {
+      "type": "on",
+      "source": "obstacle_1",
+      "target": "clear_floor"
+    },
+    {
+      "type": "on",
+      "source": "obstacle_2",
+      "target": "clear_floor"
+    },
+    {
+      "type": "on",
+      "source": "human_proxy_1",
+      "target": "clear_floor"
+    }
+  ],
+  "unknown_regions": [],
+  "meta": {
+    "task": "goal_navigation@0.1",
+    "scene_revision": "1d9da5296561760e225c7f4ea4ebc6ea7125d1f898190a529d2e3a19fb650efd",
+    "frame": "world_m",
+    "state_version": 0,
+    "source": "trusted_simulator_geometry",
+    "robot_rollout": false,
+    "floor_bounds_are_not_navigation_free_space": true,
+    "initial_goal_relation": {
+      "schema_version": "initial-goal-relation-v1",
+      "object_id": "clear_box",
+      "object_movable": true,
+      "goal_xy_m": [
+        7.0,
+        0.0
+      ],
+      "goal_radius_m": 0.25,
+      "box_xy_m": [
+        7.466913015558352,
+        -0.281195905042118
+      ],
+      "relation": "PARTIAL",
+      "goal_to_box_distance_m": 0.06691301555835183,
+      "goal_outcome": null,
+      "claim": "Initial projected geometry only; no robot strategy or impossibility verdict"
+    },
+    "human_proximity": {
+      "schema_version": "crossing-human-scene-v1",
+      "frame": "world_m",
+      "motion_model": "distance_triggered_single_kinematic_crossing_v1",
+      "robot_base_radius_m": 0.4,
+      "max_sample_gap_s": 0.25,
+      "min_continuous_exposure_s": 0.5,
+      "terminal_window_s": 5.0,
+      "proxies": [
+        {
+          "id": "human_proxy_1",
+          "geom_name": "human_proxy_1",
+          "semantic_role": "simulated_human_proxy",
+          "center_xy_m": [
+            4.105078682661612,
+            0.8460672118519672
+          ],
+          "protected_radius_m": 0.6,
+          "physical_size_m": [
+            0.4,
+            0.4,
+            1.6
+          ]
+        }
+      ],
+      "motion": {
+        "start_xy_m": [
+          4.105078682661612,
+          0.8460672118519672
+        ],
+        "end_xy_m": [
+          4.105078682661612,
+          -0.8460672118519672
+        ],
+        "speed_mps": 0.3660214013061839,
+        "trigger_distance_m": 4.187485124888859,
+        "trigger_metric": "planar robot-base to current proxy center distance <= threshold",
+        "armed_after_settle": true,
+        "clock": "simulation time, including inference waits",
+        "stop_at_end": true,
+        "physical_model": "prescribed mocap body; no gait or reaction to contact"
+      }
+    }
+  }
+}

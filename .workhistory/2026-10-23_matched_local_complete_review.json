@@ -1,0 +1,19 @@
+{
+  "date": "2026-10-23",
+  "campaign": "scene2test/development/paired_crossing_matched_local_20261023_v1",
+  "report": "reports/20261023T114142_160351Z/report.html",
+  "status": "COMPLETE",
+  "evaluation_complete": true,
+  "verified": ["report manifest hashes", "all 11 episode result/protocol/decisions hashes", "11 video files present; not decoded"],
+  "afs": {"valid": 5, "pass": 3, "fail": 2, "excluded": 0, "requests": 4},
+  "random": {"valid": 5, "pass": 5, "fail": 0, "excluded": 1, "requests": 0},
+  "difference_percentage_points": 40.0,
+  "relative_gain": null,
+  "relative_gain_reason": "Random baseline zero",
+  "measured_primary_families": {"afs": ["goal_occupied"], "random": []},
+  "safety_events": {"afs": "4/5", "random": "5/5", "relative_event_rate_gain": -0.2},
+  "modified_valid_change_counts": {"afs": {"one": 2, "two": 2}, "random": {"one": 3, "two": 1}},
+  "claim": "Descriptive development pilot only; one seed and unequal valid change-count mix; no statistical superiority or relative-Gain milestone established",
+  "live_execution_during_review": false,
+  "source_campaign_modified": false
+}

@@ -1,0 +1,729 @@
+{
+  "state_version": 2,
+  "simulation_time_s": 89.8199999999908,
+  "goal_xy_m": [
+    7.0,
+    0.0
+  ],
+  "base_xyz_m": [
+    2.5798460963787813,
+    -0.0415590247879277,
+    0.7451702516475787
+  ],
+  "yaw_rad": 0.055732844931198,
+  "geometry": [
+    {
+      "object_id": "clear_floor",
+      "center_m": [
+        4.0,
+        0.0,
+        -0.1
+      ],
+      "size_m": [
+        8.4,
+        4.4,
+        0.2
+      ],
+      "rotation_matrix": [
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "semantic_role": null
+    },
+    {
+      "object_id": "wall_south",
+      "center_m": [
+        4.0,
+        -1.45,
+        0.6
+      ],
+      "size_m": [
+        8.0,
+        0.10000000000000009,
+        1.2
+      ],
+      "rotation_matrix": [
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "semantic_role": null
+    },
+    {
+      "object_id": "wall_north",
+      "center_m": [
+        4.0,
+        1.45,
+        0.6
+      ],
+      "size_m": [
+        8.0,
+        0.10000000000000009,
+        1.2
+      ],
+      "rotation_matrix": [
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "semantic_role": null
+    },
+    {
+      "object_id": "wall_west",
+      "center_m": [
+        -0.05,
+        0.0,
+        0.6
+      ],
+      "size_m": [
+        0.1,
+        3.0,
+        1.2
+      ],
+      "rotation_matrix": [
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "semantic_role": null
+    },
+    {
+      "object_id": "wall_east",
+      "center_m": [
+        8.05,
+        0.0,
+        0.6
+      ],
+      "size_m": [
+        0.09999999999999964,
+        3.0,
+        1.2
+      ],
+      "rotation_matrix": [
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "semantic_role": null
+    },
+    {
+      "object_id": "obstacle_1",
+      "center_m": [
+        2.5,
+        0.7699999999999999,
+        0.3
+      ],
+      "size_m": [
+        0.5,
+        0.5,
+        0.6
+      ],
+      "rotation_matrix": [
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "semantic_role": null
+    },
+    {
+      "object_id": "obstacle_2",
+      "center_m": [
+        5.5,
+        -0.7699999999999999,
+        0.3
+      ],
+      "size_m": [
+        0.5,
+        0.5,
+        0.6
+      ],
+      "rotation_matrix": [
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "semantic_role": null
+    },
+    {
+      "object_id": "human_proxy_1",
+      "center_m": [
+        4.0,
+        0.5725000000005251,
+        0.8
+      ],
+      "size_m": [
+        0.4,
+        0.4,
+        1.6
+      ],
+      "rotation_matrix": [
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "semantic_role": "simulated_human_proxy"
+    },
+    {
+      "object_id": "clear_box_geom",
+      "center_m": [
+        6.99999999999926,
+        0.8000000010092844,
+        0.34998292752466675
+      ],
+      "size_m": [
+        0.8,
+        1.1,
+        0.7
+      ],
+      "rotation_matrix": [
+        1.0,
+        5.979520592398156e-16,
+        -9.156687266096283e-16,
+        -5.979520592450996e-16,
+        1.0,
+        -5.7706051070980394e-12,
+        9.156687266061778e-16,
+        5.7706051070980394e-12,
+        1.0
+      ],
+      "semantic_role": null
+    }
+  ],
+  "previous_execution": "executed",
+  "camera_name": "clear_robot_camera",
+  "camera_fovy_deg": 65.0,
+  "camera_xyz_m": [
+    2.7209605237453705,
+    -0.03665847820491809,
+    1.1387970296469254
+  ],
+  "camera_rotation_matrix": [
+    0.030576976511455217,
+    -0.0018454089700974952,
+    -0.9995307113706666,
+    -0.9995080121713542,
+    -0.007044126754102126,
+    -0.03056327671471365,
+    -0.006984419280507914,
+    0.9999734870205335,
+    -0.002059889149649302
+  ],
+  "behavior_feedback": {
+    "summary": {
+      "counts": {
+        "contact_start": 1213,
+        "contact_end": 1209
+      },
+      "peak_normal_force_n": 204.57888732135314,
+      "normal_impulse_ns": 30456.04683785371,
+      "scope": "robot/world contacts only; force peak per contact point; impulse summed"
+    },
+    "recent": [
+      {
+        "event": "contact_start",
+        "time_s": 88.91499999999162,
+        "phase": "navigate_to",
+        "kind": "contact",
+        "robot_geom": 36,
+        "world_geom": 0,
+        "robot_body": "right_ankle_roll_link",
+        "world_geom_name": "clear_floor",
+        "legacy_allowed": true,
+        "peak_normal_force_n": 60.942427285415796,
+        "sum_normal_force_n": 60.942427285415796
+      },
+      {
+        "event": "contact_start",
+        "time_s": 88.91499999999162,
+        "phase": "navigate_to",
+        "kind": "contact",
+        "robot_geom": 37,
+        "world_geom": 0,
+        "robot_body": "right_ankle_roll_link",
+        "world_geom_name": "clear_floor",
+        "legacy_allowed": true,
+        "peak_normal_force_n": 70.51782877947964,
+        "sum_normal_force_n": 70.51782877947964
+      },
+      {
+        "event": "contact_start",
+        "time_s": 88.92499999999161,
+        "phase": "navigate_to",
+        "kind": "contact",
+        "robot_geom": 38,
+        "world_geom": 0,
+        "robot_body": "right_ankle_roll_link",
+        "world_geom_name": "clear_floor",
+        "legacy_allowed": true,
+        "peak_normal_force_n": 88.3857976507544,
+        "sum_normal_force_n": 88.3857976507544
+      },
+      {
+        "event": "contact_start",
+        "time_s": 88.92499999999161,
+        "phase": "navigate_to",
+        "kind": "contact",
+        "robot_geom": 39,
+        "world_geom": 0,
+        "robot_body": "right_ankle_roll_link",
+        "world_geom_name": "clear_floor",
+        "legacy_allowed": true,
+        "peak_normal_force_n": 89.88959121081027,
+        "sum_normal_force_n": 89.88959121081027
+      },
+      {
+        "event": "contact_end",
+        "time_s": 88.9449999999916,
+        "phase": "navigate_to",
+        "kind": "contact",
+        "robot_geom": 21,
+        "world_geom": 0,
+        "robot_body": "left_ankle_roll_link",
+        "world_geom_name": "clear_floor",
+        "legacy_allowed": true,
+        "peak_normal_force_n": 119.40336792596419,
+        "sum_normal_force_n": 108.47732341508184,
+        "start_s": 88.6099999999919,
+        "start_phase": "navigate_to",
+        "sampled_duration_s": 0.3350000000000002,
+        "normal_impulse_ns": 23.952611726740734,
+        "truncated": false
+      },
+      {
+        "event": "contact_end",
+        "time_s": 88.9449999999916,
+        "phase": "navigate_to",
+        "kind": "contact",
+        "robot_geom": 23,
+        "world_geom": 0,
+        "robot_body": "left_ankle_roll_link",
+        "world_geom_name": "clear_floor",
+        "legacy_allowed": true,
+        "peak_normal_force_n": 96.74610740586952,
+        "sum_normal_force_n": 59.34574086851302,
+        "start_s": 88.6149999999919,
+        "start_phase": "navigate_to",
+        "sampled_duration_s": 0.3300000000000002,
+        "normal_impulse_ns": 22.911568898299805,
+        "truncated": false
+      },
+      {
+        "event": "contact_end",
+        "time_s": 88.94999999999159,
+        "phase": "navigate_to",
+        "kind": "contact",
+        "robot_geom": 22,
+        "world_geom": 0,
+        "robot_body": "left_ankle_roll_link",
+        "world_geom_name": "clear_floor",
+        "legacy_allowed": true,
+        "peak_normal_force_n": 110.79139836893864,
+        "sum_normal_force_n": 92.2959884304271,
+        "start_s": 88.6099999999919,
+        "start_phase": "navigate_to",
+        "sampled_duration_s": 0.3400000000000002,
+        "normal_impulse_ns": 28.866808832474074,
+        "truncated": false
+      },
+      {
+        "event": "contact_end",
+        "time_s": 88.95999999999158,
+        "phase": "navigate_to",
+        "kind": "contact",
+        "robot_geom": 24,
+        "world_geom": 0,
+        "robot_body": "left_ankle_roll_link",
+        "world_geom_name": "clear_floor",
+        "legacy_allowed": true,
+        "peak_normal_force_n": 113.02026449094859,
+        "sum_normal_force_n": 62.158743552383925,
+        "start_s": 88.6149999999919,
+        "start_phase": "navigate_to",
+        "sampled_duration_s": 0.3450000000000002,
+        "normal_impulse_ns": 28.73465297774144,
+        "truncated": false
+      },
+      {
+        "event": "contact_start",
+        "time_s": 89.21999999999134,
+        "phase": "navigate_to",
+        "kind": "contact",
+        "robot_geom": 21,
+        "world_geom": 0,
+        "robot_body": "left_ankle_roll_link",
+        "world_geom_name": "clear_floor",
+        "legacy_allowed": true,
+        "peak_normal_force_n": 62.452377451341434,
+        "sum_normal_force_n": 62.452377451341434
+      },
+      {
+        "event": "contact_start",
+        "time_s": 89.21999999999134,
+        "phase": "navigate_to",
+        "kind": "contact",
+        "robot_geom": 22,
+        "world_geom": 0,
+        "robot_body": "left_ankle_roll_link",
+        "world_geom_name": "clear_floor",
+        "legacy_allowed": true,
+        "peak_normal_force_n": 53.36897875013982,
+        "sum_normal_force_n": 53.36897875013982
+      },
+      {
+        "event": "contact_start",
+        "time_s": 89.22499999999134,
+        "phase": "navigate_to",
+        "kind": "contact",
+        "robot_geom": 23,
+        "world_geom": 0,
+        "robot_body": "left_ankle_roll_link",
+        "world_geom_name": "clear_floor",
+        "legacy_allowed": true,
+        "peak_normal_force_n": 101.94252073295226,
+        "sum_normal_force_n": 101.94252073295226
+      },
+      {
+        "event": "contact_start",
+        "time_s": 89.22499999999134,
+        "phase": "navigate_to",
+        "kind": "contact",
+        "robot_geom": 24,
+        "world_geom": 0,
+        "robot_body": "left_ankle_roll_link",
+        "world_geom_name": "clear_floor",
+        "legacy_allowed": true,
+        "peak_normal_force_n": 105.52429199119373,
+        "sum_normal_force_n": 105.52429199119373
+      },
+      {
+        "event": "contact_end",
+        "time_s": 89.24499999999132,
+        "phase": "navigate_to",
+        "kind": "contact",
+        "robot_geom": 37,
+        "world_geom": 0,
+        "robot_body": "right_ankle_roll_link",
+        "world_geom_name": "clear_floor",
+        "legacy_allowed": true,
+        "peak_normal_force_n": 122.89699322075833,
+        "sum_normal_force_n": 70.51782877947964,
+        "start_s": 88.91499999999162,
+        "start_phase": "navigate_to",
+        "sampled_duration_s": 0.3300000000000002,
+        "normal_impulse_ns": 23.21240862444247,
+        "truncated": false
+      },
+      {
+        "event": "contact_end",
+        "time_s": 89.24999999999132,
+        "phase": "navigate_to",
+        "kind": "contact",
+        "robot_geom": 36,
+        "world_geom": 0,
+        "robot_body": "right_ankle_roll_link",
+        "world_geom_name": "clear_floor",
+        "legacy_allowed": true,
+        "peak_normal_force_n": 121.64383192071456,
+        "sum_normal_force_n": 60.942427285415796,
+        "start_s": 88.91499999999162,
+        "start_phase": "navigate_to",
+        "sampled_duration_s": 0.3350000000000002,
+        "normal_impulse_ns": 28.101011948852012,
+        "truncated": false
+      },
+      {
+        "event": "contact_end",
+        "time_s": 89.24999999999132,
+        "phase": "navigate_to",
+        "kind": "contact",
+        "robot_geom": 39,
+        "world_geom": 0,
+        "robot_body": "right_ankle_roll_link",
+        "world_geom_name": "clear_floor",
+        "legacy_allowed": true,
+        "peak_normal_force_n": 93.10148788164283,
+        "sum_normal_force_n": 89.88959121081027,
+        "start_s": 88.92499999999161,
+        "start_phase": "navigate_to",
+        "sampled_duration_s": 0.3250000000000002,
+        "normal_impulse_ns": 22.59716545376942,
+        "truncated": false
+      },
+      {
+        "event": "contact_end",
+        "time_s": 89.2649999999913,
+        "phase": "navigate_to",
+        "kind": "contact",
+        "robot_geom": 38,
+        "world_geom": 0,
+        "robot_body": "right_ankle_roll_link",
+        "world_geom_name": "clear_floor",
+        "legacy_allowed": true,
+        "peak_normal_force_n": 113.48811595255304,
+        "sum_normal_force_n": 88.3857976507544,
+        "start_s": 88.92499999999161,
+        "start_phase": "navigate_to",
+        "sampled_duration_s": 0.3400000000000002,
+        "normal_impulse_ns": 28.46109899383449,
+        "truncated": false
+      },
+      {
+        "event": "contact_start",
+        "time_s": 89.52499999999107,
+        "phase": "navigate_to",
+        "kind": "contact",
+        "robot_geom": 36,
+        "world_geom": 0,
+        "robot_body": "right_ankle_roll_link",
+        "world_geom_name": "clear_floor",
+        "legacy_allowed": true,
+        "peak_normal_force_n": 92.20703345331577,
+        "sum_normal_force_n": 92.20703345331577
+      },
+      {
+        "event": "contact_start",
+        "time_s": 89.52499999999107,
+        "phase": "navigate_to",
+        "kind": "contact",
+        "robot_geom": 37,
+        "world_geom": 0,
+        "robot_body": "right_ankle_roll_link",
+        "world_geom_name": "clear_floor",
+        "legacy_allowed": true,
+        "peak_normal_force_n": 103.71138732184352,
+        "sum_normal_force_n": 103.71138732184352
+      },
+      {
+        "event": "contact_start",
+        "time_s": 89.52999999999106,
+        "phase": "navigate_to",
+        "kind": "contact",
+        "robot_geom": 38,
+        "world_geom": 0,
+        "robot_body": "right_ankle_roll_link",
+        "world_geom_name": "clear_floor",
+        "legacy_allowed": true,
+        "peak_normal_force_n": 72.59776670847587,
+        "sum_normal_force_n": 72.59776670847587
+      },
+      {
+        "event": "contact_start",
+        "time_s": 89.52999999999106,
+        "phase": "navigate_to",
+        "kind": "contact",
+        "robot_geom": 39,
+        "world_geom": 0,
+        "robot_body": "right_ankle_roll_link",
+        "world_geom_name": "clear_floor",
+        "legacy_allowed": true,
+        "peak_normal_force_n": 68.37086023440526,
+        "sum_normal_force_n": 68.37086023440526
+      },
+      {
+        "event": "contact_end",
+        "time_s": 89.55499999999104,
+        "phase": "navigate_to",
+        "kind": "contact",
+        "robot_geom": 21,
+        "world_geom": 0,
+        "robot_body": "left_ankle_roll_link",
+        "world_geom_name": "clear_floor",
+        "legacy_allowed": true,
+        "peak_normal_force_n": 112.15239144991901,
+        "sum_normal_force_n": 62.452377451341434,
+        "start_s": 89.21999999999134,
+        "start_phase": "navigate_to",
+        "sampled_duration_s": 0.3350000000000002,
+        "normal_impulse_ns": 22.947946495139746,
+        "truncated": false
+      },
+      {
+        "event": "contact_end",
+        "time_s": 89.55999999999104,
+        "phase": "navigate_to",
+        "kind": "contact",
+        "robot_geom": 23,
+        "world_geom": 0,
+        "robot_body": "left_ankle_roll_link",
+        "world_geom_name": "clear_floor",
+        "legacy_allowed": true,
+        "peak_normal_force_n": 101.94252073295226,
+        "sum_normal_force_n": 101.94252073295226,
+        "start_s": 89.22499999999134,
+        "start_phase": "navigate_to",
+        "sampled_duration_s": 0.3350000000000002,
+        "normal_impulse_ns": 23.65383551932157,
+        "truncated": false
+      },
+      {
+        "event": "contact_end",
+        "time_s": 89.56499999999103,
+        "phase": "navigate_to",
+        "kind": "contact",
+        "robot_geom": 22,
+        "world_geom": 0,
+        "robot_body": "left_ankle_roll_link",
+        "world_geom_name": "clear_floor",
+        "legacy_allowed": true,
+        "peak_normal_force_n": 115.13720083178714,
+        "sum_normal_force_n": 53.36897875013982,
+        "start_s": 89.21999999999134,
+        "start_phase": "navigate_to",
+        "sampled_duration_s": 0.3450000000000002,
+        "normal_impulse_ns": 28.064359546743063,
+        "truncated": false
+      },
+      {
+        "event": "contact_end",
+        "time_s": 89.56499999999103,
+        "phase": "navigate_to",
+        "kind": "contact",
+        "robot_geom": 24,
+        "world_geom": 0,
+        "robot_body": "left_ankle_roll_link",
+        "world_geom_name": "clear_floor",
+        "legacy_allowed": true,
+        "peak_normal_force_n": 113.78565633028109,
+        "sum_normal_force_n": 105.52429199119373,
+        "start_s": 89.22499999999134,
+        "start_phase": "navigate_to",
+        "sampled_duration_s": 0.3400000000000002,
+        "normal_impulse_ns": 29.708764110039528,
+        "truncated": false
+      }
+    ],
+    "active": [
+      {
+        "kind": "contact",
+        "robot_geom": 36,
+        "world_geom": 0,
+        "robot_body": "right_ankle_roll_link",
+        "world_geom_name": "clear_floor",
+        "legacy_allowed": true,
+        "peak_normal_force_n": 101.8957882068399,
+        "sum_normal_force_n": 92.20703345331577,
+        "start_s": 89.52499999999107,
+        "start_phase": "navigate_to",
+        "sampled_duration_s": 0.30000000000000016,
+        "normal_impulse_ns": 26.869024380088895
+      },
+      {
+        "kind": "contact",
+        "robot_geom": 37,
+        "world_geom": 0,
+        "robot_body": "right_ankle_roll_link",
+        "world_geom_name": "clear_floor",
+        "legacy_allowed": true,
+        "peak_normal_force_n": 111.90602947936087,
+        "sum_normal_force_n": 103.71138732184352,
+        "start_s": 89.52499999999107,
+        "start_phase": "navigate_to",
+        "sampled_duration_s": 0.30000000000000016,
+        "normal_impulse_ns": 23.033285818943966
+      },
+      {
+        "kind": "contact",
+        "robot_geom": 38,
+        "world_geom": 0,
+        "robot_body": "right_ankle_roll_link",
+        "world_geom_name": "clear_floor",
+        "legacy_allowed": true,
+        "peak_normal_force_n": 110.13112582123892,
+        "sum_normal_force_n": 72.59776670847587,
+        "start_s": 89.52999999999106,
+        "start_phase": "navigate_to",
+        "sampled_duration_s": 0.29500000000000015,
+        "normal_impulse_ns": 25.763432342414646
+      },
+      {
+        "kind": "contact",
+        "robot_geom": 39,
+        "world_geom": 0,
+        "robot_body": "right_ankle_roll_link",
+        "world_geom_name": "clear_floor",
+        "legacy_allowed": true,
+        "peak_normal_force_n": 94.3665488862948,
+        "sum_normal_force_n": 68.37086023440526,
+        "start_s": 89.52999999999106,
+        "start_phase": "navigate_to",
+        "sampled_duration_s": 0.29500000000000015,
+        "normal_impulse_ns": 21.35831172583984
+      }
+    ],
+    "human_motion": {
+      "schema_version": "crossing-human-sample-v1",
+      "id": "human_proxy_1",
+      "time_s": 89.8199999999908,
+      "center_xy_m": [
+        4.0,
+        0.5725000000005251
+      ],
+      "velocity_xy_mps": [
+        0.0,
+        -0.5
+      ],
+      "state": "crossing",
+      "triggered_at_s": 88.66499999999185,
+      "triggered_this_sample": false,
+      "base_xy_m": [
+        2.5798460963787813,
+        -0.0415590247879277
+      ],
+      "center_distance_m": 1.5472251277350466,
+      "protected_zone_clearance_m": 0.5472251277350467,
+      "inside_protected_zone": false,
+      "measurement_scope": "2D base radius 0.4m plus protected radius 0.6m; not whole-body safety",
+      "robot_contacts": [],
+      "phase": "navigate_to"
+    }
+  }
+}

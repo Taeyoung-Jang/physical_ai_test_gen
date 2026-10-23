@@ -1,0 +1,34 @@
+{
+  "schema_version": "crossing-human-diagnostics-v1",
+  "triggered_at_s": 39.990000000002006,
+  "minimum_sampled_center_distance_m": 0.696113218959844,
+  "robot_contact_steps": 0,
+  "final_sample": {
+    "schema_version": "crossing-human-sample-v1",
+    "id": "human_proxy_1",
+    "time_s": 90.30999999999035,
+    "center_xy_m": [
+      4.0,
+      -1.55
+    ],
+    "velocity_xy_mps": [
+      0.0,
+      0.0
+    ],
+    "state": "completed",
+    "triggered_at_s": 39.990000000002006,
+    "triggered_this_sample": false,
+    "base_xy_m": [
+      6.886506452218359,
+      -0.022834676350757362
+    ],
+    "center_distance_m": 3.265601540980607,
+    "protected_zone_clearance_m": 2.265601540980607,
+    "inside_protected_zone": false,
+    "measurement_scope": "2D base radius 0.4m plus protected radius 0.6m; not whole-body safety",
+    "robot_contacts": [],
+    "phase": "navigate_goal_hold"
+  },
+  "eligible_for_family_coverage": false,
+  "claim": "Sampled motion/contact diagnostics; no task relabeling or causal attribution"
+}

@@ -1,0 +1,259 @@
+{
+  "simulation_time_s": 409.3999999997002,
+  "base_xyz_m": [
+    3.8763493259611876,
+    0.6484377980200998,
+    0.7420066374809355
+  ],
+  "yaw_rad": 1.3403989507386167,
+  "geometry": [
+    {
+      "object_id": "clear_floor",
+      "center_m": [
+        4.0,
+        0.0,
+        -0.1
+      ],
+      "size_m": [
+        8.4,
+        4.4,
+        0.2
+      ],
+      "rotation_matrix": [
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "semantic_role": null
+    },
+    {
+      "object_id": "wall_south",
+      "center_m": [
+        4.0,
+        -1.643005501761868,
+        0.6
+      ],
+      "size_m": [
+        8.0,
+        0.10000000000000009,
+        1.2
+      ],
+      "rotation_matrix": [
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "semantic_role": null
+    },
+    {
+      "object_id": "wall_north",
+      "center_m": [
+        4.0,
+        1.643005501761868,
+        0.6
+      ],
+      "size_m": [
+        8.0,
+        0.10000000000000009,
+        1.2
+      ],
+      "rotation_matrix": [
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "semantic_role": null
+    },
+    {
+      "object_id": "wall_west",
+      "center_m": [
+        -0.05,
+        0.0,
+        0.6
+      ],
+      "size_m": [
+        0.1,
+        3.3860110035237363,
+        1.2
+      ],
+      "rotation_matrix": [
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "semantic_role": null
+    },
+    {
+      "object_id": "wall_east",
+      "center_m": [
+        8.05,
+        0.0,
+        0.6
+      ],
+      "size_m": [
+        0.09999999999999964,
+        3.3860110035237363,
+        1.2
+      ],
+      "rotation_matrix": [
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "semantic_role": null
+    },
+    {
+      "object_id": "obstacle_1",
+      "center_m": [
+        2.299620114365895,
+        1.0325173526984284,
+        0.5939394808823376
+      ],
+      "size_m": [
+        0.7865895203202402,
+        0.4913394394078168,
+        1.1878789617646752
+      ],
+      "rotation_matrix": [
+        0.9999003340641848,
+        -0.014118142169982582,
+        0.0,
+        0.014118142169982582,
+        0.9999003340641848,
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "semantic_role": null
+    },
+    {
+      "object_id": "obstacle_2",
+      "center_m": [
+        5.555297827854835,
+        -0.4872636567780216,
+        0.5763128169166672
+      ],
+      "size_m": [
+        0.7227469157236346,
+        0.7330512109880039,
+        1.1526256338333345
+      ],
+      "rotation_matrix": [
+        0.858692145676242,
+        0.5124917550106846,
+        0.0,
+        -0.5124917550106846,
+        0.858692145676242,
+        -0.0,
+        -0.0,
+        0.0,
+        1.0
+      ],
+      "semantic_role": null
+    },
+    {
+      "object_id": "human_proxy_1",
+      "center_m": [
+        3.9462741342548635,
+        -1.343005501761868,
+        0.8
+      ],
+      "size_m": [
+        0.4,
+        0.4,
+        1.6
+      ],
+      "rotation_matrix": [
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "semantic_role": "simulated_human_proxy"
+    },
+    {
+      "object_id": "clear_box_geom",
+      "center_m": [
+        6.837238519922572,
+        0.6802473909586463,
+        0.3497015617158363
+      ],
+      "size_m": [
+        0.8,
+        1.1,
+        0.7
+      ],
+      "rotation_matrix": [
+        1.0,
+        7.642103763816515e-14,
+        -9.020473051963867e-17,
+        -7.642103763816583e-14,
+        1.0,
+        -7.486777222249632e-12,
+        9.020472994749139e-17,
+        7.486777222249632e-12,
+        1.0
+      ],
+      "semantic_role": null
+    }
+  ],
+  "follower": {
+    "version": "clearance-recovery-v3",
+    "lookahead_m": 0.35,
+    "radius_m": 0.4,
+    "planning_radius_m": 0.5,
+    "tracking_margin_m": 0.1,
+    "max_forward_mps": 0.2,
+    "max_lateral_mps": 0.15,
+    "max_yaw_rate_rps": 0.4,
+    "geometry": "GT snapshot refreshed on blockage/recovery/replan; not full-body safety",
+    "endpoint_connectors": "up to 0.35m at original 0.40m radius; no narrow-route fallback",
+    "blocked_connector": "bounded recovery/replan or early tool return; not a goal verdict",
+    "recovery": {
+      "max_intrusion_m": 0.06,
+      "max_distance_m": 0.35,
+      "max_seconds_each": 3.0,
+      "speed_mps": 0.1,
+      "max_replans_per_action": 2,
+      "no_progress_seconds": 1.0,
+      "worsening_tolerance_m": 0.02,
+      "budget": "inside original action deadline; no extra policy call or grace"
+    }
+  }
+}

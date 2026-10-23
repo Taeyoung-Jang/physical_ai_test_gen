@@ -12,13 +12,18 @@ from failure_client.reporting.domain_readiness_report import write_domain_audit
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--schema", choices=SCHEMAS, default="clear-path-obstacles-v3")
+    parser.add_argument(
+        "--taxonomy-profile",
+        choices=("goal-behavior-v1", "goal-behavior-v2"),
+        default="goal-behavior-v1",
+    )
     parser.add_argument("--output-dir", type=Path, help="new directory; never overwrites")
     parser.add_argument("--stdout-only", action="store_true", help="JSON only; no files created")
     args = parser.parse_args(argv)
     if args.stdout_only and args.output_dir:
         parser.error("--stdout-only cannot be combined with --output-dir")
     try:
-        audit = audit_domain(args.schema)
+        audit = audit_domain(args.schema, taxonomy_profile=args.taxonomy_profile)
         if args.stdout_only:
             print(json.dumps(audit, indent=2, ensure_ascii=False, allow_nan=False))
             return 0

@@ -6,6 +6,7 @@ from collections import Counter, defaultdict
 from fractions import Fraction
 
 from failure_client.evaluation.research_records import (
+    EXPANDED_FAMILIES,
     FAMILIES,
     ComparisonDesign,
     EpisodeRecord,
@@ -63,7 +64,7 @@ def _costs(records):
     return costs
 
 
-def _summary(records, family_rules):
+def _summary(records, family_rules, family_inventory=FAMILIES):
     valid = [r for r in records if r.status == "VALID"]
     conditions = sorted({r.condition_id for r in valid})
     compatible = len(conditions) <= 1
@@ -89,7 +90,7 @@ def _summary(records, family_rules):
     partial = (
         operational
         and measured
-        and (len(family_rules) < len(FAMILIES) or any(not r.attribution for r in failures))
+        and (len(family_rules) < len(family_inventory) or any(not r.attribution for r in failures))
     )
     rate = len(failures) / len(valid) if valid and compatible else None
     curve, seen_failures, seen_scenes, seen_families = [], 0, set(), set()
@@ -127,10 +128,23 @@ def _summary(records, family_rules):
         "valid_stage_counts": dict(Counter(r.source.stage for r in valid)),
         "discovered_families": families if measured else [],
         "discovered_family_count": len(families) if measured else None,
-        "failure_diversity_coverage": len(families) / 6 if measured and not partial else None,
-        "observed_family_coverage_lower_bound": len(families) / 6 if measured else None,
+        "failure_diversity_coverage": len(families) / len(family_inventory)
+        if measured and not partial
+        else None,
+        "observed_family_coverage_lower_bound": len(families) / len(family_inventory)
+        if measured
+        else None,
         "diversity_target_observed": (
             True if measured and len(families) >= 4 else False if measured and not partial else None
+        ),
+        "joint_fdr_diversity_target_observed": (
+            False
+            if rate is not None and rate < 0.30
+            else True
+            if measured and rate is not None and len(families) >= 4
+            else False
+            if measured and not partial
+            else None
         ),
         "coverage_status": "partial_operational_rules"
         if partial
@@ -152,7 +166,7 @@ def _summary(records, family_rules):
             )
             if f in family_rules and compatible
             else "UNSUPPORTED"
-            for f in FAMILIES
+            for f in family_inventory
         },
         "ambiguous_family_scenes": ambiguous,
         "unverified_attributions": unsupported_attributions,
@@ -182,10 +196,16 @@ def calculate_discovery_metrics(
     design: ComparisonDesign | None = None,
     *,
     family_rules: dict[str, str] | None = None,
+    family_inventory=FAMILIES,
 ):
     """family_rules is an in-process detector registry, never a proposal's self-reported label."""
     family_rules = family_rules or {}
-    if not set(family_rules) <= set(FAMILIES) or any(
+    family_inventory = tuple(family_inventory)
+    from failure_client.evaluation.research_records import SYSTEM_FAMILIES
+
+    if family_inventory not in (FAMILIES, EXPANDED_FAMILIES, SYSTEM_FAMILIES):
+        raise ValueError("unknown versioned family inventory")
+    if not set(family_rules) <= set(family_inventory) or any(
         not isinstance(v, str) or not v for v in family_rules.values()
     ):
         raise ValueError("invalid family detector registry")
@@ -203,7 +223,7 @@ def calculate_discovery_metrics(
                 buckets[method, seed]
     groups = []
     for (method, seed), rows in sorted(buckets.items()):
-        summary = _summary(rows, family_rules)
+        summary = _summary(rows, family_rules, family_inventory)
         budget = design.valid_budget_per_seed if design else None
         n = summary["valid_rollouts"]
         groups.append(
@@ -218,7 +238,9 @@ def calculate_discovery_metrics(
             }
         )
     pooled = {
-        method: _summary([r for r in records if r.source.method == method], family_rules)
+        method: _summary(
+            [r for r in records if r.source.method == method], family_rules, family_inventory
+        )
         for method in sorted({g["method"] for g in groups})
     }
     comparison = {
@@ -255,7 +277,12 @@ def calculate_discovery_metrics(
             }
     return {
         "schema_version": "failure-discovery-metrics-v1",
-        "targets": {"fdr": 0.30, "relative_gain": 0.20, "families": 4, "family_denominator": 6},
+        "targets": {
+            "fdr": 0.30,
+            "relative_gain": 0.20,
+            "families": 4,
+            "family_denominator": len(family_inventory),
+        },
         "design": design.model_dump() if design else None,
         "input_records": len(records) + len(duplicates),
         "unique_records": len(records),

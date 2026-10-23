@@ -1,0 +1,10 @@
+{
+  "ready_for_attempt": true,
+  "missing_model_files": [],
+  "dependencies": {
+    "returncode": 0,
+    "stdout": "{\"gr00t\": true, \"libero\": true, \"torch\": true, \"gymnasium\": true, \"mujoco\": true, \"tyro\": true, \"transformers\": true}",
+    "stderr": ""
+  },
+  "claim": "Presence checks only; GPU/runtime compatibility and baseline success unverified."
+}

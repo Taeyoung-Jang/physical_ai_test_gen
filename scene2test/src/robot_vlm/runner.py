@@ -50,7 +50,15 @@ def run(root, groot_root, policy, *, max_calls=10, max_seconds=30.0):
         g for g in range(model.ngeom) if "ankle_roll" in model.body(int(model.geom_bodyid[g])).name
     }
     floor = model.geom("clear_floor").id
-    origin = "openai_api" if isinstance(policy, policy_module.OpenAIPolicy) else "mock"
+    origin = (
+        "openrouter_api"
+        if isinstance(policy, policy_module.OpenAIPolicy)
+        and getattr(policy, "api_provider", "openai") == "openrouter"
+        else "openai_api"
+        if isinstance(policy, policy_module.OpenAIPolicy)
+        else "mock"
+    )
+    paid_origin = origin in {"openai_api", "openrouter_api"}
     write(
         root / "protocol.json",
         {
@@ -317,14 +325,12 @@ def run(root, groot_root, policy, *, max_calls=10, max_seconds=30.0):
         "reason": reason,
         "error_diagnostic": error_diagnostic,
         "calls_attempted": calls,
-        "api_calls_attempted": calls if origin == "openai_api" else 0,
+        "api_calls_attempted": calls if paid_origin else 0,
         "policy_origin": origin,
         "duration_s": float(data.time),
         "goal_distance_m": float(np.linalg.norm(data.qpos[:2] - fixture.GOAL)),
-        "live_actions_accepted": accepted if origin == "openai_api" else 0,
-        "autonomous_task_success_validated": origin == "openai_api"
-        and valid
-        and reason == "GOAL_REACHED",
+        "live_actions_accepted": accepted if paid_origin else 0,
+        "autonomous_task_success_validated": paid_origin and valid and reason == "GOAL_REACHED",
         "note": "Mock proves wiring only; task failure is not an infrastructure error",
     }
     write(root / "result.json", result)

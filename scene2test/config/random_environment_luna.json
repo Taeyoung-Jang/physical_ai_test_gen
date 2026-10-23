@@ -1,0 +1,31 @@
+{
+  "schema_version": "paired-trajectory-design-v1",
+  "purpose": "random-environment-sweep",
+  "methods": ["random"],
+  "seeds": [29, 43, 71],
+  "valid_per_arm": 4,
+  "attempts_per_arm": 4,
+  "afs_requests_per_seed": 0,
+  "cold_start_per_arm": 0,
+  "target_families_twelve": 4,
+  "search": {
+    "schema_version": "autonomous-afs-budget-v1",
+    "selection_policy": "failure-branch-v3",
+    "taxonomy_profile": "expanded-ten-v1",
+    "exploration_policy": "breadth-v1",
+    "feedback_policy": "cause-review-v3",
+    "anchor_policy": "failure-diversity-v4",
+    "pattern_feedback": "trajectory-v1",
+    "reproposal_policy": "bounded-rejection-v1",
+    "max_attempts": 4,
+    "valid_rollout_target": 4,
+    "max_afs_requests": 1,
+    "max_attempts_per_axis": 4,
+    "max_repeats": 0,
+    "min_axis_change_fraction": 0.1,
+    "history_limit": 4,
+    "afs_model": "gpt-6-luna",
+    "afs_service_tier": "default",
+    "afs_timeout_s": 300.0
+  }
+}

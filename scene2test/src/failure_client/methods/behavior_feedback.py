@@ -11,6 +11,7 @@ import random
 from clear_path.contracts import parse_fixture
 from clear_path.fixture import graph
 from clear_path.scene_space import axes_for_parameters, axes_for_schema
+from clear_path.search_domain import checked_domain
 from failure_client.methods.base import CandidateObservation
 from failure_client.methods.search_evidence import behavior_signature, compact_evidence
 from llm_afs import behavior as b
@@ -21,9 +22,10 @@ def seeded(seed, *parts):
     return random.Random(int(b.digest([seed, *parts]), 16))
 
 
-def uniform_scene(seed, *parts, schema="clear-path-fixture-v1"):
+def uniform_scene(seed, *parts, schema="clear-path-fixture-v1", domain=None):
     rng = seeded(seed, *parts)
-    return {k: rng.uniform(*bounds) for k, bounds in axes_for_schema(schema).items()}
+    axes = axes_for_schema(schema) if domain is None else checked_domain(domain, schema)
+    return {k: rng.uniform(*bounds) for k, bounds in axes.items()}
 
 
 def parameters(case):
@@ -69,13 +71,19 @@ def feedback_context(
     remaining,
     scene_schema="clear-path-fixture-v1",
     selection_policy="hypothesis-v2",
+    scene_domain=None,
+    required_evidence_ids=(),
 ):
     if selection_policy not in ("novelty-v1", "hypothesis-v2"):
         raise ValueError("unknown campaign selection policy")
     cases = memory["cases"]
     if not cases or any(c["parameters"] is None for c in cases):
         raise ValueError("verified scene evidence required")
-    axes = axes_for_schema(scene_schema)
+    axes = (
+        axes_for_schema(scene_schema)
+        if scene_domain is None
+        else checked_domain(scene_domain, scene_schema)
+    )
     if any(c["parameters"].get("schema_version") != scene_schema for c in cases):
         raise ValueError("feedback must use the frozen scene schema")
     episodes = list(memory["episodes"].values())
@@ -84,6 +92,12 @@ def feedback_context(
     latest = episodes[-1]
     # Keep latest, a PASS, a FAIL, then recent observations; disclose every omission.
     selected = [latest]
+    for ref in required_evidence_ids:
+        row = next((e for e in episodes if e["record"]["evidence_id"] == ref), None)
+        if row is None:
+            raise ValueError("required baseline evidence is missing")
+        if row not in selected:
+            selected.append(row)
     for outcome in ("PASS", "FAIL"):
         row = next((e for e in reversed(episodes) if e["record"]["task_outcome"] == outcome), None)
         if row is not None and row not in selected:
@@ -94,8 +108,22 @@ def feedback_context(
         if row not in selected:
             selected.append(row)
     evidence = []
+    secondary = {}
+    if scene_schema == "clear-path-crossing-human-v6":
+        from failure_client.evaluation.dynamic_human_safety import CONTRACT
+
+        secondary["secondary_measurement_contract"] = dict(CONTRACT)
     for entry in selected[:history_limit]:
         record, behavior = entry["record"], entry["behavior"]
+        dynamic = {}
+        if scene_schema == "clear-path-crossing-human-v6":
+            from failure_client.evaluation.dynamic_human_safety import measure_dynamic_humans
+            from failure_client.evaluation.research_records import EpisodeRecord
+
+            measurement = measure_dynamic_humans(EpisodeRecord.model_validate(record))
+            dynamic["dynamic_human_safety"] = {
+                k: v for k, v in measurement.items() if k != "exposure_intervals_s"
+            }
         evidence.append(
             {
                 "id": record["evidence_id"],
@@ -107,6 +135,7 @@ def feedback_context(
                 **compact_evidence(entry),
                 "behavior_pattern": behavior_signature(entry),
                 "warnings": behavior["warnings"],
+                **dynamic,
             }
         )
     compact_cases = [
@@ -143,6 +172,8 @@ def feedback_context(
         modes = ["cross_mechanism", "success_probe", "boundary_probe"]
     return {
         "schema_version": "behavior-campaign-feedback-v1",
+        **secondary,
+        **({"scene_domain": scene_domain} if scene_domain is not None else {}),
         "latest": {"parameters": parameters(latest_case), "evidence": evidence},
         "scene_graph": graph(parse_fixture(latest_case["parameters"])),
         "task_contract": latest_case["task_contract"],
@@ -194,24 +225,97 @@ def proposal_request(ctx, model):
     )
 
 
+class NoEligibleEndpoint(ValueError):
+    """Completed, valid proposal with only explicitly rejected endpoints."""
+
+    def __init__(self, rejections):
+        self.rejections = rejections
+        super().__init__("proposal has no novel non-cooled-down endpoint; no automatic fallback")
+
+
 def choose_probe(raw, ctx, memory):
-    proposal = b.Proposal.model_validate(raw)
-    b.validate(proposal, ctx)
+    proposal = (
+        b.endpoint_proposal(raw, ctx)
+        if "development_search" in ctx
+        else b.Proposal.model_validate(raw)
+    )
+    numeric_rejected = b.validate(
+        proposal, ctx, numeric_rejections=isinstance(proposal, b.BreadthProposal)
+    )
     axes = b.context_axes(ctx)
     base = ctx["latest"]["parameters"]
     seen = [parameters(c) for c in memory["cases"]]
     stagnant = similar_failures(memory, base, axes)
-    options, rejected = [], []
+    options, rejected = [], list(numeric_rejected)
+    invalid_indices = {r["space"] for r in numeric_rejected}
     for index, space in enumerate(proposal.spaces):
-        for value in (space.low, space.high):
-            params = {**base, space.axis: value}
-            if any(distance(params, old, axes) < 1e-8 for old in seen):
-                rejected.append({"space": index, "value": value, "reason": "already_observed"})
+        if index in invalid_indices:
+            continue
+        if isinstance(space, b.ReviewedBreadthPoint):
+            from .cause_review import plan_conflict
+
+            conflict = plan_conflict(space)
+            if conflict:
+                rejected.append({"space": index, "axis": space.axis, "reason": conflict})
+                continue
+        anchor = None
+        if "anchor_catalog" in ctx:
+            from .branch_anchors import checked_anchor
+
+            anchor, anchor_ref = checked_anchor(space, ctx)
+            base = anchor["parameters"]
+            stagnant = similar_failures(memory, base, axes)
+        for value in b.endpoint_values(space):
+            changes = (
+                b.point_changes(space)
+                if isinstance(space, b.BreadthPoint)
+                else [(space.axis, value)]
+            )
+            params = {**base, **dict(changes)}
+            detail = {
+                "space": index,
+                "axis": space.axis,
+                "value": value,
+                "anchor_case_id": (
+                    anchor["case_id"]
+                    if anchor is not None
+                    else ctx.get("search_selection", {}).get("anchor_case_id")
+                ),
+                "base_value": base[space.axis],
+                **({"changes": dict(changes)} if isinstance(space, b.BreadthPoint) else {}),
+            }
+            if params in ctx.get("excluded_scene_parameters", []):
+                rejected.append({**detail, "reason": "excluded_scene_requires_explicit_replay"})
+                continue
+            minimum = ctx.get("development_search", {}).get("min_axis_change_fraction", 0)
+            if any(
+                abs(v - base[a]) / (axes[a][1] - axes[a][0]) + 1e-12 < minimum for a, v in changes
+            ):
+                rejected.append(
+                    {**detail, "reason": "discovery_step_too_small", "minimum_fraction": minimum}
+                )
+                continue
+            features = None
+            if "exploration_allocation" in ctx:
+                from .breadth_policy import describe, reject
+
+                features = describe(changes, base, axes)
+                reason = reject(features, space.model_dump(), ctx["exploration_allocation"])
+                if reason:
+                    rejected.append({**detail, "reason": reason, "exploration": features})
+                    continue
+            matches = [
+                c["case_id"]
+                for c in memory["cases"]
+                if distance(params, parameters(c), axes) < 1e-8
+            ]
+            if matches:
+                rejected.append(
+                    {**detail, "reason": "already_observed", "matching_case_ids": matches}
+                )
                 continue
             if stagnant >= 3 and distance(params, base, axes) <= 0.05:
-                rejected.append(
-                    {"space": index, "value": value, "reason": "similar_failure_cooldown"}
-                )
+                rejected.append({**detail, "reason": "similar_failure_cooldown"})
                 continue
             options.append(
                 {
@@ -222,13 +326,44 @@ def choose_probe(raw, ctx, memory):
                     "boundary_confirmed": False,
                     "space_index": index,
                     "novelty": min(distance(params, old, axes) for old in seen),
+                    **({"exploration": features} if features is not None else {}),
+                    **(
+                        {"anchor_case_id": anchor["case_id"], "anchor_evidence_id": anchor_ref}
+                        if anchor is not None
+                        else {}
+                    ),
                 }
             )
     if not options:
-        raise ValueError("proposal has no novel non-cooled-down endpoint; no automatic fallback")
+        raise NoEligibleEndpoint(rejected)
     selection = ctx.get("search_selection", {})
     policy = selection.get("policy", "novelty-v1")
-    if policy == "hypothesis-v2":
+    if policy == "failure-directed-v2":
+        objective = ctx["failure_objective"]
+        priorities = objective["intent_priority"]
+        axis_counts = ctx["development_search"]["axis_attempts"]
+
+        def rank(c):
+            prediction = c["evidence"]
+            family = prediction["target_family"]
+            return (
+                -priorities.index(prediction["intent"]),
+                family in objective["missing_supported_families"],
+                -objective["target_attempt_counts"].get(family, 0),
+                -axis_counts[prediction["axis"]],
+                -c["space_index"],
+                c["novelty"],
+            )
+
+        if "exploration_allocation" in ctx:
+            from .breadth_policy import rank as breadth_rank
+
+            chosen = max(
+                options, key=lambda c: breadth_rank(c, objective, ctx["exploration_allocation"])
+            )
+        else:
+            chosen = max(options, key=rank)
+    elif policy == "hypothesis-v2":
         modes = selection["mode_priority"]
         chosen = max(
             options, key=lambda c: (-modes.index(c["strategy"]), -c["space_index"], c["novelty"])
@@ -252,6 +387,33 @@ def choose_probe(raw, ctx, memory):
         ],
         "interpretation": "Untested endpoints and causal claims remain unconfirmed",
     }
+    if policy == "failure-directed-v2":
+        if "exploration_allocation" in ctx:
+            chosen["selection_audit"]["exploration_allocation"] = ctx["exploration_allocation"]
+            chosen["selection_audit"]["breadth_comparison"] = [
+                {
+                    "space_index": c["space_index"],
+                    "exploration": c["exploration"],
+                    "rank": list(breadth_rank(c, objective, ctx["exploration_allocation"])),
+                    "selected": c is chosen,
+                }
+                for c in options
+            ]
+        if "anchor_catalog" in ctx:
+            chosen["selection_audit"].update(
+                anchor_case_id=chosen["anchor_case_id"],
+                anchor_evidence_id=chosen["anchor_evidence_id"],
+            )
+        chosen["selection_audit"]["failure_objective"] = ctx["failure_objective"]
+        chosen["selection_audit"]["eligible_predictions"] = [
+            {
+                "space_index": c["space_index"],
+                "intent": c["evidence"]["intent"],
+                "target_family": c["evidence"]["target_family"],
+                "rank": list(rank(c)),
+            }
+            for c in options
+        ]
     return chosen
 
 

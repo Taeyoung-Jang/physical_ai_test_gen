@@ -1,0 +1,24 @@
+{
+  "schema_version": "joint-discovery-design-v1",
+  "seeds": [17, 29, 43],
+  "valid_per_seed": 20,
+  "attempts_per_seed": 24,
+  "afs_requests_per_seed": 24,
+  "cold_start_per_seed": 2,
+  "search": {
+    "selection_policy": "failure-branch-v3",
+    "taxonomy_profile": "expanded-ten-v1",
+    "exploration_policy": "breadth-v1",
+    "feedback_policy": "cause-review-v3",
+    "reproposal_policy": "bounded-rejection-v1",
+    "max_attempts": 24,
+    "valid_rollout_target": 20,
+    "max_afs_requests": 24,
+    "max_attempts_per_axis": 4,
+    "max_repeats": 0,
+    "min_axis_change_fraction": 0.1,
+    "history_limit": 4,
+    "afs_model": "gpt-6-luna",
+    "afs_timeout_s": 300.0
+  }
+}

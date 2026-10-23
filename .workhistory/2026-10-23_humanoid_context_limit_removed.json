@@ -1,0 +1,23 @@
+{
+  "date": "2026-10-23",
+  "change": "Removed local 250000-byte AFS context guard without truncation or replacement limit",
+  "source_campaign": "scene2test/development/paired_crossing_openrouter_pro_20261023_v3",
+  "new_campaign": "scene2test/development/paired_crossing_openrouter_pro_20261023_v4",
+  "inherited_valid_episodes": {"afs": 4, "random": 4},
+  "inherited_afs_requests": 2,
+  "remaining_attempt_cap": 8,
+  "remaining_afs_request_cap": 6,
+  "verification": [
+    "36 CPU tests passed",
+    "Ruff and diff checks passed",
+    "Exact provider byte-guard deletion verified against old frozen source",
+    "Full original/copy file hash verification and original state equality passed",
+    "Both new arm freshness checks passed",
+    "Next real AFS full-history request generated offline successfully"
+  ],
+  "live_execution": "Rejected by automatic approval review before process creation",
+  "rejection_reason": "Explicit approval required for concrete full-history/scene payload transmission to OpenRouter",
+  "new_api_calls": 0,
+  "new_robot_executions": 0,
+  "review_request": "scene2test/development/paired_crossing_openrouter_pro_20261023_v4/review/next_afs_request.json"
+}

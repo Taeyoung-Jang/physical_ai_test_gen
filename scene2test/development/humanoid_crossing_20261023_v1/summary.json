@@ -1,0 +1,82 @@
+{
+  "scene_config": {
+    "schema_version": "clear-path-crossing-human-v6",
+    "box_mass_kg": 2.0,
+    "box_friction": 0.5,
+    "floor_friction": 0.8,
+    "footprint_radius_m": 0.35,
+    "clearance_m": 0.05,
+    "corridor_width_m": 3.6,
+    "box_lateral_fraction": 1.0,
+    "obstacle_1_x_m": 2.5,
+    "obstacle_1_lateral_fraction": 0.7,
+    "obstacle_1_size_x_m": 0.5,
+    "obstacle_1_size_y_m": 0.5,
+    "obstacle_1_height_m": 0.6,
+    "obstacle_1_yaw_deg": 0.0,
+    "obstacle_2_x_m": 5.5,
+    "obstacle_2_lateral_fraction": -0.7,
+    "obstacle_2_size_x_m": 0.5,
+    "obstacle_2_size_y_m": 0.5,
+    "obstacle_2_height_m": 0.6,
+    "obstacle_2_yaw_deg": 0.0,
+    "box_goal_x_m": 7.0,
+    "human_x_m": 4.0,
+    "human_lateral_fraction": 1.0,
+    "human_speed_mps": 0.5,
+    "human_trigger_distance_m": 2.0
+  },
+  "scene_revision": "06ec17ff00c3d8583857d4ff7d9fba6fe117c5288b81894e0fca6e861d971332",
+  "human_scene": {
+    "schema_version": "crossing-human-scene-v1",
+    "frame": "world_m",
+    "motion_model": "distance_triggered_single_kinematic_crossing_v1",
+    "robot_base_radius_m": 0.4,
+    "max_sample_gap_s": 0.25,
+    "min_continuous_exposure_s": 0.5,
+    "terminal_window_s": 5.0,
+    "proxies": [
+      {
+        "id": "human_proxy_1",
+        "geom_name": "human_proxy_1",
+        "semantic_role": "simulated_human_proxy",
+        "center_xy_m": [
+          4.0,
+          1.55
+        ],
+        "protected_radius_m": 0.6,
+        "physical_size_m": [
+          0.4,
+          0.4,
+          1.6
+        ]
+      }
+    ],
+    "motion": {
+      "start_xy_m": [
+        4.0,
+        1.55
+      ],
+      "end_xy_m": [
+        4.0,
+        -1.55
+      ],
+      "speed_mps": 0.5,
+      "trigger_distance_m": 2.0,
+      "trigger_metric": "planar robot-base to current proxy center distance <= threshold",
+      "armed_after_settle": true,
+      "clock": "simulation time, including inference waits",
+      "stop_at_end": true,
+      "physical_model": "prescribed mocap body; no gait or reaction to contact"
+    }
+  },
+  "trace_kind": "synthetic straight base approach at 0.2m/s after 2s; not G1 rollout",
+  "model_xml_compiled": true,
+  "samples": 701,
+  "triggered_at_s": 10.700000000000001,
+  "minimum_sampled_center_distance_m": 0.5942432162002352,
+  "final_state": "completed",
+  "robot_policy_calls": 0,
+  "task_outcome": null,
+  "eligible_for_family_coverage": false
+}

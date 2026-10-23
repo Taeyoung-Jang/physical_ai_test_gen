@@ -135,11 +135,19 @@ def compact_evidence(entry, *, detail_limit=DETAIL_LIMIT):
         )
         add(n, "temporal_representative")
     selected.sort()
+    taxonomy = entry["record"].get("taxonomy", {})
+    taxonomy_summary = {
+        key: taxonomy.get(key)
+        for key in ("schema_version", "primary_family", "causal_status", "families", "warnings")
+    }
+    human = taxonomy.get("measurements", {}).get("human_proximity")
+    if human:
+        taxonomy_summary["human_proximity"] = {
+            k: human.get(k)
+            for k in ("measurement_status", "diagnostic_status", "evidence_binding", "zones")
+        }
     return {
-        "operational_taxonomy": {
-            key: entry["record"].get("taxonomy", {}).get(key)
-            for key in ("schema_version", "primary_family", "causal_status", "families", "warnings")
-        },
+        "operational_taxonomy": taxonomy_summary,
         "action_timeline": [_action_summary(i) for i in actions],
         "action_timeline_status": behavior.get("components", {}).get("actions", "UNAVAILABLE"),
         "intervals": [intervals[n] for n in selected],

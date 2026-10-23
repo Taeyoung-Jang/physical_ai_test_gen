@@ -1,0 +1,61 @@
+{
+  "id": "gen-1792737284-CA2CzsVGs8McwaqpYwp9",
+  "object": "chat.completion",
+  "created": 1792737284,
+  "model": "openai/gpt-6-luna-pro",
+  "provider": "OpenAI",
+  "system_fingerprint": null,
+  "service_tier": "default",
+  "choices": [
+    {
+      "index": 0,
+      "logprobs": null,
+      "finish_reason": "stop",
+      "native_finish_reason": "completed",
+      "message": {
+        "role": "assistant",
+        "content": "{\"parameters\":{\"obstacle_x\":-0.0125,\"obstacle_y\":0.105,\"obstacle_height\":0.17},\"hypothesis\":\"Prior valid attempts at nearby positions both failed with the bowl remaining at its initial location and sustained robot-obstacle contact. This candidate stays near the higher-contact failure while respecting shared bounds.\"}",
+        "refusal": null,
+        "reasoning": "**Formulating JSON parameters**\n\nI need to create a JSON structure with a focus on position height based on historical data. It's crucial to consider the trajectories that obstacles may interfere with; for example, there's a path from the bowl to the plate. I should look at existing position data and consider using the midpoint or highest height for effective obstruction. The strongest geometry for blockage seems to be at about 13.57 seconds, with a potential position of x=-.0125, y=.1, and height .17 to maximize obstruction.**Selecting position and height**\n\nI noticed that the position x=-.0129, y=.1078, with a maximum height of .169, resulted in a failure. To improve, I might select a nearby position at x=-.0125, y=.105, and height .17. The user is asking for a single position and height. My hypothesis indicates that failure may be linked to persistent obstruction between the bowl and the robot. I want to ensure my output contains only the necessary fields in the schema.",
+        "reasoning_details": [
+          {
+            "type": "reasoning.summary",
+            "summary": "**Formulating JSON parameters**\n\nI need to create a JSON structure with a focus on position height based on historical data. It's crucial to consider the trajectories that obstacles may interfere with; for example, there's a path from the bowl to the plate. I should look at existing position data and consider using the midpoint or highest height for effective obstruction. The strongest geometry for blockage seems to be at about 13.57 seconds, with a potential position of x=-.0125, y=.1, and height .17 to maximize obstruction.**Selecting position and height**\n\nI noticed that the position x=-.0129, y=.1078, with a maximum height of .169, resulted in a failure. To improve, I might select a nearby position at x=-.0125, y=.105, and height .17. The user is asking for a single position and height. My hypothesis indicates that failure may be linked to persistent obstruction between the bowl and the robot. I want to ensure my output contains only the necessary fields in the schema.",
+            "format": "openai-responses-v1",
+            "index": 0
+          },
+          {
+            "type": "reasoning.encrypted",
+            "data": "gAAAAABq2wAQM9kuSkoRgfibTGj8DNfW2576gIz1PLHmVGUnssUxp75Ud9sVMjHKBPOOiQA1pG4g1n9mvc3-9gHc3T6F0h3qGKHPHQSzIdqHDf5O3BBb0lWDpYBT6CZD3iy0Sw0EKepdQnjiIPeFwrQFBej6ABBPmZtsfAuFwbfqNl2oMypfwS4iR0SZIFykwkCkI5GDPSIx7IAWRLMW1JmL6riWT2MSylyJWhyDsklxm_fnNI0SkuXimMAAnkGWAootHAYc7P_8PQqccejBV87Jh01H-NjQ_SKl05qP6s4NR83diQRSzYTR2YCs-An330YK6q55d__8W10BL4GgwBYgXoxdocu6Dy3kjFhgOgIbMspvkxSfiEpWGklZkUbwmBr2vbfYNw2UKS71izxa2ITfhd7zNBQoxtn6yhN3lmbR0zfMZNCUt0V4SUplxGHmUi6aieLCWPgIih2B5AW1rC0kXLqeLz5tqNqckdsdl79G7xxDcyWNmvF4ABWzZVN5SGu-SzrN_qSZmKc3I4Wxv9OAmmgTq6wCOEDhOZ-aYBP2w5_O4u5bOO8hMyMPcgBuu5zd7wHGs6tt2PnqV-fLfPoRWmTxIqdQmCkq7tH1ps-E3fy9lv1fEBMJo-43Sb0JSGrJ0ZEYDe4YZrIfunKk_eQtIQTh3KyU3GNV-gloNOTW_2GQ1vcoPAYAVKydnvbuaLOkoCLcd2RxzlwxL-PGO1CCqGQ5qme_Vkm0AjyGZZF6VlGWIPZrt1t7O8dVukNxlN4osAbndpv884YpRCim_jX2N0UW8B7kCbLK7_2ixMrKV5oTy-hhH3zSrNeRkjdFCdS1mnirULrZisxHDroo2dpVNVJqtUW76S3Ap0ose91VzxAmK8jYlT-CsECl5yIyo-nKGWN4WkGgl7KG0TgIVCEI713Sr0euF3hhiBSG4HD8KaCZMQWBnVG84l2LhYubZJtVdaLw2at1GyzM0Z0BlfQEmIX49oazZzPlgcHADYWAAWBBRO4rYLBLZynCaqQCeHO3uHsj11IGDuWfKo_7NqyyUgFmNkoIbAIU1dVVyyZ2P4IaKYnv52lFsNPagBahDc2fudLijn13k7nBNipjwRp81vXdviKTlwF4orN9x3uL9XXCXcrjeWsD91_mw9cB72ZssV4VrRtqxHO2in3v6K5T7pNWbYiM7py-z5LA-mhb8h02Vuqlpwvm3JXEAtwzhHckatSVdjxyVk9WoLMHv3x3PXpoT0hiCJvh5Mz1TIClGsg2mjb-eiXMamt8IyGuJDA6CTG02yirrtWjQJgsI3QGhaDRIm6UoEJlPAq2ljgip1RX_y_UKlVtrl6r6Ee1TYkmFfg7YofbIRso7e3g3z9k1Ag0ZLWydsN12aG4WAf_Dvy6APms7j65GmNz8XumFiAy4EoQZTbaKtEVE1z6KD1DYr7OUwDSlh8g1J2PEovQjSkwaEvZ0S2-TL9zHG0p3bQM8TKc5kgeF1csensM6eKc6UrzZK2BTeYWzs5JV6-cOnP3Wegw_p5ejSGKZRUpWcuvzyViJxryYRkmAuQTVFpyDyY6WUcOeEWIa1YZLhQKhKO8tiTVZn792VoPAv0TGj78mY2yveAy98JQKhnxxvv6q7Fdh3sv_z7F4-ulsGudVPGNow2rZwYnug3isLhunlXPztCTbYlHhYKFAS2Vys4spMYBs_DPFf6bARrBILMdeZPi9XRoU_yWqFnl4iOB_K4o4ZdEAXdQ50Ag6trj3VHuan6KTtWC6LOU0JLQaA9RP0BkRkw6FypLcb_SFRNW4gnvdQknUnqnTLg5z5oIS15Hi0_RVLE9Baf92ZMYiuJdHS2AsF0TypSPbblrSqbO9PEmtVPllWpEWtwrbTGVmt0CJQ-6fZp_IeLkcn6qYQNW4MYdIVZd_lG1MDW8tyukmmbXYSmczdHDzjGBf78oRngtJsFr7xrfeUBqHOxQXRhCL_K_MoKzmL-P05qVS2Q7BjE-WH6TkfvGPeZcNG8RiQktvLvye0RS7kWmisVo-fMpsaDlXK94YgX68rTeuXEBWi7uK8RMM2F-nv4IvwsqXrY-0_UWKYcALTa3fuxGzHGbR7k_AYFVWE_raS6lUczn_IyHNu3PueZmBAqI_FM0MkniTQc_hRz5isMIJPP0JXaBhfAMZY75vI_qsyXEsaANxNxnaTWRAs8eW18-p-nMCPFTQZTcpXTGpBLBWwxM4f9_k4LJg-z5vt_JHA-_naTQ6cwxj5fDrX_1m6t_FETxTYCdqvuBaXb1sJTsrQpbl8X2ogyj2LZMW7Lk5divzxHzxal0cPB4I7A4U_APZTAxBaGv35RVZ9OAYsI0EiSJisD0g3e8ZuPmcVkQ8PQcvYYKdNkr6QFbdnay5bp_B-euUomxRaQ_imcc5Tf_SDVPrmaMe2Pe3D7Ca24XbdatWgeIId9RHgoIny5pl3NNVBcVA3EkG1lDVOycdzz0wzXwpcz-P_SVe_ckdS9buBl_PNAT6_zF7TQjuW2I4dJAUF9y1BtetLzlynBE0LwMkHX8LxuzyY4NK34EIBsaHrM7rqNZZ3FP8qeZsi0X6OMAM1XyeDpFb6eh7CgrANIR-3WgSFMuxNbv6rA8s9Mlgui8ttNLk8nNuxInT9lYA77AvZmeV7qdFlkeGbSSDtRs3wKn7KnkJRdZCbQkeJY_ttHO3wobYjWHq2MbhmPgj7y39T7eKQv3gtlRxNnj7fb4fklvs7AjRuQt039-GFRiWPzmDsukFLWfrFgWQmJuvshTVqUds3ZoW9A5SYBhFHOxq9nZMhVG4_wikjNvsKXEcp_9YyIwpQ_DmFseaILwJbMTJZmLav9FyeNlTY0qyqrFfbCighVkrqfKqTTTdeltdTlLM0KwE2DN8UMxP7fN3zzMF_uvJ8IUJ7xgMpLcQT6BMzr-u2tBZ2FYsdPluIhLLQPBoDid91h0F99RYG-yghoEaM2Zekm_Xh-moDqiuERNtPoFuYymDMMCuLKp6FNmhYHnpyDNG49lwmNY5ZpXrMYTgaywmybldkGcTSCG7NWNfQo3M9mj_kGQfEETH8qH5vfHST5qymD-Q4aPtdDYXkMfQAyLHa7lDBtfjIS6YleCXd2f53308pleyuCYs1OhysQAhOL-rsM-i-TFtFjQ902jJkgshP2acr8GafaFB6jFaqt9ec7g9qIAJ7zvKcuABt2w8mWMr7ayaI9MYJUaDZ8s-eLscmGG88BFudSHQbey8fn2BbWrd3pYvBXaC8xycQKqgWX_rK-S3mvmIYKT9YhGzN1HZTNxURRH11P8HxlapZTVK0rOk3e9URI40cRw0GbY2Q75gMSTNOHVj7yBg3Ppug6TRZbYa0lmsihxXVu0ASl63ERx_y_Ek6WguZwnobboZ84ocEDILSYIJr82hzF9aJkpNJqxFuYbyWDuUIXyzIsW5FgMXUntAdG-JfYunAIHDTwv6L97Fv1qZKHAgxsbmzKY3v7B64LFKkmW8uMVcUyPrZxxbCuaUz-gBeehYfmEnYcolqyioMGr5P4h7IcSl_jg6hDUmPEvIANWqkNvF4hZmt7H0MtMZNQIE8-VFwmVv6Q42df7euN5Ls3VuKlMQIKj_E17Ntycl_-LasilQ6WrI-DEf-1MIcT51BFsNJk5TEhndGl772Mm44XypcKfMx7LoIPyo3357-oDnPgE3nIXV59RicMdta1tvxOwNanvQf1wSQaDNIxFUBky6A5-obtUML1PXr0C2bdvdQB-Bh2zYUBXL6KJ79wO1q0d7WQhCWzZOmn3a1uds0e1xbHrVNzXEJohhRhV7_mNr3UYLV_1mK-Pzj5S_jOFhjm_J1IyNIjPCUc6DLfdavpkqgmPRjv3_x5MV03-UekNrnrIqwH_2axXV58n0UMWW9DhIymDjXalM5f_W726TqwBU3tu0iT-FdTFC5QHN11AkGQpfYwKelR1HK3hLEzki2OxvrPZVELFQFDwBHpNYsedDiO_07hSLhKWY5ykB0mym__Ge5c-gt6c2DQTfYdQFbT81Yyc4536x-FSaEm6YyCYQMFqWR44DVZGN1Aeqv35J3KaS73SGQ94TnJ4F70aiC8DNWjd17MLPbJiZldT169ysN76MFeV-U0sMLrptu1rnpKCyyb8ETgEr9jrWKCeG5-JuGDPiNIOhuNBwSSHmN9xsX1hAZKGLLEqKoRYwL42GEQQTzVfPHzBw-1vL5oLGtAhjL-OMCJ5QEYs4aebRSLxRLeVowMUIR_8SafPMBciF65UMUYe22j5od7yn-v2lEZ1aWI2n4mPi8804L4RnLwQ3ruc8gCVCAJarvJ161MLzYr1CmERcD6L4GHzbnYD28Xurwy3UZFc5pozAkiNhUf88PA_5SMqp218UBi6p0bE6WVSaB2Q9fE-qO99sTRiStF1_i3xp2KNhmUmFpLEcbyTZ_3Uxute2TEXxEp8zCHU0uutpK_sevUZIkao6BNm9Rnm6X-SqYsVez90CXTAXhYV34xxD9C_pcIesigUtv4eZLVOHdAbBaG5c2sY3AMnePOUeq3ssFcbziRCzKP_nCBaw_VczxgcrYDYo-87U10cPLASheMOLJp6rmTQmjUDKeQy8qr4ia_QRjOKn3jPeX-_PsRaXQrpnUPB0HC575_J35J-M-BxX2ccwCYlfAoTIk63Xov4n25T2-qzO2rCpFN1X4rAk1GH0-QQHHwU6MlPfk2TCse8SYuDi6fw-aSw7KlovX8PXaRXOrBXEB8o4DxBykwQU5f7zVSo6CWnZwoQF-BALm84sKII2eO7Uzk0BI12QSwHwFRGl9iZYuUbla9X7YnhDGBNXOh-7g9kX2C0HPXS_P6P2cyJqq1KD1l8IVTscxCBMRzOzw8MYndsB2x6nE7riMsj7Ovv803kzKUjAdSy-mLBmj72ZFv3ec0SK9sjoVM98R6wlRq36wzXGbrc4to3HGh7Cm0iLofGpBgqfodeXfMYF77yWRJGxfkLtRGSx7cIBQo36wyGtDrP_ulmp4D3n69bLz-nklm4INn08SdQRdoW0Y05FSvyeM7is8cCfYQHGhKrMALKqhLTBqYRJDKFkM4j2icCfHyZQU13lrBgXqrCLGuTz3YDzhCX43_rPnnYSleLloIdvy0oGTX-IwU7VHXKMsdrp_0xW62Jvg==.eyJlbmRwb2ludF9zbHVnIjoib3BlbmFpL2dwdC02LWx1bmEtcHJvLTIwMjYwOTIyfG9wZW5haSJ9",
+            "format": "openai-responses-v1",
+            "id": "rs_0a663575e47a2fe7016adb000e72fc87d1ac4791639de3b2f5",
+            "index": 1
+          }
+        ]
+      }
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 19777,
+    "completion_tokens": 1051,
+    "total_tokens": 20828,
+    "cost": 0.002119375,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 5905,
+      "cache_write_tokens": 5905,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.002119375,
+      "upstream_inference_prompt_cost": 0.001593875,
+      "upstream_inference_completions_cost": 0.0005255
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 857,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  }
+}

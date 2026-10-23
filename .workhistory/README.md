@@ -12,6 +12,52 @@
 
 ## 이력 목록
 
+- [2026-10-19 외부 이력 없는 독립 AFS 평가 실행기](2026-10-19_independent_discovery_runner.md)
+
+- [2026-10-19 AFS 근거 분리와 제한적 복구 및 평가 준비](2026-10-19_reference_roles_recovery_and_evaluation_prep.md)
+
+- [2026-10-19 LLM의 지난 결과 분석과 실패 검출 조건 연결](2026-10-19_cause_review_and_detector_contract.md)
+
+- [2026-10-19 AFS 행동 진단과 신규 집합 기준 선택 구현](2026-10-19_action_diagnostics_and_current_coverage.md)
+
+- [2026-10-19 미분류 실패 7개와 AFS 개선 우선순위](2026-10-19_unclassified_seven_analysis.md)
+
+- [2026-10-19 환경 요소 배정 탐색 완료 결과 검토](2026-10-19_breadth_completed_live_review.md)
+
+- [2026-10-18 숫자 범위 위반 후보 분리와 저장 응답 복구](2026-10-18_numeric_candidate_rejection_and_recovery.md)
+
+- [2026-10-18 환경 요소 배정 실험의 범위 오류 중단 검토](2026-10-18_breadth_live_bounds_stop_review.md)
+
+- [2026-10-18 환경 요소 실행 배정과 두 요소 조합 탐색 구현](2026-10-18_breadth_allocation_and_combinations.md)
+
+- [2026-10-18 환경 변화 폭과 실제 실행 편중 검토](2026-10-18_scene_variation_breadth_review.md)
+
+- [2026-10-18 확장 10종 AFS 완료: 실패율 50%, 실패 유형 3종](2026-10-18_expanded_afs_live_complete_review.md)
+
+- [2026-10-18 10종 AFS 첫 실제 분류와 API 제외 검토](2026-10-18_expanded_afs_live_partial_review.md)
+
+- [2026-10-18 확장 10종 측정과 AFS 환경 선택 연결](2026-10-18_expanded_types_afs_connection.md)
+
+- [2026-10-18 실패 유형 10종 확장과 기존 실험 재분석](2026-10-18_expanded_ten_family_reanalysis.md)
+
+- [2026-10-18 성공 기준 분기 AFS 실제 탐색 결과 검토](2026-10-18_branch_afs_live_review.md)
+
+- [2026-10-18 중복 후보 진단과 고정 예산 재제안](2026-10-18_bounded_candidate_reproposal.md)
+
+- [2026-10-18 성공 기준 분기 AFS와 전체 행동 진단](2026-10-18_branch_anchors_and_phase_audit.md)
+
+- [2026-10-18 실패 지향 AFS 첫 실제 세션 검토](2026-10-18_failure_directed_live_review.md)
+
+- [2026-10-18 실패 지향 행동 기반 AFS 선택 개선](2026-10-18_failure_directed_selection.md)
+
+- [2026-10-18 발견 모드 첫 유효 성공 결과](2026-10-18_discovery_first_valid_pass_review.md)
+
+- [2026-10-18 로봇 API 시간 초과 오프라인 진단](2026-10-18_robot_api_offline_diagnostics.md)
+
+- [2026-10-18 단일 값 환경 제안과 동일 끝점 복구](2026-10-18_single_point_proposal_recovery.md)
+
+- [2026-10-18 발견 중심 AFS 선택과 유효 표본 예산](2026-10-18_discovery_selection_and_valid_budget.md)
+
 | 날짜 (UTC) | 제목 | 기록 |
 |---|---|---|
 | 2026-09-03 | Server/Client 연동, 산출물 영상화, GR00T-WBC GPU 보행 통합 | [2026-09-03_server_client_gpu_locomotion.md](2026-09-03_server_client_gpu_locomotion.md) |
@@ -156,3 +202,7 @@
 - 2026-10-17: [FDR와 다양성 공동 달성 우선·Gain 후순위·기존 보고서와 유형 근거 보존 확인](2026-10-17_fdr_diversity_priority_and_evidence.md)
 
 - 2026-10-17: [경계 정밀화 후순위·허용 범위의 폭넓은 실패 발견 우선·기존 작은 변화의 목적 구분](2026-10-17_broad_discovery_priority.md)
+
+- 2026-10-17: [FDR 30%와 4종 공동 달성 계획·네 번째 유형 후보·발견 중심 탐색·단계별 예산과 완료 조건](2026-10-17_joint_fdr_diversity_plan.md)
+
+- 2026-10-18: [작업자 대리 장면·네 번째 근거 기반 측정·공동 지표·재개 오류 수정·347개 회귀 통과](2026-10-18_human_scene_and_joint_measurement.md)

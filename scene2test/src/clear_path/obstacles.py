@@ -7,6 +7,7 @@ projections, not exact rotated footprints. No path-validity filtering is perform
 import math
 
 from .contracts import ObstacleFixture
+from .humans import human_geometry
 
 
 def static_obstacles(config):
@@ -36,4 +37,4 @@ def static_obstacles(config):
                 "quaternion_wxyz": [math.cos(angle / 2), 0.0, 0.0, math.sin(angle / 2)],
             }
         )
-    return rows
+    return rows + human_geometry(config)

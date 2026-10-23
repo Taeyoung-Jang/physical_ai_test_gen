@@ -1,0 +1,20 @@
+{
+  "date": "2026-10-23",
+  "status": "COMPLETE",
+  "authorization": "User approved concrete cleanup plan retaining final experiment, videos and key results",
+  "deleted_files": 5237,
+  "deleted_logical_bytes": 25600004879,
+  "deleted_allocated_bytes": 25601323520,
+  "scope": "Only listed historical humanoid contact/state/motion/event traces and camera frames",
+  "protected_final_campaign": "scene2test/development/paired_crossing_matched_local_20261023_v1",
+  "protected_reference_control": "/workspace/g1_failure/runtime/humanoid_crossing_openrouter",
+  "additional_candidate_files_preserved": 13017,
+  "preserved_file_signatures_verified": 23367,
+  "preserved_content_hashes_verified": 1104,
+  "preserved_video_files": 311,
+  "receipt": "scene2test/development/storage_cleanup_review_20261023_v1/execution_receipt.json",
+  "no_source_model_or_robot_arm_changes": true,
+  "final_raw_evidence_preserved": true,
+  "historical_full_trace_revalidation_available": false,
+  "live_api_gpu_robot_execution": false
+}

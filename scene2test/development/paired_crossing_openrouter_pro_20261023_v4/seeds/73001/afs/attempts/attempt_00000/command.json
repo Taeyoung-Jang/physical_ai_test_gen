@@ -1,0 +1,26 @@
+{
+  "argv": [
+    "/workspace/g1_failure/src/physical_ai_test_gen/scene2test/.venv/bin/python3",
+    "/workspace/g1_failure/src/physical_ai_test_gen/scene2test/tools/run_robot_goal_agent.py",
+    "--live",
+    "--model=openai/gpt-6-luna-pro",
+    "--max-calls",
+    "10",
+    "--response-timeout",
+    "300.0",
+    "--evaluation-profile",
+    "goal_outcome_v1",
+    "--navigation-completion",
+    "goal_dwell_v1",
+    "--groot-root",
+    "/workspace/g1_failure/src/GR00T-WholeBodyControl",
+    "--scene-config",
+    "/workspace/g1_failure/src/physical_ai_test_gen/scene2test/development/paired_crossing_openrouter_pro_20261023_v3/seeds/73001/afs/attempts/attempt_00000/scene_config.json",
+    "--run-dir",
+    "/workspace/g1_failure/src/physical_ai_test_gen/scene2test/development/paired_crossing_openrouter_pro_20261023_v3/seeds/73001/afs/attempts/attempt_00000/rollout",
+    "--enable-push",
+    "--api-provider",
+    "openrouter"
+  ],
+  "automatic_retries": 0
+}

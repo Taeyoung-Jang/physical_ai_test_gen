@@ -1,0 +1,52 @@
+{
+  "schema_version": "task-outcome-v1",
+  "evaluation_profile": "goal_outcome_v1",
+  "task_contract_sha256": "168f511a5be4e7a1d23e7db475a1907bffaa55f0a5ddcdd2ba9ca0a779e133e4",
+  "task_outcome": "INCONCLUSIVE",
+  "goal_reached": null,
+  "termination": {
+    "actor": "infrastructure",
+    "reason": "response_deadline"
+  },
+  "execution_valid": false,
+  "valid_execution": false,
+  "success": false,
+  "robot_condition_sha256": "8a6de1438f182303fe8e85679eb9f3820ed4ca2317fafe970be96ab55e986b83",
+  "scene_revision": "11c7e2fdaabf304c5d0456f424d655fdadd7be018bb45916a1e6489ea93e5bf4",
+  "events_summary": {
+    "counts": {
+      "contact_start": 8995,
+      "contact_end": 8995
+    },
+    "peak_normal_force_n": 194.860035785489,
+    "normal_impulse_ns": 210476.4769165561,
+    "scope": "robot/world contacts only; force peak per contact point; impulse summed"
+  },
+  "goal_progress": {
+    "distance_m": 4.855328209543322,
+    "radius_m": 0.25,
+    "inside_goal_region": false,
+    "required_dwell_s": 1.0,
+    "current_dwell_s": 0.0,
+    "remaining_dwell_s": 1.0,
+    "goal_reached": false
+  },
+  "reason": "response_deadline",
+  "error_diagnostic": {
+    "stage": "runner",
+    "limit_wall_s": 353.0,
+    "elapsed_wall_s": 353.0048129950301,
+    "simulation_time_s": 622.0499999995068,
+    "observation_version": 7,
+    "client_request_id": "d09469e9-3687-41be-9c8b-d7a2f98491c9",
+    "code": "response_deadline"
+  },
+  "calls_attempted": 8,
+  "api_calls_attempted": 8,
+  "policy_origin": "openrouter_api",
+  "duration_s": 622.0499999995068,
+  "goal_distance_m": 4.8553282095433214,
+  "live_actions_accepted": 7,
+  "autonomous_task_success_validated": false,
+  "note": "Goal outcome under the recorded robot, task and budget; events are not task verdicts"
+}

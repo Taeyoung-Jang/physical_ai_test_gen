@@ -1,0 +1,20 @@
+{
+  "scope": "First humanoid single straight crossing proxy; robot-arm work untouched",
+  "scene_schema": "clear-path-crossing-human-v6",
+  "motion": "One prescribed mocap proxy crossing edge to edge at fixed X, triggered once after settle by base-center distance",
+  "speed_range_mps": [0.1, 1.5],
+  "trigger_distance_range_m": [0.5, 5.0],
+  "observation": "Current RGB/geometry plus human_motion behavior feedback; geometry refreshed during v6 navigation following",
+  "artifacts": ["human_proxies.json", "human_motion.jsonl", "human_motion_summary.json", "contacts.jsonl"],
+  "diagnostics": "Full-rate actual proxy pose, velocity command, trigger timestamp, base distance and robot contacts; manifest bound",
+  "detection_limit": "Static archive human detector explicitly unsupported for dynamic v6; no official dynamic family credit or task relabeling",
+  "search_limit": "Not registered in AFS/Random search or old frozen campaigns",
+  "physics_limit": "Box-shaped kinematic human proxy, no walking animation or contact response",
+  "offline_preview": "scene2test/development/humanoid_crossing_20261023_v1",
+  "preview_kind": "701 synthetic base-approach samples; XML compiled, trigger at 10.7s, crossing completed by 35s; not G1 rollout",
+  "tests": "142 related CPU tests passed in 43.72s; Ruff check and format passed",
+  "test_limits": "Passive sphere real MuJoCo contacts; real G1 joint/gait observation audit without inference; runner integration uses fake CPU controller/camera/video and mock policy",
+  "live_policy_or_api_or_gpu_execution": false,
+  "old_campaign_or_database_or_outcome_or_budget_edits": false,
+  "documentation": "scene2test/docs/HUMANOID_CROSSING.md"
+}

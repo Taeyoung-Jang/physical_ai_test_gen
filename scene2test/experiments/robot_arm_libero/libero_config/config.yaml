@@ -1,0 +1,7 @@
+{
+  "benchmark_root": "/workspace/g1_failure/src/Isaac-GR00T/external_dependencies/LIBERO/libero/libero",
+  "bddl_files": "/workspace/g1_failure/src/Isaac-GR00T/external_dependencies/LIBERO/libero/libero/bddl_files",
+  "init_states": "/workspace/g1_failure/src/Isaac-GR00T/external_dependencies/LIBERO/libero/libero/init_files",
+  "datasets": "/workspace/g1_failure/src/physical_ai_test_gen/scene2test/experiments/robot_arm_libero/datasets",
+  "assets": "/workspace/g1_failure/src/Isaac-GR00T/external_dependencies/LIBERO/libero/libero/assets"
+}

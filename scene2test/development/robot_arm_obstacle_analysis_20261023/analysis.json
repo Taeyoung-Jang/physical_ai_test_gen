@@ -1,0 +1,174 @@
+{
+  "scope": "Read-only post-hoc development pilot analysis; no new rollout/API, no verdict changes",
+  "verified_slots": 24,
+  "valid": 23,
+  "excluded": 1,
+  "adaptive_afs": {
+    "attempts": 6,
+    "fail": 6,
+    "repeated_prior_geometries_same_seed": 4,
+    "new_geometries_same_seed": 2
+  },
+  "adaptive_random": {
+    "attempts": 6,
+    "fail": 5,
+    "pass": 1
+  },
+  "bootstrap": {
+    "afs_fail": 6,
+    "random_fail": 5,
+    "random_excluded": 1
+  },
+  "requests": [
+    {
+      "seed": 641,
+      "index": 2,
+      "parameters": {
+        "obstacle_x": -0.0264,
+        "obstacle_y": 0.0951,
+        "obstacle_height": 0.17
+      },
+      "duplicate_of_prior_geometry_same_seed": false,
+      "hypothesis": "Prior valid attempts at this corridor location failed with the bowl unmoved and recorded robot-obstacle contact; the higher-contact attempt used a 0.1511 m box.",
+      "history_count": 2,
+      "history_pass": 0,
+      "history_fail": 2,
+      "request_sha256": "c0b179f3f3511db95dcda9ef8315855336bf2df795b2374d6469244a81bf0abd"
+    },
+    {
+      "seed": 641,
+      "index": 3,
+      "parameters": {
+        "obstacle_x": -0.0264,
+        "obstacle_y": 0.0951,
+        "obstacle_height": 0.17
+      },
+      "duplicate_of_prior_geometry_same_seed": true,
+      "hypothesis": "Prior valid attempts at this corridor location produced native task failures with the bowl unmoved and robot-obstacle contact. Reuse the high box configuration associated with a valid failure; contact is evidence, not a confirmed cause.",
+      "history_count": 3,
+      "history_pass": 0,
+      "history_fail": 3,
+      "request_sha256": "04e1533519a3825e8c105bb91a45d49b09a7bda91ae54e62bd8a0476e028de80"
+    },
+    {
+      "seed": 647,
+      "index": 2,
+      "parameters": {
+        "obstacle_x": -0.0125,
+        "obstacle_y": 0.105,
+        "obstacle_height": 0.17
+      },
+      "duplicate_of_prior_geometry_same_seed": false,
+      "hypothesis": "Prior valid attempts at nearby positions both failed with the bowl remaining at its initial location and sustained robot-obstacle contact. This candidate stays near the higher-contact failure while respecting shared bounds.",
+      "history_count": 2,
+      "history_pass": 0,
+      "history_fail": 2,
+      "request_sha256": "0935876eff1ce4bd27848366aa473904be13e7fcc7b39c39a8f2a18490276905"
+    },
+    {
+      "seed": 647,
+      "index": 3,
+      "parameters": {
+        "obstacle_x": -0.0125,
+        "obstacle_y": 0.105,
+        "obstacle_height": 0.17
+      },
+      "duplicate_of_prior_geometry_same_seed": true,
+      "hypothesis": "A valid attempt at this position and height produced native task FAIL, with the bowl remaining at its initial position and sustained robot-obstacle contact.",
+      "history_count": 3,
+      "history_pass": 0,
+      "history_fail": 3,
+      "request_sha256": "66554f89a9a53408c827ca8042c1c6d537570ef63c0511cafc544f6ff315f494"
+    },
+    {
+      "seed": 653,
+      "index": 2,
+      "parameters": {
+        "obstacle_x": -0.01294731933785441,
+        "obstacle_y": 0.10456519985836511,
+        "obstacle_height": 0.16980573558531464
+      },
+      "duplicate_of_prior_geometry_same_seed": true,
+      "hypothesis": "This geometry produced a valid native task FAIL in the supplied history. The bowl remained at its initial position, and robot\u2013obstacle contact was observed; these observations do not establish contact as the cause.",
+      "history_count": 2,
+      "history_pass": 0,
+      "history_fail": 2,
+      "request_sha256": "d892bc41bcc7759086a3e35e49d8ae61c0ff47084989a954295377346784dd47"
+    },
+    {
+      "seed": 653,
+      "index": 3,
+      "parameters": {
+        "obstacle_x": -0.01294731933785441,
+        "obstacle_y": 0.10456519985836511,
+        "obstacle_height": 0.16980573558531464
+      },
+      "duplicate_of_prior_geometry_same_seed": true,
+      "hypothesis": "This geometry had valid native task FAIL outcomes in the supplied own-seed history. The bowl remained near its initial position, and robot\u2013obstacle contact was observed; neither observation establishes the cause of failure.",
+      "history_count": 3,
+      "history_pass": 0,
+      "history_fail": 3,
+      "request_sha256": "07b8d5b774550966a33c46e25de60b0367f51ab4f4bc75ad56663ba4504fa8be"
+    }
+  ],
+  "random_success": {
+    "slot": "seed_647/random/attempt_00003",
+    "candidate": {
+      "positions": {
+        "bowl_x": -0.075,
+        "bowl_y": 0.0,
+        "plate_x": 0.06,
+        "plate_y": 0.2
+      },
+      "parameters": {
+        "obstacle_x": -0.009234022975258563,
+        "obstacle_y": 0.10861250919800894,
+        "obstacle_height": 0.08765838583854464
+      },
+      "obstacles": [
+        {
+          "id": "blocker",
+          "shape": "box",
+          "xy_m": [
+            -0.009234022975258563,
+            0.10861250919800894
+          ],
+          "size_m": [
+            0.05,
+            0.06,
+            0.08765838583854464
+          ]
+        }
+      ],
+      "scene_seed": 64703,
+      "hypothesis": "uniform random"
+    }
+  },
+  "domain_width_m": {
+    "obstacle_x": 0.03,
+    "obstacle_y": 0.020000000000000004,
+    "obstacle_height": 0.09000000000000001
+  },
+  "box_full_width_depth_m": [
+    0.05,
+    0.06
+  ],
+  "all_obstacles_common_footprint_m": {
+    "x": [
+      -0.0325,
+      -0.0125
+    ],
+    "y": [
+      0.08,
+      0.12
+    ]
+  },
+  "limitations": [
+    "Only 3 search axes, despite broader simulator adapter capabilities.",
+    "No matched counterfactual isolates why Random success differs.",
+    "Every AFS own-seed history contained zero PASS outcomes.",
+    "Repeated geometry across different policy seeds is not an identical stochastic trial.",
+    "Raw FDR rewards repeat failures; no novelty constraint or diversity objective in frozen pilot.",
+    "No statistically established advantage; equal valid budget incomplete."
+  ]
+}

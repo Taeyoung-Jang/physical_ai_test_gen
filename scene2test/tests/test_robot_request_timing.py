@@ -18,8 +18,8 @@ def test_invalid_timeout(value):
 
 def test_coordinated_deadline():
     assert RequestTiming().read_s == 90
-    assert RequestTiming().deadline_s == 120
-    assert RequestTiming(60).deadline_s == 90
+    assert RequestTiming().deadline_s == 143
+    assert RequestTiming(60).deadline_s == 113
 
 
 def test_http_timeout_propagation_and_failed_phase_survives_cleanup(tmp_path, monkeypatch):
@@ -92,4 +92,4 @@ def test_response_after_old_30s_limit_is_accepted():
     ]
     assert actions[0]["latency_s"] >= 32 and actions[0]["execution"] == "accepted"
     protocol = json.loads((root / "protocol.json").read_text())
-    assert protocol["http_read_timeout_s"] == 90 and protocol["response_deadline_wall_s"] == 120
+    assert protocol["http_read_timeout_s"] == 90 and protocol["response_deadline_wall_s"] == 143

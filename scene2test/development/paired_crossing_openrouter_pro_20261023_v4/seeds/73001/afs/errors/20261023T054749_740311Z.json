@@ -1,0 +1,43 @@
+{
+  "type": "ValueError",
+  "message": "context exceeds 250 KB; select fewer observations explicitly",
+  "exception_chain": [
+    {
+      "type": "ValueError",
+      "message": "context exceeds 250 KB; select fewer observations explicitly",
+      "frames": [
+        {
+          "file": "/workspace/g1_failure/src/physical_ai_test_gen/scene2test/src/failure_client/experiments/afs_autonomous.py",
+          "line": 550,
+          "function": "run"
+        },
+        {
+          "file": "/workspace/g1_failure/src/physical_ai_test_gen/scene2test/src/failure_client/experiments/afs_autonomous.py",
+          "line": 618,
+          "function": "_run"
+        },
+        {
+          "file": "/workspace/g1_failure/src/physical_ai_test_gen/scene2test/src/failure_client/experiments/paired_discovery.py",
+          "line": 356,
+          "function": "_proposal"
+        },
+        {
+          "file": "/workspace/g1_failure/src/physical_ai_test_gen/scene2test/src/failure_client/experiments/afs_autonomous.py",
+          "line": 358,
+          "function": "_proposal"
+        },
+        {
+          "file": "/workspace/g1_failure/src/physical_ai_test_gen/scene2test/src/llm_afs/behavior_request.py",
+          "line": 281,
+          "function": "request"
+        },
+        {
+          "file": "/workspace/g1_failure/src/physical_ai_test_gen/scene2test/src/llm_afs/provider.py",
+          "line": 29,
+          "function": "request_body"
+        }
+      ]
+    }
+  ],
+  "utc": "20261023T054749_740311Z"
+}

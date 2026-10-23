@@ -1,0 +1,22 @@
+{
+  "root": "scene2test/experiments/robot_arm_libero/staged_comparison_v3",
+  "planned_robot_cap": 36,
+  "afs_request_cap": 12,
+  "new_robot_runs": 0,
+  "new_api_calls": 0,
+  "planned_cpu_geometry_valid": 18,
+  "full_tests_passed": 143,
+  "final_staged_tests_passed": 25,
+  "prior_frozen_source_drift": [],
+  "layouts": [
+    "approach",
+    "transport",
+    "placement"
+  ],
+  "caveats": [
+    "Layout intention is not observed failure phase",
+    "Static obstacles exist from start; pregrasp obstruction still possible",
+    "Motion thresholds do not establish grasp/drop/cause",
+    "Repeated environments allowed and separately counted"
+  ]
+}

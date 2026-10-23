@@ -1,0 +1,17 @@
+{
+  "status": "COMPLETE",
+  "physics_samples": 2551,
+  "duration_s": 5.09999999999966,
+  "contact": false,
+  "contact_kinds": [],
+  "contact_duration_s": {
+    "robot_obstacle": 0.0,
+    "bowl_obstacle": 0.0
+  },
+  "peak_obstacle_force_n": 0.0,
+  "fell_below_table": false,
+  "longest_below_table_s": 0.0,
+  "min_bowl_plate_xy_distance_m": 0.011228521996092047,
+  "cause": "UNCONFIRMED",
+  "claim": "Observed contact/below-surface events only; grasp/drop/avoidance cause unconfirmed."
+}

@@ -1,0 +1,10 @@
+{
+  "schema_version": "clear-path-crossing-human-v6",
+  "corridor_width_m": 3.6,
+  "box_lateral_fraction": 1.0,
+  "floor_friction": 0.8,
+  "human_x_m": 4.0,
+  "human_lateral_fraction": 1.0,
+  "human_speed_mps": 0.5,
+  "human_trigger_distance_m": 2.0
+}

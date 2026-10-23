@@ -1,0 +1,17 @@
+{
+  "target_xy_m": [
+    5.95,
+    0.68
+  ],
+  "action_deadline_s": 417.3999999997002,
+  "events": [],
+  "summary": {
+    "version": "clearance-recovery-v3",
+    "recovery_count": 0,
+    "replan_count": 0,
+    "status": "tracking_slice_ended",
+    "ended_at_simulation_s": 417.4049999996929,
+    "terminal_reason": null,
+    "events": []
+  }
+}

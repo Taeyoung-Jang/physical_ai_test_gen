@@ -1,0 +1,25 @@
+{
+  "prepared": "scene2test/experiments/robot_arm_libero/obstacle_comparison_v1",
+  "new_robot_runs": 0,
+  "new_api_calls": 0,
+  "methods": [
+    "afs",
+    "random"
+  ],
+  "attempt_cap_per_method": 12,
+  "afs_request_cap": 6,
+  "cpu_tests_passed": 90,
+  "planned_cpu_initial_geometry_valid": 12,
+  "scope": "outcome-informed obstacle-only development pilot; fixed near-goal positions",
+  "no_claims": [
+    "AFS superiority",
+    "transport obstacle avoidance",
+    "physical reachability limit"
+  ],
+  "new_files": [
+    "scene2test/src/robot_arm/obstacle_search.py",
+    "scene2test/tools/run_robot_arm_obstacle_search.py",
+    "scene2test/config/robot_arm_obstacle_comparison.json",
+    "scene2test/tests/test_robot_arm_obstacle_search.py"
+  ]
+}

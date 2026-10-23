@@ -14,9 +14,10 @@ CURRENT = contextvars.ContextVar("robot_debug", default=None)
 
 def clean(value):
     value = str(value)
-    key = os.getenv("OPENAI_API_KEY")
-    if key:
-        value = value.replace(key, "[REDACTED]")
+    for name in ("OPENAI_API_KEY", "OPENROUTER_API_KEY"):
+        key = os.getenv(name)
+        if key:
+            value = value.replace(key, "[REDACTED]")
     value = re.sub(r"(?i)Bearer\s+\S+|sk-[\w-]+", "[REDACTED]", value)
     return value[:2000]
 
@@ -40,9 +41,12 @@ def exception_detail(exc):
 
 
 class Journal:
-    def __init__(self, path, version, *, read_timeout_s=30.0):
+    def __init__(self, path, version, *, read_timeout_s=30.0, connect_retries=0):
+        if type(connect_retries) is not int or not 0 <= connect_retries <= 2:
+            raise ValueError("connect_retries must be 0..2")
         self.path, self.version = path, version
         self.read_timeout_s = read_timeout_s
+        self.connect_retries = connect_retries
         self.client_request_id = str(uuid4())
         self.started = time.monotonic()
 

@@ -1,0 +1,11 @@
+{
+  "prepared": "capability_followup_v2",
+  "cases": 11,
+  "max_control_steps": 3300,
+  "afs_requests": 0,
+  "policy_runs_executed": 0,
+  "cpu_geometry_valid": 11,
+  "excluded_before_policy": "right-shift box initial cookie overlap",
+  "unused_do_not_run": "capability_followup_v1",
+  "purpose": "outcome-informed development, not heldout comparison"
+}

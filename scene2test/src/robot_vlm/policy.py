@@ -44,6 +44,7 @@ class Geometry(Strict):
     center_m: list[float] = Field(min_length=3, max_length=3)
     size_m: list[float] = Field(min_length=3, max_length=3)
     rotation_matrix: list[float] = Field(min_length=9, max_length=9)
+    semantic_role: Literal["simulated_human_proxy"] | None = None
 
 
 class Observation(Strict):
@@ -118,7 +119,15 @@ class PolicyError(RuntimeError):
 
 
 class OpenAIPolicy:
-    def __init__(self, *, model=MODEL, transport=None):
+    def __init__(self, *, model=MODEL, transport=None, service_tier=None, api_provider="openai"):
+        if api_provider not in {"openai", "openrouter"}:
+            raise ValueError("api_provider must be openai or openrouter")
+        if api_provider == "openrouter" and (service_tier is not None or "/" not in model):
+            raise ValueError("OpenRouter requires provider/model ID and omitted service_tier")
+        self.api_provider = api_provider
+        if service_tier not in (None, "flex", "default"):
+            raise ValueError("service_tier must be omitted, flex or default")
+        self.service_tier = service_tier
         self.model, self.transport = model, transport
 
     def decide(self, observation, png):
@@ -129,9 +138,10 @@ class OpenAIPolicy:
             command = VelocityEnvelope.model_validate(value).command
             return Action.model_validate(command.model_dump())
 
-        return call(
-            request_body(observation, png, model=self.model), parse, transport=self.transport
-        )
+        body = request_body(observation, png, model=self.model)
+        if self.service_tier is not None:
+            body["service_tier"] = self.service_tier
+        return call(body, parse, transport=self.transport, api_provider=self.api_provider)
 
 
 class MockPolicy:

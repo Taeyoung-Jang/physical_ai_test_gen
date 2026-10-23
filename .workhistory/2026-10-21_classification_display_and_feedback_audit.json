@@ -1,0 +1,39 @@
+{
+  "scope": "Display-only classification explanations and inspection of already-supplied AFS feedback",
+  "changes": [
+    "Separate primary, ambiguous, no-supported-rule, unknown, unverified and other FAIL explanations",
+    "Retain distinct-scene metrics, primary rules, FDR, diversity and Gain unchanged",
+    "Audit saved request/context/response binding without sending requests or asserting comprehension",
+    "Print the saved report snapshot without a second expensive trace parsing pass"
+  ],
+  "actual_findings": {
+    "random_valid_failures": 12,
+    "primary_attributed": 7,
+    "ambiguous": 1,
+    "no_supported_rule_detected": 4,
+    "existing_discovered_families_unchanged": 4,
+    "existing_unclassified_failures_unchanged": 5,
+    "afs_feedback_already_present": true,
+    "afs_feedback_or_robot_policy_changes_made": false
+  },
+  "reports": [
+    "/workspace/g1_failure/runtime/random_environment/luna_full_domain_v1/reports/20261021T064211_330297Z/report.html",
+    "/workspace/g1_failure/runtime/paired_discovery/luna_trajectory_smoke_v1/reports/20261021T064059_720292Z/report.html"
+  ],
+  "validation": {
+    "cpu_tests_passed": 142,
+    "seconds": 58.61,
+    "old_and_new_metrics_and_comparison_equal": true,
+    "old_and_new_attempts_proposals_and_research_ledgers_equal": true,
+    "old_and_new_report_hashes_verified": true,
+    "original_db_bytes_identical": false,
+    "db_byte_difference_explanation": "Existing repository initialization resets PRAGMA user_version to 5 then 6 on open; research state and ledger records match original snapshots. No storage patch or DB restoration attempted."
+  },
+  "paid_execution_performed": false,
+  "old_report_snapshots_overwritten": false,
+  "limits": [
+    "Diagnostic counts are per episode, not new failure diversity credit",
+    "Saved feedback presence does not prove causal correctness or better discovery",
+    "No speculative taxonomy, threshold, feedback, ranking, robot or budget changes"
+  ]
+}

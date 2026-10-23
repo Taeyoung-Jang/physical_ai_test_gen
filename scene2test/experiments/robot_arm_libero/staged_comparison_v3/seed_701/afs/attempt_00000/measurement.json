@@ -1,0 +1,37 @@
+{
+  "status": "COMPLETE",
+  "physics_samples": 2476,
+  "duration_s": 4.949999999999677,
+  "contact": false,
+  "contact_kinds": [],
+  "contact_duration_s": {
+    "robot_obstacle": 0.0,
+    "bowl_obstacle": 0.0
+  },
+  "peak_obstacle_force_n": 0.0,
+  "fell_below_table": false,
+  "longest_below_table_s": 0.0,
+  "min_bowl_plate_xy_distance_m": 0.014061996789165396,
+  "cause": "UNCONFIRMED",
+  "claim": "Observed contact/below-surface events only; grasp/drop/avoidance cause unconfirmed.",
+  "motion_contract": {
+    "version": "object-motion-observation-v1",
+    "settle_s": 1.0,
+    "rise_m": 0.03,
+    "movement_m": 0.05,
+    "near_goal_center_xy_m": 0.05,
+    "little_motion_m": 0.02
+  },
+  "motion_observations": {
+    "status": "COMPLETE",
+    "pattern": "native_task_completed",
+    "max_rise_after_settle_m": 0.17440727794888577,
+    "max_xy_movement_after_settle_m": 0.27246152272901125,
+    "min_goal_center_xy_gap_after_settle_m": 0.014061996789165396,
+    "first_obstacle_contact_elapsed_s": null,
+    "rise_ge_3cm": true,
+    "movement_ge_5cm": true,
+    "cause": "UNCONFIRMED",
+    "claim": "Motion heuristics only; no confirmed grasp, drop, avoidance or causal failure type."
+  }
+}

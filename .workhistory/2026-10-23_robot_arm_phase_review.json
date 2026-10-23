@@ -1,0 +1,13 @@
+{
+  "review": "scene2test/development/robot_arm_review_20261023/review.json",
+  "verified_cases": 11,
+  "replication": "capability_reproducibility_v1",
+  "new_robot_runs": 0,
+  "cases": 12,
+  "afs_requests": 0,
+  "outstanding": [
+    "run replication",
+    "obstacle AFS adapter",
+    "separate paired comparison"
+  ]
+}

@@ -22,7 +22,7 @@ from robot_vlm.task_outcome import digest, task_contract
 PROJECT = Path(__file__).resolve().parents[2]
 
 
-@pytest.mark.parametrize("schema,count", list(zip(domain.SCHEMAS, (3, 5, 17, 18))))
+@pytest.mark.parametrize("schema,count", list(zip(domain.SCHEMAS, (3, 5, 17, 18, 20))))
 def test_inventory_never_claims_observed_coverage(schema, count):
     report = domain.audit_domain(schema)
     assert report["axis_count"] == count
@@ -53,6 +53,17 @@ def test_initial_goal_separation_is_not_post_action_impossibility(schema):
     assert families["goal_occupied"]["rule_status"] == "IMPLEMENTED_OPERATIONAL"
     assert families["goal_occupied"]["scene_control_status"] == "NO_INITIAL_OCCUPANCY_IN_DOMAIN"
     assert families["unreachable"]["rule_status"] == "UNSUPPORTED"
+
+
+def test_v5_four_rules_are_inventory_not_observed_coverage():
+    report = domain.audit_domain("clear-path-human-v5", taxonomy_profile="goal-behavior-v2")
+    assert report["target_readiness"]["implemented_rule_count"] == 4
+    assert report["target_readiness"]["status"] == "REQUIRES_VALIDATED_SCENARIOS_AND_ROLLOUTS"
+    assert report["target_readiness"]["observed_failure_diversity_coverage"] is None
+    assert report["execution"]["robot_rollouts"] == 0
+    human = next(r for r in report["families"] if r["family"] == "human_safety_risk")
+    assert human["scene_control_status"] == "DECLARED_STATIC_HUMAN_PROXY"
+    assert human["rule_status"] == "IMPLEMENTED_OPERATIONAL"
 
 
 @pytest.mark.parametrize("schema", domain.SCHEMAS)
@@ -122,7 +133,9 @@ def test_v4_constructive_examples_do_not_invent_success_or_fourth_family():
 
 
 def test_rule_count_is_inventory_not_discovery_even_with_four_rules(monkeypatch):
-    monkeypatch.setattr(domain, "RULES", {f: "synthetic-test-rule" for f in FAMILIES[:4]})
+    monkeypatch.setattr(
+        domain, "rules_for_profile", lambda _: {f: "synthetic-test-rule" for f in FAMILIES[:4]}
+    )
     r = domain.audit_domain()
     assert r["target_readiness"]["implemented_rule_count"] == 4
     assert r["target_readiness"]["status"] == "REQUIRES_VALIDATED_SCENARIOS_AND_ROLLOUTS"

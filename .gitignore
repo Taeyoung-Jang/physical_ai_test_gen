@@ -34,3 +34,8 @@ venv/
 *.log
 *.tmp
 .cache/
+
+# Local large artifacts
+/codex.tar.gz
+/codex-x86_64-unknown-linux-musl
+/scene2test/development/paired_crossing_matched_local_20261023_v1/**/contacts.jsonl

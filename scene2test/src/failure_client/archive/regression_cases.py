@@ -39,6 +39,7 @@ COPY_FILES = {
     "terminal_state.json",
     "scene_graph.json",
     "navigation_map.json",
+    "human_proxies.json",
 }
 COPY_PATTERN = re.compile(r"(?:observation|skill|tool)_\d{3}\.json|camera_\d{3}\.png")
 SECRET_KEYS = {
@@ -61,6 +62,11 @@ SECRET_KEYS = {
 def _scene_parameters(root, protocol):
     try:
         config = validate_scene(protocol["scene_config"])
+        if (
+            config.schema_version == "clear-path-crossing-human-v6"
+            and config.human_lateral_fraction != 1.0
+        ):
+            raise ValueError("crossing search domain fixes the positive-side start")
         if identity(config) != protocol["scene_revision"]:
             raise ValueError("scene_revision_mismatch")
         xml = ET.parse(root / "scene.xml").getroot()
@@ -214,6 +220,11 @@ def build_failure_memory(records):
                     "http_read_timeout_s": protocol.get("http_read_timeout_s"),
                     "push_enabled": protocol.get("push_enabled"),
                     "policy_origin": record.policy_origin,
+                    **(
+                        {"api_provider": "openrouter"}
+                        if record.policy_origin == "openrouter_api"
+                        else {}
+                    ),
                     "evaluation_profile": protocol["evaluation_profile"],
                     "navigation_completion": profile_from_protocol(protocol),
                     "limits": (
@@ -358,10 +369,12 @@ def _reproduction_note(case):
         "--response-timeout",
         str(spec["http_read_timeout_s"]),
     ]
-    if spec["policy_origin"] == "openai_api":
+    if spec["policy_origin"] in {"openai_api", "openrouter_api"}:
         if not isinstance(spec["model"], str):
             return notice + "모델 식별 누락: 재실행 명령 없음.\n"
         argv.extend(["--live", "--model=" + spec["model"]])
+        if spec["policy_origin"] == "openrouter_api":
+            argv.extend(["--api-provider", "openrouter"])
     if spec["push_enabled"]:
         argv.append("--enable-push")
     if spec["max_simulation_s"] is not None:

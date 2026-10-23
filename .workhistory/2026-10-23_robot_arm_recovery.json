@@ -1,0 +1,12 @@
+{
+  "root": "scene2test/experiments/robot_arm_libero/obstacle_comparison_recovery_v2",
+  "original_valid": 9,
+  "preserved_pre_worker_exclusion": 1,
+  "new_robot_attempt_cap": 14,
+  "afs_request_cap_remaining": 6,
+  "new_robot_runs": 0,
+  "new_api_calls": 0,
+  "tests_passed": 92,
+  "original_modified": false,
+  "equal_valid_gain_available": false
+}

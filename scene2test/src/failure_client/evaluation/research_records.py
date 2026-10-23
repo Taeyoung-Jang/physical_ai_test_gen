@@ -13,6 +13,12 @@ Family = Literal[
     "goal_occupied",
     "human_safety_risk",
     "perception_error",
+    "fall",
+    "locomotion_stall",
+    "manipulation_failure",
+    "goal_completion_failure",
+    "goal_endpoint_rejection",
+    "subgoal_completion_loop",
 ]
 FAMILIES = (
     "collision",
@@ -22,6 +28,13 @@ FAMILIES = (
     "human_safety_risk",
     "perception_error",
 )
+EXPANDED_FAMILIES = FAMILIES + (
+    "fall",
+    "locomotion_stall",
+    "manipulation_failure",
+    "goal_completion_failure",
+)
+SYSTEM_FAMILIES = EXPANDED_FAMILIES + ("goal_endpoint_rejection", "subgoal_completion_loop")
 
 
 class StrictRecord(BaseModel):
@@ -93,7 +106,7 @@ class EpisodeRecord(StrictRecord):
     task_outcome: Literal["PASS", "FAIL", "INCONCLUSIVE"] = "INCONCLUSIVE"
     condition_id: str | None = None
     scene_id: str | None = None
-    policy_origin: Literal["openai_api", "mock"] | None = None
+    policy_origin: Literal["openai_api", "openrouter_api", "mock"] | None = None
     returned_models: list[str] = Field(default_factory=list)
     termination_reason: str | None = None
     measures: TraceMeasures | None = None

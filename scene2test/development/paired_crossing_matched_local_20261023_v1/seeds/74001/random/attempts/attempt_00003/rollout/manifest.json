@@ -1,0 +1,184 @@
+{
+  "artifacts": [
+    {
+      "path": "api_call_000.jsonl",
+      "sha256": "9c1e70298265d0309a2dfc6527536752a4d28abb4d70cc184964f64904dc4104"
+    },
+    {
+      "path": "api_call_001.jsonl",
+      "sha256": "aab7f3887e222f792e9608a2f3380a386dd15f7dae836145dcf1584fd9a0fd9a"
+    },
+    {
+      "path": "api_call_002.jsonl",
+      "sha256": "a379aa6790fa90af90947c0bbeff50c1bbd3a2a94b28f52047d53fc0bc7a7af1"
+    },
+    {
+      "path": "api_call_003.jsonl",
+      "sha256": "bffb899f33ba206e2c7ad51ebb6c22cad1c3a618f73d8c10bea82a17ddb4acb7"
+    },
+    {
+      "path": "camera_000.png",
+      "sha256": "97f5f36e8a58178336fe92b10b368bc7520137be263d6682dc35dbcc03809f68"
+    },
+    {
+      "path": "camera_001.png",
+      "sha256": "36c0adfa1c7e7a41ca44c20d215fcd903f45d88392e1c081bd7caafe52e26792"
+    },
+    {
+      "path": "camera_002.png",
+      "sha256": "bbeee20bf3dd7e6868eae060484f0547a857396d9d5000c09c1f5f012ee57177"
+    },
+    {
+      "path": "camera_003.png",
+      "sha256": "197335d57123ff710239b576da0301d6200b789a5a6cb7edfddf259d0c5f1305"
+    },
+    {
+      "path": "contacts.jsonl",
+      "sha256": "eb0ca02cd3d02205efcb26984f4f9cfefb030c59d2b240ca3ca7251927f4d1b1"
+    },
+    {
+      "path": "decisions.jsonl",
+      "sha256": "afa681dab30f71e510a0a2208e347d9cd62b39192b28fdf5ec15b99ea45c2226"
+    },
+    {
+      "path": "events.jsonl",
+      "sha256": "f2d381e5ca2a1769cd872e5b58bc4da3bea2cc207497f44cd2c200cad1e1bee8"
+    },
+    {
+      "path": "goal_context_000.json",
+      "sha256": "6765455b020d43bd5bd799b8a401f6e768a5297ba24986493bb488c7c240ef87"
+    },
+    {
+      "path": "goal_context_001.json",
+      "sha256": "cbab96b1fa203d034652cfdcc7b73ab438d31ef2b837fd0f4fe9508541fdda0a"
+    },
+    {
+      "path": "goal_context_002.json",
+      "sha256": "a8722ef04d963be2e3ce5c9fddb1144fea9cdb7acbdc93259e49e9f4c5d3cbf3"
+    },
+    {
+      "path": "goal_context_003.json",
+      "sha256": "c0fb9e66de94de7034e6271044a0dace8e8f4c7ca296ba4d66695552aa40987d"
+    },
+    {
+      "path": "human_motion.jsonl",
+      "sha256": "efc157b9a870779dce2ae71ea48da950d279c6aab661973949823b599d092161"
+    },
+    {
+      "path": "human_motion_summary.json",
+      "sha256": "caa51a13dfe6152176f14cf0b8ed65d4bac227a5f098e98ec7b245e35d570248"
+    },
+    {
+      "path": "human_proxies.json",
+      "sha256": "6fb3bf8e9ffd909f113288a05953c4c9a94af20c14fc4b921489726b42b167e9"
+    },
+    {
+      "path": "navigation_context_000.json",
+      "sha256": "4333b1ce5428be195598e400e70e5b6831cd3e99be42cb6e6ffd7b3b2803b33e"
+    },
+    {
+      "path": "navigation_context_001.json",
+      "sha256": "a5bdf6e9852c33f3cbeed95c588fb782f14f38282bcf224d10c7ecfddd9b702f"
+    },
+    {
+      "path": "navigation_context_002.json",
+      "sha256": "0d484e9ec744651c2f391f86f10c3ca080e83d9b9d4864e9cc5eafb435350ded"
+    },
+    {
+      "path": "navigation_context_003.json",
+      "sha256": "98f163dbf49ce5a258ccec33644472d58d9f3c8a9bc5b45d813b51b648bfc875"
+    },
+    {
+      "path": "navigation_map.json",
+      "sha256": "dac6ecc641f9646db2c089987d0a985299f8245ff832db1ff5b681ad2a385a65"
+    },
+    {
+      "path": "navigation_trace_000.json",
+      "sha256": "a944e05f49aa10887a774247e9f91d11614974c38a0c78539eadc5122f52e293"
+    },
+    {
+      "path": "navigation_trace_001.json",
+      "sha256": "6b1c2255a3e536d2a3f9a8156065f9213e2e3793c64a07300e48f6db5a084e15"
+    },
+    {
+      "path": "navigation_trace_002.json",
+      "sha256": "760eafd8792c36eb7151aef88a1f7df0580ff225399682eef962ea03a8a93fe1"
+    },
+    {
+      "path": "navigation_trace_003.json",
+      "sha256": "b9f8fb6b1bd19d58ff07c47c91d39ded96b5b7c0e3ecfdd0bb6182afdc6cdf77"
+    },
+    {
+      "path": "observation_000.json",
+      "sha256": "34d0ef96d7558e3717a538901a37ec1106f63f560787396c2e4a83854d47ec2c"
+    },
+    {
+      "path": "observation_001.json",
+      "sha256": "e1323f6db376eecfc906c55d980e8a1cd1df5c977009a6447cddaf96e32fdb11"
+    },
+    {
+      "path": "observation_002.json",
+      "sha256": "e01943d8b58d526907fea36631b280bbb0fa33680c200b6f9869074a77066b2c"
+    },
+    {
+      "path": "observation_003.json",
+      "sha256": "6188f8c3877ffde21554820f3371e45b7b6136f7627e730ce5efe818484a981d"
+    },
+    {
+      "path": "protocol.json",
+      "sha256": "8b3b6bac71e72bde6032f9d09173790514d12400f4bde9b6efe41409e422b65d"
+    },
+    {
+      "path": "report.html",
+      "sha256": "c7099d663e98a587c0ac8bca593a59f7220cdeb2001fd4c7ac66423f6a3bd1c9"
+    },
+    {
+      "path": "result.json",
+      "sha256": "1a74a828b5ab8f77529a40ae649f534f588bff3ddd5a8094aa96c15b90a6ca20"
+    },
+    {
+      "path": "robot_audit.json",
+      "sha256": "048cbe345878efd5d07cc5b9541ad4e6ee87c98d6d10ceef2173b09f66130185"
+    },
+    {
+      "path": "rollout.mp4",
+      "sha256": "2e7eff5c1cca7b92111e5a30f33c94f3f8e0c499dbc33adcb864a90caf6877c8"
+    },
+    {
+      "path": "scene.xml",
+      "sha256": "6e0aaf514118c1dfd0567d558fa8f2ff9906756bf72d281ddbed2679802df448"
+    },
+    {
+      "path": "scene_graph.json",
+      "sha256": "e571ee88043de26b80c51ce880bfe6c8284008d2b6324426005962147347fa9e"
+    },
+    {
+      "path": "states.jsonl",
+      "sha256": "dd92d007acd381912fc2be5d578e14284c1bde3c0429f40539179e937d4b87a0"
+    },
+    {
+      "path": "terminal_diagnostics.json",
+      "sha256": "ce8a2f2dcf06550c03680cdaef4070c0fb6d946dfadd93cf85b3f40db073b44f"
+    },
+    {
+      "path": "terminal_state.json",
+      "sha256": "33122d3ad8012d4d21b1eb39f13b26f95748d0ea5894c2183944ef8e1fa80c4c"
+    },
+    {
+      "path": "tool_000.json",
+      "sha256": "4523b677bc800154e77b99a91014bee11e3818ee4b936530c2056a07b2e3de62"
+    },
+    {
+      "path": "tool_001.json",
+      "sha256": "798ae64ff77152e8c85fc24e02be4ccaa7ea18c1b5ef65a77274d8a5c37cd867"
+    },
+    {
+      "path": "tool_002.json",
+      "sha256": "c25b9c83ef806ea3ac3717639ebc0bae139ac2118b7c28245a8218c642e5898c"
+    },
+    {
+      "path": "tool_003.json",
+      "sha256": "4699d7f85982e37487302192a0049d0600008927b2da1b85416090304b0dfa43"
+    }
+  ]
+}

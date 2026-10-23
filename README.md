@@ -1,5 +1,42 @@
 # Scene2Test
 
+새 [근거 역할 분리·감사 복구·유형 관측 범위·평가 준비](scene2test/docs/AFS_REFERENCE_RECOVERY_AND_EVALUATION.md)를 추가했습니다.
+신규 개발 모드는 `afs_reference_roles_luna.json`입니다. `recover-anchor-refs`는 기본 무료 dry-run이며,
+독립 평가 실행기는 seed별 초기 장면과 새 탐색 이력을 분리하며 `run_discovery_evaluation.py`로 실행합니다.
+CPU 모의 검증과 실제 자료의 무료 계획을 통과했으며, 새 유료 평가·4종 달성을 뜻하지 않습니다.
+
+최신 [LLM의 지난 결과 분석과 검출 조건 검토](scene2test/docs/AFS_BREADTH_SEARCH.md#llm의-지난-결과-분석과-검출-조건-검토)는
+`afs_cause_review_luna.json`을 사용합니다. 한 AFS 응답에서 지난 결과를 분석한 뒤 다음 환경을 제안하며,
+LLM의 원인 가설과 실제 실패 유형 판정은 분리합니다. 이전 세션을 수정하지 않고 별도 세션으로 실행합니다.
+
+최신 [행동 진단과 신규 집합 기준 AFS](scene2test/docs/AFS_BREADTH_SEARCH.md#행동-진단과-신규-집합-기준-선택)는
+`afs_behavior_diversity_luna.json`을 사용합니다. 반복 경로 거절·조작 요청 유무를 다음 제안에 전달하고,
+이번 집합에서 미발견한 유형을 우선합니다. 로봇·목표·분류 기준은 유지하며 별도 새 세션으로 실행합니다.
+
+새 [환경 요소 배정·작은 변경·큰 변경·두 요소 조합 탐색](scene2test/docs/AFS_BREADTH_SEARCH.md)은
+`afs_breadth_luna.json`으로 별도 세션을 시작합니다. 미발견 유형 우선 선택과 연속 PASS 후 전환을
+적용하며, 유효 12개·최대 16회 실험·AFS 20요청입니다. 기존 완료 세션과 아래 구버전 설정은 보존합니다.
+
+숫자 범위를 벗어난 후보는 기록해 제외하고 유효한 대안은 유지합니다.
+이미 중단된 실험은 [저장 응답 복구 안내](scene2test/docs/AFS_NUMERIC_RECOVERY.md)를 사용하세요.
+
+실패 유형을6종에서10종으로 확장했습니다.
+[판정 기준·기존 실험 재분석 명령](scene2test/docs/EXPANDED_FAILURE_TYPES.md)을 참조하세요.
+확장 유형을 [AFS 환경 선택에도 연결했습니다](scene2test/docs/AFS_EXPANDED_TEN.md).
+새10종 탐색은 `afs_expanded_ten_luna.json`, 기존6종 탐색은 `afs_failure_branch_luna.json`을 사용합니다.
+
+기존6종 AFS 개발 모드: [성공 기준 분기·실패 행동 진단·실행 명령](scene2test/docs/AFS_BRANCH_ANCHORS.md).
+새 가설은 성공 기록에서 분기하고 실패 완화는 실패 기록에서 분기합니다. 기존 동결
+세션은 보존하며 새 설정 `afs_failure_branch_luna.json`으로 별도 세션을 시작합니다.
+현재 설정은 중복 후보의 거절 이유를 받아 남은 AFS8요청 예산 안에서 재제안합니다.
+API 오류는 자동 재시도하지 않으며, 실제 로봇 실험은 최대8회·유효6개 목표입니다.
+아래의 이전 자동 탐색 예산·명령은 해당 구버전 모드 기준입니다.
+
+```
+apt-get update && apt-get install -y libegl1 libglvnd0
+```
+
+
 ## 검토된 기록에서 자동 AFS 탐색 시작하기
 
 최근 같은 조건의 실패·성공 기록을 받아 **장면 선택 → 로봇 실행 → 행동 분석 → 다음 선택**을

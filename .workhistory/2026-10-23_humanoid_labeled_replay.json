@@ -1,0 +1,14 @@
+{
+  "request": "Make the human and rectangular objects visually identifiable",
+  "source": "/workspace/g1_failure/runtime/humanoid_crossing_openrouter/20261023T005929_285349Z",
+  "source_review": "VALID PASS, six completed OpenRouter policy calls; human crossed, zero human contact, minimum center distance0.6982m; not safe-avoidance certification",
+  "output": "scene2test/development/humanoid_labeled_20261023_v1",
+  "viewer_changes": "Human silhouette, object name labels, distinct obstacle/box colors, transparent walls, overview camera, human motion state and distance HUD",
+  "replay": "1398 frames at12fps, nearest saved robot state with timestamp-matched human pose; no physics stepping or policy calls",
+  "source_artifacts": 59,
+  "source_mutated": false,
+  "robot_camera_inputs_changed": false,
+  "validation": "4 CPU integrity/projection tests passed; preview images visually inspected, Ruff check passed; output video decoded with ffmpeg",
+  "tool": "scene2test/tools/render_labeled_humanoid.py",
+  "notes": "Viewer silhouette and decorative walking animation do not replace the original box collision geometry or justify new failure labels"
+}

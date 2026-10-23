@@ -1,0 +1,44 @@
+{
+  "schema_version": "task-outcome-v1",
+  "evaluation_profile": "goal_outcome_v1",
+  "task_contract_sha256": "168f511a5be4e7a1d23e7db475a1907bffaa55f0a5ddcdd2ba9ca0a779e133e4",
+  "task_outcome": "FAIL",
+  "goal_reached": false,
+  "termination": {
+    "actor": "episode_budget",
+    "reason": "BUDGET_EXHAUSTED"
+  },
+  "execution_valid": true,
+  "valid_execution": true,
+  "success": false,
+  "robot_condition_sha256": "50ff2d1cf6fb3360a3fbe7dad8c1d35cf6edca9f98ca6d2390413064bc346583",
+  "scene_revision": "ecb6d4b3b2712ac77c794776707ead93c8c570af385f4fbffb1015df05d2a695",
+  "events_summary": {
+    "counts": {
+      "contact_start": 7395,
+      "contact_end": 7395
+    },
+    "peak_normal_force_n": 204.57888732135262,
+    "normal_impulse_ns": 184730.55663330833,
+    "scope": "robot/world contacts only; force peak per contact point; impulse summed"
+  },
+  "goal_progress": {
+    "distance_m": 0.5024873706475738,
+    "radius_m": 0.25,
+    "inside_goal_region": false,
+    "required_dwell_s": 1.0,
+    "current_dwell_s": 0.0,
+    "remaining_dwell_s": 1.0,
+    "goal_reached": false
+  },
+  "reason": "BUDGET_EXHAUSTED",
+  "error_diagnostic": null,
+  "calls_attempted": 10,
+  "api_calls_attempted": 10,
+  "policy_origin": "openrouter_api",
+  "duration_s": 544.7199999995771,
+  "goal_distance_m": 0.5024873706475739,
+  "live_actions_accepted": 10,
+  "autonomous_task_success_validated": false,
+  "note": "Goal outcome under the recorded robot, task and budget; events are not task verdicts"
+}

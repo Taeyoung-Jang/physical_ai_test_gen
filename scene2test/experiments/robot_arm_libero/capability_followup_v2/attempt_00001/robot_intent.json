@@ -1,0 +1,12 @@
+{
+  "id": "target_t0_125",
+  "positions": {
+    "bowl_x": -0.075,
+    "bowl_y": 0.0,
+    "plate_x": 0.0825,
+    "plate_y": 0.21625
+  },
+  "scene_seed": 62001,
+  "obstacles": [],
+  "line_t": 0.125
+}

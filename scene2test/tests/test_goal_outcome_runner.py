@@ -341,6 +341,32 @@ def test_planner_refreshes_geometry_after_model_observation(monkeypatch, tmp_pat
     assert context["geometry"] == [g.model_dump() for g in planned[0].geometry]
 
 
+def test_actual_runner_records_human_scene_and_supplies_role_to_policy(monkeypatch, tmp_path):
+    from clear_path.contracts import HumanFixture
+    from clear_path.humans import human_scene
+
+    policy = setup_loop(monkeypatch, "nav_never_arrive")
+    captured = []
+    decide = policy.decide
+
+    def observe(obs, png):
+        captured.append(obs)
+        return decide(obs, png)
+
+    policy.decide = observe
+    config = HumanFixture()
+    result = runner.run(tmp_path, tmp_path, policy, max_calls=1, scene_config=config.model_dump())
+    assert result["task_outcome"] == "FAIL" and result["calls_attempted"] == 1
+    assert json.loads((tmp_path / "human_proxies.json").read_text()) == human_scene(config)
+    person = next(g for g in captured[0].geometry if g.object_id == "human_proxy_1")
+    assert person.semantic_role == "simulated_human_proxy"
+    assert person.center_m[:2] == human_scene(config)["proxies"][0]["center_xy_m"]
+    manifest = json.loads((tmp_path / "manifest.json").read_text())
+    assert "human_proxies.json" in {r["path"] for r in manifest["artifacts"]}
+    protocol = json.loads((tmp_path / "protocol.json").read_text())
+    assert "fixture_humans" in protocol["source_hashes"]
+
+
 @pytest.mark.parametrize(
     "duration,simulation_cap,expected_status",
     [

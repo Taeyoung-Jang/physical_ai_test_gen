@@ -7,6 +7,7 @@ Ambiguous calls are never resent; saved evidence can be collected on resume.
 import json
 import os
 import time
+from copy import deepcopy
 from datetime import UTC, datetime
 from html import escape
 from pathlib import Path
@@ -17,15 +18,23 @@ from failure_client.archive.regression_cases import (
     export_failure_memory,
 )
 from failure_client.evaluation.behavior_measures import verify_episode_files
-from failure_client.evaluation.failure_taxonomy import classify_record
-from failure_client.evaluation.goal_run_reader import _hash_file, read_goal_run, read_json
+from failure_client.evaluation.goal_run_reader import (
+    _constant,
+    _hash_file,
+    _pairs,
+    read_goal_run,
+    read_json,
+)
 from failure_client.evaluation.research_records import EpisodeRecord, RunInput
+from failure_client.evaluation.taxonomy_profiles import classify_for_search, metric_options
 from failure_client.methods.autonomous_feedback import (
     SearchBudget,
     accounting,
     selected_probe,
     selection,
 )
+from failure_client.methods.behavior_feedback import NoEligibleEndpoint
+from failure_client.reporting.discovery_metrics import calculate_discovery_metrics
 from failure_client.reporting.search_diagnostics import experiment_reviews, search_diagnostics
 from failure_client.storage.research_store import ResearchStore
 from llm_afs import provider
@@ -51,6 +60,23 @@ LIMITS = [
 
 def stamp():
     return datetime.now(UTC).strftime("%Y%m%dT%H%M%S_%fZ")
+
+
+def proposal_request_digest(body):
+    """Compare the whole request, parsing only its declared JSON text payload.
+
+    Retain list order and every model/schema/instruction/transport value. DB sorting
+    can change dict insertion order inside JSON strings without changing their meaning.
+    Originals remain untouched; malformed/duplicate/nonfinite JSON is rejected.
+    """
+    normalized = deepcopy(body)
+    for message in normalized["input"]:
+        if not isinstance(message.get("content"), str):
+            raise ValueError("expected a JSON text proposal request")
+        message["content"] = json.loads(
+            message["content"], object_pairs_hook=_pairs, parse_constant=_constant
+        )
+    return digest(normalized)
 
 
 def fingerprint(config):
@@ -94,6 +120,15 @@ def development_plan(paths, budget=None, *, fingerprint_fn=None):
     # strategy slots and its default AFS model have no meaning in this session.
     cfg = {"scene_schema": cfg["scene_schema"], "robot": cfg["robot"]}
     rows = [e["record"] for e in memory["episodes"].values()]
+    if budget.selection_policy in {"discovery-v1", "failure-directed-v2", "failure-branch-v3"}:
+        rows = [
+            classify_for_search(
+                EpisodeRecord.model_validate(r),
+                cfg["scene_schema"],
+                budget.taxonomy_profile,
+            ).model_dump()
+            for r in rows
+        ]
     if len({r["policy_origin"] for r in rows}) != 1:
         raise ValueError("mixed mock/live origins")
     plan = {
@@ -144,12 +179,15 @@ def ensure_not_running(directory):
 
 
 class AutonomousAFS:
+    mode = MODE
+    request_policy = "autonomous_development_endpoint"
+
     def __init__(self, root, *, runner=None, proposer=None, fingerprint_fn=None, on_event=None):
         self.root = Path(root).resolve()
         if not (self.root / "protocol.json").is_file():
             raise ValueError("initialize an autonomous development session first")
         protocol = read_json(self.root / "protocol.json")
-        if protocol.get("lock", {}).get("plan", {}).get("mode") != MODE or protocol.get(
+        if protocol.get("lock", {}).get("plan", {}).get("mode") != self.mode or protocol.get(
             "lock_sha256"
         ) != digest(protocol.get("lock")):
             # Reject old suites before opening (or creating tables in) their DB.
@@ -206,11 +244,57 @@ class AutonomousAFS:
     def _verify_lock(self):
         expected = {"lock": self.state["lock"], "lock_sha256": digest(self.state["lock"])}
         if (
-            self.state.get("schema_version") != MODE
+            self.state.get("schema_version") != self.mode
             or self.state["lock_sha256"] != expected["lock_sha256"]
             or read_json(self.root / "protocol.json") != expected
         ):
             raise ValueError("frozen autonomous session protocol mismatch")
+        if (
+            self.state["lock"].get("recovery_sha256")
+            and digest(read_json(self.root / "recovery.json"))
+            != self.state["lock"]["recovery_sha256"]
+        ):
+            raise ValueError("point recovery audit mismatch")
+        if self.state["lock"].get("recovery_sha256"):
+            audit = read_json(self.root / "recovery.json")
+            if audit.get("schema_version") in {
+                "numeric-candidate-recovery-v1",
+                "anchor-behavior-ref-recovery-v1",
+            }:
+                snapshots = audit.get("source_snapshot_artifacts", {})
+                if set(snapshots) != {
+                    "source_state.json",
+                    "source_ledger.json",
+                    "source_protocol.json",
+                }:
+                    raise ValueError("numeric recovery source snapshot inventory mismatch")
+                if any(_hash_file(self.root / name) != sha for name, sha in snapshots.items()):
+                    raise ValueError("numeric recovery source snapshot changed")
+
+    def _proposal_raw(self, row):
+        directory = self.root / "proposals" / row["id"]
+        raw = provider.extract_proposal(read_json(directory / "response.json"))
+        if row.get("recovery"):
+            if not self.state["lock"].get("recovery_sha256"):
+                raise ValueError("unbound proposal recovery")
+            audit = read_json(self.root / "recovery.json")
+            fixed = read_json(directory / "normalized_proposal.json")
+            if row["recovery"] == "anchor_behavior_refs":
+                from .anchor_ref_recovery import normalize_anchor_refs
+
+                normalized = normalize_anchor_refs(raw, read_json(directory / "context.json"))
+            else:
+                from .point_recovery import normalize_equal_ranges
+
+                normalized = normalize_equal_ranges(raw)
+            if (
+                normalized != fixed
+                or digest(fixed) != audit["normalized_proposal_sha256"]
+                or any(row["artifacts"].get(k) != v for k, v in audit["original_artifacts"].items())
+            ):
+                raise ValueError("recovered proposal differs from original response")
+            return fixed
+        return raw
 
     def _verify_evidence(self):
         for row in self.plan["history"]:
@@ -243,12 +327,40 @@ class AutonomousAFS:
         return build_failure_memory(self._records())
 
     def _selection(self):
-        return selection(self._memory(), self.state["attempts"], self.budget, self.cfg.scene_schema)
+        candidate, ctx = selection(
+            self._memory(),
+            self.state["attempts"],
+            self.budget,
+            self.cfg.scene_schema,
+            scene_domain=self.plan.get("scene_domain"),
+        )
+        if ctx is not None and self.budget.reproposal_policy == "bounded-rejection-v1":
+            # Only finalized rejections enter the NEXT context. The pending response
+            # and validated candidate must not change their own context on resume.
+            dispatched = {a["candidate"].get("proposal_id") for a in self.state["attempts"]}
+            ctx["proposal_feedback"] = {
+                "policy": self.budget.reproposal_policy,
+                "remaining_requests": self.budget.max_afs_requests
+                - sum("rejection" in p or p["id"] in dispatched for p in self.state["proposals"]),
+                "rejected_proposals": [
+                    {"proposal_id": p["id"], **p["rejection"]}
+                    for p in self.state["proposals"]
+                    if "rejection" in p
+                ][-4:],
+            }
+        return candidate, ctx
+
+    def _selection_stop_reason(self, ctx):
+        return "no_selectable_axis" if ctx is None else "afs_request_budget"
 
     def _proposal(self, ctx):
         directory = self.root / "proposals" / f"proposal_{len(self.state['proposals']):05d}"
         body = request(
-            ctx, self.budget.afs_model, selection_policy="autonomous_development_endpoint"
+            ctx,
+            self.budget.afs_model,
+            selection_policy=self.request_policy,
+            service_tier=self.budget.afs_service_tier,
+            api_provider=self.budget.afs_api_provider,
         )
         directory.mkdir(parents=True, exist_ok=False)
         atomic_json(directory / "context.json", ctx)
@@ -276,9 +388,26 @@ class AutonomousAFS:
         if not path.is_file():
             raise RuntimeError("ambiguous proposal intent without saved response; never resend")
         response = read_json(path)
-        row.update(usage=response.get("usage"), returned_model=response.get("model"))
+        row.update(
+            usage=response.get("usage"),
+            api_provider=self.budget.afs_api_provider,
+            returned_api_provider=response.get("api_provider", "openai"),
+            routed_provider=response.get("routed_provider"),
+            returned_model=response.get("model"),
+            requested_service_tier=self.budget.afs_service_tier,
+            returned_service_tier=response.get("service_tier"),
+        )
         row["artifacts"]["response.json"] = _hash_file(path)
         self._save("proposal_response_collected", {"id": row["id"]})
+        if response.get("api_provider", "openai") != self.budget.afs_api_provider:
+            raise ValueError("AFS response provider differs from frozen request; never resend")
+        if (
+            self.budget.afs_service_tier is not None
+            and response.get("service_tier") != self.budget.afs_service_tier
+        ):
+            raise ValueError(
+                "AFS response service_tier does not confirm requested tier; never resend"
+            )
         self._fresh()
         candidate, ctx = self._selection()
         if (
@@ -288,16 +417,49 @@ class AutonomousAFS:
         ):
             raise ValueError("saved proposal context is stale")
         body = request(
-            ctx, self.budget.afs_model, selection_policy="autonomous_development_endpoint"
+            ctx,
+            self.budget.afs_model,
+            selection_policy=self.request_policy,
+            service_tier=self.budget.afs_service_tier,
+            api_provider=self.budget.afs_api_provider,
         )
-        if body != read_json(directory / "request.json"):
+        if proposal_request_digest(body) != proposal_request_digest(
+            read_json(directory / "request.json")
+        ):
             raise ValueError("saved proposal request changed")
         raw = provider.extract_proposal(response)
-        candidate = selected_probe(raw, ctx, self._memory())
+        try:
+            candidate = selected_probe(raw, ctx, self._memory())
+        except NoEligibleEndpoint as exc:
+            if self.budget.reproposal_policy != "bounded-rejection-v1":
+                raise
+            rejection = {
+                "reason": "no_eligible_endpoint",
+                "endpoints": exc.rejections,
+                "robot_launched": False,
+                "budget_consumed": "one AFS request; no rollout intent",
+            }
+            atomic_json(directory / "rejection.json", rejection)
+            row["artifacts"]["rejection.json"] = _hash_file(directory / "rejection.json")
+            row["rejection"] = rejection
+            self.state.update(selected=None, pending=None, status="READY", reason=None)
+            self._save("proposal_rejected", {"id": row["id"], **rejection})
+            return
         candidate["proposal_id"] = row["id"]
         row["candidate"] = candidate
         self.state.update(selected=candidate, pending=None, status="READY", reason=None)
-        self._save("proposal_validated", {"id": row["id"], "axis": candidate["axis"]})
+        self._save(
+            "proposal_validated",
+            {
+                "id": row["id"],
+                "axis": candidate["axis"],
+                **(
+                    {"changed_axes": candidate["changed_axes"]}
+                    if "changed_axes" in candidate
+                    else {}
+                ),
+            },
+        )
 
     def _observe(self, attempt):
         directory = self.root / "attempts" / attempt["id"]
@@ -340,7 +502,9 @@ class AutonomousAFS:
                 }
             )
         if record.status == "VALID":
-            record = classify_record(record)
+            record = classify_for_search(
+                record, self.cfg.scene_schema, self.budget.taxonomy_profile
+            )
         attempt.update(episode=record.model_dump(), receipt=receipt)
         self.state.update(
             pending=None,
@@ -352,23 +516,38 @@ class AutonomousAFS:
             {"id": attempt["id"], "status": record.status, "outcome": record.task_outcome},
         )
 
-    def run(self, *, live=False, max_new_attempts=None, continue_after_exclusion=False):
+    def run(
+        self,
+        *,
+        live=False,
+        max_new_attempts=None,
+        continue_after_exclusion=False,
+        max_new_afs_requests=None,
+    ):
         if not live:
             raise ValueError("explicit --live required for API and robot execution")
-        if self.plan["execution_origin"] != "openai_api" and isinstance(
+        if self.plan["execution_origin"] not in {"openai_api", "openrouter_api"} and isinstance(
             self.runner, LocalGoalRunner
         ):
             raise ValueError("synthetic history cannot launch the live robot runner")
         if self.plan["execution_origin"] == "openai_api" and not os.getenv("OPENAI_API_KEY"):
             raise ValueError("OPENAI_API_KEY is required in this process")
+        if self.plan["execution_origin"] == "openrouter_api" and not os.getenv(
+            "OPENROUTER_API_KEY"
+        ):
+            raise ValueError("OPENROUTER_API_KEY is required in this process")
         if max_new_attempts is not None and (
             type(max_new_attempts) is not int or max_new_attempts < 0
         ):
             raise ValueError("max_new_attempts must be nonnegative")
+        if max_new_afs_requests is not None and (
+            type(max_new_afs_requests) is not int or max_new_afs_requests < 1
+        ):
+            raise ValueError("max_new_afs_requests must be positive")
         with self.store.exclusive():
             self.state, self.revision = self.store.load()
             try:
-                return self._run(max_new_attempts, continue_after_exclusion)
+                return self._run(max_new_attempts, continue_after_exclusion, max_new_afs_requests)
             except BaseException as exc:
                 error = {
                     "type": type(exc).__name__,
@@ -386,7 +565,8 @@ class AutonomousAFS:
                 self._save("attention_required", error)
                 raise
 
-    def _run(self, max_new_attempts, continue_after_exclusion):
+    def _run(self, max_new_attempts, continue_after_exclusion, max_new_afs_requests=None):
+        initial_requests = len(self.state["proposals"])
         self._fresh()
         pending = self.state["pending"]
         if pending:
@@ -406,6 +586,16 @@ class AutonomousAFS:
             )
         launched = 0
         while len(self.state["attempts"]) < self.budget.max_attempts:
+            valid = sum(
+                a.get("episode", {}).get("status") == "VALID" for a in self.state["attempts"]
+            )
+            if (
+                self.budget.valid_rollout_target is not None
+                and valid >= self.budget.valid_rollout_target
+            ):
+                self.state.update(status="COMPLETE", reason="valid_rollout_target_complete")
+                self._save("complete")
+                return self.summary()
             if max_new_attempts is not None and launched >= max_new_attempts:
                 break
             self._fresh()
@@ -415,11 +605,19 @@ class AutonomousAFS:
                     if ctx is None or len(self.state["proposals"]) >= self.budget.max_afs_requests:
                         self.state.update(
                             status="BUDGET_EXHAUSTED",
-                            reason=("no_selectable_axis" if ctx is None else "afs_request_budget"),
+                            reason=self._selection_stop_reason(ctx),
                         )
                         self._save("selection_budget_stop")
                         return self.summary()
+                    if max_new_afs_requests is not None and (
+                        len(self.state["proposals"]) - initial_requests >= max_new_afs_requests
+                    ):
+                        self.state.update(status="READY", reason="invocation_afs_limit")
+                        self._save("invocation_afs_limit")
+                        return self.summary()
                     self._proposal(ctx)
+                    if self.state["selected"] is None:
+                        continue  # A completed rejected proposal consumed an AFS slot.
                 else:
                     self.state["selected"] = candidate
                     self._save("local_candidate_selected", {"axis": candidate["axis"]})
@@ -432,21 +630,34 @@ class AutonomousAFS:
                 )
                 if candidate != row["candidate"] or ctx is None:
                     raise ValueError("saved hypothesis no longer eligible")
-                raw = provider.extract_proposal(
-                    read_json(self.root / "proposals" / row["id"] / "response.json")
-                )
+                raw = self._proposal_raw(row)
                 expected = {**selected_probe(raw, ctx, self._memory()), "proposal_id": row["id"]}
                 if expected != candidate:
                     raise ValueError("saved candidate selection mismatch")
             elif scheduled != candidate:
                 raise ValueError("saved local candidate no longer eligible")
+            if self.plan.get("scene_domain") is not None:
+                from clear_path.search_domain import check_parameters
+
+                check_parameters(candidate["parameters"], self.plan["scene_domain"])
             self.cfg.scene(candidate["parameters"])  # strict scene compilation before intent
             attempt = {"id": f"attempt_{len(self.state['attempts']):05d}", "candidate": candidate}
             self.state["attempts"].append(attempt)
             self.state.update(
                 selected=None, pending={"kind": "rollout", "index": len(self.state["attempts"]) - 1}
             )
-            self._save("rollout_intent", {"id": attempt["id"], "axis": candidate["axis"]})
+            self._save(
+                "rollout_intent",
+                {
+                    "id": attempt["id"],
+                    "axis": candidate["axis"],
+                    **(
+                        {"changed_axes": candidate["changed_axes"]}
+                        if "changed_axes" in candidate
+                        else {}
+                    ),
+                },
+            )
             directory = self.root / "attempts" / attempt["id"]
             self.runner(self.cfg, directory, candidate["parameters"])
             launched += 1
@@ -456,9 +667,19 @@ class AutonomousAFS:
                 return self.summary()
         if len(self.state["attempts"]) == self.budget.max_attempts:
             excluded = any(a["episode"]["status"] != "VALID" for a in self.state["attempts"])
+            valid = sum(a["episode"]["status"] == "VALID" for a in self.state["attempts"])
+            target = self.budget.valid_rollout_target
             self.state.update(
-                status="COMPLETE_WITH_EXCLUSIONS" if excluded else "COMPLETE",
-                reason="fixed_attempt_budget_complete",
+                status=(
+                    "TARGET_NOT_REACHED"
+                    if target is not None and valid < target
+                    else "COMPLETE_WITH_EXCLUSIONS"
+                    if excluded
+                    else "COMPLETE"
+                ),
+                reason="attempt_cap_before_valid_target"
+                if target is not None and valid < target
+                else "fixed_attempt_budget_complete",
             )
             self._save("complete")
         return self.summary()
@@ -474,21 +695,38 @@ class AutonomousAFS:
                 "observed": sum(valid) if valid else None,
                 "missing_requests": len(proposals) - len(valid),
             }
-        axes = self.cfg.design()["axes"]
+        if self.plan.get("scene_domain") is not None:
+            from clear_path.search_domain import checked_domain
+
+            axes = checked_domain(self.plan["scene_domain"], self.cfg.scene_schema)
+        else:
+            axes = self.cfg.design()["axes"]
         return {
             "session": str(self.root),
-            "mode": MODE,
+            "mode": self.mode,
             "status": self.state["status"],
             "reason": self.state["reason"],
             "pending": self.state["pending"],
+            "recovery": read_json(self.root / "recovery.json")
+            if self.state["lock"].get("recovery_sha256")
+            else None,
             "budget": self.plan["budget"],
             "attempted": len(attempts),
+            "valid": sum(r["status"] == "VALID" for r in rows),
+            "valid_rollout_target": self.budget.valid_rollout_target,
             "robot_api_call_upper_bound": self.plan["robot_api_call_upper_bound"],
             "afs_requests_attempted": len(proposals),
+            "afs_proposals_rejected": sum("rejection" in p for p in proposals),
+            "afs_requests_remaining": max(0, self.budget.max_afs_requests - len(proposals)),
             "pass": sum(r["status"] == "VALID" and r["task_outcome"] == "PASS" for r in rows),
             "fail": sum(r["status"] == "VALID" and r["task_outcome"] == "FAIL" for r in rows),
             "excluded": sum(r["status"] != "VALID" for r in rows),
+            "new_only_discovery_metrics": calculate_discovery_metrics(
+                [EpisodeRecord.model_validate(r) for r in rows],
+                **metric_options(self.cfg.scene_schema, self.budget.taxonomy_profile),
+            ),
             "scheduler": accounting(attempts, axes, self.budget),
+            **self._breadth_summary(attempts, axes),
             "new_execution_costs": costs(rows, len(attempts)),
             "inherited_history_costs": costs(self.plan["history"], len(self.plan["history"])),
             "inherited_afs_selection_costs": {
@@ -505,6 +743,29 @@ class AutonomousAFS:
                 (a.get("receipt") or {}).get("wall_s") is None for a in attempts
             ),
             "limits": LIMITS,
+        }
+
+    def _breadth_summary(self, attempts, axes):
+        if self.budget.exploration_policy != "breadth-v1":
+            return {}
+        from collections import Counter
+
+        from failure_client.methods.breadth_policy import allocation, behavior_relevance
+
+        selectable = accounting(attempts, axes, self.budget)["selectable_axes"]
+        forms = Counter(a["candidate"]["exploration"]["form"] for a in attempts)
+        return {
+            "exploration_allocation": {
+                **allocation(
+                    attempts,
+                    selectable,
+                    relevance=behavior_relevance(self._memory())
+                    if self.budget.factor_allocation == "behavior-relevance-v1"
+                    else None,
+                ),
+                "form_attempts": dict(forms),
+                "next_slot_is_executable": self.state["status"] == "READY",
+            }
         }
 
     def report(self):
@@ -535,6 +796,13 @@ class AutonomousAFS:
             atomic_json(output / "search_diagnostics.json", diagnostics)
             atomic_json(output / "hypothesis_reviews.json", reviews)
             sections = []
+            for p in self.state["proposals"]:
+                if "rejection" in p:
+                    sections.append(
+                        f"<h2>{escape(p['id'])} · 후보 거절 · 로봇 미실행</h2><pre>"
+                        + escape(json.dumps(p["rejection"], indent=2, ensure_ascii=False))
+                        + "</pre>"
+                    )
             for a in self.state["attempts"]:
                 c, r = a["candidate"], a.get("episode", {})
                 label = (
@@ -549,6 +817,13 @@ class AutonomousAFS:
                     "exclusion_reason": r.get("exclusion_reason"),
                     "measures": r.get("measures"),
                 }
+                if "branch_audit" in c:
+                    detail["branch_audit"] = c["branch_audit"]
+                if "exploration" in c:
+                    detail["exploration"] = c["exploration"]
+                    detail["changed_axes"] = c["changed_axes"]
+                if self.budget.reproposal_policy == "bounded-rejection-v1":
+                    detail["endpoint_selection_audit"] = c.get("selection_audit")
                 links = []
                 for name, title in (("report.html", "로봇 행동 보고서"), ("rollout.mp4", "MP4")):
                     if (self.root / "attempts" / a["id"] / "rollout" / name).is_file():

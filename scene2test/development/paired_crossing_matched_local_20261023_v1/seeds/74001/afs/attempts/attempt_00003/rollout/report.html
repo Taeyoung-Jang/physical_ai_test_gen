@@ -1,0 +1,61 @@
+<!doctype html><meta charset='utf-8'><h1>Robot policy: openrouter_api</h1>
+<p>Task outcome: PASS; profile: goal_outcome_v1; reason: GOAL_REACHED.</p>
+<p>Goal outcome under the recorded robot, task and budget; events are not task verdicts</p>
+<p>Goal distance: 0.11657389943717628 m; calls: 6/10.</p>
+<p>Goal dwell: 0.9999999999990905 / 1.0 s.
+Navigation completion: goal_dwell_v1. No post-budget grace.</p>
+<details><summary>Terminal diagnostics (not a counterfactual verdict)</summary>
+<pre>{
+  &quot;schema_version&quot;: &quot;goal-termination-diagnostics-v1&quot;,
+  &quot;phase&quot;: &quot;navigate_goal_hold&quot;,
+  &quot;reason&quot;: &quot;GOAL_REACHED&quot;,
+  &quot;navigation_completion&quot;: {
+    &quot;profile&quot;: &quot;goal_dwell_v1&quot;,
+    &quot;target_radius_m&quot;: 0.12,
+    &quot;final_goal_target_tolerance_m&quot;: 1e-06,
+    &quot;final_goal_arrival&quot;: &quot;hold_within_requested_action_until_goal_or_deadline&quot;,
+    &quot;intermediate_arrival&quot;: &quot;return_immediately&quot;,
+    &quot;extra_calls&quot;: 0,
+    &quot;extra_action_time_s&quot;: 0,
+    &quot;post_budget_grace_s&quot;: 0
+  },
+  &quot;goal_progress&quot;: {
+    &quot;distance_m&quot;: 0.11657389943717628,
+    &quot;radius_m&quot;: 0.25,
+    &quot;inside_goal_region&quot;: true,
+    &quot;required_dwell_s&quot;: 1.0,
+    &quot;current_dwell_s&quot;: 0.9999999999990905,
+    &quot;remaining_dwell_s&quot;: 9.094947017729282e-13,
+    &quot;goal_reached&quot;: true
+  },
+  &quot;policy_calls_remaining&quot;: 4,
+  &quot;simulation_seconds_remaining&quot;: null,
+  &quot;budget_ended_during_goal_dwell&quot;: false,
+  &quot;last_navigation&quot;: {
+    &quot;observation_version&quot;: 5,
+    &quot;status&quot;: &quot;goal_reached&quot;,
+    &quot;profile&quot;: &quot;goal_dwell_v1&quot;,
+    &quot;action_start_s&quot;: 361.0899999997441,
+    &quot;requested_duration_s&quot;: 8.0,
+    &quot;action_deadline_s&quot;: 369.0899999997441,
+    &quot;goal_dwell_enabled_for_target&quot;: true,
+    &quot;first_target_arrival_s&quot;: 366.86499999973887,
+    &quot;hold_simulation_s&quot;: 0.03
+  },
+  &quot;claim&quot;: &quot;Observed terminal state only; no counterfactual PASS or failure cause&quot;
+}</pre></details>
+<details><summary>Behavior events (not task verdicts)</summary>
+<pre>{
+  &quot;counts&quot;: {
+    &quot;contact_start&quot;: 4948,
+    &quot;contact_end&quot;: 4948
+  },
+  &quot;peak_normal_force_n&quot;: 204.57888732135314,
+  &quot;normal_impulse_ns&quot;: 124402.64549540404,
+  &quot;scope&quot;: &quot;robot/world contacts only; force peak per contact point; impulse summed&quot;
+}</pre></details>
+<video controls width='960' src='rollout.mp4'></video><p>MP4 recording only; GIF disabled.</p>
+<p><a href='camera_000.png'>Robot camera input</a> ·
+<a href='api_call_000.jsonl'>API call 0 debug log</a> ·
+<a href='decisions.jsonl'>Decisions</a> · <a href='events.jsonl'>Behavior events</a> ·
+<a href='result.json'>Goal outcome</a> · <a href='protocol.json'>Protocol</a></p>

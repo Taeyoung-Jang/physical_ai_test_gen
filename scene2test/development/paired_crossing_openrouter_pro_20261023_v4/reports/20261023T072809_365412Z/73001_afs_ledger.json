@@ -1,0 +1,233 @@
+[
+  {
+    "revision": 0,
+    "utc": "2026-10-23T02:11:53.270665+00:00",
+    "event": "created",
+    "detail": "{}",
+    "state_sha256": "84c5c8bcc6be1513ce6443dfbb167ee308bbbaf94cccacc3d1821a156547440d"
+  },
+  {
+    "revision": 1,
+    "utc": "2026-10-23T02:13:15.056184+00:00",
+    "event": "local_candidate_selected",
+    "detail": "{\"axis\": null}",
+    "state_sha256": "32a0940bf4463bb26bbe45f66917f36166dc09d94fe5120bf736465208f3697f"
+  },
+  {
+    "revision": 2,
+    "utc": "2026-10-23T02:13:15.146124+00:00",
+    "event": "rollout_intent",
+    "detail": "{\"id\": \"attempt_00000\", \"axis\": null}",
+    "state_sha256": "05bb683b91ae0a832269ccfa5c8407085737fa89cab992761e4934319465941e"
+  },
+  {
+    "revision": 3,
+    "utc": "2026-10-23T02:22:41.239424+00:00",
+    "event": "observed",
+    "detail": "{\"id\": \"attempt_00000\", \"status\": \"VALID\", \"outcome\": \"FAIL\"}",
+    "state_sha256": "f94de7b4d74008d2b5843abcc547a6e670d5e1c54d9aa2d12cf24e92c8926cff"
+  },
+  {
+    "revision": 4,
+    "utc": "2026-10-23T03:02:53.448724+00:00",
+    "event": "local_candidate_selected",
+    "detail": "{\"axis\": null}",
+    "state_sha256": "5ec71ef75cdc6cf03b93ed618957b3a50c60bc781e1c4cde576ef8d559635e07"
+  },
+  {
+    "revision": 5,
+    "utc": "2026-10-23T03:02:53.546816+00:00",
+    "event": "rollout_intent",
+    "detail": "{\"id\": \"attempt_00001\", \"axis\": null}",
+    "state_sha256": "0a96fe062c23028ef3d961b3de3cdf48c36391ffd5c8b92d8b99c21f3186e344"
+  },
+  {
+    "revision": 6,
+    "utc": "2026-10-23T03:13:26.574181+00:00",
+    "event": "observed",
+    "detail": "{\"id\": \"attempt_00001\", \"status\": \"VALID\", \"outcome\": \"FAIL\"}",
+    "state_sha256": "2edc487126aa2a1aefca37101a869fff2618ba3f663cccb284061f535d4ac840"
+  },
+  {
+    "revision": 7,
+    "utc": "2026-10-23T04:24:18.552340+00:00",
+    "event": "proposal_intent",
+    "detail": "{\"id\": \"proposal_00000\", \"context_sha256\": \"a01e4f3bfe543cbe9f9ed4f1908e23d23be1c024c6bf9d5c1cecbcd103bfcdde\"}",
+    "state_sha256": "00ad16a069fddc640ad90c4955f2db277610429e102b53368f14ba12560c82aa"
+  },
+  {
+    "revision": 8,
+    "utc": "2026-10-23T04:26:26.058026+00:00",
+    "event": "proposal_dispatch_finished",
+    "detail": "{\"id\": \"proposal_00000\"}",
+    "state_sha256": "9c5892ffd9f1d645c1c0a5212befc38715a10e19a0bd12d29d44ffcb5368edb8"
+  },
+  {
+    "revision": 9,
+    "utc": "2026-10-23T04:26:26.217101+00:00",
+    "event": "proposal_response_collected",
+    "detail": "{\"id\": \"proposal_00000\"}",
+    "state_sha256": "c2c19c3cb104afbb884421d9e92fa35d7cfc474554ecd040d82147e594714483"
+  },
+  {
+    "revision": 10,
+    "utc": "2026-10-23T04:27:02.455697+00:00",
+    "event": "proposal_validated",
+    "detail": "{\"id\": \"proposal_00000\", \"axis\": \"floor_friction\", \"changed_axes\": [\"floor_friction\", \"box_lateral_fraction\"]}",
+    "state_sha256": "18eeff60375848d5c022c48e90397fc796ea9aa8c9237f1ed5e4ebeda7101bbd"
+  },
+  {
+    "revision": 11,
+    "utc": "2026-10-23T04:27:32.870765+00:00",
+    "event": "rollout_intent",
+    "detail": "{\"id\": \"attempt_00002\", \"axis\": \"floor_friction\", \"changed_axes\": [\"floor_friction\", \"box_lateral_fraction\"]}",
+    "state_sha256": "f0b55926808e342d207a009640c3675457ca36c26f241af7754cbef5dff3f582"
+  },
+  {
+    "revision": 12,
+    "utc": "2026-10-23T04:43:13.041038+00:00",
+    "event": "observed",
+    "detail": "{\"id\": \"attempt_00002\", \"status\": \"VALID\", \"outcome\": \"FAIL\"}",
+    "state_sha256": "f33397bdbc0ddbad68d27d74ad2599f1bc9278f1f3b09361dcb09ba1cdcbad38"
+  },
+  {
+    "revision": 13,
+    "utc": "2026-10-23T05:12:02.441717+00:00",
+    "event": "proposal_intent",
+    "detail": "{\"id\": \"proposal_00001\", \"context_sha256\": \"a28976ee3ca43e90c092812546746d2c672e92ad5038fb83aff57ebd6ee2b6cb\"}",
+    "state_sha256": "05bdad96002ec17ec54c7a68ad9db0a62f1ba7d2bac83193f42e0d8e58246653"
+  },
+  {
+    "revision": 14,
+    "utc": "2026-10-23T05:14:00.983462+00:00",
+    "event": "proposal_dispatch_finished",
+    "detail": "{\"id\": \"proposal_00001\"}",
+    "state_sha256": "7055ac1523e919b6814833014f0f3f3816f1f6ecdcfd326ffb9611bf93d7bbee"
+  },
+  {
+    "revision": 15,
+    "utc": "2026-10-23T05:14:01.170004+00:00",
+    "event": "proposal_response_collected",
+    "detail": "{\"id\": \"proposal_00001\"}",
+    "state_sha256": "378f8de30850024d9fe8f09f4a731a8c49874f554a9099b03ae2b1f492a6b3c7"
+  },
+  {
+    "revision": 16,
+    "utc": "2026-10-23T05:14:59.839556+00:00",
+    "event": "proposal_validated",
+    "detail": "{\"id\": \"proposal_00001\", \"axis\": \"box_friction\", \"changed_axes\": [\"box_friction\"]}",
+    "state_sha256": "fd5450591666b62ae5528467ca35b3f55771bc43b9c4b3793be3905910704bdc"
+  },
+  {
+    "revision": 17,
+    "utc": "2026-10-23T05:15:50.213799+00:00",
+    "event": "rollout_intent",
+    "detail": "{\"id\": \"attempt_00003\", \"axis\": \"box_friction\", \"changed_axes\": [\"box_friction\"]}",
+    "state_sha256": "b1906c0cbc65d9eacceaf557e08f07dde60a41d0dbc9d8bd1981caa87e712900"
+  },
+  {
+    "revision": 18,
+    "utc": "2026-10-23T05:30:12.131057+00:00",
+    "event": "observed",
+    "detail": "{\"id\": \"attempt_00003\", \"status\": \"VALID\", \"outcome\": \"FAIL\"}",
+    "state_sha256": "a73f1b19fc2e81ef978b4c9a83105c5004cd76b2d0fc0d116b5eb8cddd36752a"
+  },
+  {
+    "revision": 19,
+    "utc": "2026-10-23T05:47:49.883628+00:00",
+    "event": "attention_required",
+    "detail": "{\"type\": \"ValueError\", \"message\": \"context exceeds 250 KB; select fewer observations explicitly\", \"exception_chain\": [{\"type\": \"ValueError\", \"message\": \"context exceeds 250 KB; select fewer observations explicitly\", \"frames\": [{\"file\": \"/workspace/g1_failure/src/physical_ai_test_gen/scene2test/src/failure_client/experiments/afs_autonomous.py\", \"line\": 550, \"function\": \"run\"}, {\"file\": \"/workspace/g1_failure/src/physical_ai_test_gen/scene2test/src/failure_client/experiments/afs_autonomous.py\", \"line\": 618, \"function\": \"_run\"}, {\"file\": \"/workspace/g1_failure/src/physical_ai_test_gen/scene2test/src/failure_client/experiments/paired_discovery.py\", \"line\": 356, \"function\": \"_proposal\"}, {\"file\": \"/workspace/g1_failure/src/physical_ai_test_gen/scene2test/src/failure_client/experiments/afs_autonomous.py\", \"line\": 358, \"function\": \"_proposal\"}, {\"file\": \"/workspace/g1_failure/src/physical_ai_test_gen/scene2test/src/llm_afs/behavior_request.py\", \"line\": 281, \"function\": \"request\"}, {\"file\": \"/workspace/g1_failure/src/physical_ai_test_gen/scene2test/src/llm_afs/provider.py\", \"line\": 29, \"function\": \"request_body\"}]}], \"utc\": \"20261023T054749_740311Z\"}",
+    "state_sha256": "5734be13a0a8c9eacad554930e24339b697d4d84fd77a0ba882486e2c138d5cd"
+  },
+  {
+    "revision": 20,
+    "utc": "2026-10-23T06:03:10.678801+00:00",
+    "event": "byte_guard_removal_transition",
+    "detail": "{\"source\": \"/workspace/g1_failure/src/physical_ai_test_gen/scene2test/development/paired_crossing_openrouter_pro_20261023_v3\", \"source_state_sha256\": \"5734be13a0a8c9eacad554930e24339b697d4d84fd77a0ba882486e2c138d5cd\"}",
+    "state_sha256": "d72408aacb8901036b7c741988b25957f28ad23b7a5772f997a9433ac6fe553b"
+  },
+  {
+    "revision": 21,
+    "utc": "2026-10-23T06:12:10.182788+00:00",
+    "event": "proposal_intent",
+    "detail": "{\"id\": \"proposal_00002\", \"context_sha256\": \"c7af47030e628c1446f566cb4946131cf7481c5ef873a83b03a13edc2f9f7de3\"}",
+    "state_sha256": "569c57addfdb52b22c339587bb0c112c4e25ca1d4929f46060f059125fc455d3"
+  },
+  {
+    "revision": 22,
+    "utc": "2026-10-23T06:13:37.228569+00:00",
+    "event": "proposal_dispatch_finished",
+    "detail": "{\"id\": \"proposal_00002\"}",
+    "state_sha256": "72f030bb506ff56bd256a777abee044636673ed3f3151fbb0f67072a149a71f4"
+  },
+  {
+    "revision": 23,
+    "utc": "2026-10-23T06:13:37.368292+00:00",
+    "event": "proposal_response_collected",
+    "detail": "{\"id\": \"proposal_00002\"}",
+    "state_sha256": "7c22bda2993ab8a1c5a016608405ab2af14bbbb7ee5ac7ade156f0b716ee3e30"
+  },
+  {
+    "revision": 24,
+    "utc": "2026-10-23T06:14:51.759038+00:00",
+    "event": "proposal_validated",
+    "detail": "{\"id\": \"proposal_00002\", \"axis\": \"obstacle_1_size_x_m\", \"changed_axes\": [\"obstacle_1_size_x_m\"]}",
+    "state_sha256": "dcfb75d3dcd840e9123c8a7785e0d38cf93f51cbaf34859d5420afe8e0879c24"
+  },
+  {
+    "revision": 25,
+    "utc": "2026-10-23T06:16:01.620245+00:00",
+    "event": "rollout_intent",
+    "detail": "{\"id\": \"attempt_00004\", \"axis\": \"obstacle_1_size_x_m\", \"changed_axes\": [\"obstacle_1_size_x_m\"]}",
+    "state_sha256": "f7c8aaedc35aa4aff879beffcde112452fea08fb2896852bcd34006d1cb0f9c9"
+  },
+  {
+    "revision": 26,
+    "utc": "2026-10-23T06:26:44.254390+00:00",
+    "event": "observed",
+    "detail": "{\"id\": \"attempt_00004\", \"status\": \"VALID\", \"outcome\": \"FAIL\"}",
+    "state_sha256": "dfe8894e945135c5ac3dca6b60714dddacf2af24f0c5dea531349c1764b2f6b1"
+  },
+  {
+    "revision": 27,
+    "utc": "2026-10-23T06:55:05.368567+00:00",
+    "event": "proposal_intent",
+    "detail": "{\"id\": \"proposal_00003\", \"context_sha256\": \"3ae23f3e1a118346c0dba7c4f9385f28555d5357010684046f7420462eefcf18\"}",
+    "state_sha256": "92cd6ecbe2bc20e680ff10139fd3902123daed12fa33f2ba7e53d895984219a1"
+  },
+  {
+    "revision": 28,
+    "utc": "2026-10-23T06:57:26.649704+00:00",
+    "event": "proposal_dispatch_finished",
+    "detail": "{\"id\": \"proposal_00003\"}",
+    "state_sha256": "19db407fb8356753c9c2218779d6318fe584d1126187616e84ec81a4beb8d87a"
+  },
+  {
+    "revision": 29,
+    "utc": "2026-10-23T06:57:26.940946+00:00",
+    "event": "proposal_response_collected",
+    "detail": "{\"id\": \"proposal_00003\"}",
+    "state_sha256": "8830f28137239e2ffd45ffdf572151715ee3f1cb512e0bcd816abad6ead0c3ee"
+  },
+  {
+    "revision": 30,
+    "utc": "2026-10-23T06:58:56.875241+00:00",
+    "event": "proposal_validated",
+    "detail": "{\"id\": \"proposal_00003\", \"axis\": \"human_x_m\", \"changed_axes\": [\"human_x_m\", \"floor_friction\"]}",
+    "state_sha256": "0faf00634622dc9fb006d27e843e9313cfda0cec1e406c0b5f882b5f011af886"
+  },
+  {
+    "revision": 31,
+    "utc": "2026-10-23T07:00:19.569019+00:00",
+    "event": "rollout_intent",
+    "detail": "{\"id\": \"attempt_00005\", \"axis\": \"human_x_m\", \"changed_axes\": [\"human_x_m\", \"floor_friction\"]}",
+    "state_sha256": "bac6e437809af72bd0d77fd412091b47f6405a8822e503fe7411505cb1f4cfc3"
+  },
+  {
+    "revision": 32,
+    "utc": "2026-10-23T07:13:21.151775+00:00",
+    "event": "observed",
+    "detail": "{\"id\": \"attempt_00005\", \"status\": \"INCONCLUSIVE\", \"outcome\": \"INCONCLUSIVE\"}",
+    "state_sha256": "e62a1429e633a23da87fd00f47947576463973bcd90ce676be344ec77fdc1a75"
+  }
+]
