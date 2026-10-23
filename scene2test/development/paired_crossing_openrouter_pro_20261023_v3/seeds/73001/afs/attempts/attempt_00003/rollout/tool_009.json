@@ -1,0 +1,30 @@
+{
+  "status": "path_found",
+  "path_xy_m": [
+    [
+      5.762798145205843,
+      -0.5412593180081762
+    ],
+    [
+      5.775,
+      -0.5250000000000001
+    ],
+    [
+      5.825,
+      -0.5250000000000001
+    ],
+    [
+      5.875,
+      -0.5250000000000001
+    ],
+    [
+      5.95,
+      -0.45
+    ]
+  ],
+  "radius_m": 0.4,
+  "planning_radius_m": 0.5,
+  "resolution_m": 0.05,
+  "endpoint_connector_limit_m": 0.35,
+  "claim": "padded static circular-footprint route, not whole-body feasibility"
+}

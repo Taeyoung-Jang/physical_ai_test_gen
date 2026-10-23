@@ -1,0 +1,95 @@
+{
+  "observation_version": 2,
+  "task_contract": {
+    "schema_version": "task-goal-v1",
+    "task_id": "reach_destination",
+    "goal": {
+      "entity": "robot_base",
+      "frame": "world_m",
+      "target_xy_m": [
+        7.0,
+        0.0
+      ],
+      "radius_m": 0.25,
+      "dwell_s": 1.0
+    },
+    "evaluation_profile": "goal_outcome_v1",
+    "episode_budget": {
+      "max_robot_policy_calls": 10,
+      "max_simulation_s": null,
+      "inference_wait_counts_as_simulation_time": true
+    }
+  },
+  "navigation_completion": {
+    "profile": "goal_dwell_v1",
+    "target_radius_m": 0.12,
+    "final_goal_target_tolerance_m": 1e-06,
+    "final_goal_arrival": "hold_within_requested_action_until_goal_or_deadline",
+    "intermediate_arrival": "return_immediately",
+    "extra_calls": 0,
+    "extra_action_time_s": 0,
+    "post_budget_grace_s": 0
+  },
+  "goal_progress": {
+    "distance_m": 2.980804937262392,
+    "radius_m": 0.25,
+    "inside_goal_region": false,
+    "required_dwell_s": 1.0,
+    "current_dwell_s": 0.0,
+    "remaining_dwell_s": 1.0,
+    "goal_reached": false
+  },
+  "execution_feedback": {
+    "version": "action-motion-v1",
+    "recent_consecutive_zero_move_commands": 0,
+    "count_window": "retained last 8 decisions; stale/unmeasured actions break the streak",
+    "last_motion": {
+      "version": "action-motion-v1",
+      "window": "execution only; excludes preceding inference hold",
+      "start_simulation_s": 184.66499999990455,
+      "end_simulation_s": 194.66999999989545,
+      "elapsed_s": 10.0049999999909,
+      "start_xy_m": [
+        2.582010746874628,
+        -0.04263278060751775
+      ],
+      "end_xy_m": [
+        4.019499765300103,
+        -0.042619537324021524
+      ],
+      "delta_world_xy_m": [
+        1.4374890184254752,
+        1.3243283496229552e-05
+      ],
+      "delta_start_body_xy_m": [
+        1.4371310098569727,
+        -0.032080192903075996
+      ],
+      "net_translation_m": 1.437489018486479,
+      "sampled_base_path_length_m": 1.8359987445689652,
+      "path_length_note": "includes gait oscillations, not useful route progress",
+      "yaw_change_rad": -0.009994997214359808,
+      "goal_distance_reduction_m": 1.4373900103054051,
+      "raw_move_command_body": null,
+      "commanded_stationary": null,
+      "samples": 2001,
+      "mean_command_body": [
+        0.1771022022696542,
+        0.0018459521639769944,
+        0.018038247002848777
+      ],
+      "yaw_limit_fraction": 0.005497251374312844,
+      "blocked_connector_samples": 0,
+      "causality": "measured execution, not a failure cause or action recommendation"
+    },
+    "body_forward_world_xy": [
+      0.9999239508161655,
+      0.012332582219092463
+    ],
+    "body_left_world_xy": [
+      -0.012332582219092463,
+      0.9999239508161655
+    ],
+    "semantics": "Only numeric command fields actuate the robot; plan_summary is not executed. All-zero move requests zero velocity (physical drift may still occur). observe uses pose hold. Choose actions yourself from measured feedback."
+  }
+}

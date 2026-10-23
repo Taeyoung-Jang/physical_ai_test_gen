@@ -132,6 +132,12 @@ def describe(changes, base, axes):
 
 
 def reject(features, evidence, contract):
+    if contract.get("version") == "matched-local-v1":
+        return (
+            "matched_change_count_mismatch"
+            if len(features["changed_axes"]) != contract["required_change_count"]
+            else None
+        )
     if features["form"] != contract["required_form"]:
         return "allocation_form_mismatch"
     if (

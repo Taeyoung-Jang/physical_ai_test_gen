@@ -1,0 +1,11 @@
+{
+  "selected_files": 5237,
+  "selected_logical_bytes": 25600004879,
+  "selected_allocated_bytes": 25601323520,
+  "additional_candidate_files_preserved": 13017,
+  "final_campaign_preserved_entirely": "/workspace/g1_failure/src/physical_ai_test_gen/scene2test/development/paired_crossing_matched_local_20261023_v1",
+  "reference_control_preserved_entirely": "/workspace/g1_failure/runtime/humanoid_crossing_openrouter",
+  "policy": "Only approved old raw contact/state/motion/event traces and camera frames",
+  "plan_csv_sha256": "ecd3e59fac7f94d1765b17b7a72d06b0d40f852091b9eda94e71bbeb44842dae",
+  "started_unix_s": 1792758377.850992
+}

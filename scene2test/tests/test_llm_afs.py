@@ -148,8 +148,9 @@ def test_feedback_changes_next_input_not_predicted_truth(config):
     )
     assert first != second
     assert "STUCK" in second["input"][0]["content"]
-    with pytest.raises(ValueError, match="250 KB"):
-        request_body({"oversize": "x" * 250001}, proposal_schema(config))
+    large_context = {"history": "x" * 300000}
+    large_request = request_body(large_context, proposal_schema(config))
+    assert json.loads(large_request["input"][0]["content"]) == large_context
 
 
 def test_real_bundles_repeatable_preserve_endpoints(config, tmp_path):

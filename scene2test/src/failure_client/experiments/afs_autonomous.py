@@ -360,6 +360,7 @@ class AutonomousAFS:
             self.budget.afs_model,
             selection_policy=self.request_policy,
             service_tier=self.budget.afs_service_tier,
+            api_provider=self.budget.afs_api_provider,
         )
         directory.mkdir(parents=True, exist_ok=False)
         atomic_json(directory / "context.json", ctx)
@@ -389,12 +390,17 @@ class AutonomousAFS:
         response = read_json(path)
         row.update(
             usage=response.get("usage"),
+            api_provider=self.budget.afs_api_provider,
+            returned_api_provider=response.get("api_provider", "openai"),
+            routed_provider=response.get("routed_provider"),
             returned_model=response.get("model"),
             requested_service_tier=self.budget.afs_service_tier,
             returned_service_tier=response.get("service_tier"),
         )
         row["artifacts"]["response.json"] = _hash_file(path)
         self._save("proposal_response_collected", {"id": row["id"]})
+        if response.get("api_provider", "openai") != self.budget.afs_api_provider:
+            raise ValueError("AFS response provider differs from frozen request; never resend")
         if (
             self.budget.afs_service_tier is not None
             and response.get("service_tier") != self.budget.afs_service_tier
@@ -415,6 +421,7 @@ class AutonomousAFS:
             self.budget.afs_model,
             selection_policy=self.request_policy,
             service_tier=self.budget.afs_service_tier,
+            api_provider=self.budget.afs_api_provider,
         )
         if proposal_request_digest(body) != proposal_request_digest(
             read_json(directory / "request.json")
@@ -519,12 +526,16 @@ class AutonomousAFS:
     ):
         if not live:
             raise ValueError("explicit --live required for API and robot execution")
-        if self.plan["execution_origin"] != "openai_api" and isinstance(
+        if self.plan["execution_origin"] not in {"openai_api", "openrouter_api"} and isinstance(
             self.runner, LocalGoalRunner
         ):
             raise ValueError("synthetic history cannot launch the live robot runner")
         if self.plan["execution_origin"] == "openai_api" and not os.getenv("OPENAI_API_KEY"):
             raise ValueError("OPENAI_API_KEY is required in this process")
+        if self.plan["execution_origin"] == "openrouter_api" and not os.getenv(
+            "OPENROUTER_API_KEY"
+        ):
+            raise ValueError("OPENROUTER_API_KEY is required in this process")
         if max_new_attempts is not None and (
             type(max_new_attempts) is not int or max_new_attempts < 0
         ):

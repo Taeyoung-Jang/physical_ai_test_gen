@@ -59,6 +59,24 @@ def _hash_file(path):
     return h.hexdigest()
 
 
+def comparable_condition(protocol):
+    """Normalize ONLY verified scene-owned motion values, never robot behavior."""
+    condition = {k: v for k, v in protocol.items() if k not in {"scene_revision", "scene_config"}}
+    if protocol.get("scene_config", {}).get("schema_version") == "clear-path-crossing-human-v6":
+        from clear_path.humans import human_scene
+        from robot_vlm.scene_config import validate_scene
+
+        motion = human_scene(validate_scene(protocol["scene_config"]))["motion"]
+        if protocol.get("human_motion") != motion:
+            raise EvidenceError("dynamic_motion_contract_mismatch")
+        condition["human_motion"] = {
+            k: v
+            for k, v in motion.items()
+            if k not in {"start_xy_m", "end_xy_m", "speed_mps", "trigger_distance_m"}
+        }
+    return condition
+
+
 def _manifest(root):
     manifest_path = root / "manifest.json"
     if not manifest_path.resolve().is_relative_to(root):
@@ -232,8 +250,15 @@ def read_goal_run(source: RunInput) -> EpisodeRecord:
             raise EvidenceError("inconsistent_goal_outcome")
         if type(result["success"]) is not bool:
             raise EvidenceError("invalid_success_flag")
-        if protocol["policy_origin"] not in {"openai_api", "mock"}:
+        if protocol["policy_origin"] not in {"openai_api", "openrouter_api", "mock"}:
             raise EvidenceError("invalid_policy_origin")
+        if protocol["policy_origin"] == "openrouter_api" and (
+            protocol.get("api_provider") != "openrouter"
+            or protocol.get("api_endpoint") != "https://openrouter.ai/api/v1/chat/completions"
+            or protocol.get("routing") != {"allow_fallbacks": False, "require_parameters": True}
+            or protocol.get("service_tier") is not None
+        ):
+            raise EvidenceError("openrouter_protocol_mismatch")
         if result["policy_origin"] != protocol["policy_origin"]:
             raise EvidenceError("policy_origin_mismatch")
         base.update(
@@ -275,7 +300,12 @@ def read_goal_run(source: RunInput) -> EpisodeRecord:
         base.update(
             measures=measures,
             returned_models=models,
-            condition_id=digest({"robot_condition": digest(condition), "returned_models": models}),
+            condition_id=digest(
+                {
+                    "robot_condition": digest(comparable_condition(protocol)),
+                    "returned_models": models,
+                }
+            ),
             warnings=[
                 "Goal outcome comes from the full-rate evaluator, not a sampled-state replay",
                 "Base importer does not assign failure families; "
@@ -286,7 +316,7 @@ def read_goal_run(source: RunInput) -> EpisodeRecord:
                 *usage["warnings"],
             ],
         )
-        if protocol["policy_origin"] == "openai_api" and not models:
+        if protocol["policy_origin"] in {"openai_api", "openrouter_api"} and not models:
             base["warnings"].append("Returned model identity is unavailable")
         return EpisodeRecord(**base, status="VALID", task_outcome=result["task_outcome"])
     except EvidenceError as exc:

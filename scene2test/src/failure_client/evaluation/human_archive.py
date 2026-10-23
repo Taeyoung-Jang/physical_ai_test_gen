@@ -1,6 +1,6 @@
 """Bind static human proximity to verified v5 scene, geometry and sampled base trace."""
 
-from clear_path.contracts import HumanFixture
+from clear_path.contracts import CrossingHumanFixture, HumanFixture
 from clear_path.fixture import graph
 from clear_path.humans import human_scene
 from robot_vlm.scene_config import validate_scene
@@ -26,6 +26,12 @@ def measure_archive_humans(record):
         root = verify_episode_files(record)
         protocol = read_json(root / "protocol.json")
         config = validate_scene(protocol["scene_config"])
+        if isinstance(config, CrossingHumanFixture):
+            return {
+                **unknown,
+                "measurement_status": "UNSUPPORTED",
+                "reason": "dynamic_human_requires_separate_trajectory_detector",
+            }
         if not isinstance(config, HumanFixture):
             return {
                 **unknown,

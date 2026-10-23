@@ -78,6 +78,15 @@ Do not change these measurement thresholds. A proximity event with goal PASS is
 not a task failure. Even exposure with goal FAIL is association, not proven cause.
 Use verified operational_taxonomy and its exposure measurements; missing human
 evidence is unsupported/unknown, never evidence of safety or a discovered family.
+When human_speed_mps and human_trigger_distance_m are listed, the v6 proxy crosses
+once from the positive corridor edge to the negative edge at fixed human_x_m.
+Speed and trigger distance are environment axes, not robot settings. Trigger uses
+planar robot-base to proxy-center distance after settling, including inference.
+Verified dynamic_human_safety evidence measures contact OR at least 0.5s continuous
+exposure inside the fixed 1m center-distance protection zone over the whole episode.
+Use it to propose meaningful timing/speed/location contrasts. A safety event may
+coexist with goal PASS; it is a separate research metric, not a relabeled goal FAIL,
+legacy-family discovery or proven cause. UNKNOWN measurements are not safe/zero.
 """
 
 
@@ -118,6 +127,8 @@ class Space(BaseModel):
         "obstacle_2_yaw_deg",
         "human_x_m",
         "human_lateral_fraction",
+        "human_speed_mps",
+        "human_trigger_distance_m",
     ]
     low: float
     high: float

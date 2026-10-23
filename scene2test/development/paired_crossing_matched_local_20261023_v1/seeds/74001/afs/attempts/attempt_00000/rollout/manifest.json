@@ -1,0 +1,184 @@
+{
+  "artifacts": [
+    {
+      "path": "api_call_000.jsonl",
+      "sha256": "6689138278cff852b61f6ef8d33463d695b7800e030da18e5ddca7da866ecec9"
+    },
+    {
+      "path": "api_call_001.jsonl",
+      "sha256": "359ca652fbcddf84260c366f7396a349e39bb4dd0632fe99e816905269c800f4"
+    },
+    {
+      "path": "api_call_002.jsonl",
+      "sha256": "2d510aacc6ce0ca2009cdb4237b0e263051f7d8763d861c82ee628f593051fc5"
+    },
+    {
+      "path": "api_call_003.jsonl",
+      "sha256": "4b284ce83ab38345769acf85a2d687600bdf543dff59847e108b9654c9c8757d"
+    },
+    {
+      "path": "camera_000.png",
+      "sha256": "3c23b577bfb6a240fbc9609fe842c0f5c7f5c910e34ab9c9d4b8c1cf206989d2"
+    },
+    {
+      "path": "camera_001.png",
+      "sha256": "a31652ebf3d7120bc6bb8c443fa5d7785a27e39b32925dc4553f16192031da03"
+    },
+    {
+      "path": "camera_002.png",
+      "sha256": "0ef94502af6b30fc598d7d0cbbf98a0d9320229d1190eb6476b4fc0c50bb64eb"
+    },
+    {
+      "path": "camera_003.png",
+      "sha256": "d1bd76ab156be24438eb04f7067952e1800ff784fbb602fe3a665dde7c0617e8"
+    },
+    {
+      "path": "contacts.jsonl",
+      "sha256": "c8e9657258d05d55ef9e08281b4ef2687d087084f5e10a426cbadd59d8abd3f3"
+    },
+    {
+      "path": "decisions.jsonl",
+      "sha256": "2e948eb42373bf390c6bf9dbb578b151837a4326297238e7138d1ef3fa0e89ae"
+    },
+    {
+      "path": "events.jsonl",
+      "sha256": "82f307542b9bcc2f3c23ef434a1d9131a110fa1183beef32706ebae802c85518"
+    },
+    {
+      "path": "goal_context_000.json",
+      "sha256": "6765455b020d43bd5bd799b8a401f6e768a5297ba24986493bb488c7c240ef87"
+    },
+    {
+      "path": "goal_context_001.json",
+      "sha256": "83cfd08c5f0aa04fa3ca3438a250d86b1fd85a4b3b159fbd1b7b7fc22de61c63"
+    },
+    {
+      "path": "goal_context_002.json",
+      "sha256": "49f4495267797ab19983a8507293add38635d092dbdc26cccc383e9e49ee80eb"
+    },
+    {
+      "path": "goal_context_003.json",
+      "sha256": "08c6ea06fe8ac7268c255ffd73501fe601d441b2a1e9f0d1958db2fcbc1259f8"
+    },
+    {
+      "path": "human_motion.jsonl",
+      "sha256": "5f21b5afbec416b5a0f2ca994018594444aa5f8d7002a113504ff51ddfc449e0"
+    },
+    {
+      "path": "human_motion_summary.json",
+      "sha256": "244916720f17cddad36126ca090b83ba1d62ee512b845788d119a84602bb9c73"
+    },
+    {
+      "path": "human_proxies.json",
+      "sha256": "6fb3bf8e9ffd909f113288a05953c4c9a94af20c14fc4b921489726b42b167e9"
+    },
+    {
+      "path": "navigation_context_000.json",
+      "sha256": "611f98d3f983bd43aff5d2b50fe785c1e01211a8d080a399364e7d74938e4016"
+    },
+    {
+      "path": "navigation_context_001.json",
+      "sha256": "32cf075500337be251fcc4eb8718b5893ed6055a6039489fe09ba6fba1a056b7"
+    },
+    {
+      "path": "navigation_context_002.json",
+      "sha256": "129bf5c98030d88af272e9e944019c06e007173b473156baa06684311e2a49b9"
+    },
+    {
+      "path": "navigation_context_003.json",
+      "sha256": "c8dfc7c54177fd7675922ff6a6c75fa58292cbe89bed16c2ff31dacd3d4b85ed"
+    },
+    {
+      "path": "navigation_map.json",
+      "sha256": "2d1637b2fd5fae50453cc261c33e32304accb59d965ec1643ed8327354860964"
+    },
+    {
+      "path": "navigation_trace_000.json",
+      "sha256": "076beab121ff25fc61b40451190f357cab24bd6d866a917a8d40c7796d701953"
+    },
+    {
+      "path": "navigation_trace_001.json",
+      "sha256": "d6b43a1511c0c2597bf49c4e93b59a0ac572ec5c689c95a1314576647909e945"
+    },
+    {
+      "path": "navigation_trace_002.json",
+      "sha256": "087a6100531a57ff87e48a53d1fac983705ce094582eeef1c4054f96e571ed19"
+    },
+    {
+      "path": "navigation_trace_003.json",
+      "sha256": "50bdc99242ac4b58f101db339bbb5148506815a7281501c9b10889e2b9d05d3f"
+    },
+    {
+      "path": "observation_000.json",
+      "sha256": "02fb2f1712f3bc901dcbd651d31b60deaccb7cee4bebef34647e9832d48253b6"
+    },
+    {
+      "path": "observation_001.json",
+      "sha256": "7bb3765a8266e321c04c38944ff211aa7adb243ac5641987f69bd904a78fb874"
+    },
+    {
+      "path": "observation_002.json",
+      "sha256": "f43f93e588ec45a1106769adb05fd2e21502444243e4daa6160818d132e95fe9"
+    },
+    {
+      "path": "observation_003.json",
+      "sha256": "d9f516a71bc30d971185312d35391b7116380f3e4f41d5ed633f9e6de286f4a5"
+    },
+    {
+      "path": "protocol.json",
+      "sha256": "9a66391812f1045dd4134b1fc0bff65dec6ba8cb03a84cb10fba65aea60119fa"
+    },
+    {
+      "path": "report.html",
+      "sha256": "08a952a4cc09d59cd6b1fb49d83743f5f603baf821210bb632e4a0f769d61fc9"
+    },
+    {
+      "path": "result.json",
+      "sha256": "28bd7906ceb499eea05732e13090c61b74812158653c784b75214b0b4b3b91ab"
+    },
+    {
+      "path": "robot_audit.json",
+      "sha256": "048cbe345878efd5d07cc5b9541ad4e6ee87c98d6d10ceef2173b09f66130185"
+    },
+    {
+      "path": "rollout.mp4",
+      "sha256": "8b01ab94935612302e61210da1876ad2276068390a8daff19dc19c869fb23f6b"
+    },
+    {
+      "path": "scene.xml",
+      "sha256": "0ded0c5096e3aa08bd51b1bc34e898c7acf8009cc64c77dbce5bf8c017470f16"
+    },
+    {
+      "path": "scene_graph.json",
+      "sha256": "bc7bc9eee8741dd47643388433fc7a3b1d0ccae7cf71a5260792268e47ca6173"
+    },
+    {
+      "path": "states.jsonl",
+      "sha256": "e3a0c5edebbf4feed36502c3cdde98759e335c836329d5afc32295e26f692afa"
+    },
+    {
+      "path": "terminal_diagnostics.json",
+      "sha256": "816b792fa02aac1e58e21892d798150f34ca6cb565e0bc87e015d6c4aead8cab"
+    },
+    {
+      "path": "terminal_state.json",
+      "sha256": "a03d92c01604e7b01a44824a36cbbd3486ad74c5ffa0c4245bfca818632f60e6"
+    },
+    {
+      "path": "tool_000.json",
+      "sha256": "7e7e7f26c6920492f2e6b1f1159154a308de2bf6fb7211f126a9d5c0c037bae5"
+    },
+    {
+      "path": "tool_001.json",
+      "sha256": "82a666ef7adf14b963903030b8465f7c4e4b10f8d4df24d5e07ded99b3165952"
+    },
+    {
+      "path": "tool_002.json",
+      "sha256": "29e47c2afb3de0bd1a1b329cfad8a71efe7a0403573ec60a4fcefcbb281f9f3e"
+    },
+    {
+      "path": "tool_003.json",
+      "sha256": "c04ad2325eb0b0cb9ee7a349d38ccc760a943a4294519a4f93a928b5fc10d90b"
+    }
+  ]
+}

@@ -1,0 +1,30 @@
+{
+  "date": "2026-10-23",
+  "task": "Shared fixed-base 1/2-axis AFS versus local Random comparison",
+  "config": "scene2test/config/paired_crossing_matched_local_pro.json",
+  "campaign": "scene2test/development/paired_crossing_matched_local_20261023_v1",
+  "status": "READY",
+  "seed": 74001,
+  "valid_per_arm": 5,
+  "attempt_cap_per_arm": 7,
+  "afs_request_cap": 6,
+  "baseline": "Historical development PASS scene values; new separately charged baseline per arm; no imported evaluation history",
+  "local_changes": "1,2 alternating by attempt index, always reset to common base",
+  "random": "Uniform axis subset and uniform admissible values, independent of prior outcomes",
+  "afs": "Own arm/seed evidence; only the same fixed baseline anchor",
+  "common_min_normalized_change": 0.1,
+  "baseline_failure": "Stop before adaptive search; BASELINE_NOT_CONFIRMED",
+  "excluded_slots": "Consume attempts; attempted/valid/excluded change-count distributions reported",
+  "verification": {
+    "new_cpu_tests": "7 passed",
+    "related_regression_tests": "116 passed",
+    "combined_paired_tests": "18 passed",
+    "both_arm_freshness": "passed",
+    "planned_random_slots": "7/7 satisfy exact fixed-base count/minimum/domain",
+    "ruff_format_diff": "passed"
+  },
+  "report": "reports/20261023T083224_936278Z/report.html",
+  "old_campaigns": "Preserved separately, no outcome/budget edits or pending-response repair",
+  "live_api_gpu_robot_executed": false,
+  "claim": "Development pilot; neither guaranteed AFS advantage nor causal proof"
+}

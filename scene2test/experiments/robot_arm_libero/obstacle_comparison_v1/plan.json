@@ -1,0 +1,499 @@
+{
+  "design": {
+    "version": "arm-obstacle-comparison-v1",
+    "experiment": {
+      "version": "libero-placement-comparison-v1",
+      "scope": "Outcome-informed obstacle development pilot, not held-out official benchmark. Fixed near goal, same robot and shared domain both arms.",
+      "robot": {
+        "upstream_root": "/workspace/g1_failure/src/Isaac-GR00T",
+        "python": "/workspace/g1_failure/src/physical_ai_test_gen/scene2test/experiments/robot_arm_libero/.venv-arm/bin/python",
+        "model_repository": "nvidia/GR00T-N1.7-LIBERO",
+        "model_path": "/workspace/g1_failure/src/physical_ai_test_gen/scene2test/experiments/robot_arm_libero/models/GR00T-N1.7-LIBERO/libero_spatial",
+        "env_name": "libero_sim/pick_up_the_black_bowl_from_table_center_and_place_it_on_the_plate",
+        "suite": "libero_spatial",
+        "max_episode_steps": 300,
+        "n_action_steps": 8,
+        "model_revision": "2ea293aa20ba7cf5bbf3ba17a5fbcb1a01cbfe21",
+        "libero_config_path": "/workspace/g1_failure/src/physical_ai_test_gen/scene2test/experiments/robot_arm_libero/libero_config"
+      },
+      "methods": [
+        "afs",
+        "random"
+      ],
+      "seeds": [
+        641,
+        647,
+        653
+      ],
+      "per_arm": 4,
+      "bootstrap": 2,
+      "afs_model": "openai/gpt-6-luna-pro",
+      "afs_service_tier": null,
+      "bounds": {
+        "bowl_x": [
+          -0.18,
+          -0.04
+        ],
+        "bowl_y": [
+          -0.1,
+          0.06
+        ],
+        "plate_x": [
+          0.04,
+          0.24
+        ],
+        "plate_y": [
+          0.17,
+          0.33
+        ]
+      },
+      "background_seed": 51000,
+      "background_positions": {
+        "akita_black_bowl_2": [
+          -0.25,
+          0.4
+        ]
+      },
+      "afs_api_provider": "openrouter"
+    },
+    "measurement": {
+      "version": "arm-contact-fall-v1",
+      "below_table_margin_m": 0.05,
+      "below_table_dwell_s": 0.1,
+      "contact_distance_tolerance_m": 1e-06
+    },
+    "positions": {
+      "bowl_x": -0.075,
+      "bowl_y": 0.0,
+      "plate_x": 0.06,
+      "plate_y": 0.2
+    },
+    "domain": {
+      "obstacle_x": [
+        -0.0375,
+        -0.0075
+      ],
+      "obstacle_y": [
+        0.09,
+        0.11
+      ],
+      "obstacle_height": [
+        0.08,
+        0.17
+      ]
+    }
+  },
+  "robot_attempt_cap": 24,
+  "afs_request_cap": 6,
+  "planned_random": [
+    {
+      "seed": 641,
+      "index": 0,
+      "candidate": {
+        "positions": {
+          "bowl_x": -0.075,
+          "bowl_y": 0.0,
+          "plate_x": 0.06,
+          "plate_y": 0.2
+        },
+        "parameters": {
+          "obstacle_x": -0.029784816843224572,
+          "obstacle_y": 0.09512068186382713,
+          "obstacle_height": 0.08323439529331074
+        },
+        "obstacles": [
+          {
+            "id": "blocker",
+            "shape": "box",
+            "xy_m": [
+              -0.029784816843224572,
+              0.09512068186382713
+            ],
+            "size_m": [
+              0.05,
+              0.06,
+              0.08323439529331074
+            ]
+          }
+        ],
+        "scene_seed": 64100,
+        "hypothesis": "uniform"
+      }
+    },
+    {
+      "seed": 641,
+      "index": 1,
+      "candidate": {
+        "positions": {
+          "bowl_x": -0.075,
+          "bowl_y": 0.0,
+          "plate_x": 0.06,
+          "plate_y": 0.2
+        },
+        "parameters": {
+          "obstacle_x": -0.02642402789899516,
+          "obstacle_y": 0.0950950929979971,
+          "obstacle_height": 0.1511203250972328
+        },
+        "obstacles": [
+          {
+            "id": "blocker",
+            "shape": "box",
+            "xy_m": [
+              -0.02642402789899516,
+              0.0950950929979971
+            ],
+            "size_m": [
+              0.05,
+              0.06,
+              0.1511203250972328
+            ]
+          }
+        ],
+        "scene_seed": 64101,
+        "hypothesis": "uniform"
+      }
+    },
+    {
+      "seed": 641,
+      "index": 2,
+      "candidate": {
+        "positions": {
+          "bowl_x": -0.075,
+          "bowl_y": 0.0,
+          "plate_x": 0.06,
+          "plate_y": 0.2
+        },
+        "parameters": {
+          "obstacle_x": -0.03174976002580419,
+          "obstacle_y": 0.10051420466657146,
+          "obstacle_height": 0.14775827770140615
+        },
+        "obstacles": [
+          {
+            "id": "blocker",
+            "shape": "box",
+            "xy_m": [
+              -0.03174976002580419,
+              0.10051420466657146
+            ],
+            "size_m": [
+              0.05,
+              0.06,
+              0.14775827770140615
+            ]
+          }
+        ],
+        "scene_seed": 64102,
+        "hypothesis": "uniform"
+      }
+    },
+    {
+      "seed": 641,
+      "index": 3,
+      "candidate": {
+        "positions": {
+          "bowl_x": -0.075,
+          "bowl_y": 0.0,
+          "plate_x": 0.06,
+          "plate_y": 0.2
+        },
+        "parameters": {
+          "obstacle_x": -0.019368424789693067,
+          "obstacle_y": 0.1003102863270868,
+          "obstacle_height": 0.11674245525072346
+        },
+        "obstacles": [
+          {
+            "id": "blocker",
+            "shape": "box",
+            "xy_m": [
+              -0.019368424789693067,
+              0.1003102863270868
+            ],
+            "size_m": [
+              0.05,
+              0.06,
+              0.11674245525072346
+            ]
+          }
+        ],
+        "scene_seed": 64103,
+        "hypothesis": "uniform"
+      }
+    },
+    {
+      "seed": 647,
+      "index": 0,
+      "candidate": {
+        "positions": {
+          "bowl_x": -0.075,
+          "bowl_y": 0.0,
+          "plate_x": 0.06,
+          "plate_y": 0.2
+        },
+        "parameters": {
+          "obstacle_x": -0.026486017642990477,
+          "obstacle_y": 0.09466847940386115,
+          "obstacle_height": 0.09458513119880818
+        },
+        "obstacles": [
+          {
+            "id": "blocker",
+            "shape": "box",
+            "xy_m": [
+              -0.026486017642990477,
+              0.09466847940386115
+            ],
+            "size_m": [
+              0.05,
+              0.06,
+              0.09458513119880818
+            ]
+          }
+        ],
+        "scene_seed": 64700,
+        "hypothesis": "uniform"
+      }
+    },
+    {
+      "seed": 647,
+      "index": 1,
+      "candidate": {
+        "positions": {
+          "bowl_x": -0.075,
+          "bowl_y": 0.0,
+          "plate_x": 0.06,
+          "plate_y": 0.2
+        },
+        "parameters": {
+          "obstacle_x": -0.012914398222092255,
+          "obstacle_y": 0.10784757207968268,
+          "obstacle_height": 0.16906807643015626
+        },
+        "obstacles": [
+          {
+            "id": "blocker",
+            "shape": "box",
+            "xy_m": [
+              -0.012914398222092255,
+              0.10784757207968268
+            ],
+            "size_m": [
+              0.05,
+              0.06,
+              0.16906807643015626
+            ]
+          }
+        ],
+        "scene_seed": 64701,
+        "hypothesis": "uniform"
+      }
+    },
+    {
+      "seed": 647,
+      "index": 2,
+      "candidate": {
+        "positions": {
+          "bowl_x": -0.075,
+          "bowl_y": 0.0,
+          "plate_x": 0.06,
+          "plate_y": 0.2
+        },
+        "parameters": {
+          "obstacle_x": -0.02807431797407448,
+          "obstacle_y": 0.10235825645785171,
+          "obstacle_height": 0.1555893458716385
+        },
+        "obstacles": [
+          {
+            "id": "blocker",
+            "shape": "box",
+            "xy_m": [
+              -0.02807431797407448,
+              0.10235825645785171
+            ],
+            "size_m": [
+              0.05,
+              0.06,
+              0.1555893458716385
+            ]
+          }
+        ],
+        "scene_seed": 64702,
+        "hypothesis": "uniform"
+      }
+    },
+    {
+      "seed": 647,
+      "index": 3,
+      "candidate": {
+        "positions": {
+          "bowl_x": -0.075,
+          "bowl_y": 0.0,
+          "plate_x": 0.06,
+          "plate_y": 0.2
+        },
+        "parameters": {
+          "obstacle_x": -0.009234022975258563,
+          "obstacle_y": 0.10861250919800894,
+          "obstacle_height": 0.08765838583854464
+        },
+        "obstacles": [
+          {
+            "id": "blocker",
+            "shape": "box",
+            "xy_m": [
+              -0.009234022975258563,
+              0.10861250919800894
+            ],
+            "size_m": [
+              0.05,
+              0.06,
+              0.08765838583854464
+            ]
+          }
+        ],
+        "scene_seed": 64703,
+        "hypothesis": "uniform"
+      }
+    },
+    {
+      "seed": 653,
+      "index": 0,
+      "candidate": {
+        "positions": {
+          "bowl_x": -0.075,
+          "bowl_y": 0.0,
+          "plate_x": 0.06,
+          "plate_y": 0.2
+        },
+        "parameters": {
+          "obstacle_x": -0.01294731933785441,
+          "obstacle_y": 0.10456519985836511,
+          "obstacle_height": 0.16980573558531464
+        },
+        "obstacles": [
+          {
+            "id": "blocker",
+            "shape": "box",
+            "xy_m": [
+              -0.01294731933785441,
+              0.10456519985836511
+            ],
+            "size_m": [
+              0.05,
+              0.06,
+              0.16980573558531464
+            ]
+          }
+        ],
+        "scene_seed": 65300,
+        "hypothesis": "uniform"
+      }
+    },
+    {
+      "seed": 653,
+      "index": 1,
+      "candidate": {
+        "positions": {
+          "bowl_x": -0.075,
+          "bowl_y": 0.0,
+          "plate_x": 0.06,
+          "plate_y": 0.2
+        },
+        "parameters": {
+          "obstacle_x": -0.01571576518378981,
+          "obstacle_y": 0.10062176528661486,
+          "obstacle_height": 0.14732048791347846
+        },
+        "obstacles": [
+          {
+            "id": "blocker",
+            "shape": "box",
+            "xy_m": [
+              -0.01571576518378981,
+              0.10062176528661486
+            ],
+            "size_m": [
+              0.05,
+              0.06,
+              0.14732048791347846
+            ]
+          }
+        ],
+        "scene_seed": 65301,
+        "hypothesis": "uniform"
+      }
+    },
+    {
+      "seed": 653,
+      "index": 2,
+      "candidate": {
+        "positions": {
+          "bowl_x": -0.075,
+          "bowl_y": 0.0,
+          "plate_x": 0.06,
+          "plate_y": 0.2
+        },
+        "parameters": {
+          "obstacle_x": -0.01651502084204493,
+          "obstacle_y": 0.10335982016480355,
+          "obstacle_height": 0.12682031163159324
+        },
+        "obstacles": [
+          {
+            "id": "blocker",
+            "shape": "box",
+            "xy_m": [
+              -0.01651502084204493,
+              0.10335982016480355
+            ],
+            "size_m": [
+              0.05,
+              0.06,
+              0.12682031163159324
+            ]
+          }
+        ],
+        "scene_seed": 65302,
+        "hypothesis": "uniform"
+      }
+    },
+    {
+      "seed": 653,
+      "index": 3,
+      "candidate": {
+        "positions": {
+          "bowl_x": -0.075,
+          "bowl_y": 0.0,
+          "plate_x": 0.06,
+          "plate_y": 0.2
+        },
+        "parameters": {
+          "obstacle_x": -0.03313095579523245,
+          "obstacle_y": 0.10309782813581884,
+          "obstacle_height": 0.15501343036526502
+        },
+        "obstacles": [
+          {
+            "id": "blocker",
+            "shape": "box",
+            "xy_m": [
+              -0.03313095579523245,
+              0.10309782813581884
+            ],
+            "size_m": [
+              0.05,
+              0.06,
+              0.15501343036526502
+            ]
+          }
+        ],
+        "scene_seed": 65303,
+        "hypothesis": "uniform"
+      }
+    }
+  ],
+  "executed": false
+}

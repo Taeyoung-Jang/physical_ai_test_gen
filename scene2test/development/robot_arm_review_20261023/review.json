@@ -1,0 +1,403 @@
+{
+  "scope": "read-only outcome-informed development review; no new robot execution",
+  "verified_cases": 11,
+  "pass": 6,
+  "fail": 5,
+  "phase_interpretation": "Target failure has substantial lift/transport but incomplete placement. Tall-obstacle cases show robot-obstacle contact and negligible bowl displacement, suggesting pre-grasp access problem, not demonstrated carried-object avoidance failure. No grasp state instrumented.",
+  "visual_review_cases": [
+    "target_t0_5",
+    "box_14cm"
+  ],
+  "visual_review": "1fps montage of native videos; not frame-by-frame grasp validation",
+  "rows": [
+    {
+      "case": "target_t0",
+      "outcome": "PASS",
+      "steps": 103,
+      "post_one_second_max_bowl_rise_m": 0.17582248560667801,
+      "post_one_second_max_bowl_xy_displacement_m": 0.2553268758276352,
+      "final_bowl_plate_center_xy_gap_m": 0.014913385221816658,
+      "first_obstacle_contact_elapsed_s": null,
+      "first_obstacle_contacts": [],
+      "measurement": {
+        "status": "COMPLETE",
+        "physics_samples": 2576,
+        "duration_s": 5.149999999999655,
+        "contact": false,
+        "contact_kinds": [],
+        "contact_duration_s": {
+          "robot_obstacle": 0.0,
+          "bowl_obstacle": 0.0
+        },
+        "peak_obstacle_force_n": 0.0,
+        "fell_below_table": false,
+        "longest_below_table_s": 0.0,
+        "min_bowl_plate_xy_distance_m": 0.014913385221816658,
+        "cause": "UNCONFIRMED",
+        "claim": "Observed contact/below-surface events only; grasp/drop/avoidance cause unconfirmed."
+      },
+      "video": "/workspace/g1_failure/src/physical_ai_test_gen/scene2test/experiments/robot_arm_libero/capability_followup_v2/attempt_00000/videos/8ac646f9-90d2-4e2b-aaab-bef60336798e_s1.mp4",
+      "source": "/workspace/g1_failure/src/physical_ai_test_gen/scene2test/experiments/robot_arm_libero/capability_followup_v2/attempt_00000",
+      "evidence_manifest_sha256": "b923b043390a20e0fd259167822aebcf5379df5a2d37a0a2f43df073e93751d8",
+      "cause": "UNCONFIRMED"
+    },
+    {
+      "case": "target_t0_125",
+      "outcome": "PASS",
+      "steps": 98,
+      "post_one_second_max_bowl_rise_m": 0.14905690321596177,
+      "post_one_second_max_bowl_xy_displacement_m": 0.2722809557222611,
+      "final_bowl_plate_center_xy_gap_m": 0.015728013671011495,
+      "first_obstacle_contact_elapsed_s": null,
+      "first_obstacle_contacts": [],
+      "measurement": {
+        "status": "COMPLETE",
+        "physics_samples": 2451,
+        "duration_s": 4.899999999999682,
+        "contact": false,
+        "contact_kinds": [],
+        "contact_duration_s": {
+          "robot_obstacle": 0.0,
+          "bowl_obstacle": 0.0
+        },
+        "peak_obstacle_force_n": 0.0,
+        "fell_below_table": false,
+        "longest_below_table_s": 0.0,
+        "min_bowl_plate_xy_distance_m": 0.011706885155754056,
+        "cause": "UNCONFIRMED",
+        "claim": "Observed contact/below-surface events only; grasp/drop/avoidance cause unconfirmed."
+      },
+      "video": "/workspace/g1_failure/src/physical_ai_test_gen/scene2test/experiments/robot_arm_libero/capability_followup_v2/attempt_00001/videos/bb20afd8-8d72-43ca-ad50-07b2aa9c8a2d_s1.mp4",
+      "source": "/workspace/g1_failure/src/physical_ai_test_gen/scene2test/experiments/robot_arm_libero/capability_followup_v2/attempt_00001",
+      "evidence_manifest_sha256": "96095c05346c49cd7b330fafc646c0d7d6a7892479436ba734f55cbd09a3357a",
+      "cause": "UNCONFIRMED"
+    },
+    {
+      "case": "target_t0_25",
+      "outcome": "PASS",
+      "steps": 95,
+      "post_one_second_max_bowl_rise_m": 0.15051785250957106,
+      "post_one_second_max_bowl_xy_displacement_m": 0.28274125027986957,
+      "final_bowl_plate_center_xy_gap_m": 0.018245567780655954,
+      "first_obstacle_contact_elapsed_s": null,
+      "first_obstacle_contacts": [],
+      "measurement": {
+        "status": "COMPLETE",
+        "physics_samples": 2376,
+        "duration_s": 4.749999999999699,
+        "contact": false,
+        "contact_kinds": [],
+        "contact_duration_s": {
+          "robot_obstacle": 0.0,
+          "bowl_obstacle": 0.0
+        },
+        "peak_obstacle_force_n": 0.0,
+        "fell_below_table": false,
+        "longest_below_table_s": 0.0,
+        "min_bowl_plate_xy_distance_m": 0.015885490468348733,
+        "cause": "UNCONFIRMED",
+        "claim": "Observed contact/below-surface events only; grasp/drop/avoidance cause unconfirmed."
+      },
+      "video": "/workspace/g1_failure/src/physical_ai_test_gen/scene2test/experiments/robot_arm_libero/capability_followup_v2/attempt_00002/videos/81f54975-8460-459f-a0a0-61d6b2172048_s1.mp4",
+      "source": "/workspace/g1_failure/src/physical_ai_test_gen/scene2test/experiments/robot_arm_libero/capability_followup_v2/attempt_00002",
+      "evidence_manifest_sha256": "b810959de483366a106b4b7792ed381e0ee4a79fd0465f36da5f900a38bbf7ee",
+      "cause": "UNCONFIRMED"
+    },
+    {
+      "case": "target_t0_375",
+      "outcome": "PASS",
+      "steps": 261,
+      "post_one_second_max_bowl_rise_m": 0.1541344071431917,
+      "post_one_second_max_bowl_xy_displacement_m": 0.2922366010302612,
+      "final_bowl_plate_center_xy_gap_m": 0.02999878168770887,
+      "first_obstacle_contact_elapsed_s": null,
+      "first_obstacle_contacts": [],
+      "measurement": {
+        "status": "COMPLETE",
+        "physics_samples": 6526,
+        "duration_s": 13.050000000001027,
+        "contact": false,
+        "contact_kinds": [],
+        "contact_duration_s": {
+          "robot_obstacle": 0.0,
+          "bowl_obstacle": 0.0
+        },
+        "peak_obstacle_force_n": 0.0,
+        "fell_below_table": false,
+        "longest_below_table_s": 0.0,
+        "min_bowl_plate_xy_distance_m": 0.02999878168770887,
+        "cause": "UNCONFIRMED",
+        "claim": "Observed contact/below-surface events only; grasp/drop/avoidance cause unconfirmed."
+      },
+      "video": "/workspace/g1_failure/src/physical_ai_test_gen/scene2test/experiments/robot_arm_libero/capability_followup_v2/attempt_00003/videos/d83699d5-78f8-4052-968d-8ab9d3dbf298_s1.mp4",
+      "source": "/workspace/g1_failure/src/physical_ai_test_gen/scene2test/experiments/robot_arm_libero/capability_followup_v2/attempt_00003",
+      "evidence_manifest_sha256": "93fbf7c0e54f6269807830ca420ecdbb7e81b44c85074db45059ce0a6f24e554",
+      "cause": "UNCONFIRMED"
+    },
+    {
+      "case": "target_t0_5",
+      "outcome": "FAIL",
+      "steps": 300,
+      "post_one_second_max_bowl_rise_m": 0.1567973626532072,
+      "post_one_second_max_bowl_xy_displacement_m": 0.32163780684353777,
+      "final_bowl_plate_center_xy_gap_m": 0.0866616745078621,
+      "first_obstacle_contact_elapsed_s": null,
+      "first_obstacle_contacts": [],
+      "measurement": {
+        "status": "COMPLETE",
+        "physics_samples": 7501,
+        "duration_s": 15.000000000001679,
+        "contact": false,
+        "contact_kinds": [],
+        "contact_duration_s": {
+          "robot_obstacle": 0.0,
+          "bowl_obstacle": 0.0
+        },
+        "peak_obstacle_force_n": 0.0,
+        "fell_below_table": false,
+        "longest_below_table_s": 0.0,
+        "min_bowl_plate_xy_distance_m": 0.04726733911455479,
+        "cause": "UNCONFIRMED",
+        "claim": "Observed contact/below-surface events only; grasp/drop/avoidance cause unconfirmed."
+      },
+      "video": "/workspace/g1_failure/src/physical_ai_test_gen/scene2test/experiments/robot_arm_libero/capability_followup_v2/attempt_00004/videos/e7fbd6e9-0b72-4dc2-be77-a024f78c2f78_s0.mp4",
+      "source": "/workspace/g1_failure/src/physical_ai_test_gen/scene2test/experiments/robot_arm_libero/capability_followup_v2/attempt_00004",
+      "evidence_manifest_sha256": "89246ac4c7813e847daaebba593dc80ebb398d2da1b4162a6f7c1c26b7bdb1fc",
+      "cause": "UNCONFIRMED"
+    },
+    {
+      "case": "box_10cm",
+      "outcome": "PASS",
+      "steps": 97,
+      "post_one_second_max_bowl_rise_m": 0.15071911705139185,
+      "post_one_second_max_bowl_xy_displacement_m": 0.24790710602291263,
+      "final_bowl_plate_center_xy_gap_m": 0.0064553392750885405,
+      "first_obstacle_contact_elapsed_s": null,
+      "first_obstacle_contacts": [],
+      "measurement": {
+        "status": "COMPLETE",
+        "physics_samples": 2426,
+        "duration_s": 4.849999999999688,
+        "contact": false,
+        "contact_kinds": [],
+        "contact_duration_s": {
+          "robot_obstacle": 0.0,
+          "bowl_obstacle": 0.0
+        },
+        "peak_obstacle_force_n": 0.0,
+        "fell_below_table": false,
+        "longest_below_table_s": 0.0,
+        "min_bowl_plate_xy_distance_m": 0.0064553392750885405,
+        "cause": "UNCONFIRMED",
+        "claim": "Observed contact/below-surface events only; grasp/drop/avoidance cause unconfirmed."
+      },
+      "video": "/workspace/g1_failure/src/physical_ai_test_gen/scene2test/experiments/robot_arm_libero/capability_followup_v2/attempt_00005/videos/a007fd0a-5f86-4cfd-a328-acd458f35e79_s1.mp4",
+      "source": "/workspace/g1_failure/src/physical_ai_test_gen/scene2test/experiments/robot_arm_libero/capability_followup_v2/attempt_00005",
+      "evidence_manifest_sha256": "db72837c87c5c0bdcc18388edaa0783dae4f6fec857631612e78a84d877efc18",
+      "cause": "UNCONFIRMED"
+    },
+    {
+      "case": "box_12cm",
+      "outcome": "PASS",
+      "steps": 98,
+      "post_one_second_max_bowl_rise_m": 0.14401690089646657,
+      "post_one_second_max_bowl_xy_displacement_m": 0.2498641619455778,
+      "final_bowl_plate_center_xy_gap_m": 0.008339113018064486,
+      "first_obstacle_contact_elapsed_s": null,
+      "first_obstacle_contacts": [],
+      "measurement": {
+        "status": "COMPLETE",
+        "physics_samples": 2451,
+        "duration_s": 4.899999999999682,
+        "contact": false,
+        "contact_kinds": [],
+        "contact_duration_s": {
+          "robot_obstacle": 0.0,
+          "bowl_obstacle": 0.0
+        },
+        "peak_obstacle_force_n": 0.0,
+        "fell_below_table": false,
+        "longest_below_table_s": 0.0,
+        "min_bowl_plate_xy_distance_m": 0.008339113018064486,
+        "cause": "UNCONFIRMED",
+        "claim": "Observed contact/below-surface events only; grasp/drop/avoidance cause unconfirmed."
+      },
+      "video": "/workspace/g1_failure/src/physical_ai_test_gen/scene2test/experiments/robot_arm_libero/capability_followup_v2/attempt_00006/videos/89ac6b66-3051-46c8-8427-e8ef0b41f39e_s1.mp4",
+      "source": "/workspace/g1_failure/src/physical_ai_test_gen/scene2test/experiments/robot_arm_libero/capability_followup_v2/attempt_00006",
+      "evidence_manifest_sha256": "d00b84ad82ff7359eea166469425f03f10ba4a032ee5623ef2273574fa65d09c",
+      "cause": "UNCONFIRMED"
+    },
+    {
+      "case": "box_14cm",
+      "outcome": "FAIL",
+      "steps": 300,
+      "post_one_second_max_bowl_rise_m": 6.374900607397649e-13,
+      "post_one_second_max_bowl_xy_displacement_m": 8.13083866728348e-17,
+      "final_bowl_plate_center_xy_gap_m": 0.24132708001766515,
+      "first_obstacle_contact_elapsed_s": 1.5340000000000011,
+      "first_obstacle_contacts": [
+        {
+          "kind": "robot_obstacle",
+          "geoms": [
+            "s2t_obstacle_blocker_geom",
+            "gripper0_finger2_collision"
+          ],
+          "distance_m": -0.00012940180119280775,
+          "force_n": 162.47049883410108
+        }
+      ],
+      "measurement": {
+        "status": "COMPLETE",
+        "physics_samples": 7501,
+        "duration_s": 15.000000000001679,
+        "contact": true,
+        "contact_kinds": [
+          "robot_obstacle"
+        ],
+        "contact_duration_s": {
+          "robot_obstacle": 13.468000000001167,
+          "bowl_obstacle": 0.0
+        },
+        "peak_obstacle_force_n": 197.891579170277,
+        "fell_below_table": false,
+        "longest_below_table_s": 0.0,
+        "min_bowl_plate_xy_distance_m": 0.2412985702402731,
+        "cause": "UNCONFIRMED",
+        "claim": "Observed contact/below-surface events only; grasp/drop/avoidance cause unconfirmed."
+      },
+      "video": "/workspace/g1_failure/src/physical_ai_test_gen/scene2test/experiments/robot_arm_libero/capability_followup_v2/attempt_00007/videos/90cd71ae-2e79-4af8-aa34-c3bd1bcf2748_s0.mp4",
+      "source": "/workspace/g1_failure/src/physical_ai_test_gen/scene2test/experiments/robot_arm_libero/capability_followup_v2/attempt_00007",
+      "evidence_manifest_sha256": "854a74565de70c7c58255e3c0218d996dde9ecb64a71847453a95776b51f9e11",
+      "cause": "UNCONFIRMED"
+    },
+    {
+      "case": "box_15cm",
+      "outcome": "FAIL",
+      "steps": 300,
+      "post_one_second_max_bowl_rise_m": 6.374900607397649e-13,
+      "post_one_second_max_bowl_xy_displacement_m": 8.141680689008335e-17,
+      "final_bowl_plate_center_xy_gap_m": 0.24132708001766515,
+      "first_obstacle_contact_elapsed_s": 1.478000000000001,
+      "first_obstacle_contacts": [
+        {
+          "kind": "robot_obstacle",
+          "geoms": [
+            "s2t_obstacle_blocker_geom",
+            "gripper0_finger2_collision"
+          ],
+          "distance_m": -0.00012275373902226328,
+          "force_n": 184.20984429139853
+        }
+      ],
+      "measurement": {
+        "status": "COMPLETE",
+        "physics_samples": 7501,
+        "duration_s": 15.000000000001679,
+        "contact": true,
+        "contact_kinds": [
+          "robot_obstacle"
+        ],
+        "contact_duration_s": {
+          "robot_obstacle": 13.520000000001184,
+          "bowl_obstacle": 0.0
+        },
+        "peak_obstacle_force_n": 205.92257694548627,
+        "fell_below_table": false,
+        "longest_below_table_s": 0.0,
+        "min_bowl_plate_xy_distance_m": 0.2412985702402731,
+        "cause": "UNCONFIRMED",
+        "claim": "Observed contact/below-surface events only; grasp/drop/avoidance cause unconfirmed."
+      },
+      "video": "/workspace/g1_failure/src/physical_ai_test_gen/scene2test/experiments/robot_arm_libero/capability_followup_v2/attempt_00008/videos/430fd392-5bb9-4c48-b518-2a11aeed2df7_s0.mp4",
+      "source": "/workspace/g1_failure/src/physical_ai_test_gen/scene2test/experiments/robot_arm_libero/capability_followup_v2/attempt_00008",
+      "evidence_manifest_sha256": "d52202df83ce12b20d166e60b25ff4f0f9582ac3c41b5e5e62fa8b5fb699493c",
+      "cause": "UNCONFIRMED"
+    },
+    {
+      "case": "box_17cm",
+      "outcome": "FAIL",
+      "steps": 300,
+      "post_one_second_max_bowl_rise_m": 6.374900607397649e-13,
+      "post_one_second_max_bowl_xy_displacement_m": 8.1349044254303e-17,
+      "final_bowl_plate_center_xy_gap_m": 0.24132708001766515,
+      "first_obstacle_contact_elapsed_s": 1.388000000000001,
+      "first_obstacle_contacts": [
+        {
+          "kind": "robot_obstacle",
+          "geoms": [
+            "s2t_obstacle_blocker_geom",
+            "gripper0_finger2_collision"
+          ],
+          "distance_m": -0.00027153187542428014,
+          "force_n": 260.16459701413555
+        }
+      ],
+      "measurement": {
+        "status": "COMPLETE",
+        "physics_samples": 7501,
+        "duration_s": 15.000000000001679,
+        "contact": true,
+        "contact_kinds": [
+          "robot_obstacle"
+        ],
+        "contact_duration_s": {
+          "robot_obstacle": 13.600000000001211,
+          "bowl_obstacle": 0.0
+        },
+        "peak_obstacle_force_n": 278.9346594458536,
+        "fell_below_table": false,
+        "longest_below_table_s": 0.0,
+        "min_bowl_plate_xy_distance_m": 0.2412985702402731,
+        "cause": "UNCONFIRMED",
+        "claim": "Observed contact/below-surface events only; grasp/drop/avoidance cause unconfirmed."
+      },
+      "video": "/workspace/g1_failure/src/physical_ai_test_gen/scene2test/experiments/robot_arm_libero/capability_followup_v2/attempt_00009/videos/07880233-52ea-4254-bdbd-f578df4ce436_s0.mp4",
+      "source": "/workspace/g1_failure/src/physical_ai_test_gen/scene2test/experiments/robot_arm_libero/capability_followup_v2/attempt_00009",
+      "evidence_manifest_sha256": "8d5b6efb6e2982d96786982a2e5981ecac2792510aafa38e6cf7c5bca1fdf002",
+      "cause": "UNCONFIRMED"
+    },
+    {
+      "case": "box15_shift_left",
+      "outcome": "FAIL",
+      "steps": 300,
+      "post_one_second_max_bowl_rise_m": 6.374900607397649e-13,
+      "post_one_second_max_bowl_xy_displacement_m": 8.142358315366138e-17,
+      "final_bowl_plate_center_xy_gap_m": 0.24132708001766515,
+      "first_obstacle_contact_elapsed_s": 1.466000000000001,
+      "first_obstacle_contacts": [
+        {
+          "kind": "robot_obstacle",
+          "geoms": [
+            "s2t_obstacle_blocker_geom",
+            "gripper0_finger2_collision"
+          ],
+          "distance_m": -0.00024319792710403298,
+          "force_n": 192.8052152193189
+        }
+      ],
+      "measurement": {
+        "status": "COMPLETE",
+        "physics_samples": 7501,
+        "duration_s": 15.000000000001679,
+        "contact": true,
+        "contact_kinds": [
+          "robot_obstacle"
+        ],
+        "contact_duration_s": {
+          "robot_obstacle": 13.53600000000119,
+          "bowl_obstacle": 0.0
+        },
+        "peak_obstacle_force_n": 214.50101412806325,
+        "fell_below_table": false,
+        "longest_below_table_s": 0.0,
+        "min_bowl_plate_xy_distance_m": 0.2412985702402731,
+        "cause": "UNCONFIRMED",
+        "claim": "Observed contact/below-surface events only; grasp/drop/avoidance cause unconfirmed."
+      },
+      "video": "/workspace/g1_failure/src/physical_ai_test_gen/scene2test/experiments/robot_arm_libero/capability_followup_v2/attempt_00010/videos/892524d6-4792-47e3-a3d6-3ba1ea5bac8f_s0.mp4",
+      "source": "/workspace/g1_failure/src/physical_ai_test_gen/scene2test/experiments/robot_arm_libero/capability_followup_v2/attempt_00010",
+      "evidence_manifest_sha256": "2b8235df657b0b9bab9bddf67f9a6f22491f712adfcb39c5ad7cbbb413aa2999",
+      "cause": "UNCONFIRMED"
+    }
+  ]
+}

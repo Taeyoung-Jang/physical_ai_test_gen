@@ -1,0 +1,327 @@
+{
+  "status": "PLAN_ONLY_NO_DELETION",
+  "protected_final_campaign": "/workspace/g1_failure/src/physical_ai_test_gen/scene2test/development/paired_crossing_matched_local_20261023_v1",
+  "protected_reference_control": "/workspace/g1_failure/runtime/humanoid_crossing_openrouter",
+  "excluded_scope": "robot-arm, source/config/models, mixed navigation/terrain/server directories",
+  "policy": "Keep final campaign entirely; keep all historical videos and selected metadata/reports/DBs. Delete candidates only from explicit old humanoid roots. Historical full replay/hash validation can be lost.",
+  "candidate_files": 18254,
+  "candidate_logical_bytes": 25870114266,
+  "candidate_allocated_bytes": 25874532864,
+  "preserved_historical_video_count": 299,
+  "roots": {
+    "/workspace/g1_failure/src/physical_ai_test_gen/scene2test/development/paired_crossing_20261023_v1": {
+      "candidate_delete": 0,
+      "allocated_candidate_delete": 0,
+      "preserve": 791529,
+      "allocated_preserve": 795648
+    },
+    "/workspace/g1_failure/src/physical_ai_test_gen/scene2test/development/paired_crossing_openrouter_20261023_v2": {
+      "preserve": 590919,
+      "allocated_preserve": 592384
+    },
+    "/workspace/g1_failure/src/physical_ai_test_gen/scene2test/development/paired_crossing_openrouter_pro_20261023_v3": {
+      "preserve": 158606170,
+      "allocated_preserve": 158646272,
+      "candidate_delete": 2526694192,
+      "allocated_candidate_delete": 2526839296
+    },
+    "/workspace/g1_failure/src/physical_ai_test_gen/scene2test/development/paired_crossing_openrouter_pro_20261023_v4": {
+      "candidate_delete": 3521194691,
+      "allocated_candidate_delete": 3521390592,
+      "preserve": 226102087,
+      "allocated_preserve": 226154496
+    },
+    "/workspace/g1_failure/src/physical_ai_test_gen/scene2test/development/humanoid_crossing_20261023_v1": {
+      "candidate_delete": 343853,
+      "allocated_candidate_delete": 344576,
+      "preserve": 2382,
+      "allocated_preserve": 2560
+    },
+    "/workspace/g1_failure/src/physical_ai_test_gen/scene2test/development/humanoid_broad_20261022_v1": {
+      "preserve": 181159,
+      "allocated_preserve": 184320
+    },
+    "/workspace/g1_failure/src/physical_ai_test_gen/scene2test/development/humanoid_labeled_20261023_v1": {
+      "preserve": 954705,
+      "allocated_preserve": 954880,
+      "candidate_delete": 88330,
+      "allocated_candidate_delete": 88576
+    },
+    "/workspace/g1_failure/src/physical_ai_test_gen/scene2test/development/humanoid_labeled_preview_20261023_v1": {
+      "preserve": 21451,
+      "allocated_preserve": 21504,
+      "candidate_delete": 44876,
+      "allocated_candidate_delete": 45056
+    },
+    "/workspace/g1_failure/runtime/humanoid_crossing": {
+      "preserve": 8331273,
+      "allocated_preserve": 8334336,
+      "candidate_delete": 146282661,
+      "allocated_candidate_delete": 146288640
+    },
+    "/workspace/g1_failure/runtime/behavior_relevance_smoke": {
+      "candidate_delete": 36680439,
+      "allocated_candidate_delete": 36698112,
+      "preserve": 8971662,
+      "allocated_preserve": 8989184
+    },
+    "/workspace/g1_failure/runtime/timeout_diagnostic": {
+      "candidate_delete": 101177403,
+      "allocated_candidate_delete": 101193216,
+      "preserve": 8796697,
+      "allocated_preserve": 8799232
+    },
+    "/workspace/g1_failure/runtime/goal_clearance_control": {
+      "candidate_delete": 132457052,
+      "allocated_candidate_delete": 132502528,
+      "preserve": 43247320,
+      "allocated_preserve": 43300864
+    },
+    "/workspace/g1_failure/runtime/factor_calibration": {
+      "candidate_delete": 857040701,
+      "allocated_candidate_delete": 857229312,
+      "preserve": 161128658,
+      "allocated_preserve": 161270784
+    },
+    "/workspace/g1_failure/runtime/random_environment": {
+      "candidate_delete": 1062502457,
+      "allocated_candidate_delete": 1062716416,
+      "preserve": 89965974,
+      "allocated_preserve": 90010624
+    },
+    "/workspace/g1_failure/runtime/paired_discovery": {
+      "candidate_delete": 2046937556,
+      "allocated_candidate_delete": 2047525376,
+      "preserve": 197208759,
+      "allocated_preserve": 197400064
+    },
+    "/workspace/g1_failure/runtime/report_submission": {
+      "preserve": 154268244,
+      "allocated_preserve": 154340352,
+      "candidate_delete": 2083392365,
+      "allocated_candidate_delete": 2083746304
+    },
+    "/workspace/g1_failure/runtime/trajectory_feedback": {
+      "candidate_delete": 1351240232,
+      "allocated_candidate_delete": 1351435264,
+      "preserve": 224793059,
+      "allocated_preserve": 224942080
+    },
+    "/workspace/g1_failure/runtime/budget15_diagnostic": {
+      "candidate_delete": 399548264,
+      "allocated_candidate_delete": 399601664,
+      "preserve": 30652914,
+      "allocated_preserve": 30660608
+    },
+    "/workspace/g1_failure/runtime/discovery_evaluation": {
+      "candidate_delete": 680867323,
+      "allocated_candidate_delete": 680995840,
+      "preserve": 66601155,
+      "allocated_preserve": 66673664
+    },
+    "/workspace/g1_failure/runtime/afs_autonomous": {
+      "candidate_delete": 5082220375,
+      "allocated_candidate_delete": 5083233792,
+      "preserve": 954450138,
+      "allocated_preserve": 955357184
+    },
+    "/workspace/g1_failure/runtime/afs_contrast": {
+      "preserve": 153659197,
+      "allocated_preserve": 153829376,
+      "candidate_delete": 718843390,
+      "allocated_candidate_delete": 719006208
+    },
+    "/workspace/g1_failure/runtime/behavior_regression": {
+      "candidate_delete": 913827286,
+      "allocated_candidate_delete": 913979392,
+      "preserve": 79330947,
+      "allocated_preserve": 79370752
+    },
+    "/workspace/g1_failure/runtime/afs_benchmark": {
+      "candidate_delete": 3169000672,
+      "allocated_candidate_delete": 3169628160,
+      "preserve": 500912677,
+      "allocated_preserve": 501325312
+    },
+    "/workspace/g1_failure/runtime/robot_goal_agent": {
+      "preserve": 691913599,
+      "allocated_preserve": 691964416,
+      "candidate_delete": 961015069,
+      "allocated_candidate_delete": 961216000
+    },
+    "/workspace/g1_failure/runtime/robot_vlm": {
+      "preserve": 29238339,
+      "allocated_preserve": 29245952,
+      "candidate_delete": 3532231,
+      "allocated_candidate_delete": 3539456
+    },
+    "/workspace/g1_failure/runtime/robot_timeout_checks": {
+      "preserve": 14029890,
+      "allocated_preserve": 14031360,
+      "candidate_delete": 1683729,
+      "allocated_candidate_delete": 1684480
+    },
+    "/workspace/g1_failure/runtime/robot_push_integration": {
+      "preserve": 69711494,
+      "allocated_preserve": 69721088,
+      "candidate_delete": 11189958,
+      "allocated_candidate_delete": 11210240
+    },
+    "/workspace/g1_failure/runtime/robot_push_validation": {
+      "preserve": 29468040,
+      "allocated_preserve": 29474816,
+      "candidate_delete": 7478547,
+      "allocated_candidate_delete": 7480832
+    },
+    "/workspace/g1_failure/runtime/robot_error_checks": {
+      "preserve": 5973873,
+      "allocated_preserve": 5983232,
+      "candidate_delete": 810170,
+      "allocated_candidate_delete": 819200
+    },
+    "/workspace/g1_failure/runtime/failure_measures": {
+      "preserve": 435654,
+      "allocated_preserve": 447488,
+      "candidate_delete": 47760699,
+      "allocated_candidate_delete": 47805440
+    },
+    "/workspace/g1_failure/runtime/system_failure_reanalysis": {
+      "preserve": 139283,
+      "allocated_preserve": 140800,
+      "candidate_delete": 940498,
+      "allocated_candidate_delete": 942080
+    },
+    "/workspace/g1_failure/runtime/failure_type_reanalysis": {
+      "preserve": 28735,
+      "allocated_preserve": 29184,
+      "candidate_delete": 200304,
+      "allocated_candidate_delete": 201216
+    },
+    "/workspace/g1_failure/runtime/failure_phase_audit": {
+      "preserve": 345546,
+      "allocated_preserve": 346112
+    },
+    "/workspace/g1_failure/runtime/robot_api_audit": {
+      "preserve": 44484,
+      "allocated_preserve": 46080
+    },
+    "/workspace/g1_failure/runtime/human_scene_validation": {
+      "preserve": 294504,
+      "allocated_preserve": 301056,
+      "candidate_delete": 826379,
+      "allocated_candidate_delete": 830976
+    },
+    "/workspace/g1_failure/runtime/human_proximity": {
+      "preserve": 323,
+      "allocated_preserve": 512,
+      "candidate_delete": 2580,
+      "allocated_candidate_delete": 3072
+    },
+    "/workspace/g1_failure/runtime/goal_region_previews": {
+      "preserve": 428506,
+      "allocated_preserve": 438272,
+      "candidate_delete": 1138233,
+      "allocated_candidate_delete": 1144320
+    },
+    "/workspace/g1_failure/runtime/failure_domain_audit": {
+      "preserve": 83029,
+      "allocated_preserve": 84992,
+      "candidate_delete": 3313,
+      "allocated_candidate_delete": 4608
+    },
+    "/workspace/g1_failure/runtime/obstacle_previews": {
+      "preserve": 559158,
+      "allocated_preserve": 569344,
+      "candidate_delete": 1523813,
+      "allocated_candidate_delete": 1531904
+    },
+    "/workspace/g1_failure/runtime/corridor_previews": {
+      "preserve": 599904,
+      "allocated_preserve": 609792,
+      "candidate_delete": 1624625,
+      "allocated_candidate_delete": 1630720
+    }
+  },
+  "largest_files": [
+    [
+      281461208,
+      "/workspace/g1_failure/src/physical_ai_test_gen/scene2test/development/paired_crossing_openrouter_pro_20261023_v4/seeds/73001/afs/attempts/attempt_00000/rollout/contacts.jsonl"
+    ],
+    [
+      281461208,
+      "/workspace/g1_failure/src/physical_ai_test_gen/scene2test/development/paired_crossing_openrouter_pro_20261023_v3/seeds/73001/afs/attempts/attempt_00000/rollout/contacts.jsonl"
+    ],
+    [
+      265450603,
+      "/workspace/g1_failure/src/physical_ai_test_gen/scene2test/development/paired_crossing_openrouter_pro_20261023_v4/seeds/73001/afs/attempts/attempt_00002/rollout/contacts.jsonl"
+    ],
+    [
+      265450603,
+      "/workspace/g1_failure/src/physical_ai_test_gen/scene2test/development/paired_crossing_openrouter_pro_20261023_v3/seeds/73001/afs/attempts/attempt_00002/rollout/contacts.jsonl"
+    ],
+    [
+      256429921,
+      "/workspace/g1_failure/src/physical_ai_test_gen/scene2test/development/paired_crossing_openrouter_pro_20261023_v4/seeds/73001/random/attempts/attempt_00004/rollout/contacts.jsonl"
+    ],
+    [
+      239186651,
+      "/workspace/g1_failure/src/physical_ai_test_gen/scene2test/development/paired_crossing_openrouter_pro_20261023_v4/seeds/73001/afs/attempts/attempt_00003/rollout/contacts.jsonl"
+    ],
+    [
+      239186651,
+      "/workspace/g1_failure/src/physical_ai_test_gen/scene2test/development/paired_crossing_openrouter_pro_20261023_v3/seeds/73001/afs/attempts/attempt_00003/rollout/contacts.jsonl"
+    ],
+    [
+      238812689,
+      "/workspace/g1_failure/src/physical_ai_test_gen/scene2test/development/paired_crossing_openrouter_pro_20261023_v4/seeds/73001/random/attempts/attempt_00000/rollout/contacts.jsonl"
+    ],
+    [
+      238812689,
+      "/workspace/g1_failure/src/physical_ai_test_gen/scene2test/development/paired_crossing_openrouter_pro_20261023_v3/seeds/73001/random/attempts/attempt_00000/rollout/contacts.jsonl"
+    ],
+    [
+      211929638,
+      "/workspace/g1_failure/src/physical_ai_test_gen/scene2test/development/paired_crossing_openrouter_pro_20261023_v4/seeds/73001/afs/attempts/attempt_00005/rollout/contacts.jsonl"
+    ],
+    [
+      181532360,
+      "/workspace/g1_failure/runtime/afs_autonomous/20261003T165928_663622Z/attempts/attempt_00003/rollout/contacts.jsonl"
+    ],
+    [
+      178128049,
+      "/workspace/g1_failure/runtime/budget15_diagnostic/20261019T125033_7926/attempt_00005/contacts.jsonl"
+    ],
+    [
+      177525662,
+      "/workspace/g1_failure/src/physical_ai_test_gen/scene2test/development/paired_crossing_openrouter_pro_20261023_v4/seeds/73001/random/attempts/attempt_00001/rollout/contacts.jsonl"
+    ],
+    [
+      177525662,
+      "/workspace/g1_failure/src/physical_ai_test_gen/scene2test/development/paired_crossing_openrouter_pro_20261023_v3/seeds/73001/random/attempts/attempt_00001/rollout/contacts.jsonl"
+    ],
+    [
+      173617296,
+      "/workspace/g1_failure/src/physical_ai_test_gen/scene2test/development/paired_crossing_openrouter_pro_20261023_v4/seeds/73001/afs/attempts/attempt_00001/rollout/contacts.jsonl"
+    ],
+    [
+      173617296,
+      "/workspace/g1_failure/src/physical_ai_test_gen/scene2test/development/paired_crossing_openrouter_pro_20261023_v3/seeds/73001/afs/attempts/attempt_00001/rollout/contacts.jsonl"
+    ],
+    [
+      171883225,
+      "/workspace/g1_failure/src/physical_ai_test_gen/scene2test/development/paired_crossing_openrouter_pro_20261023_v4/seeds/73001/afs/attempts/attempt_00004/rollout/contacts.jsonl"
+    ],
+    [
+      162115813,
+      "/workspace/g1_failure/src/physical_ai_test_gen/scene2test/development/paired_crossing_openrouter_pro_20261023_v4/seeds/73001/random/attempts/attempt_00002/rollout/contacts.jsonl"
+    ],
+    [
+      162115813,
+      "/workspace/g1_failure/src/physical_ai_test_gen/scene2test/development/paired_crossing_openrouter_pro_20261023_v3/seeds/73001/random/attempts/attempt_00002/rollout/contacts.jsonl"
+    ],
+    [
+      159128870,
+      "/workspace/g1_failure/runtime/robot_goal_agent/20261003T154614_537450Z/contacts.jsonl"
+    ]
+  ]
+}

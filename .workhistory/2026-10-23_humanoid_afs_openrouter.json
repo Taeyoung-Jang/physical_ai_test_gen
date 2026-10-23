@@ -1,0 +1,21 @@
+{
+  "date": "2026-10-23",
+  "scope": "Humanoid AFS proposer provider switch",
+  "robot_api": "OpenRouter openai/gpt-6-luna-pro",
+  "afs_api": "OpenRouter openai/gpt-6-luna",
+  "new_config": "scene2test/config/paired_crossing_openrouter_development.json",
+  "new_campaign": "scene2test/development/paired_crossing_openrouter_20261023_v2",
+  "status": "READY",
+  "attempts": 0,
+  "afs_requests": 0,
+  "legacy_campaign_preserved": "scene2test/development/paired_crossing_20261023_v1",
+  "verification": {
+    "reference_robot_code_resources_runtime": "passed",
+    "api_path_tests": "54 passed",
+    "afs_paired_regression_tests": "76 passed",
+    "post_adaptation_openrouter_tests": "25 passed",
+    "ruff_format_diff": "passed"
+  },
+  "live_api_gpu_robot_executed": false,
+  "notes": "Existing seed 73001, 21-axis full development domain and 6-valid/8-attempt per-arm caps retained. Old goal endpoint saturation risk remains. No credential lookup, request resend, source-freeze bypass, or historical outcome change."
+}

@@ -1,0 +1,28 @@
+{
+  "user_selected_model": "openai/gpt-6-luna-pro",
+  "scope": "Explicit OpenRouter robot-policy adapter for new humanoid development run; AFS unchanged",
+  "endpoint": "https://openrouter.ai/api/v1/chat/completions",
+  "credential_variable": "OPENROUTER_API_KEY",
+  "credential_values_accessed": false,
+  "transport": "Same images/context/strict action schema, common typed parser; fixed endpoint, provider fallback disabled, require all parameters",
+  "timeout": "300s read, existing pre-send TCP retries only; no post-send, HTTP error or output error retry",
+  "service_tier": "Omitted; OpenAI direct service-tier options rejected on OpenRouter",
+  "accounting": "openrouter_api origin; provider/model/generation/normalized token usage and returned cost recorded",
+  "research_scope": "Existing archive reader/paired comparison do not accept new origin; separate development evidence only",
+  "dry_run": "Validated selected model, crossing scene, push enabled, goal dwell, one episode/max10 policy calls; no key checks/GPU/API",
+  "actual_live_api_or_gpu_execution": false,
+  "tests": "124 passed, 5 skipped in 16.69s; fake keys, mock HTTP, CPU test doubles",
+  "prior_run_review": {
+    "root": "/workspace/g1_failure/runtime/humanoid_crossing/20261023T003536_637106Z",
+    "manifest_artifacts_verified": 35,
+    "calls": 3,
+    "accepted_actions": 2,
+    "outcome": "INCONCLUSIVE",
+    "timeout": "Third call response-header ReadTimeout about300s; no retry; usage unknown",
+    "human_triggered": false,
+    "minimum_center_distance_m": 3.2886673621199045,
+    "avoidance_outcome": "not evaluated"
+  },
+  "old_evidence_database_or_budget_changes": false,
+  "documentation": "scene2test/docs/HUMANOID_OPENROUTER.md"
+}

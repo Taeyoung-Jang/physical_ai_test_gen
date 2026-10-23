@@ -1,0 +1,20 @@
+{
+  "request": "Review and prepare broader humanoid failure exploration after the navigation domain became too easy",
+  "scope": "humanoid only; robot-arm files untouched",
+  "artifacts": "scene2test/development/humanoid_broad_20261022_v1",
+  "method": "Random-only development; three equal-width strata jointly restore original human-v5 full parameter domain",
+  "seeds": [62001, 62002, 62003],
+  "attempt_cap": 12,
+  "robot_policy_call_cap": 120,
+  "afs_call_cap": 0,
+  "actual_robot_or_api_calls": 0,
+  "campaign_initialized": false,
+  "source_database_opened": false,
+  "samples_validated": 12,
+  "resampled": 0,
+  "whole_goal_disk_endpoint_envelope_sufficient_certificates": {"narrow": 4, "middle": 4, "wide": 2},
+  "finding": "Broadening original bounds alone restores the common goal-approach bottleneck in 10/12 planned draws; not physical impossibility or observed FAIL",
+  "next": "Review independent goal-box placement in a versioned domain while retaining broad route/friction/obstacle ranges before paid execution",
+  "validation": "11 paired CPU tests passed; Ruff check/format and git diff check passed",
+  "old_campaigns": "preserved; no resume, budget reset, outcome edits or retries"
+}

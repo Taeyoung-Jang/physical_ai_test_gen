@@ -1,0 +1,114 @@
+[
+  {
+    "revision": 0,
+    "utc": "2026-10-23T08:31:54.991780+00:00",
+    "event": "created",
+    "detail": "{}",
+    "state_sha256": "a6eccbcf61b0ae39f131375e05426c32e70841efb4aa5e7df03b1717a9c33c0f"
+  },
+  {
+    "revision": 1,
+    "utc": "2026-10-23T08:42:39.708200+00:00",
+    "event": "local_candidate_selected",
+    "detail": "{\"axis\": null}",
+    "state_sha256": "1b4090f9a4c0d03faac322fbd7081d83d5802771fe888fc0f6ff03aba0bd51b2"
+  },
+  {
+    "revision": 2,
+    "utc": "2026-10-23T08:42:40.033849+00:00",
+    "event": "rollout_intent",
+    "detail": "{\"id\": \"attempt_00000\", \"axis\": null}",
+    "state_sha256": "22b14dcd1239778c02eaa9f38501285feb390311811bf03d21575ac5febf78db"
+  },
+  {
+    "revision": 3,
+    "utc": "2026-10-23T08:45:13.685002+00:00",
+    "event": "observed",
+    "detail": "{\"id\": \"attempt_00000\", \"status\": \"VALID\", \"outcome\": \"PASS\"}",
+    "state_sha256": "e0034f1d15586eaf9c91ccbc5324b24e2d008eb4b072e28fb3f736b21c502c0e"
+  },
+  {
+    "revision": 4,
+    "utc": "2026-10-23T09:02:34.861329+00:00",
+    "event": "local_candidate_selected",
+    "detail": "{\"axis\": \"obstacle_1_x_m\"}",
+    "state_sha256": "1bc1f72b2958ea05fde4a0e88f398d37b8d921099977d31975cc68bd6ff2e15f"
+  },
+  {
+    "revision": 5,
+    "utc": "2026-10-23T09:02:35.225532+00:00",
+    "event": "rollout_intent",
+    "detail": "{\"id\": \"attempt_00001\", \"axis\": \"obstacle_1_x_m\", \"changed_axes\": [\"obstacle_1_x_m\"]}",
+    "state_sha256": "5113edd50644f74f6cba65c2cf55c6b48b64a3e20cce4e1fc295890f063e2e71"
+  },
+  {
+    "revision": 6,
+    "utc": "2026-10-23T09:04:55.407925+00:00",
+    "event": "observed",
+    "detail": "{\"id\": \"attempt_00001\", \"status\": \"VALID\", \"outcome\": \"PASS\"}",
+    "state_sha256": "c04befa049f91fedf9ce35d6bc1af05c95aab40360fda6de9bd29ba64236dc46"
+  },
+  {
+    "revision": 7,
+    "utc": "2026-10-23T09:22:02.574470+00:00",
+    "event": "local_candidate_selected",
+    "detail": "{\"axis\": \"obstacle_2_x_m\"}",
+    "state_sha256": "ea69689003dfbfb7c05d5f6692cf274295640142dc2d582e41fad86a49e032ad"
+  },
+  {
+    "revision": 8,
+    "utc": "2026-10-23T09:22:02.955899+00:00",
+    "event": "rollout_intent",
+    "detail": "{\"id\": \"attempt_00002\", \"axis\": \"obstacle_2_x_m\", \"changed_axes\": [\"obstacle_2_x_m\", \"obstacle_2_yaw_deg\"]}",
+    "state_sha256": "413ad08c0720df957f5bf4504466d6d21b3f777ca2f766689546ed4dffcda01f"
+  },
+  {
+    "revision": 9,
+    "utc": "2026-10-23T09:24:27.611425+00:00",
+    "event": "observed",
+    "detail": "{\"id\": \"attempt_00002\", \"status\": \"VALID\", \"outcome\": \"PASS\"}",
+    "state_sha256": "8ae950915b0b4fcfe1d33b059fd85b902504ef5716afd4fdcc985b694630b4ef"
+  },
+  {
+    "revision": 10,
+    "utc": "2026-10-23T09:43:16.779592+00:00",
+    "event": "local_candidate_selected",
+    "detail": "{\"axis\": \"obstacle_1_size_x_m\"}",
+    "state_sha256": "c39523ff8b84e873416bedf17e3337a9e7060627b4c16b388944719c525ef4ea"
+  },
+  {
+    "revision": 11,
+    "utc": "2026-10-23T09:43:17.117624+00:00",
+    "event": "rollout_intent",
+    "detail": "{\"id\": \"attempt_00003\", \"axis\": \"obstacle_1_size_x_m\", \"changed_axes\": [\"obstacle_1_size_x_m\"]}",
+    "state_sha256": "4af0195baffcd22a907d6ea6f1c1665297d233bda49a2f8d7a2cb55b9449a053"
+  },
+  {
+    "revision": 12,
+    "utc": "2026-10-23T09:47:14.073126+00:00",
+    "event": "observed",
+    "detail": "{\"id\": \"attempt_00003\", \"status\": \"VALID\", \"outcome\": \"PASS\"}",
+    "state_sha256": "279b193a2431d84e3b19d2c4039233949968a2723cecaea6c557b7bf3b5e0c33"
+  },
+  {
+    "revision": 13,
+    "utc": "2026-10-23T10:14:38.084774+00:00",
+    "event": "local_candidate_selected",
+    "detail": "{\"axis\": \"box_friction\"}",
+    "state_sha256": "7cf2b733028a29dcb1261ba0992d0cca4d8626ab591898908bc8f072b2a46c1b"
+  },
+  {
+    "revision": 14,
+    "utc": "2026-10-23T10:14:38.477085+00:00",
+    "event": "rollout_intent",
+    "detail": "{\"id\": \"attempt_00004\", \"axis\": \"box_friction\", \"changed_axes\": [\"box_friction\", \"box_lateral_fraction\"]}",
+    "state_sha256": "5b5a6c89524dc381b485ec02b2abe6594448ae7ebf7c2f3178f58a90b7411dd0"
+  },
+  {
+    "revision": 15,
+    "utc": "2026-10-23T10:28:32.293024+00:00",
+    "event": "observed",
+    "detail": "{\"id\": \"attempt_00004\", \"status\": \"INCONCLUSIVE\", \"outcome\": \"INCONCLUSIVE\"}",
+    "state_sha256": "386c7111bc6f5a71347bb67b7687c542385b923302f27a7e5a409fd8cf06c1f4"
+  }
+]

@@ -20,6 +20,7 @@ PROJECT = Path(__file__).resolve().parents[3]
 
 class RobotSettings(StrictRecord):
     model: str = Field(default="gpt-6-astra", min_length=1)
+    api_provider: Literal["openai", "openrouter"] = "openai"
     service_tier: Literal["flex", "default"] | None = None
     groot_root: str = "/workspace/g1_failure/src/GR00T-WholeBodyControl"
     max_calls: int = Field(default=10, ge=1, le=20)
@@ -28,6 +29,14 @@ class RobotSettings(StrictRecord):
     enable_push: bool = True
     navigation_completion: Literal["position_only_v1", "goal_dwell_v1"] = "position_only_v1"
     watchdog_wall_s: float | None = Field(default=None, gt=0)
+
+    @model_validator(mode="after")
+    def provider_contract(self):
+        if self.api_provider == "openrouter" and (
+            self.service_tier is not None or "/" not in self.model
+        ):
+            raise ValueError("OpenRouter requires provider/model ID and omitted service tier")
+        return self
 
 
 class CampaignConfig(StrictRecord):
@@ -38,6 +47,7 @@ class CampaignConfig(StrictRecord):
         "clear-path-obstacles-v3",
         "clear-path-goal-region-v4",
         "clear-path-human-v5",
+        "clear-path-crossing-human-v6",
     ] = "clear-path-fixture-v1"
     seeds: list[int] = Field(default_factory=lambda: [17], min_length=1, max_length=20)
     valid_budget_per_seed: int = Field(default=8, ge=2, le=128)
@@ -83,6 +93,8 @@ class CampaignConfig(StrictRecord):
                 if self.scene_schema == "clear-path-obstacles-v3"
                 else "independent-uniform-full-eighteen-axis-goal-region-v4"
                 if self.scene_schema == "clear-path-goal-region-v4"
+                else "independent-uniform-full-twenty-one-axis-crossing-v6-fixed-positive-side"
+                if self.scene_schema == "clear-path-crossing-human-v6"
                 else "independent-uniform-full-twenty-axis-human-v5"
             ),
             "cold_start": "paired scene draws, separately executed and charged to each arm",

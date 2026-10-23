@@ -1,0 +1,184 @@
+{
+  "artifacts": [
+    {
+      "path": "api_call_000.jsonl",
+      "sha256": "8ae5ba706aa5e9a2a1ba05928163335b0e52d9b26dd47c31248ce97051fe5b27"
+    },
+    {
+      "path": "api_call_001.jsonl",
+      "sha256": "76920acde61e78793fcbdc8137dc25747905cd4fce8067c4bfa83aed24a61289"
+    },
+    {
+      "path": "api_call_002.jsonl",
+      "sha256": "5222351408fedd706a2a3b674e9e350ed53f9180e5012fec35a879e30c94a6e5"
+    },
+    {
+      "path": "api_call_003.jsonl",
+      "sha256": "b5d9637f2260e63250c193b52a01ba84d0621d594a5ba3497133d972d43b9f0b"
+    },
+    {
+      "path": "camera_000.png",
+      "sha256": "2fa8a1e179a96c9d9a7af66fa37c726b9c8bbcf06ab00e8a17287efb210caf56"
+    },
+    {
+      "path": "camera_001.png",
+      "sha256": "24f478eb2e21e7e9592b74db5dbc806157940c1dda835a155ebaffe282b439ce"
+    },
+    {
+      "path": "camera_002.png",
+      "sha256": "2b3b95ebb9ebc4c53d09a5a5e15ebce0a3a544bc4d7f2f55a57214e11d59d42e"
+    },
+    {
+      "path": "camera_003.png",
+      "sha256": "f48d2d0ae44ea6065e1bf93aae6d8651f90aadf0543a5238ba09dfdc63a79fda"
+    },
+    {
+      "path": "contacts.jsonl",
+      "sha256": "1fd9daf6dd020ea38ec3244ac41d4e444452378ba4254354b706abaaa70c0250"
+    },
+    {
+      "path": "decisions.jsonl",
+      "sha256": "57c724d988be2195a98916427ccaf15382cd19418fedea5d2d0d58a28721f8b3"
+    },
+    {
+      "path": "events.jsonl",
+      "sha256": "4b0171ef4bf4aa0f4e1d0d7ef9947f960ec75c69163144b47919217f6472ca78"
+    },
+    {
+      "path": "goal_context_000.json",
+      "sha256": "6765455b020d43bd5bd799b8a401f6e768a5297ba24986493bb488c7c240ef87"
+    },
+    {
+      "path": "goal_context_001.json",
+      "sha256": "4e0000bd5685dfbf9e8c26987c5253016f35935aa2c2003f1a53992b936d0e20"
+    },
+    {
+      "path": "goal_context_002.json",
+      "sha256": "f00767e0ad78a0f1707e3adcca7b5215d4c420572f5aea9a4eeb5cd730364405"
+    },
+    {
+      "path": "goal_context_003.json",
+      "sha256": "99b3f7c2113c8098ea740d067ffb5f1fad025402f901367a3bb7674565c70384"
+    },
+    {
+      "path": "human_motion.jsonl",
+      "sha256": "300414f73e080c778487a8998e415e80e1d2c2178a15c3365e5cf31d5b0df40b"
+    },
+    {
+      "path": "human_motion_summary.json",
+      "sha256": "b9d5cc14b070c9f76b8b8b1ef6191bacb495fc42b2bd8a537bc716733a32e197"
+    },
+    {
+      "path": "human_proxies.json",
+      "sha256": "6fb3bf8e9ffd909f113288a05953c4c9a94af20c14fc4b921489726b42b167e9"
+    },
+    {
+      "path": "navigation_context_000.json",
+      "sha256": "52f9c3871fd932c302cdaa4b8e42d205c7ca22ff0e150d374269e782769ed4c3"
+    },
+    {
+      "path": "navigation_context_001.json",
+      "sha256": "f109f3dcbd74c97a5ace7542a384430d2ad6fecd2af0f1a755147c4c0d5d884e"
+    },
+    {
+      "path": "navigation_context_002.json",
+      "sha256": "1ca35f073ae0067206048e9ac001eea2811180ba8d3305330882363474f0c205"
+    },
+    {
+      "path": "navigation_context_003.json",
+      "sha256": "6edecd7ddf81c4cede23d81c17dc2e14ddcc50ae3f6626a7c06644340688cd74"
+    },
+    {
+      "path": "navigation_map.json",
+      "sha256": "046e69d77254c1a5489b8f500bb2c9c70d86c33c3e19b9c8a993bf70ccccfca8"
+    },
+    {
+      "path": "navigation_trace_000.json",
+      "sha256": "3c2a0899ff5830a28edf82f9edf42d309168c007b5d7ffa3bddebcaca3ef99a6"
+    },
+    {
+      "path": "navigation_trace_001.json",
+      "sha256": "7e0d11fd2069685cd03c73a83204aab7f51ef944e8c805b768957ad195abd072"
+    },
+    {
+      "path": "navigation_trace_002.json",
+      "sha256": "39e50f33cb23c154ff20cc3ad95a6ddd1020884c9548c82dbcb78f678dcc0217"
+    },
+    {
+      "path": "navigation_trace_003.json",
+      "sha256": "2f73aafad5e294427e1d6b4a23b1dfd405f2cfbb2127618fdccabde8fe78ca9f"
+    },
+    {
+      "path": "observation_000.json",
+      "sha256": "68764761808b5dc97cb70533d10f3f39adbdef2424754c92ac0361b4a50cdccf"
+    },
+    {
+      "path": "observation_001.json",
+      "sha256": "ee5cea8b72bee90c99e3aa1648e0f972cbf4128ae6c01bb409c3714baf96a398"
+    },
+    {
+      "path": "observation_002.json",
+      "sha256": "f94a9e8f24676f258aacedda3a563d9b9d52cf47318220f33b455d9a25e56128"
+    },
+    {
+      "path": "observation_003.json",
+      "sha256": "ef334fd25dfabab460b9e7e7f0361326e0b301fac9128b368404bad2a7d9773b"
+    },
+    {
+      "path": "protocol.json",
+      "sha256": "c4b05586ba99f72ba0aaec00123d1274dfa8768a2ac9e0bc1e9ca539fb3eb4a6"
+    },
+    {
+      "path": "report.html",
+      "sha256": "a4b60234617ce8713985ef93926f84fd0335dc0c100ac5d222479e962e4f1016"
+    },
+    {
+      "path": "result.json",
+      "sha256": "3bd89650745cebaeb77cdb00e9de2808233db0fbe137d597ebabfab3bab59b19"
+    },
+    {
+      "path": "robot_audit.json",
+      "sha256": "048cbe345878efd5d07cc5b9541ad4e6ee87c98d6d10ceef2173b09f66130185"
+    },
+    {
+      "path": "rollout.mp4",
+      "sha256": "cf2893b1a56df890bc6cd2546a79a01eff50eb7e9760b187eac030e271f5cf35"
+    },
+    {
+      "path": "scene.xml",
+      "sha256": "4ca96b80f4f048c7035a89974368cceb23cf75245b967039c672991e0f519669"
+    },
+    {
+      "path": "scene_graph.json",
+      "sha256": "dec31eef76e8e3619b8cea4a1dd6cb7cc8567f79ae7573580cf19bc5c9e8a80f"
+    },
+    {
+      "path": "states.jsonl",
+      "sha256": "38283373556f8bc0eac9ae6e5676453494c1d1e86ff4b400e0b7aa32e16e7e68"
+    },
+    {
+      "path": "terminal_diagnostics.json",
+      "sha256": "dfe9ee28f69444276d2f0b5013a6bc65936d3f9ebbe398595d1f4971bb8d0b52"
+    },
+    {
+      "path": "terminal_state.json",
+      "sha256": "fcaf998e5e3b9d038bd32b5e17bc661f6baec27dab418c11ad87aa0d6aee0bf2"
+    },
+    {
+      "path": "tool_000.json",
+      "sha256": "6a0d4d4f96152e68dc2ae07eacb55d3987ede5d93f703d1437b10b37a40e1f65"
+    },
+    {
+      "path": "tool_001.json",
+      "sha256": "da10a6d67c392abf0dcb6f516d88a18c21f9db938bd1516d694be18258ce9023"
+    },
+    {
+      "path": "tool_002.json",
+      "sha256": "1e6f679b418ce5dce2b7ea920cbe3daccb44049b90882c0ce73fcbe5bd95f104"
+    },
+    {
+      "path": "tool_003.json",
+      "sha256": "3c0faeea2e0687b50b23345893884614d0f5e2d95f75b6afc6a011d3123be5ff"
+    }
+  ]
+}

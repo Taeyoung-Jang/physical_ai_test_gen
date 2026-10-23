@@ -1,0 +1,758 @@
+{
+  "manifest": {
+    "schema_version": "paired-trajectory-discovery-v1",
+    "design": {
+      "schema_version": "paired-trajectory-design-v1",
+      "purpose": "random-environment-sweep",
+      "methods": [
+        "random"
+      ],
+      "seeds": [
+        62001
+      ],
+      "valid_per_arm": 4,
+      "attempts_per_arm": 4,
+      "afs_requests_per_seed": 0,
+      "cold_start_per_arm": 0,
+      "target_families_twelve": 4,
+      "search": {
+        "schema_version": "autonomous-afs-budget-v1",
+        "max_attempts": 4,
+        "max_afs_requests": 1,
+        "max_attempts_per_axis": 4,
+        "max_repeats": 0,
+        "history_limit": 4,
+        "afs_model": "gpt-6-luna",
+        "afs_service_tier": "default",
+        "afs_timeout_s": 300.0,
+        "selection_policy": "failure-branch-v3",
+        "valid_rollout_target": 4,
+        "min_axis_change_fraction": 0.1,
+        "reproposal_policy": "bounded-rejection-v1",
+        "taxonomy_profile": "expanded-ten-v1",
+        "exploration_policy": "breadth-v1",
+        "factor_allocation": "balanced-v1",
+        "feedback_policy": "cause-review-v3",
+        "anchor_policy": "failure-diversity-v4",
+        "pattern_feedback": "trajectory-v1"
+      },
+      "scene_domain": {
+        "schema_version": "bounded-scene-domain-v1",
+        "scene_schema": "clear-path-human-v5",
+        "scope": "Development difficulty audit, not held-out AFS superiority evaluation. Width thirds jointly restore the original full domain; all other axes retain original bounds. No geometry/outcome rejection or resampling.",
+        "axes": {
+          "box_mass_kg": [
+            0.2,
+            10.0
+          ],
+          "box_friction": [
+            0.05,
+            1.5
+          ],
+          "floor_friction": [
+            0.05,
+            1.5
+          ],
+          "corridor_width_m": [
+            1.6,
+            2.4
+          ],
+          "box_lateral_fraction": [
+            -1.0,
+            1.0
+          ],
+          "obstacle_1_x_m": [
+            2.25,
+            2.75
+          ],
+          "obstacle_1_lateral_fraction": [
+            -1.0,
+            1.0
+          ],
+          "obstacle_1_size_x_m": [
+            0.2,
+            0.8
+          ],
+          "obstacle_1_size_y_m": [
+            0.2,
+            0.8
+          ],
+          "obstacle_1_height_m": [
+            0.1,
+            1.2
+          ],
+          "obstacle_1_yaw_deg": [
+            -90.0,
+            90.0
+          ],
+          "obstacle_2_x_m": [
+            5.25,
+            5.75
+          ],
+          "obstacle_2_lateral_fraction": [
+            -1.0,
+            1.0
+          ],
+          "obstacle_2_size_x_m": [
+            0.2,
+            0.8
+          ],
+          "obstacle_2_size_y_m": [
+            0.2,
+            0.8
+          ],
+          "obstacle_2_height_m": [
+            0.1,
+            1.2
+          ],
+          "obstacle_2_yaw_deg": [
+            -90.0,
+            90.0
+          ],
+          "box_goal_x_m": [
+            6.8,
+            7.5
+          ],
+          "human_x_m": [
+            3.65,
+            4.35
+          ],
+          "human_lateral_fraction": [
+            -1.0,
+            1.0
+          ]
+        }
+      }
+    },
+    "robot_config": {
+      "scene_schema": "clear-path-human-v5",
+      "robot": {
+        "model": "gpt-6-luna",
+        "service_tier": "default",
+        "groot_root": "/workspace/g1_failure/src/GR00T-WholeBodyControl",
+        "max_calls": 10,
+        "max_seconds": null,
+        "response_timeout": 300.0,
+        "enable_push": true,
+        "navigation_completion": "goal_dwell_v1",
+        "watchdog_wall_s": null
+      }
+    },
+    "environment": {
+      "source_hashes": {
+        "uv.lock": "9066ec9fc557eb4b54eea66c6dcb060298ae1aa55285cf597a4d12d7f2b268c1",
+        "pyproject.toml": "a18e8dd79c478886a52367c1a79810b48ad672eaa30880d555e153cbbbf5357e",
+        "src/scene_graph.py": "ad7663a9b54e173325aa2d4b2f13f83feb661e6683005df95479fbf148a4229a",
+        "tools/run_robot_goal_agent.py": "e8fec1741a53b9933057f4b63c79a473f0108c65272c62bd84e44024ed09ee67",
+        "tools/run_afs_benchmark.py": "bd9a441c510627a5144a868ea70e6b7737b0a0cb6d07f263c2cbab8bc81e6191",
+        "tools/run_afs_pilot.py": "0642df23258e2f7b2061be35e04c4f0be3294087e4bd275338e60af3f2184303",
+        "src/robot_vlm/__init__.py": "b2db0d3dcae2926730a43fe54f6e660c96931e0d61def385a8d7c894a6caec5b",
+        "src/robot_vlm/api_transport.py": "9147abeea58c9971ca46a11e5c3bda693556aac393bd0d1f5738c85b42d273a7",
+        "src/robot_vlm/behavior_events.py": "9b278b1496d15ae750eb3bd204884615871ae0aa0d8fdaf675273e7c89f4b25f",
+        "src/robot_vlm/budget.py": "6906259aaf8534798ec6e6485f4779ac84b64445da61aaae36ca1e8c2846dac2",
+        "src/robot_vlm/debug_log.py": "90f5a3d7f5b6dc00501b3eeadb4a178488be35a2cc14f71b8ea2dc7cdbb6f57e",
+        "src/robot_vlm/execution_feedback.py": "0b8b001a97c8bb42de540635987a95ef1d1feed4f322c2af097d0c7754633781",
+        "src/robot_vlm/goal_policy.py": "df3daaf0bdfb78e507920d92a4c66d428aa0865d3cdaacc0127e2c043405502a",
+        "src/robot_vlm/goal_runner.py": "22d426f7ddd1884674796116fa528693eeea89a5b91d9b39693b47dd81b347e2",
+        "src/robot_vlm/navigation_completion.py": "dcf8d2f927f013399be540be5f8459fdb45ffbe0b6509aa38952069cc4752907",
+        "src/robot_vlm/navigation_tools.py": "ae6ae573f6495dceed8324749f4c56c35899cdcaa732b3743e40550ac527c885",
+        "src/robot_vlm/policy.py": "23f01ab7ffd92a54d8d5f624900ed4420f636a1aa76d9c4b5124faa40b7b99fe",
+        "src/robot_vlm/push_alignment.py": "c0383fa71c90ab766728015612e7bfe88b14c479ae424fe28359f65fdccd3ffb",
+        "src/robot_vlm/push_execution.py": "0f8dff8e09afcba1f981bc686943a3c6de5cd858f4c0df475d6576ace3310f19",
+        "src/robot_vlm/push_policy.py": "9579883bf4d933b79e267894362e98e923065ceff96cf25ec0c30f29758e68b5",
+        "src/robot_vlm/push_skill.py": "c7d7c018c7cb044a53c350a23b42e430a218b4c43941b97dc342ec270b80d488",
+        "src/robot_vlm/push_validation.py": "97ad51eacf96ebf723771821c32599ce1d6aabe4bd0704f97fc5cb23a955d6de",
+        "src/robot_vlm/runner.py": "396ba9c8752dde91999a8a17133fe021c23266a9c63ecd44142dc49e83df7dc2",
+        "src/robot_vlm/scene_config.py": "7cfd4ed8448711d61c8d9ca3f2ed3bebd79334119a6d8b3552ed18b5323074de",
+        "src/robot_vlm/task_outcome.py": "34deb1db6256ff821c7abc698d7f4eeb295288e052342afd04145cf4d325f50d",
+        "src/robot_vlm/timing.py": "2afde68e9fe8a374da35df6a4bd1eed5632e5af851299a1580b226ba9b1dc84f",
+        "src/robot_vlm/wire_contract.py": "f4eff2e010899be2193aaebce05714895be72bd882aedb608b323dac29197ae4",
+        "src/clear_path/__init__.py": "bcd97dd5e7492d90562b3d6e025f4a2c9eec4ef67e59734473a767880dc38f1e",
+        "src/clear_path/audit.py": "4a4e9d42ace874d04079f157c54240993f97d898916ed870f46c5aca3b161a59",
+        "src/clear_path/contact_control.py": "290ae9faee7d8bfef7b8e1f2a27887f16b2fdbec18259f9bb4db35e01a811013",
+        "src/clear_path/contact_probe.py": "df2ec7df361a78e0edcc3d25c2913caa896fc4379735a8ab2e85eebbca2896e1",
+        "src/clear_path/contracts.py": "9a6827229646e51792b2b30c4c440a6aeb906d578ec047a35498e220206dffa6",
+        "src/clear_path/fixture.py": "3e12fb96e45ca52cb3876be870fba5331f1cf7f9b972f1d9c628b4199583ee30",
+        "src/clear_path/humans.py": "5be1e95a848ee77780cabffc992976d92d08aaf91500103037441955e18418d2",
+        "src/clear_path/obstacles.py": "db6ab82681b3b2a62d45a06a8eb2900cc2527b425ba787a43ee638570e81a8bf",
+        "src/clear_path/placement_preflight.py": "3f1faab4353379b9a7abab312f59e872a25ae491b3d7687d00f19bfc57df6725",
+        "src/clear_path/push_probe.py": "8fa7883b48c2cb0f6954a86106fec828ecd000f551ce93380a0c49e178018895",
+        "src/clear_path/report.py": "400b1afc56ee5e2fc9f9bf5ffbe881463843fcf770345e0c2f75dcde6130e54c",
+        "src/clear_path/scene_space.py": "0936aff4c92bd386c9a0c66ed012be2790b9e55ec07c9b48a50b034db78510e2",
+        "src/clear_path/search_domain.py": "4866107b0b6476cb0c6f3f0e2d0915845dc6071f950548066a39a1e43d543885",
+        "src/llm_afs/__init__.py": "2898737a642edf1d393bd0d2a04c61c6061669755ef973e4110ef7c45e8b3d4e",
+        "src/llm_afs/behavior.py": "d3a127065dd705aaad1c0842a5cdc22d7c43622f78b979fecfbec0f57db60271",
+        "src/llm_afs/behavior_request.py": "28e32b6225ec6c0518eb9b7b935932d78270ce4baff75698937955e140016ed2",
+        "src/llm_afs/contracts.py": "b28aa1b60bc9555940ed6f5edc824362979ae4c5c3b142a31a4eafb8d4e76c8f",
+        "src/llm_afs/expanded.py": "c77f29ba273acb4ac751741adf02ba2d44492e22ed0ef0264d2dcb19374d64cb",
+        "src/llm_afs/provider.py": "2ba7f6859236ad0464ce9fbaa7072f6af739866416cbb695bf79297ace21a6a2",
+        "src/llm_afs/workflow.py": "ce23180d106d511608d3e2f0a7862f0d4acac1b7f19866545dc17d670bbf2e4c",
+        "src/failure_client/__init__.py": "dfc5b71651ef10a3d45e486300a480f80877e6c12b7ff857c05432a71844b36c",
+        "src/failure_client/__main__.py": "935a1c1166b0c1ea35a82256345000bf2c73ded718d77773bc27a71ecce28f7d",
+        "src/failure_client/api/__init__.py": "b2e57babd2a9163a00466e14f59c8bd342235208efa017514dc33b44af530601",
+        "src/failure_client/api/artifact_downloader.py": "deac3ab3ddb54089169d03e8552926bdb57fc0a6fe5ccef766f74d86c7709b0f",
+        "src/failure_client/api/fake_gateway.py": "c84fa3f51777abdcd301df38b61c1815038d956c04277ae7a15e76f892c042ee",
+        "src/failure_client/api/gateway.py": "acb7fbf0c6860cc268f1f1462d918b90fa63e1427ade480a7e2019903e8df579",
+        "src/failure_client/api/http_gateway.py": "76498723c2f6ec2f1868fa71e16bc97b4789a694b909b25ab28bd5a5cd50abdd",
+        "src/failure_client/archive/__init__.py": "c77127242d8c1a0e03a6494147b617702fb010f86d0c886f3f050ba35af45969",
+        "src/failure_client/archive/failure_archive.py": "d8f49ad6a39093b11e96a113869834fafb0b3342424c07aef56d7f155af637a6",
+        "src/failure_client/archive/models.py": "576ef39ad2e947ece7e893133bdaa78c4af4fc7b535d21254aa33de66003b607",
+        "src/failure_client/archive/regression_cases.py": "8fbdf8e64ea6ec075ccc93a811b252426ea1d8d6b16359a7f7007eb7ee52400b",
+        "src/failure_client/candidates/__init__.py": "b9b3fab53edbf1cfd58fa93057e2cc23bb4082f1f5f8a862b08b8a5c4dce245f",
+        "src/failure_client/candidates/builder.py": "0e5e43a88dc99e76c8c67fd10f8e9d72778d8c96326452861109ae6d19227e3b",
+        "src/failure_client/candidates/models.py": "d58b9e9dc268244627336dc1c46afa4e8081c4d9fcefb038a99dcd5167eabf28",
+        "src/failure_client/candidates/validator.py": "aeb45d24c370ff492d3e8e1dfa92701adb2c8534372520dd5624ba10ff640ece",
+        "src/failure_client/cli.py": "485565ddae5d46c73d90b8d5a72c7dadc58bcd98c4209b90cbdfa53c43f46875",
+        "src/failure_client/config.py": "07aed60e6eb2872c4a9d04ec8c4145c237e2b49c1f3edc3084ed7d79b879ed2f",
+        "src/failure_client/contracts/__init__.py": "996c929eaf6d9f2f7f41f5716a7ac2be4eb51a3e922778a4b18ae296f58b36c0",
+        "src/failure_client/contracts/artifacts.py": "c932b44ea219314c0e1c0d1048a627741462ef431a404003340f7655f125a05c",
+        "src/failure_client/contracts/base.py": "f23a827c9f9e7ffbe2e373438fb110b2d554b9380c5b40d0251e960aebe2070f",
+        "src/failure_client/contracts/capabilities.py": "a596d4a5439e9c03a0344d53ad69ee44c2c7691f360d5d67ac5507d3110c752c",
+        "src/failure_client/contracts/errors.py": "e572cd149fe2dcd87062bc5a451a7f6b4c75f643afba33d5c25c92410cf2479e",
+        "src/failure_client/contracts/interventions.py": "f2dd5d16225d359f2d6fb7a679d1fd2c6769f226c6e95ca3076dc63eb09a043a",
+        "src/failure_client/contracts/registry.py": "86943f35c97e65d39d7d99eab37af410181414e7aa35bcd65a665b5890a74f49",
+        "src/failure_client/contracts/resources.py": "48ff580d3f7fe60c0b5af926631cbaefe0c63e417e78f4b620d93a2d6d759e59",
+        "src/failure_client/contracts/rollouts.py": "a750611e2700706df2eef23118a4d3332f35931398bbd3b40cf1e0a5fd2ee3f3",
+        "src/failure_client/contracts/scene_queries.py": "a04621809ee82dc25ede0400ce0c3bf4cfc691c7bd9336f96083f39601d5792a",
+        "src/failure_client/evaluation/__init__.py": "fcdcd2039efa3f5d73319f7c0d4ca6ab65138dc452e014c30b330b1edf90f692",
+        "src/failure_client/evaluation/behavior_measures.py": "464393fc7849e8aed78d515612ae10bfeda223c01ffe3ccc387199907288861e",
+        "src/failure_client/evaluation/call_usage.py": "a979df551f28035734a594941562516474c8ecce44411bffa80ed67df5a89abe",
+        "src/failure_client/evaluation/discovery_readiness.py": "32b0a17ff95b310e74a31d75e39f715213d94787076298d985b3d5000a3c0d10",
+        "src/failure_client/evaluation/domain_readiness.py": "39ad92b0974e03b6167102fdc51250b73b89d19defa94eecef8db646478e948f",
+        "src/failure_client/evaluation/evaluator.py": "91ea3da1210b757ecf23660f9f61dd0753b2cf12f8e3005819ef127326020761",
+        "src/failure_client/evaluation/expanded_taxonomy.py": "66341235e0de05ca4d2fb5ef0a3a7d7193ca29e603441a6da66f2c62f078547f",
+        "src/failure_client/evaluation/failure_taxonomy.py": "de7270d1bf3cbbc8861da273c34db122c132fd29222be91ee0b163bdc10f1c3e",
+        "src/failure_client/evaluation/goal_run_reader.py": "87556bfafbdcf3f9ccefccb2e693cc28e64844f6305f6f8087b416269a8b45e5",
+        "src/failure_client/evaluation/human_archive.py": "01eab409e9169a00a10aedf6ef1067096552663326bc4d414ee1bf38373ef72a",
+        "src/failure_client/evaluation/human_proximity.py": "a884a4d556eac1f1e31d602145030e0b7f79169edc6577acbd7ff4fff43a81ed",
+        "src/failure_client/evaluation/models.py": "9a5adf4d1c30eabcdc04e4b0c209bd6abe00905f7728814727c183e44767ff0a",
+        "src/failure_client/evaluation/research_records.py": "df63f95e620c01396722154a34f13cd3ede9c6e6b17c70a1137b83c53df9d360",
+        "src/failure_client/evaluation/system_taxonomy.py": "fda70f9f189ce0c10bdd61fa2dd1e36d66db47a8fbaa4586a5a3c746d72c5288",
+        "src/failure_client/evaluation/taxonomy_profiles.py": "c1eea85323e307d9ea5f17243539bec05e6317e4320c43aca3e5adc1c8174baf",
+        "src/failure_client/experiments/__init__.py": "3ad936aa4bba8a523ecbe7b64323db4480e761543aec7f60dfdd35a2456dc76a",
+        "src/failure_client/experiments/afs_autonomous.py": "a226487cdacc6aeb2bf11a034c0a1a98dc0f275d312081c44d9fadb58467e609",
+        "src/failure_client/experiments/afs_contrast.py": "6fb7eb984cde9f272d13947419bbc2231d7656c28eb0f29d9ad091429a875dba",
+        "src/failure_client/experiments/afs_paired_contrast.py": "468d63d9a4acf134102aed686c01f91513c86dc0cbbebeecd3ea508c1af0370d",
+        "src/failure_client/experiments/anchor_ref_recovery.py": "e338572c702b309c59b8939ccd72c9914623189d6e56e806c9d31795a3a50b49",
+        "src/failure_client/experiments/behavior_regression.py": "ff6abc1af5e49618d6b86c5f3052fcc359454ef73e0132d39d2cca2e5b6fa632",
+        "src/failure_client/experiments/discovery_continuation.py": "7a63ba6c7cf0af205c69395f504cabd67b1979ee45e3d2215dd07dc033717f1f",
+        "src/failure_client/experiments/discovery_evaluation.py": "66bcfe002ad8a101b7bab473f30f91d116833b10bc558cf59d99e60f4dc96e79",
+        "src/failure_client/experiments/independent_discovery.py": "853638b5a190c86ae33903bc403c461638616748cec500d9c744cc13768c1034",
+        "src/failure_client/experiments/local_goal_adapter.py": "f5642132ee3e5a5c7e041a5319080dbfcb50c37b967e6db173fcb814c3a7153c",
+        "src/failure_client/experiments/lock.py": "540da5ad4f0b28ae082bb7c37bcf2889a4ba977d687189f4bfa9b329944303fd",
+        "src/failure_client/experiments/numeric_recovery.py": "0fda8fde9fd43dbe0483bd312b16e37feb997512490ba0d7d7b7aa4f67c22c2d",
+        "src/failure_client/experiments/orchestrator.py": "41dea651892bc7ee1d3f5ed5fd552f603beb23240b3785e47809488ca152bc7c",
+        "src/failure_client/experiments/paired_discovery.py": "ae656618700e05c5aa3568ab5fa39489a7b4ee9794517a276adf0e256ac7cd06",
+        "src/failure_client/experiments/point_recovery.py": "d44b9277c280b76c19d623f58110531d6bc7c4cc86a9d2f8ed5a5d791e09445d",
+        "src/failure_client/experiments/proposal_recovery.py": "c92062c32c6afdf925aa06822aa6c6d518233bd88e80187036234c95b0d1d613",
+        "src/failure_client/experiments/protocol.py": "b5e87d1cec34f872c161febff1d5f8c35a9b434ff53a854dc26e2b2d48c542e5",
+        "src/failure_client/experiments/reevaluation.py": "998b7eccf2ead3574a807b2fcf74e2a55a563f244f0f3b79056722ac8f7faa81",
+        "src/failure_client/experiments/research_campaign.py": "66d92840061bc7a53a557bc5797eb163f613d8c21f7f3b3be76a474bd6618066",
+        "src/failure_client/experiments/research_protocol.py": "4abda4af43bc02b7239ff5ffe20dba16ff98b00dc77efdff004de6700007fbb5",
+        "src/failure_client/experiments/rollout_coordinator.py": "364d910420a0350b935dfc142f17ffb8164a1c950cda2c11ccf135508eab3a9b",
+        "src/failure_client/methods/__init__.py": "a71b9b3300b58a50a42df593284c013ba992cc85432ea8733df814ba77b7e5b3",
+        "src/failure_client/methods/action_diagnostics.py": "f9ab8d245a28c12c3c8e2c1aa85457d1609f8a1e8fe629ed955fd9e92ec8fc0e",
+        "src/failure_client/methods/adapters/__init__.py": "edeb7ca57897be5959e67d8ff8076f045ebe18115ba77605350664200f390b85",
+        "src/failure_client/methods/adapters/legacy_afs.py": "c1f4211dbaab4f36f54e80e1c1ea73c9a49123ddfc170bbba4797a72a1b71353",
+        "src/failure_client/methods/adapters/legacy_lam_guided.py": "b182594bb9e71f25f578ad3e77c7b4d08f0f1555107fab6f3cc6198f1a9b5f47",
+        "src/failure_client/methods/autonomous_feedback.py": "de7a00c635ed06facedf64916da78b7cbb8e97ec45fe0d0ff6a03afc9029d076",
+        "src/failure_client/methods/base.py": "e0d419e60cdb499eabf1d40c2d3a7c574e2101cd3b8836cd206acc492d7f32d2",
+        "src/failure_client/methods/baselines/__init__.py": "cff6517fea8021ca507a996db12ac7fcf8f4f65d9a5aff73efcbe992f018eae6",
+        "src/failure_client/methods/baselines/manual_method.py": "fc5e65e6bd7f6aef1d534054cf271ef229a35d494799b3b0b376094ccb7626e2",
+        "src/failure_client/methods/baselines/random_method.py": "8b44ffab2859ca5019aebb83f2c715911d11fa784f2a737264229ea5193ccb5d",
+        "src/failure_client/methods/baselines/sobol_method.py": "070bc5207890253b323bba6bf1b72102e7a9964fb1b459f2967e5918f8731449",
+        "src/failure_client/methods/behavior_feedback.py": "28e10325baba9e904c6dbb9e936d3457fe99658635afef63e79b8e3ba5a1e798",
+        "src/failure_client/methods/branch_anchors.py": "f538380072daf8d3f4dfa128d0d207058bd543be9d24f0bcd8890424e51faec1",
+        "src/failure_client/methods/breadth_policy.py": "9d0722c062d3025fc2ea0af355ef2f668a52b30855caf61d230828790d78bd4e",
+        "src/failure_client/methods/cause_review.py": "5bd28191d76e943d16c4b52c0bd00eaaab71488373e7b7f17ebaef1a2532b5cb",
+        "src/failure_client/methods/failure_objective.py": "0f6460b595f8ea75699ef699d541069e5505e29ff7c696f48e406032d6621e06",
+        "src/failure_client/methods/parameters.py": "4c5cb722b1b09af8e2760d830e878dc6d191467e88f27a3229617884fc0776b5",
+        "src/failure_client/methods/registry.py": "6cfaed0213e8af4f078b3963d06fc412f2ac0e0109a498850fff86482180211d",
+        "src/failure_client/methods/search_evidence.py": "aa001c56da2ff7ca31f39d7c3cc46b72a32727bc56968edfdd1199dec8e61ce2",
+        "src/failure_client/methods/seeding.py": "8bb5b3ff7669ab8ebb9b7ba5903de6b4fdd0795582baf53f73918f11e9798df9",
+        "src/failure_client/methods/trajectory_feedback.py": "9b7da15eacb4f4b08a1739a43ae7a5a857ad34b081a548ef9fc4979e3c2ab476",
+        "src/failure_client/registry/__init__.py": "085b1bda3206a56e5a645ae062bdffebca8b14aadca2dd2e2fe8ba3931816556",
+        "src/failure_client/registry/capability_matcher.py": "f3c0cb39e98379807bc59e8163e7b5bb8d5e1e004f61d15e8fa6c3e10887438f",
+        "src/failure_client/registry/synchronizer.py": "0ec2e2368c41697c42491c9dc6789c535d74b0e2b147dad795df554cb2171736",
+        "src/failure_client/reporting/__init__.py": "b8b5723b764a6b9e7001c53020fdbb189c8dc07fd7ca93282a0fd7359b339ae9",
+        "src/failure_client/reporting/behavior_report.py": "72d357a5f5efe158ecd710d2ea308e21777066dfcc5b48c47e3637203f7d35e2",
+        "src/failure_client/reporting/classification_explanation.py": "a237674b9fdcdc1e1a60a0471a566eb2de34cb562082b82ec784091130822196",
+        "src/failure_client/reporting/discovery_metrics.py": "e18f739e396773d79a3b905aebffcccd8699940b3287f19534990fa6a81ace46",
+        "src/failure_client/reporting/discovery_report.py": "4ea744f300300f417b236cdc9e7525783302b7089279d2a323fb8ed447887762",
+        "src/failure_client/reporting/domain_readiness_report.py": "e113784ca7f05b00dfeed38b8cdd60273d035e50c9499605ef83818adcaea601",
+        "src/failure_client/reporting/exporter.py": "d9c511f4889e100d4e4da35c7200aba76d54ac4015f2caf7faeaba9318e9d8df",
+        "src/failure_client/reporting/search_diagnostics.py": "930d3bad59273f0dec51a90b79629591dda326a8d94ef5ae7235b7d2eb41319b",
+        "src/failure_client/storage/__init__.py": "541cff12df59011e9dcfbf54fdfc36cfdd7537583d6b53b73725cf064ab131d5",
+        "src/failure_client/storage/repository.py": "17388e39c94ecd0c678ce45904fba58d553ca8c43b95f4094f44d247514928e8",
+        "src/failure_client/storage/research_store.py": "38d5b8f78671c693904c8cb9c226d2a88dbb4f0b28fbd214c928b3e7375c703f",
+        "src/failure_client/world_model/__init__.py": "f126f6bc459496ce812497350b3d7ce5dc8956fe107cba7fbe31a3ecfc63b762",
+        "src/failure_client/world_model/models.py": "6518670f5885c85fee0e50d96a8181d80885cfa413c2b6ec3fb75f7d8087f519",
+        "src/failure_client/world_model/projector.py": "da39b557eeb50f46b0102bbde2ed7027c664170ec0925ed094b6d8b60b4ed554",
+        "src/simulation_server/__init__.py": "accf0396ba79620d26e8fa84df1c17b454054c4454bc2827dc237a0516aaec8f",
+        "src/simulation_server/bootstrap.py": "144a9ab20201d1187196aab9a1390a7b567a12eb83f5bb7e13c3c7d701ca5aef",
+        "src/simulation_server/cli.py": "af2dfba055fa0f794bea55f990042759b75c81998fa709e71b98d6248a0fd00b",
+        "src/simulation_server/config.py": "e6461574d315902de14f957b3f0d04c6ae2fdacb269a16dee163447cb591c542",
+        "src/simulation_server/groot_locomotion.py": "f19aacff5ebd318641ca6167203e7545d3d3e273f9a3e93de1aead3fbd06bdc2",
+        "src/simulation_server/jobs.py": "1f6d84e419563182d04e084d33441b7867568d95d85ffd3ca5cee31154cf19f6",
+        "src/simulation_server/main.py": "3264ecbec96990f2d3df0de5b6260b940c4b767ce231c077249325549c5500bf",
+        "src/simulation_server/navigation.py": "162e1355f8959aa39141f3566fdc2ba176fcf69b242cc441647ef509e753923f",
+        "src/simulation_server/navigation_worker.py": "9308adb193b86aa5342287a4ca03803e1cbc300a6f88b6985be953ef3a571810",
+        "src/simulation_server/path_tracking.py": "fedcec64ddfe114a2b046296e5b165d8eb0b0d761f96f989a3f2214d995b88be",
+        "src/simulation_server/registry.py": "99090a08e8d33389fb74af43d853dd7709a82892f0b829be6b1f7862ff88ea8b",
+        "src/simulation_server/terrain_metrics.py": "9f3842f2857d618d7e7015e90d253ece656e6f40f53c1ff941f4b5332bea1c31",
+        "src/simulation_server/terrain_worker.py": "7f0ed853ecc0ed43fc041f0f0ab2c3a14a296888c5d39c8d0db5c9e328c2a078",
+        "src/simulation_server/worker.py": "7e3b1808916ad67583adfa0ce7d2e6f2a0e2d3d5f085af0dd5b09502cc76f2e6",
+        "src/simulation_server/worlds.py": "74525010832304b98f6cd9646526b30070629ea8aa3cfcada2391ceaf1d27232",
+        "tools/run_afs_autonomous.py": "5b792f77342887b05d711dd759f8a4d3d863a9c4e54c3d143ffd2b3a9be4bc63",
+        "tools/run_discovery_evaluation.py": "4730bc2d2a3db4c1ea83b9b6e6eff96dd3b13fce916f996bdbda5d52380a3dcc",
+        "tools/prepare_discovery_evaluation.py": "18b562b4def1c1b389d9f778e010a0665dd4300568859f39164980ef9823395b",
+        "tools/run_discovery_continuation.py": "bfa5331951765c26d5f6b96f688f4b5a4a8d099b9e5991b00695bed30891c6f6",
+        "tools/run_paired_discovery.py": "a90b29b58bc48e3cd0cd3b9dfe041a43b4ace563b715ce0441b664a4d40f1bce",
+        "tools/run_random_environment.py": "f2b1835befb9588d97a76edd758b0d46cebe4824244fdb6601dd1d673deb7930",
+        "tools/run_navigation_comparison.sh": "82fe6619471afbf8828c1dad9faa9471968ee47a3cd8fb3c058c650c34fae1e1"
+      },
+      "robot_resources": {
+        "decoupled_wbc/sim2mujoco/resources/robots/g1/g1_gear_wbc.xml": "3b0b5a1c8299fda85cf328cc2a8df53ccc765ce37f20030175295049947b1a19",
+        "decoupled_wbc/sim2mujoco/resources/robots/g1/g1_gear_wbc.yaml": "31226a224ca8450e89d9ce17d5cb31c052192a9cbfedc8d145f1cb95627ac7a2",
+        "decoupled_wbc/sim2mujoco/resources/robots/g1/meshes/pelvis.STL": "5ba6bbc888e630550140d3c26763f10206da8c8bd30ed886b8ede41c61f57a31",
+        "decoupled_wbc/sim2mujoco/resources/robots/g1/meshes/pelvis_contour_link.STL": "5cc5c2c7a312329e3feeb2b03d3fc09fc29705bd01864f6767e51be959662420",
+        "decoupled_wbc/sim2mujoco/resources/robots/g1/meshes/left_hip_pitch_link.STL": "4725168105ee768ee31638ef22b53f6be2d7641bfd7cfefe803488d884776fa4",
+        "decoupled_wbc/sim2mujoco/resources/robots/g1/meshes/left_hip_roll_link.STL": "91f25922ee8a7c3152790051bebad17b4d9cd243569c38fe340285ff93a97acf",
+        "decoupled_wbc/sim2mujoco/resources/robots/g1/meshes/left_hip_yaw_link.STL": "a16d88aa6ddac8083aa7ad55ed317bea44b1fa003d314fba88965b7ed0f3b55b",
+        "decoupled_wbc/sim2mujoco/resources/robots/g1/meshes/left_knee_link.STL": "8d92b9e3d3a636761150bb8025e32514c4602b91c7028d523ee42b3e632de477",
+        "decoupled_wbc/sim2mujoco/resources/robots/g1/meshes/left_ankle_pitch_link.STL": "d49e3abc6f5b12e532062cd575b87b5ef40cd2a3fc18f54a1ca5bba4f773d51d",
+        "decoupled_wbc/sim2mujoco/resources/robots/g1/meshes/left_ankle_roll_link.STL": "c4092af943141d4d9f74232f3cfa345afc6565f46a077793b8ae0e68b39dc33f",
+        "decoupled_wbc/sim2mujoco/resources/robots/g1/meshes/right_hip_pitch_link.STL": "e4f3c99d7f4a7d34eadbef9461fc66e3486cb5442db1ec50c86317d459f1a9c6",
+        "decoupled_wbc/sim2mujoco/resources/robots/g1/meshes/right_hip_roll_link.STL": "4c254ef66a356f492947f360dd931965477b631e3fcc841f91ccc46d945d54f6",
+        "decoupled_wbc/sim2mujoco/resources/robots/g1/meshes/right_hip_yaw_link.STL": "e479c2936ca2057e9eb2f7dff6c189b7419d7b8484dea0b298cbb36a2a6aa668",
+        "decoupled_wbc/sim2mujoco/resources/robots/g1/meshes/right_knee_link.STL": "63c4008449c9bbe701a6e2b557b7a252e90cf3a5abcf54cee46862b9a69f8ec8",
+        "decoupled_wbc/sim2mujoco/resources/robots/g1/meshes/right_ankle_pitch_link.STL": "15be426539ec1be70246d4d82a168806db64a41301af8b35c197a33348c787a9",
+        "decoupled_wbc/sim2mujoco/resources/robots/g1/meshes/right_ankle_roll_link.STL": "4b66222ea56653e627711b56d0a8949b4920da5df091da0ceb343f54e884e3a5",
+        "decoupled_wbc/sim2mujoco/resources/robots/g1/meshes/waist_yaw_link_rev_1_0.STL": "ec6db442b11f25eed898b5add07940c85d804f300de24dcbd264ccd8be7d554c",
+        "decoupled_wbc/sim2mujoco/resources/robots/g1/meshes/waist_roll_link_rev_1_0.STL": "b67c347a05abc3e8ddae600d98a082bee273bb39f8e651647708b0a7140a8a97",
+        "decoupled_wbc/sim2mujoco/resources/robots/g1/meshes/torso_link_rev_1_0.STL": "11ddb46f2098efbbd8816b1d65893632d8e78be936376c7cdcd6771899ccc723",
+        "decoupled_wbc/sim2mujoco/resources/robots/g1/meshes/logo_link.STL": "8571a0a19bc4916fa55f91449f51d5fdefd751000054865a842449429d5f155b",
+        "decoupled_wbc/sim2mujoco/resources/robots/g1/meshes/head_link.STL": "005fb67fbd3eff94aa8bf4a6e83238174e9f91b6721f7111594322f223724411",
+        "decoupled_wbc/sim2mujoco/resources/robots/g1/meshes/left_shoulder_pitch_link.STL": "f0d1cfd02fcf0d42f95e678eeca33da3afbcc366ffba5c052847773ec4f31d52",
+        "decoupled_wbc/sim2mujoco/resources/robots/g1/meshes/left_shoulder_roll_link.STL": "fb9df21687773522598dc384f1a2945c7519f11cbc8bd372a49170316d6eee88",
+        "decoupled_wbc/sim2mujoco/resources/robots/g1/meshes/left_shoulder_yaw_link.STL": "1aa97e9748e924336567992181f78c7cd0652fd52a4afcca3df6b2ef6f9e712e",
+        "decoupled_wbc/sim2mujoco/resources/robots/g1/meshes/left_elbow_link.STL": "fa752198accd104d5c4c3a01382e45165b944fbbc5acce085059223324e5bed3",
+        "decoupled_wbc/sim2mujoco/resources/robots/g1/meshes/left_wrist_roll_link.STL": "edc387c9a0ba8c2237e9b296d32531426fabeb6f53e58df45c76106bca74148c",
+        "decoupled_wbc/sim2mujoco/resources/robots/g1/meshes/left_wrist_pitch_link.STL": "b251d8e05047f695d0f536cd78c11973cfa4e78d08cfe82759336cc3471de3a9",
+        "decoupled_wbc/sim2mujoco/resources/robots/g1/meshes/left_wrist_yaw_link.STL": "83f8fb3a726bf9613d65dd14f0f447cb918c3c95b3938042a0c9c09749267d3b",
+        "decoupled_wbc/sim2mujoco/resources/robots/g1/meshes/left_hand_palm_link.STL": "23a486b75bd78a9bf03cec25d84d87f97f3dae038cf21a743b6d469b337e4004",
+        "decoupled_wbc/sim2mujoco/resources/robots/g1/meshes/left_hand_thumb_0_link.STL": "a90c721661c0622685488a3c74d1e122c7da89242d3a1daef75edb83422d05e0",
+        "decoupled_wbc/sim2mujoco/resources/robots/g1/meshes/left_hand_thumb_1_link.STL": "445c54a45bc13ce36001556f66bc0f49c83cb40321205ae4d676bb2874325684",
+        "decoupled_wbc/sim2mujoco/resources/robots/g1/meshes/left_hand_thumb_2_link.STL": "3d8dbe5085acfc213d21aa8b0782e89cd79084e9678f3a85fc7b04a86b029db5",
+        "decoupled_wbc/sim2mujoco/resources/robots/g1/meshes/left_hand_middle_0_link.STL": "6b35f2f77211d5a366f0b9a4e47c4ee35e536731266f1a34e9efa12db579b892",
+        "decoupled_wbc/sim2mujoco/resources/robots/g1/meshes/left_hand_middle_1_link.STL": "9e315ebc8a7a0cb98e033985b586b20d81cf8aa761181ae61ce56fcb14077a06",
+        "decoupled_wbc/sim2mujoco/resources/robots/g1/meshes/left_hand_index_0_link.STL": "6b35f2f77211d5a366f0b9a4e47c4ee35e536731266f1a34e9efa12db579b892",
+        "decoupled_wbc/sim2mujoco/resources/robots/g1/meshes/left_hand_index_1_link.STL": "9e315ebc8a7a0cb98e033985b586b20d81cf8aa761181ae61ce56fcb14077a06",
+        "decoupled_wbc/sim2mujoco/resources/robots/g1/meshes/right_shoulder_pitch_link.STL": "24cdb387e0128dfe602770a81c56cdce3a0181d34d039a11d1aaf8819b7b8c02",
+        "decoupled_wbc/sim2mujoco/resources/robots/g1/meshes/right_shoulder_roll_link.STL": "962b97c48f9ce9e8399f45dd9522e0865d19aa9fd299406b2d475a8fc4a53e81",
+        "decoupled_wbc/sim2mujoco/resources/robots/g1/meshes/right_shoulder_yaw_link.STL": "a0b76489271da0c72461a344c9ffb0f0c6e64f019ea5014c1624886c442a2fe5",
+        "decoupled_wbc/sim2mujoco/resources/robots/g1/meshes/right_elbow_link.STL": "1be925d7aa268bb8fddf5362b9173066890c7d32092c05638608126e59d1e2ab",
+        "decoupled_wbc/sim2mujoco/resources/robots/g1/meshes/right_wrist_roll_link.STL": "a7ee9212ff5b94d6cb7f52bb1bbf3f352194d5b598acff74f4c77d340c5b344f",
+        "decoupled_wbc/sim2mujoco/resources/robots/g1/meshes/right_wrist_pitch_link.STL": "d22f8f3b3127f15a63e5be1ee273cd5075786c3142f1c3d9f76cbf43d2a26477",
+        "decoupled_wbc/sim2mujoco/resources/robots/g1/meshes/right_wrist_yaw_link.STL": "bc9dece2d12509707e0057ba2e48df8f3d56db0c79410212963a25e8a50f61a6",
+        "decoupled_wbc/sim2mujoco/resources/robots/g1/meshes/right_hand_palm_link.STL": "86c0b231cc44477d64a6493e5a427ba16617a00738112dd187c652675b086fb9",
+        "decoupled_wbc/sim2mujoco/resources/robots/g1/meshes/right_hand_thumb_0_link.STL": "544298d0ea1088f5b276a10cc6a6a9e533efdd91594955fdc956c46211d07f83",
+        "decoupled_wbc/sim2mujoco/resources/robots/g1/meshes/right_hand_thumb_1_link.STL": "0a9a820da8dd10f298778b714f1364216e8a5976f4fd3a05689ea26327d44bf6",
+        "decoupled_wbc/sim2mujoco/resources/robots/g1/meshes/right_hand_thumb_2_link.STL": "3f1bfb37668e8f61801c8d25f171fa1949e08666be86c67acad7e0079937cc45",
+        "decoupled_wbc/sim2mujoco/resources/robots/g1/meshes/right_hand_middle_0_link.STL": "12ab4300c95e437e834f9aef772b3b431c671bf34338930b52ad11aef73bbd0d",
+        "decoupled_wbc/sim2mujoco/resources/robots/g1/meshes/right_hand_middle_1_link.STL": "c9c34efce4563cacdcfd29fc838a982976d40f5442c71219811dcbbf3923a33d",
+        "decoupled_wbc/sim2mujoco/resources/robots/g1/meshes/right_hand_index_0_link.STL": "12ab4300c95e437e834f9aef772b3b431c671bf34338930b52ad11aef73bbd0d",
+        "decoupled_wbc/sim2mujoco/resources/robots/g1/meshes/right_hand_index_1_link.STL": "c9c34efce4563cacdcfd29fc838a982976d40f5442c71219811dcbbf3923a33d",
+        "decoupled_wbc/sim2mujoco/resources/robots/g1/policy/GR00T-WholeBodyControl-Walk.onnx": "7c82255b6905ffcc4468fa7f8ddcf7b70db168cf1042107ccab887cb6a8e5407"
+      },
+      "python": "3.11.13",
+      "runtime_versions": {
+        "mujoco": "3.12.0",
+        "numpy": "1.26.4",
+        "onnxruntime-gpu": "1.22.0",
+        "httpx": "0.28.1",
+        "pydantic": "2.13.4",
+        "imageio": "2.37.3",
+        "imageio-ffmpeg": "0.6.0",
+        "pillow": "12.2.0",
+        "pyyaml": "6.0.3"
+      }
+    },
+    "reference_condition_id": "4619619d0c12ed39db7cf1968e55281fb375cc3bfd32969d735e546170007032",
+    "reference_geometry_id": "e69e44d2e4345f7217cfdc827f069757662a9415856252bd3269b49d59c71d08",
+    "execution_origin": "openai_api",
+    "control_provenance": [
+      {
+        "source": {
+          "path": "/workspace/g1_failure/runtime/goal_clearance_control/luna_clear_goal_20261021_v1/attempts/attempt_00000/rollout",
+          "method": "unassigned",
+          "seed": 0,
+          "stage": "unknown"
+        },
+        "artifact_hashes": {
+          "api_call_000.jsonl": "458e8218ef4267b5e40f57fce190e1ca884d9ac2702443e97035ec0f09563874",
+          "api_call_001.jsonl": "49ba9cd6850a357b071857895d7202fec8a2f48664719be93d0e5ed7b29f31ea",
+          "api_call_002.jsonl": "99ada506bbe41c15689acef21066c840ddf7b11804c6eca190c379b977de013b",
+          "api_call_003.jsonl": "9e9205a9f8e62ce374075084e2aaa6edc45a502f50be771a10d3278828b43b08",
+          "api_call_004.jsonl": "1991332d7acc6bddcc0cf8e9441da300548192be5e41db5d2519efc1a73c4fe1",
+          "api_call_005.jsonl": "92d220ddb91f8ab9d68e4c526ed028cef9dff9203c9f91c39cee752b6aa15c89",
+          "camera_000.png": "06b3d2d8488d2da9418fa375f1a230c611bfbd8ff0c35afb807fcf5dc7654bb3",
+          "camera_001.png": "8ebe7e64fee0a842922d2be2604d979652aa3e9c5e03991f5e352ceebab2deb7",
+          "camera_002.png": "e198f75c387ad55e578af463b77109ac9575171daecbb7a4108aeae213bf3eea",
+          "camera_003.png": "3e5bc83a8466d84f95e8242efb37b58ced342de58557ed76011386f38a503921",
+          "camera_004.png": "0dad38a26ab88bdd8bf255282f5ac32cf4aad741413d52f3ccbaf7c9542af9fb",
+          "camera_005.png": "75dde7cc728179cfd0de8d2322345bd91fe1fd4a09fd221f841ac0999ba011ca",
+          "contacts.jsonl": "b60adc0d9497f967424c2d57ac972ee86c94bfaaffc3d59bc1a508a50d49a56c",
+          "decisions.jsonl": "91a32833bcbf6bee898ff104947a0bf0692a8b1ec6a282c466805b4f55e1f857",
+          "events.jsonl": "3e5badfe7065236dcc369dbe2070a6fe46f4b7262da02803a534d63674275264",
+          "goal_context_000.json": "6765455b020d43bd5bd799b8a401f6e768a5297ba24986493bb488c7c240ef87",
+          "goal_context_001.json": "223266452a45ad02740db18a9707b30509e8824c2666fc3ed1ae051ec4bbc5fe",
+          "goal_context_002.json": "d9c8077e9f92139d1d72de2c754a9d7a650ce70cd3e530c5855ae635089cb9af",
+          "goal_context_003.json": "e1ea8bbd4412a81507d5df1d7fea58621d3eea1e3e93904253243079b363220a",
+          "goal_context_004.json": "44a81a5b0ec0cf91950948223e7705b7784d34523754e9fd7668fdc789a4a826",
+          "goal_context_005.json": "9ced2e7417c7c679a24be1d1187533ec8fddd846abfc4269fc462440732cace3",
+          "human_proxies.json": "665381d313f360ea145d16c05d6cd326369a844c14df1f1b95dc66934dfba39a",
+          "navigation_context_000.json": "12e0494022f5041ac916b1d41e4d2ee41e0af056e05a788deba5e0e6d37c1c0e",
+          "navigation_context_001.json": "a6e19dc0cd5f8819ecb44507ec1472996109820b2b4eb09e607af6f32610dc27",
+          "navigation_context_002.json": "0af2ba99a6834b16b5b73c9c55f34323a9f7b858292578b4df505ec3a4046010",
+          "navigation_context_003.json": "6485abf73cf12f7c5a571d3d1c13ff2914b8b1a41ef88fa1ff53867e51e5776a",
+          "navigation_context_004.json": "c57973a9af44795036023cafecea435607e5deb93fd3988d91a1c70dc08dffc0",
+          "navigation_context_005.json": "6ba8805eb61f14229230567ee6abaa6bb9c2b5dccbe84113fc5a2e1e8ed78555",
+          "navigation_map.json": "f0961002527267277ae15c1acd15a75a87598481f46487e31b3956f4652cde6b",
+          "navigation_trace_001.json": "56c9c4c93357b2ba51c27d9cfd6c7b3e22d458c85644ad1304d5c8bea9f6877b",
+          "navigation_trace_002.json": "46f94a02b2c1864c449214e1dc51fd7656cf6aaacc16628b89e890ca2166d550",
+          "navigation_trace_003.json": "6197d95fdefcbcf86096083534d44fa6a587b95139fe145c4b7ac22f14cc0139",
+          "navigation_trace_004.json": "14689195b9924e589ffd55f3f3e1eb73600f478eea5e9f07a12dab5e1fd90f76",
+          "navigation_trace_005.json": "9a42c9c546b3343fab676f23ea5dd4bda4539b7f6ad5d8d6ca3bd8a5aec6f1e3",
+          "observation_000.json": "218571967fbc30b1d4ddc21640025f01fa0a3ccaa1f2e47fb7bb39ed30d4f999",
+          "observation_001.json": "d9007aa56ba147dd2379cd9be80767fdc078b8cedf2f78e670a4ab0dad5f91d5",
+          "observation_002.json": "385f2408665d2eb771f5dced07c03cdcf1b89f2af0f3905e56c204efd1209218",
+          "observation_003.json": "3a3cebe06c6eee1420ab8f8d3912a53f5e4221e2d80c5f884925297402714408",
+          "observation_004.json": "96937740888312af3b13afda0b87e663bc239fe0301a559193171576ae80d6fe",
+          "observation_005.json": "5583191dda90b7f006aaadbde55e1fc73eee0040f2ecf2ef7f68fc71674bc9ef",
+          "protocol.json": "647e9a633277d498d5820c20e5471911dbaa74160c1357dc72d3f2f28c9196db",
+          "report.html": "d11b53740f95e1e1975918750609b646ce460984c3563b36df81f06e29fd5592",
+          "result.json": "77bf2a7955554f4e0d0ffeac64f924d4b91ad9052049554920b184e4ef8d5fc0",
+          "robot_audit.json": "e418182778da67250870f898a5e842db52c4e9ff2332ac3af891fac803828a42",
+          "rollout.mp4": "2056408cf0658c59d3a1e793231692f9f253e031fbfbbb93b0d32741823dcf96",
+          "scene.xml": "335d516fc91264265a7593947be5f79d09d51d582587838f47f5664a628b90ff",
+          "scene_graph.json": "74518db9e83f06b8c7ab3ad3039b2f118fcf49a87b15917bc8e0fe06e7b2fd4f",
+          "states.jsonl": "11ab78aff4d8acf48e910f310c065e229caaefb26ee6181b914e298e765d9258",
+          "terminal_diagnostics.json": "4d617e85795521fd51cc66a712567103b3e63a5c08558923607489fb1bb537f9",
+          "terminal_state.json": "d942d7f3d85627a528273d891a46b2e67851ce7940009baf66690197a796c693",
+          "tool_000.json": "140c7994a694aa991f75ded660905e8e997d28d261735f9dd8f182ccea28ee16",
+          "tool_001.json": "241bf1ba5432d45bfbd5501bf77df4ff03285e993aa44c5f2150d9a15b2f76c7",
+          "tool_002.json": "1ea23540ba3ec4d5c8b0d1cac1557ae9006df4c811d1e7a504d76b358df4b36f",
+          "tool_003.json": "0cb4f418af8117c930aa772dd1463c2977f97b99d9b2ab1d3efd1ac349a4e13d",
+          "tool_004.json": "cd7fafa2d8a2b78163d66b9e2b12eaf1e0b59cc4152494c5b8e1acbc3b902dc3",
+          "tool_005.json": "1bb98f890e1664b514bfdd524647d92ef7e20ef71017af79aa3a98f4185db696"
+        },
+        "evidence_id": "56a7767899fdc263af807d1b6917d780361152394f318f29eeef9900ef67fc56"
+      },
+      {
+        "source": {
+          "path": "/workspace/g1_failure/runtime/goal_clearance_control/luna_clear_goal_20261021_v1/attempts/attempt_00001/rollout",
+          "method": "unassigned",
+          "seed": 0,
+          "stage": "unknown"
+        },
+        "artifact_hashes": {
+          "api_call_000.jsonl": "c06d5e84a696e1ea37ca738050a67ae7e991a43e4aa9fa80e5c6538e7baed1f3",
+          "api_call_001.jsonl": "6135ecaa4bf0074b66e9b0e43de3c273077388bf223cd936a6c1321a178002e1",
+          "api_call_002.jsonl": "f2bf9de6a8be2a6bd0f1f88df7fd05a5af4c8abf47f7570123aaf38a2ceee892",
+          "api_call_003.jsonl": "df501d35f7835e11d86a55ef24448e031ba8e2535ceb31ea45b50209b41b937a",
+          "api_call_004.jsonl": "0e3b28d362440257cff1cc74dcaf9465165dff2e785b8ba9c59139fa79ec05c4",
+          "camera_000.png": "06b3d2d8488d2da9418fa375f1a230c611bfbd8ff0c35afb807fcf5dc7654bb3",
+          "camera_001.png": "e3bc1fa7c62fae73bb55f3ff141fcbd58516b49a523c97dbc3e7c6a3bf9fe5c6",
+          "camera_002.png": "3a5448fb9abf836b92be0a0e46f51077686ae0e40dd57a3469b9510289b11885",
+          "camera_003.png": "1a02dffdd52f6ca08ea68fb696a041fff7ea7f699580b278294f954be2eda9d6",
+          "camera_004.png": "767bdc337257a4ffb069dfe8dc646bed9a9882f0d134c792214b589320404a8e",
+          "contacts.jsonl": "bbd957d3ffa19f760b1889223ad1c7f6674c296da4bc10cc5a404ace8c426900",
+          "decisions.jsonl": "9595735a3e288c12722b8f4742d7856fc441981204b3b97a80a285ca966e7a00",
+          "events.jsonl": "7fd9893e9a0bf08478d414616692b304af5763ad466ee0233d4bcf9699d6b693",
+          "goal_context_000.json": "6765455b020d43bd5bd799b8a401f6e768a5297ba24986493bb488c7c240ef87",
+          "goal_context_001.json": "f858f22713f7482123ec580aee85465a27a8f360b828bfcdd4835f84e790831e",
+          "goal_context_002.json": "67546e778b6094075446d7a27f116fd09dbdd0adc55797215a51eedeed2de92d",
+          "goal_context_003.json": "f73bf5cfb687f08178da5e289fbf88370d31b5a322ba463f5df42d1473a27f13",
+          "goal_context_004.json": "8a4df918b39a0eb2fd7b876ef341a4a5a76360ddeb7bd48d36c78a5a06fe2cbb",
+          "human_proxies.json": "665381d313f360ea145d16c05d6cd326369a844c14df1f1b95dc66934dfba39a",
+          "navigation_context_000.json": "85d00d70f31bbf82d4e65669c8327ed429503ab238497dccf46bfe1001adb28f",
+          "navigation_context_001.json": "73d0ceeeabe8b921aad167ba2586103fd724fea355b9e2d52fd4a9355566324d",
+          "navigation_context_002.json": "4251ae23087bc837451c66509fc587dd287ec94a34d599298db3ef4fb0fe0b68",
+          "navigation_context_003.json": "7727fcd8c42d26a6581da292c2c4ff4caa2b2396944f376a7049ea29f4824780",
+          "navigation_context_004.json": "cc84b8b0c4f2e36fc15a7f548303d8248b7663ffc39e05168605661d2cf6ca41",
+          "navigation_map.json": "f0961002527267277ae15c1acd15a75a87598481f46487e31b3956f4652cde6b",
+          "navigation_trace_000.json": "c8c9d99e825789739664d85ee42d3824340deb57e54d27ab6aad5aacfdb9a287",
+          "navigation_trace_001.json": "b5da1f685850202c53716e60dc85d8d04406455dbc96bce486d36469c9740663",
+          "navigation_trace_002.json": "7361778be552e04134cc19790bf6c527c12478e58c08d37b946afca72f7ac3c9",
+          "navigation_trace_003.json": "fd9969d4876fca7a74f02e86112f5003a51a42aa95e25db34ffde671dff9a74e",
+          "navigation_trace_004.json": "3a37b05d53a9e0ce2beaa382bedf76f4d5f2d2168493b64e74b6b761659eba9a",
+          "observation_000.json": "218571967fbc30b1d4ddc21640025f01fa0a3ccaa1f2e47fb7bb39ed30d4f999",
+          "observation_001.json": "2347b2cd3d015b567ba840b93c90e0f2098a45a5ead3cfc8ae2513ee6f674216",
+          "observation_002.json": "3b4f59fc82a97eca3e0e3c31b27e774fac2b212a44cc6401cae642a1df082170",
+          "observation_003.json": "0c4974a27102284b25110df5618e17f602afb0b5edfb91df167ea2872bdfe02c",
+          "observation_004.json": "221a84d15d6af03c5572f2bb28ddc6d598b108a5674d65a45061218c4637319d",
+          "protocol.json": "647e9a633277d498d5820c20e5471911dbaa74160c1357dc72d3f2f28c9196db",
+          "report.html": "440f2e565768244bbe2609439313952a51e1ee4a38a27438f06fdc112893bbca",
+          "result.json": "167b73bf0fd18b34bb853ce68672adc138fbc80e5a6fffa078416a728a57ba45",
+          "robot_audit.json": "e418182778da67250870f898a5e842db52c4e9ff2332ac3af891fac803828a42",
+          "rollout.mp4": "8c5311fd063b3311aed65d72c26db20804cc8db9cb9a8162e4492cb9a8cfb504",
+          "scene.xml": "335d516fc91264265a7593947be5f79d09d51d582587838f47f5664a628b90ff",
+          "scene_graph.json": "74518db9e83f06b8c7ab3ad3039b2f118fcf49a87b15917bc8e0fe06e7b2fd4f",
+          "states.jsonl": "502c58eaa0b2f07659ea925ca63d1813dbae296478b2bca9d04ab52ad1e80e90",
+          "terminal_diagnostics.json": "411199d2392e5027fa0df900c2da2f779178dc46048604358e2d2b49ed7f2dae",
+          "terminal_state.json": "6ec9217d00175e02942398f7ec3a064545592d76b9ae41fe749d175e1fd81055",
+          "tool_000.json": "34cb3c4735e28abb346e616710fe665335eaf7777bb14f3f1d702bf0f12840d7",
+          "tool_001.json": "94b414692cb52a526baaa4f030c1cbc2176e4a6b984ffcbad74868f1e828b55c",
+          "tool_002.json": "fb53e830ad2fed4063a3024505d87fca0f0a75ffc69f84741e1e6fe4ff3feac8",
+          "tool_003.json": "cb21020124083fc9563d7a946ac5a49e8ba0542e72e0c2eba9e952f6a0e5d7a8",
+          "tool_004.json": "adfb882063a37203ad886f9cc7dfd98f3db0b7bddef265990f0205b4aa519156"
+        },
+        "evidence_id": "8ff03865e2be12f0d39a1e43150bbd0e7f82f8a65a32ff9e147281a32e0bd454"
+      }
+    ],
+    "external_history_in_evaluation": [],
+    "methods": [
+      "random"
+    ],
+    "method_assignment": "Random only; no proposer or AFS arm exists",
+    "execution_order": "predeclared sequential seeds and draw indices; no outcome selection",
+    "bootstrap": "none; all episodes are independent full-domain Random draws",
+    "random_distribution": "independent uniform over every frozen bounded-domain axis; no geometry/outcome rejection, clipping or novelty filter",
+    "domain_axes": {
+      "box_mass_kg": [
+        0.2,
+        10.0
+      ],
+      "box_friction": [
+        0.05,
+        1.5
+      ],
+      "floor_friction": [
+        0.05,
+        1.5
+      ],
+      "corridor_width_m": [
+        1.6,
+        2.4
+      ],
+      "box_lateral_fraction": [
+        -1.0,
+        1.0
+      ],
+      "obstacle_1_x_m": [
+        2.25,
+        2.75
+      ],
+      "obstacle_1_lateral_fraction": [
+        -1.0,
+        1.0
+      ],
+      "obstacle_1_size_x_m": [
+        0.2,
+        0.8
+      ],
+      "obstacle_1_size_y_m": [
+        0.2,
+        0.8
+      ],
+      "obstacle_1_height_m": [
+        0.1,
+        1.2
+      ],
+      "obstacle_1_yaw_deg": [
+        -90.0,
+        90.0
+      ],
+      "obstacle_2_x_m": [
+        5.25,
+        5.75
+      ],
+      "obstacle_2_lateral_fraction": [
+        -1.0,
+        1.0
+      ],
+      "obstacle_2_size_x_m": [
+        0.2,
+        0.8
+      ],
+      "obstacle_2_size_y_m": [
+        0.2,
+        0.8
+      ],
+      "obstacle_2_height_m": [
+        0.1,
+        1.2
+      ],
+      "obstacle_2_yaw_deg": [
+        -90.0,
+        90.0
+      ],
+      "box_goal_x_m": [
+        6.8,
+        7.5
+      ],
+      "human_x_m": [
+        3.65,
+        4.35
+      ],
+      "human_lateral_fraction": [
+        -1.0,
+        1.0
+      ]
+    },
+    "domain_id": "b45844632bd7e775303a20af15321cb22894989ef538f9e8438dd22b64f72864",
+    "evaluators": {
+      "primary": {
+        "family_rules": {
+          "collision": "goal-behavior-v1/collision",
+          "obstacle_interference": "goal-behavior-v1/obstacle_interference",
+          "goal_occupied": "goal-behavior-v1/goal_occupied",
+          "human_safety_risk": "goal-behavior-v2/human_safety_risk",
+          "fall": "expanded-goal-behavior-v1/fall",
+          "locomotion_stall": "expanded-goal-behavior-v1/locomotion_stall",
+          "manipulation_failure": "expanded-goal-behavior-v1/manipulation_failure",
+          "goal_completion_failure": "expanded-goal-behavior-v1/goal_completion_failure",
+          "goal_endpoint_rejection": "system-twelve-v1/goal_endpoint_rejection",
+          "subgoal_completion_loop": "system-twelve-v1/subgoal_completion_loop"
+        },
+        "family_inventory": [
+          "collision",
+          "unreachable",
+          "obstacle_interference",
+          "goal_occupied",
+          "human_safety_risk",
+          "perception_error",
+          "fall",
+          "locomotion_stall",
+          "manipulation_failure",
+          "goal_completion_failure",
+          "goal_endpoint_rejection",
+          "subgoal_completion_loop"
+        ]
+      },
+      "original_six": {
+        "family_rules": {
+          "collision": "goal-behavior-v1/collision",
+          "obstacle_interference": "goal-behavior-v1/obstacle_interference",
+          "goal_occupied": "goal-behavior-v1/goal_occupied",
+          "human_safety_risk": "goal-behavior-v2/human_safety_risk"
+        },
+        "family_inventory": [
+          "collision",
+          "unreachable",
+          "obstacle_interference",
+          "goal_occupied",
+          "human_safety_risk",
+          "perception_error"
+        ]
+      }
+    },
+    "valid_total": 4,
+    "attempt_cap_total": 4,
+    "robot_api_call_upper_bound": 40,
+    "afs_request_upper_bound": 0,
+    "relative_gain_definition": "(FDR_AFS-FDR_Random)/FDR_Random; null if Random FDR=0",
+    "limits": [
+      "Random-only descriptive environment exploration; no AFS comparison or Gain claim",
+      "Predeclared seeds and full-domain independent uniform draws; no outcome-based selection",
+      "Controls bind robot/settings only; no external history or free copied episodes",
+      "All valid episodes count; exclusions consume attempts and STOP; no automatic replacement",
+      "Zero AFS calls; robot action selection still uses the frozen GPT robot policy",
+      "Fixed topology/object counts/bounds; not new venue generation or matched-change Random",
+      "Marginal parameter bins are not joint environmental or failure-family coverage",
+      "Common twelve-family and separate original-six scoring; unsupported remains unsupported",
+      "No implicit token/simulation cap, tier fallback, automatic episode retry or budget reset",
+      "Bounded development-derived subdomain, not the original full-domain benchmark",
+      "Subdomain results do not establish whole-project original-family coverage"
+    ],
+    "scene_domain": {
+      "schema_version": "bounded-scene-domain-v1",
+      "scene_schema": "clear-path-human-v5",
+      "scope": "Development difficulty audit, not held-out AFS superiority evaluation. Width thirds jointly restore the original full domain; all other axes retain original bounds. No geometry/outcome rejection or resampling.",
+      "axes": {
+        "box_mass_kg": [
+          0.2,
+          10.0
+        ],
+        "box_friction": [
+          0.05,
+          1.5
+        ],
+        "floor_friction": [
+          0.05,
+          1.5
+        ],
+        "corridor_width_m": [
+          1.6,
+          2.4
+        ],
+        "box_lateral_fraction": [
+          -1.0,
+          1.0
+        ],
+        "obstacle_1_x_m": [
+          2.25,
+          2.75
+        ],
+        "obstacle_1_lateral_fraction": [
+          -1.0,
+          1.0
+        ],
+        "obstacle_1_size_x_m": [
+          0.2,
+          0.8
+        ],
+        "obstacle_1_size_y_m": [
+          0.2,
+          0.8
+        ],
+        "obstacle_1_height_m": [
+          0.1,
+          1.2
+        ],
+        "obstacle_1_yaw_deg": [
+          -90.0,
+          90.0
+        ],
+        "obstacle_2_x_m": [
+          5.25,
+          5.75
+        ],
+        "obstacle_2_lateral_fraction": [
+          -1.0,
+          1.0
+        ],
+        "obstacle_2_size_x_m": [
+          0.2,
+          0.8
+        ],
+        "obstacle_2_size_y_m": [
+          0.2,
+          0.8
+        ],
+        "obstacle_2_height_m": [
+          0.1,
+          1.2
+        ],
+        "obstacle_2_yaw_deg": [
+          -90.0,
+          90.0
+        ],
+        "box_goal_x_m": [
+          6.8,
+          7.5
+        ],
+        "human_x_m": [
+          3.65,
+          4.35
+        ],
+        "human_lateral_fraction": [
+          -1.0,
+          1.0
+        ]
+      }
+    }
+  },
+  "sha256": "fe49eb21c32aa94aee4903f52d988b36acaab6cdd5f0ffebd67ff32602d1d7d0"
+}

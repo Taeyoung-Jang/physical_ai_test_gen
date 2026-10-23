@@ -51,8 +51,12 @@ def checked_manifest(wrapped, *, schema_version="joint-discovery-evaluation-mani
     }
     if any(manifest.get(k) != v for k, v in totals.items()):
         raise ValueError("manifest totals differ from predeclared evaluation budgets")
-    if manifest["execution_origin"] not in {"openai_api", "mock"}:
+    if manifest["execution_origin"] not in {"openai_api", "openrouter_api", "mock"}:
         raise ValueError("unsupported evaluation execution origin")
+    if manifest["execution_origin"] != "mock" and manifest["execution_origin"] != (
+        "openrouter_api" if cfg.robot.api_provider == "openrouter" else "openai_api"
+    ):
+        raise ValueError("robot API provider and execution origin mismatch")
     return manifest
 
 

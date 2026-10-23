@@ -10,7 +10,13 @@ import numpy as np
 
 from scene_graph import ObjectNode, Relation, SceneGraph, SupportSurface
 
-from .contracts import CorridorFixture, GoalRegionFixture, HumanFixture, ObstacleFixture
+from .contracts import (
+    CorridorFixture,
+    CrossingHumanFixture,
+    GoalRegionFixture,
+    HumanFixture,
+    ObstacleFixture,
+)
 from .humans import human_scene
 from .obstacles import static_obstacles
 
@@ -173,7 +179,9 @@ def navigation_map(config, box_xy=None, *, hypothetical=False):
         current = parents[current]
     return {
         "schema_version": (
-            "clear-path-map-v5"
+            "clear-path-map-v6"
+            if isinstance(config, CrossingHumanFixture)
+            else "clear-path-map-v5"
             if isinstance(config, HumanFixture)
             else "clear-path-map-v4"
             if isinstance(config, GoalRegionFixture)
@@ -195,6 +203,11 @@ def navigation_map(config, box_xy=None, *, hypothetical=False):
         "reachable": bool(path),
         "path_xy_m": path[::-1],
         "note": "Static circular-footprint test; NOT a whole-body manipulation oracle",
+        **(
+            {"dynamic_scene_scope": "Initial snapshot only; human moves during execution"}
+            if isinstance(config, CrossingHumanFixture)
+            else {}
+        ),
         **(
             {"obstacle_projection": "conservative world AABB at every height; no step-over model"}
             if isinstance(config, ObstacleFixture)
@@ -405,12 +418,23 @@ def world_xml(config, robot_source=None):
             rgba=".25 .3 .4 1",
         )
     for row in static_obstacles(config):
+        parent = wb
+        pos = row["center_m"]
+        if isinstance(config, CrossingHumanFixture) and row["id"] == "human_proxy_1":
+            parent = ET.SubElement(
+                wb,
+                "body",
+                name="crossing_human",
+                mocap="true",
+                pos=" ".join(map(str, pos)),
+            )
+            pos = [0, 0, 0]
         ET.SubElement(
-            wb,
+            parent,
             "geom",
             name=row["id"],
             type="box",
-            pos=" ".join(map(str, row["center_m"])),
+            pos=" ".join(map(str, pos)),
             size=" ".join(str(v / 2) for v in row["local_size_m"]),
             quat=" ".join(map(str, row["quaternion_wxyz"])),
             friction="1 .005 .0001",

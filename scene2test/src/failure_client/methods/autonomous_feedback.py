@@ -24,6 +24,7 @@ class SearchBudget(StrictRecord):
     max_repeats: int = Field(default=1, ge=0, le=4)
     history_limit: int = Field(default=4, ge=2, le=8)
     afs_model: str = Field(default="gpt-6-luna", min_length=1)
+    afs_api_provider: Literal["openai", "openrouter"] = "openai"
     afs_service_tier: Literal["flex", "default"] | None = None
     afs_timeout_s: float = Field(default=300.0, gt=0, le=600)
     selection_policy: Literal[
@@ -43,6 +44,10 @@ class SearchBudget(StrictRecord):
 
     @model_validator(mode="after")
     def check_target(self):
+        if self.afs_api_provider == "openrouter" and (
+            self.afs_service_tier is not None or "/" not in self.afs_model
+        ):
+            raise ValueError("OpenRouter AFS requires provider/model ID and omitted service tier")
         if self.factor_allocation == "behavior-relevance-v1" and (
             self.exploration_policy != "breadth-v1"
             or self.feedback_policy != "cause-review-v3"
@@ -161,10 +166,19 @@ def bind(candidate, memory):
     return candidate
 
 
-def selection(memory, attempts, budget, schema, *, scene_domain=None):
+def selection(memory, attempts, budget, schema, *, scene_domain=None, matched_local=None):
     """LLM first; at most one local step between LLM hypotheses; no local starvation."""
     axes = list(parameters(memory["cases"][0]))
     audit = accounting(attempts, axes, budget)
+    required_refs = []
+    if matched_local is not None:
+        base_cases = [
+            c for c in memory["cases"] if parameters(c) == matched_local["base_parameters"]
+        ]
+        if len(base_cases) != 1 or base_cases[0]["role"] != "success_control":
+            return None, None
+        required_refs = base_cases[0]["episodes"][:1]
+        audit.update(selectable_axes=axes, blocked_axes={})
     discovery = budget.selection_policy in {
         "discovery-v1",
         "failure-directed-v2",
@@ -205,6 +219,7 @@ def selection(memory, attempts, budget, schema, *, scene_domain=None):
         remaining=budget.max_attempts - len(attempts),
         scene_schema=schema,
         scene_domain=scene_domain,
+        required_evidence_ids=required_refs,
     )
     ctx["development_search"] = {
         "mode": "autonomous-development-v1",
@@ -284,6 +299,51 @@ def selection(memory, attempts, budget, schema, *, scene_domain=None):
                 "missing measured family, intent, family attempts, factor attempts, "
                 "novelty, proposal order"
             )
+    if matched_local is not None:
+        from .matched_local import VERSION, change_count
+
+        count = change_count(matched_local, len(attempts) - 1)
+        ctx["matched_local"] = {**matched_local, "required_change_count": count}
+        ctx["anchor_catalog"] = [
+            a for a in ctx["anchor_catalog"] if a["parameters"] == matched_local["base_parameters"]
+        ]
+        anchor = ctx["anchor_catalog"][0]
+        ctx["observed_single_axis_endpoints"] = [
+            e
+            for e in ctx["observed_single_axis_endpoints"]
+            if e["anchor_case_id"] == anchor["case_id"]
+        ]
+        ctx["search_selection"].update(
+            anchor_case_id=anchor["case_id"],
+            anchor_evidence_id=anchor["evidence_ids"][0],
+            ranking="Fixed base and change count; behavior-informed axis/value ranking",
+        )
+        ctx["branch_contract"].update(
+            version=VERSION, max_changed_parameters=count, fixed_anchor_case_id=anchor["case_id"]
+        )
+        ctx["development_search"]["allocation_override"] = VERSION
+        objective = ctx["failure_objective"]
+        allowed = [
+            i
+            for i in objective["allowed_intents"]
+            if any(i in a["allowed_intents"] for a in ctx["anchor_catalog"])
+        ]
+        objective.update(
+            allowed_intents=allowed,
+            intent_priority=[i for i in objective["intent_priority"] if i in allowed],
+        )
+        allocation = ctx["exploration_allocation"]
+        allocation.update(
+            version=VERSION,
+            required_change_count=count,
+            required_form="combination" if count == 2 else "single",
+            required_group=None,
+            mandatory_groups=[],
+            deferred_mandatory_groups=[],
+            optional_exploration_groups=list(allocation["group_axes"]),
+            paused_after_two_passes={"groups": [], "predicted_families": []},
+            claim="Same fixed base, axis domain, minimum and change count as Random",
+        )
     return None, ctx
 
 
@@ -296,6 +356,18 @@ def selected_probe(raw, ctx, memory):
         from .cause_review import validate_reviews
 
         validate_reviews(proposal, ctx)
+    if "matched_local" in ctx:
+        from .matched_local import check_candidate
+
+        for space in proposal.spaces:
+            params = {**ctx["matched_local"]["base_parameters"], **dict(b.point_changes(space))}
+            check_candidate(
+                params,
+                ctx["matched_local"],
+                ctx["scene_domain"],
+                ctx["matched_local"]["required_change_count"],
+                ctx["development_search"]["min_axis_change_fraction"],
+            )
     if any(
         axis not in ctx["development_search"]["selectable_axes"]
         for s in proposal.spaces

@@ -1,5 +1,596 @@
 # Scene2Test workspace memory
 
+## Approved old humanoid raw-data cleanup COMPLETE (2026-10-23)
+
+User explicitly approved cleanup after concrete inventory/review. Narrowed scope
+further: deleted only5237 unchanged approved old contacts/states/human_motion/
+events/state_trajectory/synthetic_trace JSONL and camera_N.png files. Removed
+25,600,004,879 logical bytes (~25.6GB),25,601,323,520 allocated bytes. All JSON,
+DBs, reports/plots, decisions/API logs, lockfiles and videos retained;13017 extra
+original candidates preserved. No directory removal or original manifest/DB edits.
+Final development/paired_crossing_matched_local_20261023_v1 and reference control
+/workspace/g1_failure/runtime/humanoid_crossing_openrouter preserved ENTIRELY.
+23367 retained file signatures verified;1104 content hashes including all final
+experiment/control files and311 video files match before/after. Videos count is
+files incl duplicates/exclusions,not unique episodes. Robot-arm/source/config/
+models/mixed navigation/terrain/server roots excluded; active robot-arm run untouched.
+Cleanup source script lives ONLY in development/storage_cleanup_review_20261023_v1,
+not frozen executable source.62 existing locks held during cleanup,never deleted.
+Detailed receipt execution_receipt.json, deletion_journal.jsonl, protected_before.json
+and original files.csv under same reviewfolder. Do not repeat --apply (start marker).
+IMPORTANT: historical roots in receipt intentionally lack full raw evidence now;
+old full-trace hash validation/reclassification/re-rendering is unavailable. Never
+pretend old archives intact or convert missing traces to zero. Existing summaries
+remain historical derived evidence. Final matched-local raw data/11videos and
+reference PASS remain intact for submission/report/re-rendering. No API/GPU/robot
+execution, credential probing or code/model changes in cleanup. See
+.workhistory/2026-10-23_humanoid_storage_cleanup.json.
+
+## Stage-stratified two-obstacle arm exploration prepared (2026-10-23)
+
+User approved more varied failure environments after completed10axisanalysis.
+New additive staged_search.py/phase_measure.py/run_robot_arm_staged_search.py,
+config/robot_arm_staged_comparison.json. Existingenvironmentv2allfrozen sourcehashes
+stillmatch;no oldresult/budget/sourceedits. Reuses rotatedboxphysics/recorder with2
+parallelstaticboxes,clearinnergap=parameter(gap),yawderivedstart-goaldirection.
+10axes:bowlXY/plateXY/gap/boxlength/thickness/height/progress/lateral. Sameboxsize2,
+no newmass/friction/dynamicappearance/graspstateinstrumentation. Intendedlayouts
+approach(progress0..05,gap.12..18),transport(.66..72,gap.09..12),placement(.98..1.02,
+gap.16..20);not observedfailurephases nor guaranteedapproachclearance. Staticboxes
+existfromstart,maystillcausepregraspblocks inanylayout. Sharedbounds/perindexstage
+scheduleapproach,transport,placement repeatedtwice BOTHarms. Seeds701/709/719,
+6slots/arm/seed=>36episodes(18/method),10800steps,12AFSmax. First2commonUniform
+bootstrapsperseed separatelyexecuted;approach/transport1bootstrap+1adaptive,
+placement2adaptive perseed;explicitlyreported,notcausalstratumcomparison. Ownseed/
+armhistoryonly,olddevelopmentnotimported,RandomindependentUniformwithinstage.
+AFSreceivescurrentstagebounds+two-boxconstruction+motionobservations,advisory
+preferuntestedinstage;NOautomaticreject/resend/noveltyquota. Recheckseparatecounts.
+Motion observationsafter1ssettle:rise3cm/move5cm/near-goalXY5cm/littlemotion2cm
+HEURISTICS only. Nativeoutcomeunchanged;UNKNOWNifpartial/excluded. Patterns
+little_object_motion/object_moved_native_task_incomplete/object_near_goal_native_task_incomplete
+NOTconfirmedgrasp/drop/causaltypes. Contacttimegate matchesoldcontactcriterion.
+Summaryby_layout_stage,failure_motion_patterns,unique_failing_environment_settings,
+recheck_failures separate;replicationFAILnotnewenvironmentcredit. 143fullrobotarm
+CPUtests pass22.75s;25stagedtests finalpass4.38s aftercontactgatealignment;Ruff/diff
+clean. RealLIBEROCPUplanned18/18initialgeometryvalid,0resample;notfutureAFSvalidity
+orpolicyperformanceproof. New staged_comparison_v3 frozenPREPARED0robot/0API;
+NO GPU/model/API/keyprobe. Command fromscene2test: .venv/bin/python
+ tools/run_robot_arm_staged_search.py run --live --output
+ experiments/robot_arm_libero/staged_comparison_v3 --max-new-attempts2;
+first2matchedapproach/noAFS;thenremaining34underfixedcapsafterreview. Neverinitagain.
+No guarantee ofdiversefailuretypes orAFSwin;see docs/ROBOT_ARM_CAPABILITY.md.
+
+## Matched-local comparison COMPLETE, descriptive AFS advantage (2026-10-23)
+
+Final snapshot114142_160351 manifest11hashes and all11episode result/protocol/
+decision hashes verified readonly. matched_local_v1 COMPLETE,evaluation_complete
+true,10VALIDepisodes (5each),1Randomdeadlineexcluded,4AFSrequests. AFS3PASS2FAIL
+(40%FDR),Random5PASS0FAIL(0%FDR),difference40percentagepoints/2FAIL; relativeGain
+null because baseline_zero,NOT an error or achieved relativeGain target. Both
+baselinePASS. AFSoneaxis boxlateral1->0 yields goal_occupied;2axis lateral.5+boxX7.4
+FAIL remains unclassified. One measured primary family vsRandom0. LastRandom mass
+2->7.2818494595 VALIDPASS. All11MP4present,notdecoded. Safety eventsAFS4/5(.8),
+Random5/5(1),relativeeventrateGain-.2; separate from taskFDR and no AFShumanrisk
+search advantage. Important imbalance after exclusion: valid modified AFS1axis2/
+2axis2,Random1axis3/2axis1. One developmentseed74001 and tiny sample, not statistical
+superiority or heldout confirmation. Preserve completed campaign/results; no rerun,
+budget reset or source changes. Review only, no API/robot/model execution or source
+DB opened. Next work can assemble baselinePASS/AFSgoaloccupiedFAIL/RandomPASS videos
+and report with these limitations; do not present 40percentagepoints as40%relative.
+
+## Ten-axis arm pilot completed: advantage persists after geometric deduplication (2026-10-23)
+
+User requested actual-result analysis. Read-only24case seals/rootmanifest verified;
+6pairedbootstrap candidate+initial_sim_state bytes match;6AFSsavedrequests exactly
+match reconstructed ownseedhistory and responses/candidates. Current frozen source
+hashes match;model not rehashed in this analysis. NoAPI/GPU/robot/source/outcomechanges.
+ActualAFS12valid5PASS7FAIL vsRandom12valid10PASS2FAIL;equalbudgetcomplete/noexclusions.
+Bootstrap6/method:1FAIL5PASS matched;selection6/method:AFS6FAIL vsRandom1FAIL5PASS.
+Threeadaptive repeats(once/seed),allrepeatdifferentpolicyseed;AFS9uniqueenvironments,
+4uniquefailing(1bootstrap+3newselected),Random12unique/2uniquefailing(1+1new).
+PerseedAFSvsRandomfail:6613vs1,6732vs1,6772vs0. Firstfail6611both,6733both,
+677AFS3/Randomnotfoundwithin4(censored). All6AFSproposals maximizefullwidth/depth6cm
+andheight17cm;3novelgeometries,not6newtypes. 673/677start2PASS thenAFSdiscoversFAIL,
+so feedback was not all-fail-only. All9failedEPISODES acrossmethods: post1s bowl
+rise+XYmovement<1mm,robotcontact10.728..13.74s,bowlobstaclecontact0. Consistent
+approach/pre-grasp blockage observation,not confirmedcause/graspstate/bodylimit or
+transportavoidancefailure. PASScontact.016/.126/.230s showscontactaloneNOTFAIL.
+TotalcontrolstepsAFS2591/Random1590 plus6paidAFSrequests(known155678in10471out);
+equalattempts doesNOTmean equal totalcost/walltime. RelativeFDRgain250percent is
+observeddevelopmentmetric,notstatisticalsuperiority/popuplationclaim. Only3search
+seeds/adaptivecorrelations;largerboxheuristic baseline needed before attributing
+advantage specifically toLLMreasoning rather than extreme-geometry selection.
+AnalysisJSON+episodesCSV at development/robot_arm_environment_analysis_20261023;
+old3axisvs10axis domains differ,do notclaim controlledcrosspilotimprovement.
+
+## Matched-local actual results review: Random deadline exclusion (2026-10-23)
+
+Snapshot104737_547957 reportmanifest and all10result/protocol/decisions hashes
+verified readonly. Both new baseline VALIDPASS. All10candidates exact sharedbase
+0/1/2counts/minimum; allRandomdraws reproduce frozen schedule.4AFSproposal artifact
+hashes/requestedPro/ownarm-only refs/solefixedbase verified.10MP4present,notdecoded.
+AFS COMPLETE5valid=3PASS2FAIL: boxlateral1->0 produces goal_occupied; later
+boxlateral.5+boxgoalX7.4 FAIL unclassified. Random4valid=4PASS0FAIL+1excluded,
+last attempt4(boxfriction.9643+lateral.2275) response_deadline:353s runner cap,
+response completes445.1925s,6calls/5accepted, late6th usage known,
+pending_call completed_after_termination; no retry. Not robotFAIL/AFS/schemaerror.
+Current NEEDS_ATTENTION, comparison incomplete; mainmetrics cannot establish AFS
+superiority. Validcounts AFS1axis2/2axis2,Random1axis2/2axis1. Next originalRandom
+slot5 is ONE axis: can reach total5valid but valid1/2counts then3/1 vsAFS2/2.
+Disclose imbalance; no exclusion relabel/replay/skip/outcome selection. Remaining
+Random2attempts; explicit continue-after-exclusion only, no automatic live dispatch.
+Audit development/matched_local_result_review_20261023_v1/audit.json. No code,
+sourceDB/outcome/budget changes or live execution in this review.
+
+## Fixed-base matched local AFS/Random comparison prepared (2026-10-23)
+
+User approved Random selecting only1/2axes and values randomly, same fixed base
+and change-count rules as AFS. Added opt-in PairedDesign.matched_local with
+matched-local-v1; legacy full-vector Random unchanged when absent. New config
+scene2test/config/paired_crossing_matched_local_pro.json, campaign
+scene2test/development/paired_crossing_matched_local_20261023_v1 READY0attempt/
+0AFS; fresh checks botharms and all7plannedRandomslots passed. Report
+reports/20261023T083224_936278Z/report.html. One new baseline perarm at common
+historical PASS config values (width3.6/boxlateral1/floor.8/humanspeed.5/trigger2);
+no historical outcomes imported. Baseline must VALIDPASS; first FAIL/exclusion
+stops automatic search as BASELINE_NOT_CONFIRMED. GoalPASS is NOT safety proof.
+After baseline, each arm alternates1,2,1,2 axis changes by attemptindex; changes
+always reset to fixedbase, no accumulation/adaptiveanchor. Random draws uniform
+axis subsets and values uniform over admissible intervals excluding normalized
+minimumgap.1. Same axes/bounds/min/count, AFS chooses via ownarm/seed evidence;
+base evidence pinned in context, sole anchor/schema/final candidate validation.
+Newmode replaces AFS mandatorygroup/form/cooldown allocation with sharedcount;
+all axes selectable. Crossgroup requirement absent BOTH methods. Random no
+outcome/geometry/rejection resampling. Quotas configured7=attemptcap; rawrejections/
+unknown usage/noresend/stop policies unchanged. matched_change_counts exposes
+0/1/2axis attempted/valid/excluded (exclusions consume schedule slots).
+Seed74001,5valid/7attempt perarm (base1+changes4),6AFS; caps10valid/14episodes/
+140robotcalls/6AFS. Both roles OpenRouter openai/gpt-6-luna-pro. Development pilot,
+NOT heldout/full-joint-domain superiority or confirmed causal diagnosis. Old
+v3/v4 histories/proposals/budgets preserved separately; do not resume old frozen
+sessions after source drift. Earlier pending ref issue NOT silently repaired.
+7newmockCPUtests passed22.45s,116relatedregressions45.82s and combined18checks
+40.96s;Ruff/format/diffclean. No API/GPU/robot execution or credentials inspection.
+One-command new run: tools/run_paired_discovery.py run --campaign <newroot> --live
+--max-new-attempts14 --max-new-afs-requests6; baseline gate applies automatically,
+errors/exclusions stop. Do not init again. See docs/HUMANOID_DYNAMIC_SEARCH.md.
+
+## Robot-arm environment generation expanded to ten axes (2026-10-23)
+
+User clarified failure-environment variables too few and approved expansion.
+New additive environment_obstacles.py/environment_search.py and CLI
+run_robot_arm_environment_search.py;originalobstacles/search/placement/provider/
+policy/upstream sources untouched. Priorrecoveryv2 allfrozen sourcehashes stillmatch.
+10sharedaxes: bowlXY[-.10,-.05]/[-.01,.01],plateXY[.06,.10]/[.19,.24],boxXY
+[-.24,-.0075]/[.09,.12],fullwidth/depth[.02,.06],height[.02,.17],yaw+-pi/2.
+Includesoldboxdomain/fixedposes/size/yaw,notoutcomefilteredseedchanges. Initial
+offlineproposal20.5cmX/narrowersizes audit12valid retained environment_geometry_v2;
+final23.25cm/size6cm boundsto includeoldconditions auditedseparately
+ environment_geometry_v2_final12/12initialvalid,0resample. RotatedMuJoCoboxactual
+collision+boundsincludingrotatedcorners;liveinitialauditrotationmatrix/XML saved.
+Robot/model/nativegoal/300steps/chunk8/background unchanged. Static1boxonly;no
+objectyaw/mass/friction/objectcountnewaxes. Newseed661/673/6774perarm=>24episodes/
+7200steps/6OpenRouterAFSmax,sameboundssampling/bootstrap/schema/finalguards.
+AFSownseedownarmhistoryonly;olddevelopmenthistoriesnotimported. Contactseparate
+fromnativeFAIL. Addedexact10numericenvironmentunique/repeatedcountspermethod
+VALIDresultsacrossseeds;noequivalence/near-duplicate/familyclaims. Repeatallowed,
+AFSfailureobjectiveunchanged;doNOTclaimexpansionfixesrepetition/saturation.
+117fullrobotarmCPUtests pass7.42s;final26expandedtests pass3.49s incloneadditional
+old-domain-containmenttestandduplicatecounts;Ruff/diffclean. Newfrozen
+experiments/robot_arm_libero/environment_comparison_v2 PREPARED0robot/0AFS.
+NOrealAPI/GPU/model/keyprobeexecution. Use .venv/bin/python
+ tools/run_robot_arm_environment_search.py run --live --output
+ experiments/robot_arm_libero/environment_comparison_v2 --max-new-attempts2
+first;matchedbootstrap,noAFScall;thenremaining22. Neverinitagain orresumecompleted
+oldpilots. Developmentdomain,NOT heldoutofficialbenchmark/success/AFSsuperiority.
+See docs/ROBOT_ARM_CAPABILITY.md environmentsection and workhistory.
+
+## Humanoid stopped on saved proposal reference inconsistency (2026-10-23)
+
+Read-only v4 audit: current source/resources/runtime match freeze.10VALIDFAIL
+(AFS5/Random5),1AFSdeadline exclusion,11MP4present(notdecoded). AFSpending proposal4,
+5AFSrequests spent. Response completed via OpenRouter Pro,311401input/14269output;
+no new rollout. Candidate0 refs valid. Candidate1 names reviewed analysis ID
+bd0de97...c12914 but omits it from BOTH behavior_refs/evidence_refs. validate_reviews
+checks ALL candidates and stops; not transport/GPU/source drift. Blind rerun will
+reprocess same saved invalid response; do not resend. Offline diagnostic ONLY:
+append already-explicit reviewed analysis ID to those two lists; all other fields
+unchanged. Full selected_probe passed, selected original candidate1 box_mass=1.1.
+NOT applied to campaign, no source/protocol/outcome/budget edits or live execution.
+Diagnostic audit+normalized example in
+scene2test/development/humanoid_reliability_review_20261023_v1. Future recovery must
+be explicit audited operator-assisted fork preserving rawresponse/costs, not silent
+repair or prospective-unmodified claim. Previous separate exclusion: robot runner
+deadline353s,HTTPresponse completed388.3s with usage,not HTTPReadTimeout or robotFAIL.
+
+## Completed robot-arm pilot analysis: saturation and repeated failures (2026-10-23)
+
+User asked analyze and suspected too few variables. Recoveryv2 COMPLETE24slots:
+AFS12VALIDFAIL/6requests,Random11VALID(1PASS10FAIL)+1preservedexcluded,pending0;
+equalvalidfalse/Gainnull. Read-only verified all24case seals incl23native results;
+6savedAFSrequests exactlymatch reconstructed ownseed priorhistory. AllAFShistories
+0PASS;bootstrapAFS6FAIL/Random5FAIL+1excluded. AdaptiveAFS6FAIL vsRandom5FAIL1PASS.
+4of6adaptiveAFSgeometries repeat earlier same-seed geometry exactly (policyseed
+changes byindex),only2new;3uniqueadaptivegeometries total. Seeds641/647 raiseheight
+17cm thenrepeat;653 repeatsbootstrapgeometry twice. This is permitted by original
+failure-only objective/no novelty guard,not evidence of diverse discovery or missing
+history. Randomsuccess647/index3X-.009234/Y.108613/h.087658,noobstaclecontact;
+low8.323cmbootstrapelsewhereFAIL meansheightalone not establishedcause.
+CurrentsearchONLY3axes,domainXwidth3cm/Ywidth2cm/hwidth9cm with5x6cmfixedfootprint:
+allpossibleboxes overlapcommon2x4cmpatch. Localregion saturation plausible,not
+causalproof. Simulator can vary more;robotarm intrinsicallyfewvariables not proven.
+New analysis JSON development/robot_arm_obstacle_analysis_20261023/analysis.json.
+No newAPI/GPU/robot/source/outcome/budgetchanges in analysis. Futuredevelopment
+should declare novelty/uniquegeometry vsrepeat policy and balancedinfo separately,
+commonwiderdomain botharms,not silentlyretuneoldpilot or promiseAFS wins.
+
+## Robot-arm interrupted pilot recovered without slot replacement (2026-10-23)
+
+User requested runnable recovery command. v1 actual9VALIDFAIL(5AFS/4Random),0API;
+Random647/index1 failed frozen provider check BEFORE worker_started/physics/receipt.
+Add tools/recover_robot_arm_obstacle_search.py verifies parentmanifest,9seals+allfiles,
+originalUniformcandidates+intents,blockedlog+exactartifactset/no workerstarted,
+modelidentity;copies to new obstacle_comparison_recovery_v2,binds originalfilehashes.
+Provider global change not reverted;new freeze records source epochs. Existingv1
+source/hash/outcome/intents untouched;NEVERresumeoldv1. Blockedslot gets explicit
+administrative INCONCLUSIVE in NEWroot only,tasknull/robotexecutedfalse,sealhash
+acknowledged in frozen recovery. obstacle_search skips ONLY this exact sealed
+receipt;new exclusions stillstop;no ambiguousretry/replacement/reset. Full24slot
+budget retains9complete+1excluded=>14newrobot,6AFS remaining. MaxvalidAFS12/Random11:
+equalvalidfalse/Gainnull,do not add replacement to forceequal. Summary now also
+attempt_budget_complete and recoveryprovenance.92CPUtests pass6.47s inclmockfull
+recoveryoriginalhashidentity+14newexact+blockednotrerun+6API+completedresume/
+unacknowledgedexclusionstop;Ruffclean. No realAPI/GPU/model/keyprobe execution.
+New command from scene2test: .venv/bin/python tools/run_robot_arm_obstacle_search.py
+run --live --output experiments/robot_arm_libero/obstacle_comparison_recovery_v2
+--max-new-attempts14. Do not run init/recovery again;keep frozen sourcesstable.
+
+## Humanoid context byte cap removed and results-preserving transition (2026-10-23)
+
+User explicitly rejected text-byte limits and authorized removal/re-execution.
+Removed ONLY local250000-byte request_body guard; no substitute byte/token cap,
+history truncation or model/controller/evaluator/domain changes.36CPUtests pass
+including exact large-context preservation and OR durable response tests;Ruffclean.
+New tools/migrate_paired_context_limit.py validates exact provider deletion against
+old frozen hash and rejects all unrelated source/resource/runtime drift; locks source
+parent+arms, reads original SQLite read-only, verifies all copied files and finalized
+episodes/proposals, retains original ledgers and appends explicit transition only in
+new copied DBs. Originalv3 remains untouched. New
+development/paired_crossing_openrouter_pro_20261023_v4 inherits8VALIDepisodes
+(4eacharm),2AFSrequests,all budgets spent retained; NOT independent samples. No
+pending/selected at transition; error was pre-request local size check with no new
+intent/API. Full original code/resources/runtime and both new arm _fresh checks pass.
+New transition.json inventories original/copy hashes and source-state digests.
+Remaining caps8attempts/6AFS; valid target6each unchanged. Use v4 for next execution,
+never edit old freeze or rerun init. Docs HUMANOID_DYNAMIC_SEARCH.md updated.
+Actual next full-context request generation passed. Attempted live batch8/6 was
+REJECTED by automatic approval review before process creation: reviewer requires
+explicit approval for this concrete full experiment-history/scene payload sent to
+OpenRouter. No API/robot call or new intent occurred. Do not bypass rejection;
+review/next_afs_request.json prepared offline for user review/approval. Await
+explicit payload-transmission approval before assistant live dispatch.
+
+## Robot-arm obstacle AFS/Random pilot connected/prepared (2026-10-23)
+
+User approved connecting after replication. Actual replication12manifests verified
+prior turn:3PASS9FAIL, t.375/.5 both3FAIL;box12 all3PASS(one robotcontact1.128s),
+box14 all3FAIL(robotcontact13.45..13.52s). Goal boundary seed-dependent; contact
+alone NOTFAIL;overall causeUNCONFIRMED. New additive robot_arm/obstacle_search.py,
+tools/run_robot_arm_obstacle_search.py,config/robot_arm_obstacle_comparison.json.
+Old placement/search/capability/upstream executable sources untouched. Fixed near
+bowl/goal, staticbox fullXY.05/.06; commonX[-.0375,-.0075],Y[.09,.11],height[.08,.17].
+Explicit DEVELOPMENTsubdomain informed by previous observations,NOTheldout/transport
+avoidance/bodyreachability benchmark. Both methods use exactlysamebounds/robot/task/
+policyseeds. Seeds641/647/653,index0..3perarm =>12/method24attempt/7200steps,
+2matchedUniformbootstrapperseed separatelyexecuted;AFSownseedownarmhistoryonly,
+no olddevelopment/Random/crossseed import;laterRandom independentUniform nofilter.
+AFSOpenRouteropenai/gpt-6-luna-pro max6requests/HTTP300/noautoretry/fallback.
+NativePASS/FAIL separate contactPASS/contactFAIL/UNKNOWNmeasurements;firstFAILperseed,
+knowninput/outputtokens+unknownusage separate;equalvalidcomplete requiredGain,
+statisticalsuperiorityfalse. PendingAPI/robot intents never resend/rerun, rawresponses
+saved beforeparse;candidate/schema/domain/seedchecks and percasehashseal;exclusion
+stops no replacement. Existing broad search not silently repurposed.
+90robot-armCPUtests pass6.49s incl16new sharedbounds/matchedbootstrap/historyisolation/
+completedresume/noresend/savedreceipt/invalidresponse/workerstartseal/contactPASS/
+unknownusage;Ruff/diffclean. NativeLIBEROCPUplannedRandom12/12initialvalid at
+obstacle_comparison_geometry_v1 (not futureAFSgeometry/performance proof).
+New frozen obstacle_comparison_v1 PREPARED0robot/0API;NO credentialprobe/GPU/model/API
+execution. First usercommand .venv/bin/python tools/run_robot_arm_obstacle_search.py
+run --live --max-new-attempts2 (pairedbootstrap,noAFScall);then remaining22 after
+review. OPENROUTER_API_KEY must exist in user's terminal;do not print/persist.
+See docs/ROBOT_ARM_CAPABILITY.md obstaclepilot section. Do not rerun init/reset.
+
+## Robot-arm actual failure phase review and replication preparation (2026-10-23)
+
+User approved start after staged plan. Read-only verified all11followup case evidence
+manifests,6PASS5FAIL. New development/robot_arm_review_20261023/review.json retains
+native outcomes and derived post1s lift/XY/contact metrics; extracted1fps nativevideo
+montages for target_t0_5 and box14. Target FAIL transports bowl~.322m XY, rises~.157m
+from settled1s baseline,finalcenterXYgap~.087m: incomplete placement observation,
+not proven kinematic reach limit. Tall-box14/15/17/leftshift failures: bowl almost
+stationary,robot_obstacle contacts(first gripper finger) persistent; NO bowl_obstacle
+contacts. Suggests pre-grasp approach obstruction, NOT carried-object avoidance
+failure. No grasp state instrumented/causeUNCONFIRMED/native verdicts unchanged.
+Prepared separate capability_reproducibility_v1,12cases:four conditions(t.375/.5,
+box12/14)x3newseeds63011/12/13,background51000 unchanged. Upstreamseed_everything
+verified before policy construction; not environment-only variation. Existing
+sources unchanged,0newrollouts/API/GPU. Next command tools/run_robot_arm_capability.py
+run --live --output experiments/robot_arm_libero/capability_reproducibility_v1
+--max-new-attempts12. This is development replication,notAFS/Random comparison;
+new obstacleAFS adapter and separate paired benchmark STILL outstanding. Do not
+claim robot transport-avoidance failure orAFS advantage from these histories.
+
+## Robot-arm additional failure exploration prepared (2026-10-23)
+
+User requested more failure cases before main comparison. New config
+robot_arm_capability_followup.json contains11 fixed outcome-informed DEVELOPMENT
+cases: five plate-line t0/.125/.25/.375/.5, five near-goal box heights10/12/14/15/17cm,
+one15cm box shifted left3cm. Same bowl, policyseed62001, robot, task and measurement.
+CPU nativeLIBERO initial audit12:11valid; right-shift box collided cookies, removed
+before policy rollout. Initial unused frozen capability_followup_v1 retained but
+DO NOT RUN; final11case capability_followup_v2 separately frozen,0attempts,
+max11episodes/3300steps/0AFS. No GPU/model/API execution. Existing6results preserved;
+not heldout AFS/Random or guaranteed failures. CLI/docs command uses --output
+experiments/robot_arm_libero/capability_followup_v2 --max-new-attempts11 --live.
+No executable source changed; plan validation and diff checks performed.
+
+## Humanoid AFS Pro model alignment (2026-10-23)
+
+User requested AFS use OpenRouter `openai/gpt-6-luna-pro`, matching the robot.
+Created separate config `scene2test/config/paired_crossing_openrouter_pro_development.json`
+and frozen campaign `scene2test/development/paired_crossing_openrouter_pro_20261023_v3`.
+Config equality check confirms ONLY search.afs_model changes from prior v2
+OpenRouter `openai/gpt-6-luna`; robot and all domain/seed/budget settings same.
+Real PASS control/source/resource check passed. v3 status READY, both arms 0attempt/
+0valid, AFS requests0, pendingnull. Old v1/v2 folders preserved; do not run them
+for the new model or mutate their frozen manifests. No API/GPU/robot execution,
+credential probing or code changes in this alignment. First v3 run is bootstrap
+and will not yet call AFS. See docs/HUMANOID_DYNAMIC_SEARCH.md and
+.workhistory/2026-10-23_humanoid_afs_pro.json.
+
+## Robot-arm capability development suite prepared (2026-10-23)
+
+User approved placement-limit/obstacle evaluation. New additive robot_arm/obstacles.py,
+capability.py and tools/run_robot_arm_capability.py preserve old placement/search code.
+Static table-local box/cylinder up to4 injected through native XML reset; full-rate
+sim.step observer records robot/bowl obstacle contact force/duration and below-table
+center event(.05m/.10s). Native task verdict unchanged; missing physics UNKNOWN,
+contact/fall not causal attribution or full grasp/drop detector. Three fixed-bowl
+plate positions plus matched near-control obstacles5/10/15cm, same policyseed62001.
+Observed adjacent PASS/FAIL brackets+midpoint proposal only, no automatic extra budget.
+Separate capability_suite_v1 PREPARED0attempts,6episode/1800controlstep cap,0AFS;
+fixed public local GR00T,300steps/chunk8/nativeLIBEROgoal unchanged. Not AFS/Random
+obstacle search integration or superiority evidence. Real LIBERO CPU geometry6/6valid;
+MuJoCo sphere collision+observer-state-equivalence tests; realPanda adapter1controlstep
+with policy/camera TEST DOUBLES only,26physics samples COMPLETE. No actual policy,
+GPU/render/API execution.74robot-arm CPUtests pass5.47s,Ruff/diffclean. PriorOpenRouter source audit found provider.py drift already in shared workspace;
+old frozen experiment must NOT resume or bypass checks. New suite frozen separately. See scene2test/docs/ROBOT_ARM_CAPABILITY.md.
+Next user command from scene2test: .venv/bin/python tools/run_robot_arm_capability.py
+run --live --max-new-attempts 1; inspect control before remaining5. No init again,
+retry/replacement/reset or old result edits. Logs/video/native results plus sealed
+per-case physics/measurement evidence; status/report read saved data only.
+
+## Humanoid AFS proposer switched to OpenRouter (2026-10-23)
+
+User requested AFS proposal API also use OpenRouter. Separate paired config
+`scene2test/config/paired_crossing_openrouter_development.json` keeps robot
+OpenRouter `openai/gpt-6-luna-pro` and switches AFS to OpenRouter
+`openai/gpt-6-luna` (same prior AFS model family), no service tier. AFS
+SearchBudget/request/provider now bind provider in frozen request; the existing
+robot OpenRouter adapter receives AFS text parts after conversion only inside
+`llm_afs/provider.py`. Robot adapter file restored to its prior hash; real PASS
+control code/resources/runtime verification passes. Fixed OR endpoint, own
+OPENROUTER_API_KEY, strict JSON schema, fallback disabled, raw paid response
+and usage preserved; incomplete/bad responses not repaired or resent. Saved
+response resume and provider mismatch guard retain no-resend behavior. Old
+`paired_crossing_20261023_v1` with direct OpenAI AFS preserved at 0 attempts;
+do not resume after source drift. New separate
+`scene2test/development/paired_crossing_openrouter_20261023_v2` READY,
+0attempt/0AFS, arms empty, status/freeze passes. Seed/domain/budgets same
+as v1, no outcome-based retuning. 54 API tests, 76 AFS/paired tests, 25
+post-adaptation OpenRouter tests pass; Ruff/format/diff clean. No real key
+inspection or live API/GPU/robot execution. First `run --live` episode is
+paired bootstrap and does not yet call AFS; keep one-attempt cap and stop on
+exclusion. Details docs/HUMANOID_DYNAMIC_SEARCH.md and
+.workhistory/2026-10-23_humanoid_afs_openrouter.json.
+
+## Dynamic-human measurement and common AFS/Random domain (2026-10-23)
+
+User explicitly wants robot FIXED, meaningful environment variables and performance
+measurement, NOT avoidance upgrades. This turn changes no robot_vlm/controller/
+planner/prompt/action-budget code. New dynamic-human-safety-v1 separately measures
+any corroborated human contact OR >=.5s continuous center distance<1m, from whole
+recorded episode (relative linear trajectories, incl inference). Manifest/config/
+XML/motion/trigger/base/contact corroboration; unnamed G1 geoms via robot body.
+Missing/gapped/inconsistent/excluded evidence UNKNOWN, never safe/zero/replacement.
+Original goal PASS/FAIL and legacy6/10/12 family credit unchanged. Retrospective
+OpenRouter PASS staysPASS: mincenter.6982435m,exposure2.746525s,0contact; separate
+development measurement saved, NOT imported into new evaluation histories.
+v6 search21axes: original19 except static human lateral + speed.1..1.5 and
+trigger.5..5, humanX3.65..4.35; start side fixed+1 BOTH methods. Original full
+width1.6..4/floor.05..1.5/boxlateral-1..1 retained. Samebounds Random/bootstrap,
+AFS schema/numeric/finalguards; verified ownarm/seed safety evidence in AFS context.
+Goal-based branch/anchor/ranking unchanged; no calibrated risk or superiority claim.
+RobotSettings/OpenRouter reader/local runner binding added; raw condition hash
+verified before normalizing ONLY scene-owned motion values for comparability.
+New paired_crossing_development_luna.json: seed73001,6valid/8attempt perarm,cold2,
+max12valid/16episodes/160robotcalls/8AFS,connection-smoke NOT held-out evaluation.
+Robot OpenRouter openai/gpt-6-luna-pro same priorPASS; AFS remains DIRECT OpenAI
+gpt-6-luna/default (two providers/keys distinct). No credential checks/liveAPI/GPU.
+New development/paired_crossing_20261023_v1 READY0attempt0AFS,pendingnull,empty
+arm histories. Report reports/20261023T014304_785622Z/report.html. Frozen source/
+resources checks pass; never init again or bypass drift. Important geometry audit:
+all8plannedRandom slots satisfy whole-goal endpoint-envelope sufficient condition,
+same old goal-approach bottleneck; NOT physical impossibility/observedFAIL. No
+geometry/outcome filtering or seed change. GoalFDR saturation remains possible;
+safety-event rate is separate. 248CPUtests pass85.97s; Ruff/format/diffclean.
+Old campaigns/source DB/evidence/outcomes/budgets untouched. See
+docs/HUMANOID_DYNAMIC_SEARCH.md and .workhistory/2026-10-23_dynamic_human_search.json.
+
+## Robot-arm OpenRouter AFS transition prepared (2026-10-23)
+
+User selected openai/gpt-6-luna-pro for AFS only; local GR00T robot unchanged.
+Old placement_wide_v1 completed12bootstrap (eacharm1PASS5FAIL); firstAFS missing
+OPENAI_API_KEY ValueError beforeHTTP perusertrace/providercode. Originalrequest
+andalloutcomes preserved,NOT resent. Beforeedits allfrozen sources verified;
+audit embedded in new transition.json. Explicit separate placement_wide_openrouter_v1
+copies12bootstrap/120files with source/copy hash equality; candidates/seeds/intents/
+validreceipts/results/initialrequest/tracecounts+success checked;modelhashesmatch.
+New freeze binds newprovidercode+inheritedartifacts. Remaining12robot/6newRouter
+requestcaps;oldunsentintent1 separatelyretained,not independentcopies/newfreePASS.
+No oldmanifestrewrite/sourcefreeze bypass; oldsourcesnowdrift,neverdirectresume.
+New robot_arm/openrouter.py uses OPENROUTER_API_KEY only, fixedchatendpoint, strict
+JSON,allowfallbacksfalse/requireparameterstrue,read300,noretries. Service tier omitted;
+notdirectStandardparity. Rawresponse/model/provider/generation/usage/cost preserved;
+wrongmodel/refusal/tool/length/errorsstop. Keypreflight beforeanynewintent. No key
+inspection or actualpaid/API/GPU/robotexecution. 47CPUtests pass3.23s,fakekeys/mockHTTP.
+Official modelpageconfirmedregistration,notlivecompatibility. Newconfig and docs
+prepared; use watch_robot_arm_search.py --live --output .../placement_wide_openrouter_v1
+--max-new-attempts1 first,afteruserterminalkeysetup. Do not pool roots as two samples.
+See .workhistory/2026-10-23_robot_arm_openrouter.json and placementdoc Routersection.
+
+## Humanoid labeled viewer replay (2026-10-23)
+
+User found proxy boxes unreadable. New tools/render_labeled_humanoid.py verifies
+saved manifest and renders recorded qpos/qvel + matched full-rate mocap poses,
+no mj_step/policy/API. Human silhouette + HUMAN/OBSTACLE1/2/PUSHABLEBOX/GOAL/G1
+labels, distinct colors, transparent walls, overview; DISPLAY ONLY, original
+robot images/physics/evidence unchanged. New development/humanoid_labeled_20261023_v1
+contains1398frames12fps MP4+PNGs+provenance;59source artifact hashes stillmatch.
+4CPU integrity/projection tests pass;Ruffclean;MP4decoded. Source OpenRouter run
+20261023T005929_285349Z VALIDPASS/6calls6actions,allreturned requestedmodel viaOpenAI,
+humantrigger52.6s/completed,0humancontact,mincenterdistance.6982m<1mprotectedzone:
+goalPASS,NOT proven active or safe avoidance. Do not infer safety from viewer avatar.
+
+## Humanoid OpenRouter opt-in prepared (2026-10-23)
+
+User chose openai/gpt-6-luna-pro via OpenRouter for robot policy. New explicit
+run_robot_goal_agent.py --api-provider openrouter; --dry-run prints plan without
+credentials/GPU/API. OPENROUTER_API_KEY only, fixed Chat Completions endpoint;
+same RGB/context/reasoning/strict action schema via adapter, same typed parser.
+No service-tier option in this path: do NOT claim direct Standard parity.
+Single model, allow_fallbacks=false/require_parameters=true; read300 remains,
+only proven pre-send TCP retries2; no post-send/HTTP/schema resend or fallback.
+Logs preserve generation/model/provider/usage/returned cost, unknown timeout
+usage neverzero. origin=openrouter_api counts calls/actions; existing research
+archive/paired origin schemas intentionally NOT extended. New output root
+runtime/humanoid_crossing_openrouter; no campaign/Gain integration or actual live
+execution. Pro may take longer; not timeout solution guarantee. 124 related CPU
+tests pass16.69s,5skipped; fake keys/mockHTTP, CPU runner with test doubles only.
+Readonly prior crossing 20261023T003536_637106Z:35manifest hashes match;3OpenAI
+Luna/default calls,2accepted(plan_path path_found,navigate_to1s),thirdheaders
+ReadTimeout300.36s/0retry,INCONCLUSIVE/unknown thirdusage. Human never triggered:
+mincenter3.2887m>2m,0humancontact,so no avoidance outcome. Original untouched.
+See docs/HUMANOID_OPENROUTER.md; do not inspect keys or auto-retry old request.
+
+## Robot-arm progress observer (2026-10-23)
+
+User requested visible stages/heartbeat. Added standalone tools/watch_robot_arm_search.py
+(stdlib) rather than changing frozen search/placement/runner sources. --watch-only
+attaches readonly to current artifacts, --once prints one snapshot; neither starts
+or controls robot/API. --live wraps original runner with identical output/cap and
+PYTHONUNBUFFERED=1, preserves stdout/stderr/exit, emits stderr heartbeat5s. Shows
+result counts (exclusions separate), seed/method/round, common bootstrap vs actual
+selection, observed shardloading/actual trace step/recordage; no fake ETA/percent.
+Observer never collects receipts or writes manifests/results/intents. Existingfreeze,
+budget,noresend/noreset remain. Do not concurrently start old and wrapped run; use
+watch-only while existing run continues. Stored pending does not prove liveness.
+Ctrl+C observe-only stops UI; own live child group gets interrupt, no resend.
+9CPUtests pass with fake processes only; no new paid/API/GPU/robot execution.
+See placement doc progress section and .workhistory/2026-10-23_robot_arm_progress.json.
+
+## Humanoid single crossing proxy development (2026-10-23)
+
+User approved first moving-human implementation, humanoid only. New opt-in
+clear-path-crossing-human-v6 + CrossingHumanFixture: one existing-size proxy moves
+once across corridor at fixed X after planar base-center distance trigger, armed
+after 2s settle; speed .1..1.5m/s, trigger .5..5m, edge side +/-1. Prescribed mocap
+body, no gait/contact reaction/social policy. Existing v5 static schema and 20-axis
+search remain; v6 NOT registered in paired/AFS search. Runner updates pose each
+physics step incl inference waits; v6 follower refreshes geometry every command.
+RGB/current geometry + behavior_feedback.human_motion bind observed state, velocity,
+trigger/time/distance/contact. Full-rate human_motion.jsonl + summary + metadata
+manifest-hashed; existing contacts retain link/force. Static human archive detector
+explicitly UNSUPPORTED for v6: dynamic trajectory detector remains separate; no
+task outcome/taxonomy credit change. New config humanoid_crossing_development.json,
+preview_human_crossing.py produces synthetic base approach, NOT G1 rollout.
+development/humanoid_crossing_20261023_v1: XML compiled,701 synthetic samples,
+trigger10.7s,completed by35s,0policy/API/GPU execution. CPU tests exercise real
+MuJoCo contact with passive sphere, original G1 joint/gait-observation identity,
+current follower geometry and real runner with explicitly fake controller/render
+and mock policy. No old campaigns/DB/outcomes/budgets modified or resumed; source
+drift forbids old frozen resume. 142 related CPU tests pass43.72s; Ruff/format pass.
+See docs/HUMANOID_CROSSING.md.
+
+
+
+## Wide robot-arm placement domain prepared (2026-10-23)
+
+User requested wider motion ranges and asked whether arbitrary objects can be added.
+New config robot_arm_placement_wide.json; old source/config/campaign unchanged.
+Bounds metres bowlX[-.18,-.04],Y[-.10,.06],plateX[.04,.24],Y[.17,.33] include all old
+bounds. Newseeds52001/52002/52003,existingrobot/background/budgets retained.
+CPUgeometry12/12valid,noRandomresampling,noreachability/PASS claim. New separate
+placement_wide_v1 prepared0robot/0AFS; cap24robot/7200steps/6AFSrequests. First12
+are paired bootstrap (no AFS calls),later6AFS+6Random. No paid/GPU/policy execution.
+Objectaddition is possible in simulator but currentCLI has no new-object support;
+needs geometry/physics/observation adapter and equal setup for both arms. Do not
+claim arbitrary mesh/photo import or obstacle-avoidance capability. See placement
+doc wide-domain section and .workhistory/2026-10-23_robot_arm_wide_placement.json.
+
+## Robot-arm manual placement and AFS/Random development setup (2026-10-22)
+
+User approved bowl/plate XY controls, actual pose recording, common-domain AFS/Random.
+New src/robot_arm and tools/run_robot_arm_search.py; original external policy and
+baseline sources unchanged. baseline_v2 actual2VALIDPASS103/86steps preserved.
+New placement_comparison_v1 prepared0robot/0AFS: seeds51001/51002/51003,4permethod
+perseed incl2 separately executed common bootstrap,24attempts/7200steps/6AFS caps.
+Luna/default AFStimeout300,localGR00T robot300steps/chunk8 unchanged. Four table-local
+metre axes native BDDL bounds bowlX[-.1,-.05],Y[-.01,.01],plateX[.05,.07],Y[.19,.21].
+Explicit development backgroundseed51000 and second distractor bowl fixed(-.25,.4).
+CPU geometry audits preserved: varyingbackground9/12valid;fixedseedonly0/12;
+parkeddistractor12/12valid,requestedposesmatch,backgroundidentical,noRandomresampling.
+No policy outcomes used to select seeds/bounds; newbackground NOT originalbenchmark.
+Manual_placement_v1 separate1attempt/300steps/0AFS prepared,not executed. Initialization
+only writesXY,preservesZ/rotation;refreshespolicyobservation;actualpose/state/trace/video.
+Outoftable/penetrating/alreadygoal initialgeometryexcluded,notrobotFAIL;no replacement.
+New placement-specific LLMAFS uses ownseed/arm only,not full navigationbreadth port.
+Request/response/receipt durability,noambiguousresend;source/model/manifestguards;
+completeequalvalidbudget requiredforGain,RandomFDR0=>null,no statisticalsuperiority.
+29CPUtests pass;no paid/API/GPU/policy execution. No oldcampaign/DB/budget edits.
+See docs/ROBOT_ARM_PLACEMENT_SEARCH.md;future live commands explicit--live only.
+
+## Robot-arm first execution blocked by gated backbone (2026-10-22)
+
+User run baseline_v1 attempt0 stopped during model construction: saved log shows
+GatedRepoError/401 for nvidia/Cosmos-Reason2-2B. No rollout started; INCONCLUSIVE,
+not robotFAIL. Repeated run hit existing execution_intent. Added readonly status
+and early existing-intent diagnosis before source/model hashing; never delete intent
+or auto-resend. Preflight now separates local_resources_present from UNVERIFIED
+backbone access; previous presence check did NOT prove model-load readiness.
+8CPUtests pass. User must approve HF model access/authenticate in own terminal;
+no credential inspection or acceptance by Codex. New source means preserve frozen
+baseline_v1; prepare separate version only after access resolution, no old freeze bypass.
+
+## Public-policy robot-arm baseline preparation (2026-10-22)
+
+User requested robot-arm experiment setup. Separate LIBERO Panda bowl-to-plate
+baseline uses public NVIDIA GR00T-N1.7-LIBERO/libero_spatial revision
+2ea293aa20ba7cf5bbf3ba17a5fbcb1a01cbfe21. Inference files (~6.9GB) downloaded
+anonymously; no optimizer files. New experiments/robot_arm_libero/.venv-arm
+reads existing GR00T site-packages without modifying them; installs simulator deps
+locally. LIBERO_CONFIG_PATH isolated, no ~/.libero deletion or official destructive
+setup script execution. Two development seeds41001/41002, one episode each,
+300steps/episode, actionchunk8,0AFS. No policy/environment/task changes. Upstream
+seeded reset differs from fixed-init-state official benchmark: no published-score
+reproduction claim. New run_robot_arm_baseline.py plan/check/init/run; prepared
+baseline_v1 has config/source hashes. run requires --live, exclusive invocation+
+worker intents forbid automatic resend/replacement; errors not robotFAIL. SixCPU
+guard tests pass,Ruffclean. No model inference/GPU/robot/API execution. No original
+campaign/DB edits. Next baseline execution then explicit pose-control adapter and
+separate frozen equal-domain AFS/Random design; current AFS not connected to arm.
+See docs/ROBOT_ARM_LIBERO_BASELINE.md and .workhistory/2026-10-22_robot_arm_libero_baseline.json.
+
 ## Behavior-relevant mandatory allocation opt-in (2026-10-21)
 
 User approved improvement priority1 after navigation paired COMPLETE: AFS0/18FAIL,

@@ -176,6 +176,7 @@ def request(
     model,
     *,
     service_tier=None,
+    api_provider="openai",
     selection_policy: Literal[
         "standalone_suite",
         "campaign_single_endpoint",
@@ -186,6 +187,10 @@ def request(
     ] = "standalone_suite",
 ):
     """Bind both evidence and the caller's actual candidate-selection instructions."""
+    if api_provider not in {"openai", "openrouter"}:
+        raise ValueError("unknown AFS API provider")
+    if api_provider == "openrouter" and (service_tier is not None or "/" not in model):
+        raise ValueError("OpenRouter AFS requires provider/model ID and omitted service tier")
     if selection_policy not in SELECTION_POLICIES:
         raise ValueError("unknown behavior AFS selection policy")
     context_schema, selection_instructions = SELECTION_POLICIES[selection_policy]
@@ -278,6 +283,8 @@ def request(
         raise ValueError("service_tier must be omitted, flex or default")
     if service_tier is not None:
         body["service_tier"] = service_tier
+    if api_provider == "openrouter":
+        body["api_provider"] = api_provider
     body.update(
         model=model,
         instructions=b.INSTRUCTIONS
@@ -561,6 +568,23 @@ Small changes remain useful; no automatic pattern rejection or ranking bonus.
 Use ONLY the existing allowed evidence/anchor IDs; aggregate provenance is not
 permission to cite unpresented episodes. No extra API, robot commands, budget change,
 detector relaxation, automatic scene replay or outcome/family relabeling.
+"""
+    if "matched_local" in ctx:
+        count = ctx["matched_local"]["required_change_count"]
+        for definition in schema["$defs"].values():
+            if "extra_changes" in definition.get("properties", {}):
+                definition["properties"]["extra_changes"].update(
+                    minItems=count - 1, maxItems=count - 1
+                )
+        body["instructions"] += f"""
+Matched-local comparison OVERRIDES factor rotation, small/large forms, cooldown,
+and adaptive anchor choice above. Use ONLY the one supplied fixed-base anchor.
+EVERY candidate MUST change exactly {count} distinct axes from that base, with
+the same minimum normalized change shown in development_search as Random.
+For one change extra_changes is empty; for two changes it has exactly one entry.
+Any axis in selectable_axes may be selected; no factor-group quota is mandatory.
+Return all other base parameters unchanged. Episodes never accumulate changes.
+This compares informed axis/value choice with uniform local Random selection.
 """
     return body
 

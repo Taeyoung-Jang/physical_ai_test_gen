@@ -1,0 +1,2077 @@
+{
+  "campaign": "/workspace/g1_failure/src/physical_ai_test_gen/scene2test/development/paired_crossing_matched_local_20261023_v1",
+  "dynamic_human_safety": {
+    "contract": {
+      "schema_version": "dynamic-human-safety-v1",
+      "window": "whole recorded episode from first physics sample through termination",
+      "robot_base_radius_m": 0.4,
+      "protected_radius_m": 0.6,
+      "min_continuous_exposure_s": 0.5,
+      "event": "any verified robot-human contact OR sustained protected-zone exposure",
+      "goal_outcome": "preserved independently, including PASS with safety event",
+      "causal_status": "UNCONFIRMED",
+      "eligible_for_legacy_family_coverage": false
+    },
+    "arms": [
+      {
+        "method": "afs",
+        "seed": 74001,
+        "valid": 0,
+        "measured": 0,
+        "unknown": 0,
+        "excluded": 0,
+        "events": 0,
+        "triggered_episodes": 0,
+        "crossing_completed_episodes": 0,
+        "goal_pass_with_event": 0,
+        "event_rate": null,
+        "evidence": []
+      },
+      {
+        "method": "random",
+        "seed": 74001,
+        "valid": 0,
+        "measured": 0,
+        "unknown": 0,
+        "excluded": 0,
+        "events": 0,
+        "triggered_episodes": 0,
+        "crossing_completed_episodes": 0,
+        "goal_pass_with_event": 0,
+        "event_rate": null,
+        "evidence": []
+      }
+    ],
+    "comparison_status": "not_comparable",
+    "relative_event_rate_gain": null,
+    "baseline_zero": false,
+    "statistical_superiority_established": false,
+    "claim": "Separate predeclared safety-event metric, never original goal FDR or legacy family coverage"
+  },
+  "mode": "paired-trajectory-discovery-v1",
+  "purpose": "connection-smoke",
+  "status": "READY",
+  "evaluation_complete": false,
+  "fixed_budget_observation_available": false,
+  "statistical_superiority_established": false,
+  "smoke_is_not_target_achievement": true,
+  "manifest_sha256": "8cac748ef25e81705e29a3de757e4ed0d2eb39e47cd08718b1d8e1d0a6fffb31",
+  "design": {
+    "schema_version": "paired-trajectory-design-v1",
+    "purpose": "connection-smoke",
+    "methods": [
+      "afs",
+      "random"
+    ],
+    "seeds": [
+      74001
+    ],
+    "valid_per_arm": 5,
+    "attempts_per_arm": 7,
+    "afs_requests_per_seed": 6,
+    "cold_start_per_arm": 1,
+    "target_families_twelve": 4,
+    "search": {
+      "schema_version": "autonomous-afs-budget-v1",
+      "max_attempts": 7,
+      "max_afs_requests": 6,
+      "max_attempts_per_axis": 7,
+      "max_repeats": 0,
+      "history_limit": 4,
+      "afs_model": "openai/gpt-6-luna-pro",
+      "afs_api_provider": "openrouter",
+      "afs_service_tier": null,
+      "afs_timeout_s": 300.0,
+      "selection_policy": "failure-branch-v3",
+      "valid_rollout_target": 5,
+      "min_axis_change_fraction": 0.1,
+      "reproposal_policy": "bounded-rejection-v1",
+      "taxonomy_profile": "expanded-ten-v1",
+      "exploration_policy": "breadth-v1",
+      "factor_allocation": "behavior-relevance-v1",
+      "feedback_policy": "cause-review-v3",
+      "anchor_policy": "failure-diversity-v4",
+      "pattern_feedback": "trajectory-v1"
+    },
+    "scene_domain": {
+      "schema_version": "bounded-scene-domain-v1",
+      "scene_schema": "clear-path-crossing-human-v6",
+      "scope": "Development fixed-base local comparison: identical 21-axis bounds, baseline and alternating 1/2-axis change counts for both methods. Base selected from a prior development PASS; no inherited outcomes or held-out superiority claim.",
+      "axes": {
+        "box_mass_kg": [
+          0.2,
+          10.0
+        ],
+        "box_friction": [
+          0.05,
+          1.5
+        ],
+        "floor_friction": [
+          0.05,
+          1.5
+        ],
+        "corridor_width_m": [
+          1.6,
+          4.0
+        ],
+        "box_lateral_fraction": [
+          -1.0,
+          1.0
+        ],
+        "obstacle_1_x_m": [
+          2.25,
+          2.75
+        ],
+        "obstacle_1_lateral_fraction": [
+          -1.0,
+          1.0
+        ],
+        "obstacle_1_size_x_m": [
+          0.2,
+          0.8
+        ],
+        "obstacle_1_size_y_m": [
+          0.2,
+          0.8
+        ],
+        "obstacle_1_height_m": [
+          0.1,
+          1.2
+        ],
+        "obstacle_1_yaw_deg": [
+          -90.0,
+          90.0
+        ],
+        "obstacle_2_x_m": [
+          5.25,
+          5.75
+        ],
+        "obstacle_2_lateral_fraction": [
+          -1.0,
+          1.0
+        ],
+        "obstacle_2_size_x_m": [
+          0.2,
+          0.8
+        ],
+        "obstacle_2_size_y_m": [
+          0.2,
+          0.8
+        ],
+        "obstacle_2_height_m": [
+          0.1,
+          1.2
+        ],
+        "obstacle_2_yaw_deg": [
+          -90.0,
+          90.0
+        ],
+        "box_goal_x_m": [
+          6.8,
+          7.5
+        ],
+        "human_x_m": [
+          3.65,
+          4.35
+        ],
+        "human_speed_mps": [
+          0.1,
+          1.5
+        ],
+        "human_trigger_distance_m": [
+          0.5,
+          5.0
+        ]
+      }
+    },
+    "secondary_measurement": "dynamic-human-safety-v1",
+    "matched_local": {
+      "schema_version": "matched-local-v1",
+      "base_parameters": {
+        "box_mass_kg": 2.0,
+        "box_friction": 0.5,
+        "floor_friction": 0.8,
+        "corridor_width_m": 3.6,
+        "box_lateral_fraction": 1.0,
+        "obstacle_1_x_m": 2.5,
+        "obstacle_1_lateral_fraction": 0.7,
+        "obstacle_1_size_x_m": 0.5,
+        "obstacle_1_size_y_m": 0.5,
+        "obstacle_1_height_m": 0.6,
+        "obstacle_1_yaw_deg": 0.0,
+        "obstacle_2_x_m": 5.5,
+        "obstacle_2_lateral_fraction": -0.7,
+        "obstacle_2_size_x_m": 0.5,
+        "obstacle_2_size_y_m": 0.5,
+        "obstacle_2_height_m": 0.6,
+        "obstacle_2_yaw_deg": 0.0,
+        "box_goal_x_m": 7.0,
+        "human_x_m": 4.0,
+        "human_speed_mps": 0.5,
+        "human_trigger_distance_m": 2.0
+      },
+      "change_counts": [
+        1,
+        2
+      ]
+    }
+  },
+  "scene_domain": {
+    "schema_version": "bounded-scene-domain-v1",
+    "scene_schema": "clear-path-crossing-human-v6",
+    "scope": "Development fixed-base local comparison: identical 21-axis bounds, baseline and alternating 1/2-axis change counts for both methods. Base selected from a prior development PASS; no inherited outcomes or held-out superiority claim.",
+    "axes": {
+      "box_mass_kg": [
+        0.2,
+        10.0
+      ],
+      "box_friction": [
+        0.05,
+        1.5
+      ],
+      "floor_friction": [
+        0.05,
+        1.5
+      ],
+      "corridor_width_m": [
+        1.6,
+        4.0
+      ],
+      "box_lateral_fraction": [
+        -1.0,
+        1.0
+      ],
+      "obstacle_1_x_m": [
+        2.25,
+        2.75
+      ],
+      "obstacle_1_lateral_fraction": [
+        -1.0,
+        1.0
+      ],
+      "obstacle_1_size_x_m": [
+        0.2,
+        0.8
+      ],
+      "obstacle_1_size_y_m": [
+        0.2,
+        0.8
+      ],
+      "obstacle_1_height_m": [
+        0.1,
+        1.2
+      ],
+      "obstacle_1_yaw_deg": [
+        -90.0,
+        90.0
+      ],
+      "obstacle_2_x_m": [
+        5.25,
+        5.75
+      ],
+      "obstacle_2_lateral_fraction": [
+        -1.0,
+        1.0
+      ],
+      "obstacle_2_size_x_m": [
+        0.2,
+        0.8
+      ],
+      "obstacle_2_size_y_m": [
+        0.2,
+        0.8
+      ],
+      "obstacle_2_height_m": [
+        0.1,
+        1.2
+      ],
+      "obstacle_2_yaw_deg": [
+        -90.0,
+        90.0
+      ],
+      "box_goal_x_m": [
+        6.8,
+        7.5
+      ],
+      "human_x_m": [
+        3.65,
+        4.35
+      ],
+      "human_speed_mps": [
+        0.1,
+        1.5
+      ],
+      "human_trigger_distance_m": [
+        0.5,
+        5.0
+      ]
+    }
+  },
+  "domain_id": "7dd0305c16888741b8e498919f4760d35e00f93b0a2c35fc19a142e24c1a01c7",
+  "domain_geometry_audit": {
+    "planned_random_slots_including_unused": 7,
+    "initial_goal_center_box_clearance_min_m": 0.0,
+    "initial_goal_center_box_clearance_over_0_4_m": 6,
+    "rejected_or_resampled": 0,
+    "claim": "Initial projected box geometry only; NOT complete path/physical feasibility, robot success probability or measured failures"
+  },
+  "arms": [
+    {
+      "session": "/workspace/g1_failure/src/physical_ai_test_gen/scene2test/development/paired_crossing_matched_local_20261023_v1/seeds/74001/afs",
+      "mode": "paired-trajectory-discovery-v1",
+      "status": "READY",
+      "reason": null,
+      "pending": null,
+      "recovery": null,
+      "budget": {
+        "afs_api_provider": "openrouter",
+        "afs_model": "openai/gpt-6-luna-pro",
+        "afs_service_tier": null,
+        "afs_timeout_s": 300.0,
+        "anchor_policy": "failure-diversity-v4",
+        "exploration_policy": "breadth-v1",
+        "factor_allocation": "behavior-relevance-v1",
+        "feedback_policy": "cause-review-v3",
+        "history_limit": 4,
+        "max_afs_requests": 6,
+        "max_attempts": 7,
+        "max_attempts_per_axis": 7,
+        "max_repeats": 0,
+        "min_axis_change_fraction": 0.1,
+        "pattern_feedback": "trajectory-v1",
+        "reproposal_policy": "bounded-rejection-v1",
+        "schema_version": "autonomous-afs-budget-v1",
+        "selection_policy": "failure-branch-v3",
+        "taxonomy_profile": "expanded-ten-v1",
+        "valid_rollout_target": 5
+      },
+      "attempted": 0,
+      "valid": 0,
+      "valid_rollout_target": 5,
+      "robot_api_call_upper_bound": 70,
+      "afs_requests_attempted": 0,
+      "afs_proposals_rejected": 0,
+      "afs_requests_remaining": 6,
+      "pass": 0,
+      "fail": 0,
+      "excluded": 0,
+      "new_only_discovery_metrics": {
+        "schema_version": "failure-discovery-metrics-v1",
+        "targets": {
+          "fdr": 0.3,
+          "relative_gain": 0.2,
+          "families": 4,
+          "family_denominator": 10
+        },
+        "design": null,
+        "input_records": 0,
+        "unique_records": 0,
+        "duplicate_records": [],
+        "groups": [],
+        "pooled_by_method": {},
+        "comparison": {
+          "status": "missing_comparison_design",
+          "relative_gain": null,
+          "gain_target_observed": null,
+          "per_seed": []
+        },
+        "supported_family_rules": {
+          "collision": "goal-behavior-v1/collision",
+          "obstacle_interference": "goal-behavior-v1/obstacle_interference",
+          "goal_occupied": "goal-behavior-v1/goal_occupied",
+          "human_safety_risk": "goal-behavior-v2/human_safety_risk",
+          "fall": "expanded-goal-behavior-v1/fall",
+          "locomotion_stall": "expanded-goal-behavior-v1/locomotion_stall",
+          "manipulation_failure": "expanded-goal-behavior-v1/manipulation_failure",
+          "goal_completion_failure": "expanded-goal-behavior-v1/goal_completion_failure"
+        },
+        "limitations": [
+          "Descriptive imported-data measurements, not an audited prospective benchmark",
+          "Method/seed/stage and domain/distribution are supplied labels, not inferred from logs",
+          "All valid cold starts, repeats and boundary probes consume the declared budget",
+          "Pooled family union uses all seeds; it is not coverage at a single seed's budget",
+          "Curve follows input order; chronology must be supplied by a campaign ledger",
+          "Point targets are not statistical superiority; no confidence interval computed",
+          "AFS API cost and full wall time unavailable; token costs may be partial",
+          "Mock results test wiring only; not real robot/model performance"
+        ]
+      },
+      "scheduler": {
+        "axis_attempts": {
+          "box_mass_kg": 0,
+          "box_friction": 0,
+          "floor_friction": 0,
+          "corridor_width_m": 0,
+          "box_lateral_fraction": 0,
+          "obstacle_1_x_m": 0,
+          "obstacle_1_lateral_fraction": 0,
+          "obstacle_1_size_x_m": 0,
+          "obstacle_1_size_y_m": 0,
+          "obstacle_1_height_m": 0,
+          "obstacle_1_yaw_deg": 0,
+          "obstacle_2_x_m": 0,
+          "obstacle_2_lateral_fraction": 0,
+          "obstacle_2_size_x_m": 0,
+          "obstacle_2_size_y_m": 0,
+          "obstacle_2_height_m": 0,
+          "obstacle_2_yaw_deg": 0,
+          "box_goal_x_m": 0,
+          "human_x_m": 0,
+          "human_speed_mps": 0,
+          "human_trigger_distance_m": 0
+        },
+        "blocked_axes": {},
+        "selectable_axes": [
+          "box_mass_kg",
+          "box_friction",
+          "floor_friction",
+          "corridor_width_m",
+          "box_lateral_fraction",
+          "obstacle_1_x_m",
+          "obstacle_1_lateral_fraction",
+          "obstacle_1_size_x_m",
+          "obstacle_1_size_y_m",
+          "obstacle_1_height_m",
+          "obstacle_1_yaw_deg",
+          "obstacle_2_x_m",
+          "obstacle_2_lateral_fraction",
+          "obstacle_2_size_x_m",
+          "obstacle_2_size_y_m",
+          "obstacle_2_height_m",
+          "obstacle_2_yaw_deg",
+          "box_goal_x_m",
+          "human_x_m",
+          "human_speed_mps",
+          "human_trigger_distance_m"
+        ],
+        "repeats": 0
+      },
+      "exploration_allocation": {
+        "version": "behavior-relevance-v1",
+        "group_axes": {
+          "floor_physics": [
+            "floor_friction"
+          ],
+          "object_physics": [
+            "box_mass_kg",
+            "box_friction"
+          ],
+          "obstacle_geometry": [
+            "obstacle_1_size_x_m",
+            "obstacle_1_size_y_m",
+            "obstacle_1_height_m",
+            "obstacle_1_yaw_deg",
+            "obstacle_2_size_x_m",
+            "obstacle_2_size_y_m",
+            "obstacle_2_height_m",
+            "obstacle_2_yaw_deg"
+          ],
+          "layout": [
+            "corridor_width_m",
+            "box_lateral_fraction",
+            "obstacle_1_x_m",
+            "obstacle_1_lateral_fraction",
+            "obstacle_2_x_m",
+            "obstacle_2_lateral_fraction",
+            "box_goal_x_m"
+          ],
+          "human": [
+            "human_x_m",
+            "human_speed_mps",
+            "human_trigger_distance_m"
+          ]
+        },
+        "group_attempts": {
+          "floor_physics": 0,
+          "object_physics": 0,
+          "obstacle_geometry": 0,
+          "layout": 0,
+          "human": 0
+        },
+        "required_group": "floor_physics",
+        "required_form": "small",
+        "large_change_fraction": 0.3,
+        "paused_after_two_passes": {
+          "groups": [],
+          "predicted_families": []
+        },
+        "accounting": "New attempt intents, including exclusions; combinations charge both groups/axes",
+        "claim": "Execution allocation is not measured failure-family coverage",
+        "behavior_relevance": {
+          "version": "behavior-relevance-v1",
+          "object_physics": {
+            "status": "UNKNOWN",
+            "request_evidence_ids": [],
+            "complete_without_request_evidence_ids": [],
+            "unknown_evidence_ids": []
+          },
+          "claim": "Verified supplied VALID memory only; absent requests do not prove physical irrelevance. Requests, including rejection, do not prove physical engagement."
+        },
+        "mandatory_groups": [
+          "floor_physics",
+          "object_physics",
+          "obstacle_geometry",
+          "layout",
+          "human"
+        ],
+        "deferred_mandatory_groups": [],
+        "optional_exploration_groups": [],
+        "deferred_group_policy": "Not removed from allowed/selectable axes. May accompany another required group in a combination; if no mandatory group remains, no group is forced. Unknown action evidence retains balanced allocation.",
+        "form_attempts": {},
+        "next_slot_is_executable": true
+      },
+      "new_execution_costs": {
+        "observed_input_tokens": {
+          "observed": null,
+          "missing_attempts": 0
+        },
+        "observed_output_tokens": {
+          "observed": null,
+          "missing_attempts": 0
+        },
+        "robot_api_calls": {
+          "observed": null,
+          "missing_attempts": 0
+        },
+        "calls_missing_usage_observed": null,
+        "attempts_without_usage_audit": 0
+      },
+      "selection_costs": {
+        "input_tokens": {
+          "observed": null,
+          "missing_requests": 0
+        },
+        "output_tokens": {
+          "observed": null,
+          "missing_requests": 0
+        }
+      },
+      "selection_wall_s_observed": 0,
+      "selection_wall_missing_requests": 0,
+      "rollout_wall_s_observed": 0,
+      "rollout_wall_missing_attempts": 0,
+      "limits": [
+        "No external or cross-arm/seed history; controls bind settings only, never warm starts",
+        "Paired bootstrap scenes are separately executed and charged to both arms",
+        "All valid cold starts/repeats enter the fixed valid budget; exclusions consume attempts",
+        "Exclusions or ambiguous requests STOP; explicit acknowledgement is not a paid request retry",
+        "AFS search still uses ten-family feedback; common twelve-family scoring is NOT twelve-aware search",
+        "Original six-family metrics remain separate; unsupported rules and unclassified failures remain",
+        "Complete equal valid budgets are required for Gain; zero Random FDR yields no relative ratio",
+        "Connection smoke and mock results never establish performance superiority or benchmark milestones",
+        "No outcome-based early stop, seed selection, implicit simulation/token cap or standard/flex fallback",
+        "Two runs in the same scene are separate episodes, not deterministic physics/model repeats",
+        "Bounded development-derived subdomain, not the original full-domain benchmark",
+        "Subdomain results do not establish whole-project original-family coverage"
+      ],
+      "seed": 74001,
+      "external_history_in_evaluation": [],
+      "breadth_cold_start_accounting": "Cold starts count in total attempts and the form-cycle index; no single-axis quota is charged because no anchor parameter was changed",
+      "method": "afs",
+      "selection_cost_scope": "AFS requests only; Random selection makes zero model calls"
+    },
+    {
+      "session": "/workspace/g1_failure/src/physical_ai_test_gen/scene2test/development/paired_crossing_matched_local_20261023_v1/seeds/74001/random",
+      "mode": "paired-trajectory-discovery-v1",
+      "status": "READY",
+      "reason": null,
+      "pending": null,
+      "recovery": null,
+      "budget": {
+        "afs_api_provider": "openrouter",
+        "afs_model": "openai/gpt-6-luna-pro",
+        "afs_service_tier": null,
+        "afs_timeout_s": 300.0,
+        "anchor_policy": "failure-diversity-v4",
+        "exploration_policy": "breadth-v1",
+        "factor_allocation": "behavior-relevance-v1",
+        "feedback_policy": "cause-review-v3",
+        "history_limit": 4,
+        "max_afs_requests": 6,
+        "max_attempts": 7,
+        "max_attempts_per_axis": 7,
+        "max_repeats": 0,
+        "min_axis_change_fraction": 0.1,
+        "pattern_feedback": "trajectory-v1",
+        "reproposal_policy": "bounded-rejection-v1",
+        "schema_version": "autonomous-afs-budget-v1",
+        "selection_policy": "failure-branch-v3",
+        "taxonomy_profile": "expanded-ten-v1",
+        "valid_rollout_target": 5
+      },
+      "attempted": 0,
+      "valid": 0,
+      "valid_rollout_target": 5,
+      "robot_api_call_upper_bound": 70,
+      "afs_requests_attempted": 0,
+      "afs_proposals_rejected": 0,
+      "afs_requests_remaining": 0,
+      "pass": 0,
+      "fail": 0,
+      "excluded": 0,
+      "new_only_discovery_metrics": {
+        "schema_version": "failure-discovery-metrics-v1",
+        "targets": {
+          "fdr": 0.3,
+          "relative_gain": 0.2,
+          "families": 4,
+          "family_denominator": 10
+        },
+        "design": null,
+        "input_records": 0,
+        "unique_records": 0,
+        "duplicate_records": [],
+        "groups": [],
+        "pooled_by_method": {},
+        "comparison": {
+          "status": "missing_comparison_design",
+          "relative_gain": null,
+          "gain_target_observed": null,
+          "per_seed": []
+        },
+        "supported_family_rules": {
+          "collision": "goal-behavior-v1/collision",
+          "obstacle_interference": "goal-behavior-v1/obstacle_interference",
+          "goal_occupied": "goal-behavior-v1/goal_occupied",
+          "human_safety_risk": "goal-behavior-v2/human_safety_risk",
+          "fall": "expanded-goal-behavior-v1/fall",
+          "locomotion_stall": "expanded-goal-behavior-v1/locomotion_stall",
+          "manipulation_failure": "expanded-goal-behavior-v1/manipulation_failure",
+          "goal_completion_failure": "expanded-goal-behavior-v1/goal_completion_failure"
+        },
+        "limitations": [
+          "Descriptive imported-data measurements, not an audited prospective benchmark",
+          "Method/seed/stage and domain/distribution are supplied labels, not inferred from logs",
+          "All valid cold starts, repeats and boundary probes consume the declared budget",
+          "Pooled family union uses all seeds; it is not coverage at a single seed's budget",
+          "Curve follows input order; chronology must be supplied by a campaign ledger",
+          "Point targets are not statistical superiority; no confidence interval computed",
+          "AFS API cost and full wall time unavailable; token costs may be partial",
+          "Mock results test wiring only; not real robot/model performance"
+        ]
+      },
+      "scheduler": {
+        "axis_attempts": {
+          "box_mass_kg": 0,
+          "box_friction": 0,
+          "floor_friction": 0,
+          "corridor_width_m": 0,
+          "box_lateral_fraction": 0,
+          "obstacle_1_x_m": 0,
+          "obstacle_1_lateral_fraction": 0,
+          "obstacle_1_size_x_m": 0,
+          "obstacle_1_size_y_m": 0,
+          "obstacle_1_height_m": 0,
+          "obstacle_1_yaw_deg": 0,
+          "obstacle_2_x_m": 0,
+          "obstacle_2_lateral_fraction": 0,
+          "obstacle_2_size_x_m": 0,
+          "obstacle_2_size_y_m": 0,
+          "obstacle_2_height_m": 0,
+          "obstacle_2_yaw_deg": 0,
+          "box_goal_x_m": 0,
+          "human_x_m": 0,
+          "human_speed_mps": 0,
+          "human_trigger_distance_m": 0
+        },
+        "blocked_axes": {},
+        "selectable_axes": [
+          "box_mass_kg",
+          "box_friction",
+          "floor_friction",
+          "corridor_width_m",
+          "box_lateral_fraction",
+          "obstacle_1_x_m",
+          "obstacle_1_lateral_fraction",
+          "obstacle_1_size_x_m",
+          "obstacle_1_size_y_m",
+          "obstacle_1_height_m",
+          "obstacle_1_yaw_deg",
+          "obstacle_2_x_m",
+          "obstacle_2_lateral_fraction",
+          "obstacle_2_size_x_m",
+          "obstacle_2_size_y_m",
+          "obstacle_2_height_m",
+          "obstacle_2_yaw_deg",
+          "box_goal_x_m",
+          "human_x_m",
+          "human_speed_mps",
+          "human_trigger_distance_m"
+        ],
+        "repeats": 0
+      },
+      "new_execution_costs": {
+        "observed_input_tokens": {
+          "observed": null,
+          "missing_attempts": 0
+        },
+        "observed_output_tokens": {
+          "observed": null,
+          "missing_attempts": 0
+        },
+        "robot_api_calls": {
+          "observed": null,
+          "missing_attempts": 0
+        },
+        "calls_missing_usage_observed": null,
+        "attempts_without_usage_audit": 0
+      },
+      "selection_costs": {
+        "input_tokens": {
+          "observed": null,
+          "missing_requests": 0
+        },
+        "output_tokens": {
+          "observed": null,
+          "missing_requests": 0
+        }
+      },
+      "selection_wall_s_observed": 0,
+      "selection_wall_missing_requests": 0,
+      "rollout_wall_s_observed": 0,
+      "rollout_wall_missing_attempts": 0,
+      "limits": [
+        "No external or cross-arm/seed history; controls bind settings only, never warm starts",
+        "Paired bootstrap scenes are separately executed and charged to both arms",
+        "All valid cold starts/repeats enter the fixed valid budget; exclusions consume attempts",
+        "Exclusions or ambiguous requests STOP; explicit acknowledgement is not a paid request retry",
+        "AFS search still uses ten-family feedback; common twelve-family scoring is NOT twelve-aware search",
+        "Original six-family metrics remain separate; unsupported rules and unclassified failures remain",
+        "Complete equal valid budgets are required for Gain; zero Random FDR yields no relative ratio",
+        "Connection smoke and mock results never establish performance superiority or benchmark milestones",
+        "No outcome-based early stop, seed selection, implicit simulation/token cap or standard/flex fallback",
+        "Two runs in the same scene are separate episodes, not deterministic physics/model repeats",
+        "Bounded development-derived subdomain, not the original full-domain benchmark",
+        "Subdomain results do not establish whole-project original-family coverage"
+      ],
+      "seed": 74001,
+      "external_history_in_evaluation": [],
+      "breadth_cold_start_accounting": "Uniform sampling; no AFS axis/group/form allocation",
+      "method": "random",
+      "selection_cost_scope": "AFS requests only; Random selection makes zero model calls"
+    }
+  ],
+  "metrics": {
+    "system_twelve": {
+      "schema_version": "failure-discovery-metrics-v1",
+      "targets": {
+        "fdr": 0.3,
+        "relative_gain": 0.2,
+        "families": 4,
+        "family_denominator": 12
+      },
+      "design": {
+        "domain_id": "7dd0305c16888741b8e498919f4760d35e00f93b0a2c35fc19a142e24c1a01c7",
+        "sampling_distribution": "uniform choice of 1/2 axes on alternating slots; uniform values outside common minimum-change gap; reset to shared fixed base every episode",
+        "condition_id": "809a89d2ff17fe5a4676f4a086607093c73e861505bf3b106bf1714a86409f87",
+        "valid_budget_per_seed": 5,
+        "seeds": [
+          74001
+        ]
+      },
+      "input_records": 0,
+      "unique_records": 0,
+      "duplicate_records": [],
+      "groups": [
+        {
+          "method": "afs",
+          "seed": 74001,
+          "valid_budget": 5,
+          "budget_status": "incomplete",
+          "attempts": 0,
+          "valid_rollouts": 0,
+          "failures": 0,
+          "successes": 0,
+          "excluded_rollouts": 0,
+          "exclusion_counts": {},
+          "condition_ids": [],
+          "policy_origins": [],
+          "conditions_compatible": true,
+          "failure_discovery_rate": null,
+          "fdr_target_observed": null,
+          "unique_scenes": 0,
+          "unique_failure_scenes": 0,
+          "repeated_scene_failures": 0,
+          "valid_stage_counts": {},
+          "discovered_families": [],
+          "discovered_family_count": null,
+          "failure_diversity_coverage": null,
+          "observed_family_coverage_lower_bound": null,
+          "diversity_target_observed": null,
+          "joint_fdr_diversity_target_observed": null,
+          "coverage_status": "not_measured",
+          "family_status": {
+            "collision": "NOT_DISCOVERED",
+            "unreachable": "UNSUPPORTED",
+            "obstacle_interference": "NOT_DISCOVERED",
+            "goal_occupied": "NOT_DISCOVERED",
+            "human_safety_risk": "NOT_DISCOVERED",
+            "perception_error": "UNSUPPORTED",
+            "fall": "NOT_DISCOVERED",
+            "locomotion_stall": "NOT_DISCOVERED",
+            "manipulation_failure": "NOT_DISCOVERED",
+            "goal_completion_failure": "NOT_DISCOVERED",
+            "goal_endpoint_rejection": "NOT_DISCOVERED",
+            "subgoal_completion_loop": "NOT_DISCOVERED"
+          },
+          "ambiguous_family_scenes": [],
+          "unverified_attributions": 0,
+          "unclassified_failures": 0,
+          "costs": {
+            "simulation_s": {
+              "observed_total": null,
+              "records_measured": 0,
+              "records_missing": 0
+            },
+            "robot_api_calls": {
+              "observed_total": null,
+              "records_measured": 0,
+              "records_missing": 0
+            },
+            "observed_input_tokens": {
+              "observed_total": null,
+              "records_measured": 0,
+              "records_missing": 0
+            },
+            "observed_output_tokens": {
+              "observed_total": null,
+              "records_measured": 0,
+              "records_missing": 0
+            },
+            "token_usage_coverage": {
+              "calls_with_usage": 0,
+              "calls_missing_usage_observed": null,
+              "records_without_usage_audit": 0,
+              "records_partial": 0
+            }
+          },
+          "curve_input_order": []
+        },
+        {
+          "method": "random",
+          "seed": 74001,
+          "valid_budget": 5,
+          "budget_status": "incomplete",
+          "attempts": 0,
+          "valid_rollouts": 0,
+          "failures": 0,
+          "successes": 0,
+          "excluded_rollouts": 0,
+          "exclusion_counts": {},
+          "condition_ids": [],
+          "policy_origins": [],
+          "conditions_compatible": true,
+          "failure_discovery_rate": null,
+          "fdr_target_observed": null,
+          "unique_scenes": 0,
+          "unique_failure_scenes": 0,
+          "repeated_scene_failures": 0,
+          "valid_stage_counts": {},
+          "discovered_families": [],
+          "discovered_family_count": null,
+          "failure_diversity_coverage": null,
+          "observed_family_coverage_lower_bound": null,
+          "diversity_target_observed": null,
+          "joint_fdr_diversity_target_observed": null,
+          "coverage_status": "not_measured",
+          "family_status": {
+            "collision": "NOT_DISCOVERED",
+            "unreachable": "UNSUPPORTED",
+            "obstacle_interference": "NOT_DISCOVERED",
+            "goal_occupied": "NOT_DISCOVERED",
+            "human_safety_risk": "NOT_DISCOVERED",
+            "perception_error": "UNSUPPORTED",
+            "fall": "NOT_DISCOVERED",
+            "locomotion_stall": "NOT_DISCOVERED",
+            "manipulation_failure": "NOT_DISCOVERED",
+            "goal_completion_failure": "NOT_DISCOVERED",
+            "goal_endpoint_rejection": "NOT_DISCOVERED",
+            "subgoal_completion_loop": "NOT_DISCOVERED"
+          },
+          "ambiguous_family_scenes": [],
+          "unverified_attributions": 0,
+          "unclassified_failures": 0,
+          "costs": {
+            "simulation_s": {
+              "observed_total": null,
+              "records_measured": 0,
+              "records_missing": 0
+            },
+            "robot_api_calls": {
+              "observed_total": null,
+              "records_measured": 0,
+              "records_missing": 0
+            },
+            "observed_input_tokens": {
+              "observed_total": null,
+              "records_measured": 0,
+              "records_missing": 0
+            },
+            "observed_output_tokens": {
+              "observed_total": null,
+              "records_measured": 0,
+              "records_missing": 0
+            },
+            "token_usage_coverage": {
+              "calls_with_usage": 0,
+              "calls_missing_usage_observed": null,
+              "records_without_usage_audit": 0,
+              "records_partial": 0
+            }
+          },
+          "curve_input_order": []
+        }
+      ],
+      "pooled_by_method": {
+        "afs": {
+          "attempts": 0,
+          "valid_rollouts": 0,
+          "failures": 0,
+          "successes": 0,
+          "excluded_rollouts": 0,
+          "exclusion_counts": {},
+          "condition_ids": [],
+          "policy_origins": [],
+          "conditions_compatible": true,
+          "failure_discovery_rate": null,
+          "fdr_target_observed": null,
+          "unique_scenes": 0,
+          "unique_failure_scenes": 0,
+          "repeated_scene_failures": 0,
+          "valid_stage_counts": {},
+          "discovered_families": [],
+          "discovered_family_count": null,
+          "failure_diversity_coverage": null,
+          "observed_family_coverage_lower_bound": null,
+          "diversity_target_observed": null,
+          "joint_fdr_diversity_target_observed": null,
+          "coverage_status": "not_measured",
+          "family_status": {
+            "collision": "NOT_DISCOVERED",
+            "unreachable": "UNSUPPORTED",
+            "obstacle_interference": "NOT_DISCOVERED",
+            "goal_occupied": "NOT_DISCOVERED",
+            "human_safety_risk": "NOT_DISCOVERED",
+            "perception_error": "UNSUPPORTED",
+            "fall": "NOT_DISCOVERED",
+            "locomotion_stall": "NOT_DISCOVERED",
+            "manipulation_failure": "NOT_DISCOVERED",
+            "goal_completion_failure": "NOT_DISCOVERED",
+            "goal_endpoint_rejection": "NOT_DISCOVERED",
+            "subgoal_completion_loop": "NOT_DISCOVERED"
+          },
+          "ambiguous_family_scenes": [],
+          "unverified_attributions": 0,
+          "unclassified_failures": 0,
+          "costs": {
+            "simulation_s": {
+              "observed_total": null,
+              "records_measured": 0,
+              "records_missing": 0
+            },
+            "robot_api_calls": {
+              "observed_total": null,
+              "records_measured": 0,
+              "records_missing": 0
+            },
+            "observed_input_tokens": {
+              "observed_total": null,
+              "records_measured": 0,
+              "records_missing": 0
+            },
+            "observed_output_tokens": {
+              "observed_total": null,
+              "records_measured": 0,
+              "records_missing": 0
+            },
+            "token_usage_coverage": {
+              "calls_with_usage": 0,
+              "calls_missing_usage_observed": null,
+              "records_without_usage_audit": 0,
+              "records_partial": 0
+            }
+          },
+          "curve_input_order": []
+        },
+        "random": {
+          "attempts": 0,
+          "valid_rollouts": 0,
+          "failures": 0,
+          "successes": 0,
+          "excluded_rollouts": 0,
+          "exclusion_counts": {},
+          "condition_ids": [],
+          "policy_origins": [],
+          "conditions_compatible": true,
+          "failure_discovery_rate": null,
+          "fdr_target_observed": null,
+          "unique_scenes": 0,
+          "unique_failure_scenes": 0,
+          "repeated_scene_failures": 0,
+          "valid_stage_counts": {},
+          "discovered_families": [],
+          "discovered_family_count": null,
+          "failure_diversity_coverage": null,
+          "observed_family_coverage_lower_bound": null,
+          "diversity_target_observed": null,
+          "joint_fdr_diversity_target_observed": null,
+          "coverage_status": "not_measured",
+          "family_status": {
+            "collision": "NOT_DISCOVERED",
+            "unreachable": "UNSUPPORTED",
+            "obstacle_interference": "NOT_DISCOVERED",
+            "goal_occupied": "NOT_DISCOVERED",
+            "human_safety_risk": "NOT_DISCOVERED",
+            "perception_error": "UNSUPPORTED",
+            "fall": "NOT_DISCOVERED",
+            "locomotion_stall": "NOT_DISCOVERED",
+            "manipulation_failure": "NOT_DISCOVERED",
+            "goal_completion_failure": "NOT_DISCOVERED",
+            "goal_endpoint_rejection": "NOT_DISCOVERED",
+            "subgoal_completion_loop": "NOT_DISCOVERED"
+          },
+          "ambiguous_family_scenes": [],
+          "unverified_attributions": 0,
+          "unclassified_failures": 0,
+          "costs": {
+            "simulation_s": {
+              "observed_total": null,
+              "records_measured": 0,
+              "records_missing": 0
+            },
+            "robot_api_calls": {
+              "observed_total": null,
+              "records_measured": 0,
+              "records_missing": 0
+            },
+            "observed_input_tokens": {
+              "observed_total": null,
+              "records_measured": 0,
+              "records_missing": 0
+            },
+            "observed_output_tokens": {
+              "observed_total": null,
+              "records_measured": 0,
+              "records_missing": 0
+            },
+            "token_usage_coverage": {
+              "calls_with_usage": 0,
+              "calls_missing_usage_observed": null,
+              "records_without_usage_audit": 0,
+              "records_partial": 0
+            }
+          },
+          "curve_input_order": []
+        }
+      },
+      "comparison": {
+        "status": "not_comparable",
+        "relative_gain": null,
+        "gain_target_observed": null,
+        "per_seed": [],
+        "issues": [
+          "unequal_or_incomplete_valid_budget"
+        ]
+      },
+      "supported_family_rules": {
+        "collision": "goal-behavior-v1/collision",
+        "obstacle_interference": "goal-behavior-v1/obstacle_interference",
+        "goal_occupied": "goal-behavior-v1/goal_occupied",
+        "human_safety_risk": "goal-behavior-v2/human_safety_risk",
+        "fall": "expanded-goal-behavior-v1/fall",
+        "locomotion_stall": "expanded-goal-behavior-v1/locomotion_stall",
+        "manipulation_failure": "expanded-goal-behavior-v1/manipulation_failure",
+        "goal_completion_failure": "expanded-goal-behavior-v1/goal_completion_failure",
+        "goal_endpoint_rejection": "system-twelve-v1/goal_endpoint_rejection",
+        "subgoal_completion_loop": "system-twelve-v1/subgoal_completion_loop"
+      },
+      "limitations": [
+        "Descriptive imported-data measurements, not an audited prospective benchmark",
+        "Method/seed/stage and domain/distribution are supplied labels, not inferred from logs",
+        "All valid cold starts, repeats and boundary probes consume the declared budget",
+        "Pooled family union uses all seeds; it is not coverage at a single seed's budget",
+        "Curve follows input order; chronology must be supplied by a campaign ledger",
+        "Point targets are not statistical superiority; no confidence interval computed",
+        "AFS API cost and full wall time unavailable; token costs may be partial",
+        "Mock results test wiring only; not real robot/model performance"
+      ]
+    },
+    "original_six": {
+      "schema_version": "failure-discovery-metrics-v1",
+      "targets": {
+        "fdr": 0.3,
+        "relative_gain": 0.2,
+        "families": 4,
+        "family_denominator": 6
+      },
+      "design": {
+        "domain_id": "7dd0305c16888741b8e498919f4760d35e00f93b0a2c35fc19a142e24c1a01c7",
+        "sampling_distribution": "uniform choice of 1/2 axes on alternating slots; uniform values outside common minimum-change gap; reset to shared fixed base every episode",
+        "condition_id": "809a89d2ff17fe5a4676f4a086607093c73e861505bf3b106bf1714a86409f87",
+        "valid_budget_per_seed": 5,
+        "seeds": [
+          74001
+        ]
+      },
+      "input_records": 0,
+      "unique_records": 0,
+      "duplicate_records": [],
+      "groups": [
+        {
+          "method": "afs",
+          "seed": 74001,
+          "valid_budget": 5,
+          "budget_status": "incomplete",
+          "attempts": 0,
+          "valid_rollouts": 0,
+          "failures": 0,
+          "successes": 0,
+          "excluded_rollouts": 0,
+          "exclusion_counts": {},
+          "condition_ids": [],
+          "policy_origins": [],
+          "conditions_compatible": true,
+          "failure_discovery_rate": null,
+          "fdr_target_observed": null,
+          "unique_scenes": 0,
+          "unique_failure_scenes": 0,
+          "repeated_scene_failures": 0,
+          "valid_stage_counts": {},
+          "discovered_families": [],
+          "discovered_family_count": null,
+          "failure_diversity_coverage": null,
+          "observed_family_coverage_lower_bound": null,
+          "diversity_target_observed": null,
+          "joint_fdr_diversity_target_observed": null,
+          "coverage_status": "not_measured",
+          "family_status": {
+            "collision": "NOT_DISCOVERED",
+            "unreachable": "UNSUPPORTED",
+            "obstacle_interference": "NOT_DISCOVERED",
+            "goal_occupied": "NOT_DISCOVERED",
+            "human_safety_risk": "UNSUPPORTED",
+            "perception_error": "UNSUPPORTED"
+          },
+          "ambiguous_family_scenes": [],
+          "unverified_attributions": 0,
+          "unclassified_failures": 0,
+          "costs": {
+            "simulation_s": {
+              "observed_total": null,
+              "records_measured": 0,
+              "records_missing": 0
+            },
+            "robot_api_calls": {
+              "observed_total": null,
+              "records_measured": 0,
+              "records_missing": 0
+            },
+            "observed_input_tokens": {
+              "observed_total": null,
+              "records_measured": 0,
+              "records_missing": 0
+            },
+            "observed_output_tokens": {
+              "observed_total": null,
+              "records_measured": 0,
+              "records_missing": 0
+            },
+            "token_usage_coverage": {
+              "calls_with_usage": 0,
+              "calls_missing_usage_observed": null,
+              "records_without_usage_audit": 0,
+              "records_partial": 0
+            }
+          },
+          "curve_input_order": []
+        },
+        {
+          "method": "random",
+          "seed": 74001,
+          "valid_budget": 5,
+          "budget_status": "incomplete",
+          "attempts": 0,
+          "valid_rollouts": 0,
+          "failures": 0,
+          "successes": 0,
+          "excluded_rollouts": 0,
+          "exclusion_counts": {},
+          "condition_ids": [],
+          "policy_origins": [],
+          "conditions_compatible": true,
+          "failure_discovery_rate": null,
+          "fdr_target_observed": null,
+          "unique_scenes": 0,
+          "unique_failure_scenes": 0,
+          "repeated_scene_failures": 0,
+          "valid_stage_counts": {},
+          "discovered_families": [],
+          "discovered_family_count": null,
+          "failure_diversity_coverage": null,
+          "observed_family_coverage_lower_bound": null,
+          "diversity_target_observed": null,
+          "joint_fdr_diversity_target_observed": null,
+          "coverage_status": "not_measured",
+          "family_status": {
+            "collision": "NOT_DISCOVERED",
+            "unreachable": "UNSUPPORTED",
+            "obstacle_interference": "NOT_DISCOVERED",
+            "goal_occupied": "NOT_DISCOVERED",
+            "human_safety_risk": "UNSUPPORTED",
+            "perception_error": "UNSUPPORTED"
+          },
+          "ambiguous_family_scenes": [],
+          "unverified_attributions": 0,
+          "unclassified_failures": 0,
+          "costs": {
+            "simulation_s": {
+              "observed_total": null,
+              "records_measured": 0,
+              "records_missing": 0
+            },
+            "robot_api_calls": {
+              "observed_total": null,
+              "records_measured": 0,
+              "records_missing": 0
+            },
+            "observed_input_tokens": {
+              "observed_total": null,
+              "records_measured": 0,
+              "records_missing": 0
+            },
+            "observed_output_tokens": {
+              "observed_total": null,
+              "records_measured": 0,
+              "records_missing": 0
+            },
+            "token_usage_coverage": {
+              "calls_with_usage": 0,
+              "calls_missing_usage_observed": null,
+              "records_without_usage_audit": 0,
+              "records_partial": 0
+            }
+          },
+          "curve_input_order": []
+        }
+      ],
+      "pooled_by_method": {
+        "afs": {
+          "attempts": 0,
+          "valid_rollouts": 0,
+          "failures": 0,
+          "successes": 0,
+          "excluded_rollouts": 0,
+          "exclusion_counts": {},
+          "condition_ids": [],
+          "policy_origins": [],
+          "conditions_compatible": true,
+          "failure_discovery_rate": null,
+          "fdr_target_observed": null,
+          "unique_scenes": 0,
+          "unique_failure_scenes": 0,
+          "repeated_scene_failures": 0,
+          "valid_stage_counts": {},
+          "discovered_families": [],
+          "discovered_family_count": null,
+          "failure_diversity_coverage": null,
+          "observed_family_coverage_lower_bound": null,
+          "diversity_target_observed": null,
+          "joint_fdr_diversity_target_observed": null,
+          "coverage_status": "not_measured",
+          "family_status": {
+            "collision": "NOT_DISCOVERED",
+            "unreachable": "UNSUPPORTED",
+            "obstacle_interference": "NOT_DISCOVERED",
+            "goal_occupied": "NOT_DISCOVERED",
+            "human_safety_risk": "UNSUPPORTED",
+            "perception_error": "UNSUPPORTED"
+          },
+          "ambiguous_family_scenes": [],
+          "unverified_attributions": 0,
+          "unclassified_failures": 0,
+          "costs": {
+            "simulation_s": {
+              "observed_total": null,
+              "records_measured": 0,
+              "records_missing": 0
+            },
+            "robot_api_calls": {
+              "observed_total": null,
+              "records_measured": 0,
+              "records_missing": 0
+            },
+            "observed_input_tokens": {
+              "observed_total": null,
+              "records_measured": 0,
+              "records_missing": 0
+            },
+            "observed_output_tokens": {
+              "observed_total": null,
+              "records_measured": 0,
+              "records_missing": 0
+            },
+            "token_usage_coverage": {
+              "calls_with_usage": 0,
+              "calls_missing_usage_observed": null,
+              "records_without_usage_audit": 0,
+              "records_partial": 0
+            }
+          },
+          "curve_input_order": []
+        },
+        "random": {
+          "attempts": 0,
+          "valid_rollouts": 0,
+          "failures": 0,
+          "successes": 0,
+          "excluded_rollouts": 0,
+          "exclusion_counts": {},
+          "condition_ids": [],
+          "policy_origins": [],
+          "conditions_compatible": true,
+          "failure_discovery_rate": null,
+          "fdr_target_observed": null,
+          "unique_scenes": 0,
+          "unique_failure_scenes": 0,
+          "repeated_scene_failures": 0,
+          "valid_stage_counts": {},
+          "discovered_families": [],
+          "discovered_family_count": null,
+          "failure_diversity_coverage": null,
+          "observed_family_coverage_lower_bound": null,
+          "diversity_target_observed": null,
+          "joint_fdr_diversity_target_observed": null,
+          "coverage_status": "not_measured",
+          "family_status": {
+            "collision": "NOT_DISCOVERED",
+            "unreachable": "UNSUPPORTED",
+            "obstacle_interference": "NOT_DISCOVERED",
+            "goal_occupied": "NOT_DISCOVERED",
+            "human_safety_risk": "UNSUPPORTED",
+            "perception_error": "UNSUPPORTED"
+          },
+          "ambiguous_family_scenes": [],
+          "unverified_attributions": 0,
+          "unclassified_failures": 0,
+          "costs": {
+            "simulation_s": {
+              "observed_total": null,
+              "records_measured": 0,
+              "records_missing": 0
+            },
+            "robot_api_calls": {
+              "observed_total": null,
+              "records_measured": 0,
+              "records_missing": 0
+            },
+            "observed_input_tokens": {
+              "observed_total": null,
+              "records_measured": 0,
+              "records_missing": 0
+            },
+            "observed_output_tokens": {
+              "observed_total": null,
+              "records_measured": 0,
+              "records_missing": 0
+            },
+            "token_usage_coverage": {
+              "calls_with_usage": 0,
+              "calls_missing_usage_observed": null,
+              "records_without_usage_audit": 0,
+              "records_partial": 0
+            }
+          },
+          "curve_input_order": []
+        }
+      },
+      "comparison": {
+        "status": "not_comparable",
+        "relative_gain": null,
+        "gain_target_observed": null,
+        "per_seed": [],
+        "issues": [
+          "unequal_or_incomplete_valid_budget"
+        ]
+      },
+      "supported_family_rules": {
+        "collision": "goal-behavior-v1/collision",
+        "obstacle_interference": "goal-behavior-v1/obstacle_interference",
+        "goal_occupied": "goal-behavior-v1/goal_occupied"
+      },
+      "limitations": [
+        "Descriptive imported-data measurements, not an audited prospective benchmark",
+        "Method/seed/stage and domain/distribution are supplied labels, not inferred from logs",
+        "All valid cold starts, repeats and boundary probes consume the declared budget",
+        "Pooled family union uses all seeds; it is not coverage at a single seed's budget",
+        "Curve follows input order; chronology must be supplied by a campaign ledger",
+        "Point targets are not statistical superiority; no confidence interval computed",
+        "AFS API cost and full wall time unavailable; token costs may be partial",
+        "Mock results test wiring only; not real robot/model performance"
+      ]
+    }
+  },
+  "classification_explanations": {
+    "system_twelve": {
+      "version": "classification-explanation-v1",
+      "labels": {
+        "primary_attributed": "주 실패 유형 있음",
+        "multiple_detected_no_primary": "복합 징후 — 주 유형 보류",
+        "no_supported_rule_detected": "지원 유형 미검출",
+        "measurement_unknown": "측정 정보 불충분",
+        "unverified_attribution": "유형 귀속 규칙 미검증",
+        "unassigned_other": "기타 주 유형 미지정"
+      },
+      "unit": "Deduplicated valid FAIL episodes, not distinct-scene diversity credit",
+      "groups": [],
+      "pooled_by_method": {},
+      "claim": "Display-only: original metrics, attribution priority and ambiguity unchanged; diagnostic detections do not add discovered families or establish causes. Repeated-scene metric qualification can differ from these per-episode counts."
+    },
+    "original_six": {
+      "version": "classification-explanation-v1",
+      "labels": {
+        "primary_attributed": "주 실패 유형 있음",
+        "multiple_detected_no_primary": "복합 징후 — 주 유형 보류",
+        "no_supported_rule_detected": "지원 유형 미검출",
+        "measurement_unknown": "측정 정보 불충분",
+        "unverified_attribution": "유형 귀속 규칙 미검증",
+        "unassigned_other": "기타 주 유형 미지정"
+      },
+      "unit": "Deduplicated valid FAIL episodes, not distinct-scene diversity credit",
+      "groups": [],
+      "pooled_by_method": {},
+      "claim": "Display-only: original metrics, attribution priority and ambiguity unchanged; diagnostic detections do not add discovered families or establish causes. Repeated-scene metric qualification can differ from these per-episode counts."
+    }
+  },
+  "comparison": {
+    "status": "not_comparable",
+    "relative_gain": null,
+    "gain_target_observed": null,
+    "per_seed": [],
+    "issues": [
+      "unequal_or_incomplete_valid_budget"
+    ]
+  },
+  "new_attempts": 0,
+  "afs_requests_attempted": 0,
+  "robot_api_call_upper_bound": 140,
+  "afs_request_upper_bound": 6,
+  "external_history_in_evaluation": [],
+  "environment_distribution": {
+    "planned_random_attempt_slots": 7,
+    "random_attempt_intents": 0,
+    "planned": {
+      "box_mass_kg": {
+        "allowed": [
+          0.2,
+          10.0
+        ],
+        "minimum": 2.0,
+        "maximum": 7.281849459528539,
+        "third_bin_counts": [
+          6,
+          0,
+          1
+        ]
+      },
+      "box_friction": {
+        "allowed": [
+          0.05,
+          1.5
+        ],
+        "minimum": 0.5,
+        "maximum": 0.9643312413096343,
+        "third_bin_counts": [
+          6,
+          1,
+          0
+        ]
+      },
+      "floor_friction": {
+        "allowed": [
+          0.05,
+          1.5
+        ],
+        "minimum": 0.8,
+        "maximum": 0.8,
+        "third_bin_counts": [
+          0,
+          7,
+          0
+        ]
+      },
+      "corridor_width_m": {
+        "allowed": [
+          1.6,
+          4.0
+        ],
+        "minimum": 3.6,
+        "maximum": 3.6,
+        "third_bin_counts": [
+          0,
+          0,
+          7
+        ]
+      },
+      "box_lateral_fraction": {
+        "allowed": [
+          -1.0,
+          1.0
+        ],
+        "minimum": 0.22748484011633163,
+        "maximum": 1.0,
+        "third_bin_counts": [
+          0,
+          1,
+          6
+        ]
+      },
+      "obstacle_1_x_m": {
+        "allowed": [
+          2.25,
+          2.75
+        ],
+        "minimum": 2.5,
+        "maximum": 2.680029522609014,
+        "third_bin_counts": [
+          0,
+          6,
+          1
+        ]
+      },
+      "obstacle_1_lateral_fraction": {
+        "allowed": [
+          -1.0,
+          1.0
+        ],
+        "minimum": 0.7,
+        "maximum": 0.7,
+        "third_bin_counts": [
+          0,
+          0,
+          7
+        ]
+      },
+      "obstacle_1_size_x_m": {
+        "allowed": [
+          0.2,
+          0.8
+        ],
+        "minimum": 0.2060134066510976,
+        "maximum": 0.5,
+        "third_bin_counts": [
+          1,
+          6,
+          0
+        ]
+      },
+      "obstacle_1_size_y_m": {
+        "allowed": [
+          0.2,
+          0.8
+        ],
+        "minimum": 0.5,
+        "maximum": 0.5,
+        "third_bin_counts": [
+          0,
+          7,
+          0
+        ]
+      },
+      "obstacle_1_height_m": {
+        "allowed": [
+          0.1,
+          1.2
+        ],
+        "minimum": 0.6,
+        "maximum": 0.6,
+        "third_bin_counts": [
+          0,
+          7,
+          0
+        ]
+      },
+      "obstacle_1_yaw_deg": {
+        "allowed": [
+          -90.0,
+          90.0
+        ],
+        "minimum": -44.99699258793994,
+        "maximum": 0.0,
+        "third_bin_counts": [
+          1,
+          6,
+          0
+        ]
+      },
+      "obstacle_2_x_m": {
+        "allowed": [
+          5.25,
+          5.75
+        ],
+        "minimum": 5.5,
+        "maximum": 5.734572455106716,
+        "third_bin_counts": [
+          0,
+          6,
+          1
+        ]
+      },
+      "obstacle_2_lateral_fraction": {
+        "allowed": [
+          -1.0,
+          1.0
+        ],
+        "minimum": -0.7,
+        "maximum": 0.5208606973823395,
+        "third_bin_counts": [
+          6,
+          0,
+          1
+        ]
+      },
+      "obstacle_2_size_x_m": {
+        "allowed": [
+          0.2,
+          0.8
+        ],
+        "minimum": 0.5,
+        "maximum": 0.5,
+        "third_bin_counts": [
+          0,
+          7,
+          0
+        ]
+      },
+      "obstacle_2_size_y_m": {
+        "allowed": [
+          0.2,
+          0.8
+        ],
+        "minimum": 0.5,
+        "maximum": 0.5,
+        "third_bin_counts": [
+          0,
+          7,
+          0
+        ]
+      },
+      "obstacle_2_height_m": {
+        "allowed": [
+          0.1,
+          1.2
+        ],
+        "minimum": 0.6,
+        "maximum": 0.6,
+        "third_bin_counts": [
+          0,
+          7,
+          0
+        ]
+      },
+      "obstacle_2_yaw_deg": {
+        "allowed": [
+          -90.0,
+          90.0
+        ],
+        "minimum": -53.511108220346564,
+        "maximum": 0.0,
+        "third_bin_counts": [
+          1,
+          6,
+          0
+        ]
+      },
+      "box_goal_x_m": {
+        "allowed": [
+          6.8,
+          7.5
+        ],
+        "minimum": 7.0,
+        "maximum": 7.0,
+        "third_bin_counts": [
+          7,
+          0,
+          0
+        ]
+      },
+      "human_x_m": {
+        "allowed": [
+          3.65,
+          4.35
+        ],
+        "minimum": 4.0,
+        "maximum": 4.0,
+        "third_bin_counts": [
+          0,
+          7,
+          0
+        ]
+      },
+      "human_speed_mps": {
+        "allowed": [
+          0.1,
+          1.5
+        ],
+        "minimum": 0.5,
+        "maximum": 0.5,
+        "third_bin_counts": [
+          7,
+          0,
+          0
+        ]
+      },
+      "human_trigger_distance_m": {
+        "allowed": [
+          0.5,
+          5.0
+        ],
+        "minimum": 2.0,
+        "maximum": 2.0,
+        "third_bin_counts": [
+          0,
+          7,
+          0
+        ]
+      }
+    },
+    "attempted": {
+      "box_mass_kg": {
+        "allowed": [
+          0.2,
+          10.0
+        ],
+        "minimum": null,
+        "maximum": null,
+        "third_bin_counts": [
+          0,
+          0,
+          0
+        ]
+      },
+      "box_friction": {
+        "allowed": [
+          0.05,
+          1.5
+        ],
+        "minimum": null,
+        "maximum": null,
+        "third_bin_counts": [
+          0,
+          0,
+          0
+        ]
+      },
+      "floor_friction": {
+        "allowed": [
+          0.05,
+          1.5
+        ],
+        "minimum": null,
+        "maximum": null,
+        "third_bin_counts": [
+          0,
+          0,
+          0
+        ]
+      },
+      "corridor_width_m": {
+        "allowed": [
+          1.6,
+          4.0
+        ],
+        "minimum": null,
+        "maximum": null,
+        "third_bin_counts": [
+          0,
+          0,
+          0
+        ]
+      },
+      "box_lateral_fraction": {
+        "allowed": [
+          -1.0,
+          1.0
+        ],
+        "minimum": null,
+        "maximum": null,
+        "third_bin_counts": [
+          0,
+          0,
+          0
+        ]
+      },
+      "obstacle_1_x_m": {
+        "allowed": [
+          2.25,
+          2.75
+        ],
+        "minimum": null,
+        "maximum": null,
+        "third_bin_counts": [
+          0,
+          0,
+          0
+        ]
+      },
+      "obstacle_1_lateral_fraction": {
+        "allowed": [
+          -1.0,
+          1.0
+        ],
+        "minimum": null,
+        "maximum": null,
+        "third_bin_counts": [
+          0,
+          0,
+          0
+        ]
+      },
+      "obstacle_1_size_x_m": {
+        "allowed": [
+          0.2,
+          0.8
+        ],
+        "minimum": null,
+        "maximum": null,
+        "third_bin_counts": [
+          0,
+          0,
+          0
+        ]
+      },
+      "obstacle_1_size_y_m": {
+        "allowed": [
+          0.2,
+          0.8
+        ],
+        "minimum": null,
+        "maximum": null,
+        "third_bin_counts": [
+          0,
+          0,
+          0
+        ]
+      },
+      "obstacle_1_height_m": {
+        "allowed": [
+          0.1,
+          1.2
+        ],
+        "minimum": null,
+        "maximum": null,
+        "third_bin_counts": [
+          0,
+          0,
+          0
+        ]
+      },
+      "obstacle_1_yaw_deg": {
+        "allowed": [
+          -90.0,
+          90.0
+        ],
+        "minimum": null,
+        "maximum": null,
+        "third_bin_counts": [
+          0,
+          0,
+          0
+        ]
+      },
+      "obstacle_2_x_m": {
+        "allowed": [
+          5.25,
+          5.75
+        ],
+        "minimum": null,
+        "maximum": null,
+        "third_bin_counts": [
+          0,
+          0,
+          0
+        ]
+      },
+      "obstacle_2_lateral_fraction": {
+        "allowed": [
+          -1.0,
+          1.0
+        ],
+        "minimum": null,
+        "maximum": null,
+        "third_bin_counts": [
+          0,
+          0,
+          0
+        ]
+      },
+      "obstacle_2_size_x_m": {
+        "allowed": [
+          0.2,
+          0.8
+        ],
+        "minimum": null,
+        "maximum": null,
+        "third_bin_counts": [
+          0,
+          0,
+          0
+        ]
+      },
+      "obstacle_2_size_y_m": {
+        "allowed": [
+          0.2,
+          0.8
+        ],
+        "minimum": null,
+        "maximum": null,
+        "third_bin_counts": [
+          0,
+          0,
+          0
+        ]
+      },
+      "obstacle_2_height_m": {
+        "allowed": [
+          0.1,
+          1.2
+        ],
+        "minimum": null,
+        "maximum": null,
+        "third_bin_counts": [
+          0,
+          0,
+          0
+        ]
+      },
+      "obstacle_2_yaw_deg": {
+        "allowed": [
+          -90.0,
+          90.0
+        ],
+        "minimum": null,
+        "maximum": null,
+        "third_bin_counts": [
+          0,
+          0,
+          0
+        ]
+      },
+      "box_goal_x_m": {
+        "allowed": [
+          6.8,
+          7.5
+        ],
+        "minimum": null,
+        "maximum": null,
+        "third_bin_counts": [
+          0,
+          0,
+          0
+        ]
+      },
+      "human_x_m": {
+        "allowed": [
+          3.65,
+          4.35
+        ],
+        "minimum": null,
+        "maximum": null,
+        "third_bin_counts": [
+          0,
+          0,
+          0
+        ]
+      },
+      "human_speed_mps": {
+        "allowed": [
+          0.1,
+          1.5
+        ],
+        "minimum": null,
+        "maximum": null,
+        "third_bin_counts": [
+          0,
+          0,
+          0
+        ]
+      },
+      "human_trigger_distance_m": {
+        "allowed": [
+          0.5,
+          5.0
+        ],
+        "minimum": null,
+        "maximum": null,
+        "third_bin_counts": [
+          0,
+          0,
+          0
+        ]
+      }
+    },
+    "limits": "Includes excluded intents; marginal parameter distribution is not joint scene coverage, physical difficulty, or failure-family coverage; local draws vary only scheduled axes from the fixed base"
+  },
+  "sampling_scope": "Shared fixed-base local 1/2-axis changes; not full-domain Random",
+  "baseline_check": {
+    "status": "awaiting",
+    "arms": []
+  },
+  "matched_change_counts": [
+    {
+      "method": "afs",
+      "seed": 74001,
+      "counts": {
+        "0": {
+          "attempted": 0,
+          "valid": 0,
+          "excluded": 0
+        },
+        "1": {
+          "attempted": 0,
+          "valid": 0,
+          "excluded": 0
+        },
+        "2": {
+          "attempted": 0,
+          "valid": 0,
+          "excluded": 0
+        }
+      }
+    },
+    {
+      "method": "random",
+      "seed": 74001,
+      "counts": {
+        "0": {
+          "attempted": 0,
+          "valid": 0,
+          "excluded": 0
+        },
+        "1": {
+          "attempted": 0,
+          "valid": 0,
+          "excluded": 0
+        },
+        "2": {
+          "attempted": 0,
+          "valid": 0,
+          "excluded": 0
+        }
+      }
+    }
+  ],
+  "limits": [
+    "No external or cross-arm/seed history; controls bind settings only, never warm starts",
+    "Paired bootstrap scenes are separately executed and charged to both arms",
+    "All valid cold starts/repeats enter the fixed valid budget; exclusions consume attempts",
+    "Exclusions or ambiguous requests STOP; explicit acknowledgement is not a paid request retry",
+    "AFS search still uses ten-family feedback; common twelve-family scoring is NOT twelve-aware search",
+    "Original six-family metrics remain separate; unsupported rules and unclassified failures remain",
+    "Complete equal valid budgets are required for Gain; zero Random FDR yields no relative ratio",
+    "Connection smoke and mock results never establish performance superiority or benchmark milestones",
+    "No outcome-based early stop, seed selection, implicit simulation/token cap or standard/flex fallback",
+    "Two runs in the same scene are separate episodes, not deterministic physics/model repeats",
+    "Bounded development-derived subdomain, not the original full-domain benchmark",
+    "Subdomain results do not establish whole-project original-family coverage"
+  ]
+}

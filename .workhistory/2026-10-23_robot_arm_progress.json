@@ -1,0 +1,11 @@
+{
+  "task": "Show current execution stages without changing frozen experiment sources",
+  "tool": "scene2test/tools/watch_robot_arm_search.py",
+  "design": "Standalone stdlib observer/wrapper; original search/placement/baseline code untouched",
+  "display": ["5-second heartbeat", "PASS/FAIL/excluded result counts", "seed/method/round", "bootstrap versus adaptive phase", "observed model loading shard count", "actual trace step count versus budget", "record age"],
+  "modes": ["watch-only attach; no process start/control", "once; readonly snapshot", "live wraps unchanged original runner and preserves streams/exit status"],
+  "guards": "No experiment writes, receipt collection, manifest rewrite, budget reset, API retry or request resend. Existing runner freeze/intent rules retained. Logs do not prove process liveness in observe-only mode.",
+  "tests": "9 CPU tests: readonly receipt, incremental partial trace, observed shards, API intent, exclusions, manual/partial JSON, stream+exit preservation with fake CPU processes, once never starts subprocess",
+  "new_api_robot_gpu_execution": false,
+  "sources_preserved": true
+}

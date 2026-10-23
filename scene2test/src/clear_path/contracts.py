@@ -74,6 +74,21 @@ class HumanFixture(GoalRegionFixture):
     human_lateral_fraction: float = Field(default=0.7, ge=-1.0, le=1.0)
 
 
+class CrossingHumanFixture(HumanFixture):
+    """Opt-in kinematic proxy crossing once from one corridor edge to the other."""
+
+    schema_version: Literal["clear-path-crossing-human-v6"] = "clear-path-crossing-human-v6"
+    human_lateral_fraction: float = Field(default=1.0, ge=-1.0, le=1.0)
+    human_speed_mps: float = Field(default=0.5, ge=0.1, le=1.5)
+    human_trigger_distance_m: float = Field(default=2.0, ge=0.5, le=5.0)
+
+    @model_validator(mode="after")
+    def edge_start(self):
+        if abs(self.human_lateral_fraction) != 1.0:
+            raise ValueError("crossing proxy must start at either corridor edge (-1 or +1)")
+        return self
+
+
 def parse_fixture(value=None):
     if value is None:
         return Fixture()
@@ -86,6 +101,7 @@ def parse_fixture(value=None):
         "clear-path-obstacles-v3": ObstacleFixture,
         "clear-path-goal-region-v4": GoalRegionFixture,
         "clear-path-human-v5": HumanFixture,
+        "clear-path-crossing-human-v6": CrossingHumanFixture,
     }.get(value.get("schema_version"), Fixture)
     return cls.model_validate(value)
 

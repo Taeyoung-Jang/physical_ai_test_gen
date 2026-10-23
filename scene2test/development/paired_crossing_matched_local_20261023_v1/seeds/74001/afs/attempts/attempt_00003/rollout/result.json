@@ -1,0 +1,44 @@
+{
+  "schema_version": "task-outcome-v1",
+  "evaluation_profile": "goal_outcome_v1",
+  "task_contract_sha256": "168f511a5be4e7a1d23e7db475a1907bffaa55f0a5ddcdd2ba9ca0a779e133e4",
+  "task_outcome": "PASS",
+  "goal_reached": true,
+  "termination": {
+    "actor": "goal_evaluator",
+    "reason": "GOAL_REACHED"
+  },
+  "execution_valid": true,
+  "valid_execution": true,
+  "success": true,
+  "robot_condition_sha256": "fd35aab4df4c6123a1cde724e292e576b90be8753babf06d90375be5a4b0fb13",
+  "scene_revision": "605d9f8b03d2b7b13ead7689ca5b09ecd1e6ae064a1ff5a122fbcd4edf0349a2",
+  "events_summary": {
+    "counts": {
+      "contact_start": 4948,
+      "contact_end": 4948
+    },
+    "peak_normal_force_n": 204.57888732135314,
+    "normal_impulse_ns": 124402.64549540404,
+    "scope": "robot/world contacts only; force peak per contact point; impulse summed"
+  },
+  "goal_progress": {
+    "distance_m": 0.11657389943717628,
+    "radius_m": 0.25,
+    "inside_goal_region": true,
+    "required_dwell_s": 1.0,
+    "current_dwell_s": 0.9999999999990905,
+    "remaining_dwell_s": 9.094947017729282e-13,
+    "goal_reached": true
+  },
+  "reason": "GOAL_REACHED",
+  "error_diagnostic": null,
+  "calls_attempted": 6,
+  "api_calls_attempted": 6,
+  "policy_origin": "openrouter_api",
+  "duration_s": 366.89499999973884,
+  "goal_distance_m": 0.11657389943717628,
+  "live_actions_accepted": 6,
+  "autonomous_task_success_validated": true,
+  "note": "Goal outcome under the recorded robot, task and budget; events are not task verdicts"
+}

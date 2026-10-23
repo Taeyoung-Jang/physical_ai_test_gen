@@ -349,7 +349,8 @@ class NavigationSession:
     scene edits, target substitutions or manipulation commands occur here.
     """
 
-    def __init__(self, observation, target, initial_plan):
+    def __init__(self, observation, target, initial_plan, *, dynamic_geometry=False):
+        self.dynamic_geometry = dynamic_geometry
         self.target = list(target)
         self.initial_status = initial_plan["status"]
         self.floor, self.rects = rectangles(observation)
@@ -404,6 +405,11 @@ class NavigationSession:
     def command(self, base, heading, time_s, refresh):
         if self.stop_reason:
             return None
+        if self.dynamic_geometry:
+            # Opt-in v6: do not follow a connector checked against an old human pose.
+            self.floor, self.rects = rectangles(refresh())
+            if self.follower is not None:
+                self.follower.floor, self.follower.rects = self.floor, self.rects
         if self.recovery is not None:
             observation = refresh()
             self.floor, self.rects = rectangles(observation)

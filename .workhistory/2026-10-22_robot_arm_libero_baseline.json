@@ -1,0 +1,36 @@
+{
+  "task": "Prepare separate public-policy robot-arm development baseline",
+  "robot": "LIBERO Panda",
+  "policy": "nvidia/GR00T-N1.7-LIBERO/libero_spatial",
+  "model_revision": "2ea293aa20ba7cf5bbf3ba17a5fbcb1a01cbfe21",
+  "task_name": "pick_up_the_black_bowl_from_table_center_and_place_it_on_the_plate",
+  "budget": {
+    "development_seeds": [
+      41001,
+      41002
+    ],
+    "episodes": 2,
+    "steps_per_episode": 300,
+    "action_chunk": 8,
+    "afs_requests": 0
+  },
+  "sampling": "Existing upstream seeded reset, not official fixed-init-state score reproduction",
+  "isolation": "New local .venv-arm references existing GR00T site-packages read-only; local LIBERO_CONFIG_PATH; no upstream source/policy edits",
+  "prepared_root": "scene2test/experiments/robot_arm_libero/baseline_v1",
+  "validation": {
+    "cpu_tests": "6 passed",
+    "ruff": "passed",
+    "actual_rollout": false,
+    "rollout_import": "PASS",
+    "mujoco_import": "PASS",
+    "task_registration": "PASS"
+  },
+  "scope": "Baseline setup only; explicit pose mutation and AFS/Random comparison adapter still required",
+  "execution": {
+    "public_model_download": true,
+    "paid_api": false,
+    "gpu_inference": false,
+    "robot_rollout": false,
+    "old_campaign_or_database_opened": false
+  }
+}

@@ -1,0 +1,205 @@
+[
+  {
+    "revision": 0,
+    "utc": "2026-10-23T08:31:54.570157+00:00",
+    "event": "created",
+    "detail": "{}",
+    "state_sha256": "ceb0d55d2ec98d6e526b5d4cd420e623b5533a0eb52750c68589b5e9dae193ef"
+  },
+  {
+    "revision": 1,
+    "utc": "2026-10-23T08:36:58.932392+00:00",
+    "event": "local_candidate_selected",
+    "detail": "{\"axis\": null}",
+    "state_sha256": "e99743af46901ba0a8e64a7b3ee4298533bb0a0d2d553d4b81055f9001a9cd46"
+  },
+  {
+    "revision": 2,
+    "utc": "2026-10-23T08:36:59.000218+00:00",
+    "event": "rollout_intent",
+    "detail": "{\"id\": \"attempt_00000\", \"axis\": null}",
+    "state_sha256": "581fbacfa9119a3c14fab5f54da7203d10aa1311933b3c462f18eaa6b1091118"
+  },
+  {
+    "revision": 3,
+    "utc": "2026-10-23T08:41:46.573469+00:00",
+    "event": "observed",
+    "detail": "{\"id\": \"attempt_00000\", \"status\": \"VALID\", \"outcome\": \"PASS\"}",
+    "state_sha256": "50ac73663276fa1c3262db40d03c54b050ef3cb1213c763418772044206a4050"
+  },
+  {
+    "revision": 4,
+    "utc": "2026-10-23T08:45:55.080352+00:00",
+    "event": "proposal_intent",
+    "detail": "{\"id\": \"proposal_00000\", \"context_sha256\": \"94f057f105869615c697a0062c3ebcab761ffb82acca5807161c426f49cec6cd\"}",
+    "state_sha256": "00c24251d977981b73fc5f618b9a5b06ad54475dad83964b93143521c9e241cc"
+  },
+  {
+    "revision": 5,
+    "utc": "2026-10-23T08:47:27.865852+00:00",
+    "event": "proposal_dispatch_finished",
+    "detail": "{\"id\": \"proposal_00000\"}",
+    "state_sha256": "353e3088a1614a115a7287993fad7bcbd6b8080b4bd7c9f5f3616a534cc8bf6d"
+  },
+  {
+    "revision": 6,
+    "utc": "2026-10-23T08:47:28.070744+00:00",
+    "event": "proposal_response_collected",
+    "detail": "{\"id\": \"proposal_00000\"}",
+    "state_sha256": "18eaaf963fbcaa8d3b13886eebbfff30e38b9b3040cb5da8ddd7c6a709090dab"
+  },
+  {
+    "revision": 7,
+    "utc": "2026-10-23T08:47:38.686024+00:00",
+    "event": "proposal_validated",
+    "detail": "{\"id\": \"proposal_00000\", \"axis\": \"box_lateral_fraction\", \"changed_axes\": [\"box_lateral_fraction\"]}",
+    "state_sha256": "597dc07781a9b41cd9ccd031fa885d95887dee948205ac7a42f38c333ba50b8e"
+  },
+  {
+    "revision": 8,
+    "utc": "2026-10-23T08:47:45.891188+00:00",
+    "event": "rollout_intent",
+    "detail": "{\"id\": \"attempt_00001\", \"axis\": \"box_lateral_fraction\", \"changed_axes\": [\"box_lateral_fraction\"]}",
+    "state_sha256": "a279776dfea03363a34e7996a05d9cd899234426e2d973331b4ed305649a2d87"
+  },
+  {
+    "revision": 9,
+    "utc": "2026-10-23T09:00:09.609894+00:00",
+    "event": "observed",
+    "detail": "{\"id\": \"attempt_00001\", \"status\": \"VALID\", \"outcome\": \"FAIL\"}",
+    "state_sha256": "78effd7f3ca1a91df06e626c98a749fc76d4ca9ca82652ddb8e08c1e96d5991d"
+  },
+  {
+    "revision": 10,
+    "utc": "2026-10-23T09:07:53.079450+00:00",
+    "event": "proposal_intent",
+    "detail": "{\"id\": \"proposal_00001\", \"context_sha256\": \"c76b91c4521e697363589b7cece5023e550d19ed790982e0ae57036f7dc9f40c\"}",
+    "state_sha256": "9b999835bc564d70ef7015a4bbc61d9bfe57ab42c41e2d8e677ff28182903e13"
+  },
+  {
+    "revision": 11,
+    "utc": "2026-10-23T09:09:20.916422+00:00",
+    "event": "proposal_dispatch_finished",
+    "detail": "{\"id\": \"proposal_00001\"}",
+    "state_sha256": "d95f5d90e0fd2e3600521ef7fee1dd939d6b5687de4d5841e84409a260a9da42"
+  },
+  {
+    "revision": 12,
+    "utc": "2026-10-23T09:09:21.323728+00:00",
+    "event": "proposal_response_collected",
+    "detail": "{\"id\": \"proposal_00001\"}",
+    "state_sha256": "10b61b00c13fedd9f27c36d7abc7b7e85403e75b7ebdde4aab30a126e65ea4a3"
+  },
+  {
+    "revision": 13,
+    "utc": "2026-10-23T09:09:56.430993+00:00",
+    "event": "proposal_validated",
+    "detail": "{\"id\": \"proposal_00001\", \"axis\": \"floor_friction\", \"changed_axes\": [\"floor_friction\", \"corridor_width_m\"]}",
+    "state_sha256": "2a691252a1874f894de8bb1981509356aeedb60ca71d0616c2ab808537150379"
+  },
+  {
+    "revision": 14,
+    "utc": "2026-10-23T09:10:23.835544+00:00",
+    "event": "rollout_intent",
+    "detail": "{\"id\": \"attempt_00002\", \"axis\": \"floor_friction\", \"changed_axes\": [\"floor_friction\", \"corridor_width_m\"]}",
+    "state_sha256": "e555d49bd8bda3c31142b0d1ad0d4c0ac0dc3e1cdd71186df3e079fea08f3b64"
+  },
+  {
+    "revision": 15,
+    "utc": "2026-10-23T09:18:34.838110+00:00",
+    "event": "observed",
+    "detail": "{\"id\": \"attempt_00002\", \"status\": \"VALID\", \"outcome\": \"PASS\"}",
+    "state_sha256": "b810c5b52348822cbe2b0eb9ad69a9486920ef62ea088ae13cb9302feccd6b7f"
+  },
+  {
+    "revision": 16,
+    "utc": "2026-10-23T09:28:12.228337+00:00",
+    "event": "proposal_intent",
+    "detail": "{\"id\": \"proposal_00002\", \"context_sha256\": \"1f36241f65935bb9a9c2486e13bc8b57ff3b968c23a01553675601447d92114c\"}",
+    "state_sha256": "aff28db007e7003e1f341a02ba35a0989e00a2f40219cbb8cacb2c7ce1186272"
+  },
+  {
+    "revision": 17,
+    "utc": "2026-10-23T09:29:38.942262+00:00",
+    "event": "proposal_dispatch_finished",
+    "detail": "{\"id\": \"proposal_00002\"}",
+    "state_sha256": "eeb35943770cc4b36cd85d987269b4e3d6810436d9f0a144bc03f1a5fab3ade0"
+  },
+  {
+    "revision": 18,
+    "utc": "2026-10-23T09:29:39.843940+00:00",
+    "event": "proposal_response_collected",
+    "detail": "{\"id\": \"proposal_00002\"}",
+    "state_sha256": "097baa4f1e8f4e4c5654244068b9e106ad58c1dc98a1c5a4d1005072f3911300"
+  },
+  {
+    "revision": 19,
+    "utc": "2026-10-23T09:30:38.295733+00:00",
+    "event": "proposal_validated",
+    "detail": "{\"id\": \"proposal_00002\", \"axis\": \"floor_friction\", \"changed_axes\": [\"floor_friction\"]}",
+    "state_sha256": "0e9ca20107b03dca9bdf2ad0c837caaa68d69fa9c6636b0c0be080fa31284f5d"
+  },
+  {
+    "revision": 20,
+    "utc": "2026-10-23T09:31:17.809648+00:00",
+    "event": "rollout_intent",
+    "detail": "{\"id\": \"attempt_00003\", \"axis\": \"floor_friction\", \"changed_axes\": [\"floor_friction\"]}",
+    "state_sha256": "e928ee13915cb6458f0418d0b5475e466c81426801845e81b110d9764f2a7ec8"
+  },
+  {
+    "revision": 21,
+    "utc": "2026-10-23T09:39:15.021715+00:00",
+    "event": "observed",
+    "detail": "{\"id\": \"attempt_00003\", \"status\": \"VALID\", \"outcome\": \"PASS\"}",
+    "state_sha256": "55ebd813c2f2903e961cc8a98a53188fb59a307ab41a26e8b5074f73bf89b441"
+  },
+  {
+    "revision": 22,
+    "utc": "2026-10-23T09:52:52.366295+00:00",
+    "event": "proposal_intent",
+    "detail": "{\"id\": \"proposal_00003\", \"context_sha256\": \"734f6a4e99a4c87640e0e460334cf888be703b79e16a061816db935795f7b88c\"}",
+    "state_sha256": "64271ca95ac07a384ad773db187be43fc66397881401de107583fb92cbb47800"
+  },
+  {
+    "revision": 23,
+    "utc": "2026-10-23T09:54:26.373922+00:00",
+    "event": "proposal_dispatch_finished",
+    "detail": "{\"id\": \"proposal_00003\"}",
+    "state_sha256": "098422f5ba5eddfd4214bc063c13164dde2694c50dab509e14dddd8d6fbcab6e"
+  },
+  {
+    "revision": 24,
+    "utc": "2026-10-23T09:54:26.916595+00:00",
+    "event": "proposal_response_collected",
+    "detail": "{\"id\": \"proposal_00003\"}",
+    "state_sha256": "ffdbfa55188d9348968a6f616ab2de6699a765da20b897b641ca895cbdee49d2"
+  },
+  {
+    "revision": 25,
+    "utc": "2026-10-23T09:55:34.043730+00:00",
+    "event": "proposal_validated",
+    "detail": "{\"id\": \"proposal_00003\", \"axis\": \"box_goal_x_m\", \"changed_axes\": [\"box_goal_x_m\", \"box_lateral_fraction\"]}",
+    "state_sha256": "a61ad1c55a6c70396969f9cb0baa8a13aad0bff6032681d2a9335e42bf0062f8"
+  },
+  {
+    "revision": 26,
+    "utc": "2026-10-23T09:56:23.488525+00:00",
+    "event": "rollout_intent",
+    "detail": "{\"id\": \"attempt_00004\", \"axis\": \"box_goal_x_m\", \"changed_axes\": [\"box_goal_x_m\", \"box_lateral_fraction\"]}",
+    "state_sha256": "5e43b29360a3158842b057a33ac224979d3f79c2f100c089acdf4b64a1ea7248"
+  },
+  {
+    "revision": 27,
+    "utc": "2026-10-23T10:08:42.588687+00:00",
+    "event": "observed",
+    "detail": "{\"id\": \"attempt_00004\", \"status\": \"VALID\", \"outcome\": \"FAIL\"}",
+    "state_sha256": "32d5facd3048803e4cb3b96eff226992ce034af8d92ffc7298b28be213395a90"
+  },
+  {
+    "revision": 28,
+    "utc": "2026-10-23T10:08:43.109352+00:00",
+    "event": "complete",
+    "detail": "{}",
+    "state_sha256": "a1c88a01ee8f5844d9a8f915efc97bb217332bfe307e75dd0cd94a4ce3a46571"
+  }
+]

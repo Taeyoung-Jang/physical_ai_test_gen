@@ -74,8 +74,10 @@ class GoalAction(Strict):
 
 
 class GoalPolicy(OpenAIPolicy):
-    def __init__(self, *, model=MODEL, transport=None, service_tier=None):
-        super().__init__(model=model, transport=transport, service_tier=service_tier)
+    def __init__(self, *, model=MODEL, transport=None, service_tier=None, api_provider="openai"):
+        super().__init__(
+            model=model, transport=transport, service_tier=service_tier, api_provider=api_provider
+        )
         self.memory = []
         from .task_outcome import task_contract
 
@@ -136,7 +138,12 @@ class GoalPolicy(OpenAIPolicy):
             command = GoalEnvelope.model_validate(value).command
             return GoalAction.model_validate(command.model_dump())
 
-        return call(self.body(observation, png), parse, transport=self.transport)
+        return call(
+            self.body(observation, png),
+            parse,
+            transport=self.transport,
+            api_provider=self.api_provider,
+        )
 
 
 class GoalMock(GoalPolicy):

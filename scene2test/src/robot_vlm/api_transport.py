@@ -2,6 +2,7 @@
 
 import hashlib
 import json
+import math
 import os
 import re
 import time
@@ -21,14 +22,27 @@ class DiagnosticError(PolicyError):
         self.diagnostic = {**diagnostic, "code": code}
 
 
-def call(body, parse, *, transport=None):
+def call(body, parse, *, transport=None, api_provider="openai"):
+    if api_provider not in {"openai", "openrouter"}:
+        raise ValueError("api_provider must be openai or openrouter")
+    endpoint, key_env, wire_body = "https://api.openai.com/v1/responses", "OPENAI_API_KEY", body
+    if api_provider == "openrouter":
+        from . import openrouter
+
+        endpoint, key_env, wire_body = (
+            openrouter.ENDPOINT,
+            openrouter.KEY_ENV,
+            openrouter.request_body(body),
+        )
     started = time.monotonic()
     journal = CURRENT.get()
     read_timeout = journal.read_timeout_s if journal else 30.0
     client_id = journal.client_request_id if journal else str(uuid4())
     max_retries = journal.connect_retries if journal else 0
-    key = os.getenv("OPENAI_API_KEY")
+    key = os.getenv(key_env)
     info = {
+        "api_provider": api_provider,
+        "endpoint": endpoint,
         "requested_service_tier": body.get("service_tier"),
         "stage": "credentials",
         "retry_attempted": False,
@@ -104,8 +118,8 @@ def call(body, parse, *, transport=None):
                 emit("connection_attempt_started", attempt=attempt + 1)
                 try:
                     response = client.post(
-                        "https://api.openai.com/v1/responses",
-                        json=body,
+                        endpoint,
+                        json=wire_body,
                         headers={
                             "Authorization": f"Bearer {key}",
                             "X-Client-Request-Id": client_id,
@@ -187,7 +201,26 @@ def call(body, parse, *, transport=None):
         fail("response_json_error")
     if not isinstance(value, dict):
         fail("response_shape_error")
-    info["response_id"] = identifier(value.get("id"), r"resp_[A-Za-z0-9_-]{1,200}")
+    if api_provider == "openrouter":
+        info["usage"] = openrouter.normalized_usage(value)
+        info["response_id"] = identifier(value.get("id"), r"[A-Za-z0-9_-]{1,200}")
+        info["returned_model"] = identifier(value.get("model"), r"[A-Za-z0-9_./:-]{1,200}")
+        info["routed_provider"] = identifier(value.get("provider"), r"[A-Za-z0-9_ .()/-]{1,100}")
+        info["routing"] = dict(openrouter.ROUTING)
+        cost = (
+            (value.get("usage") or {}).get("cost") if isinstance(value.get("usage"), dict) else None
+        )
+        info["provider_reported_cost"] = (
+            cost if type(cost) in (int, float) and math.isfinite(cost) and cost >= 0 else None
+        )
+        try:
+            value = openrouter.response_value(value)
+        except (KeyError, TypeError, ValueError):
+            fail("response_shape_error")
+    info["response_id"] = identifier(
+        value.get("id"),
+        r"[A-Za-z0-9_-]{1,200}" if api_provider == "openrouter" else r"resp_[A-Za-z0-9_-]{1,200}",
+    )
     usage = value.get("usage")
     info["usage"] = (
         {
@@ -282,11 +315,12 @@ def call(body, parse, *, transport=None):
     emit("api_completed", diagnostic=info)
     return action, {
         "response_id": info.get("response_id"),
-        "model": identifier(value.get("model"), r"[A-Za-z0-9_.:-]{1,100}"),
+        "model": identifier(value.get("model"), r"[A-Za-z0-9_./:-]{1,200}"),
         "requested_model": body["model"],
         "requested_service_tier": body.get("service_tier"),
         "returned_service_tier": info["returned_service_tier"],
         "usage": info["usage"],
-        "origin": "openai_api",
+        "origin": "openrouter_api" if api_provider == "openrouter" else "openai_api",
+        "api_provider": api_provider,
         "diagnostic": info,
     }

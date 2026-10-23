@@ -1,0 +1,17 @@
+{
+  "target_xy_m": [
+    7.0,
+    0.0
+  ],
+  "action_deadline_s": 29.409999999998472,
+  "events": [],
+  "summary": {
+    "version": "clearance-recovery-v3",
+    "recovery_count": 0,
+    "replan_count": 0,
+    "status": "blocked_endpoint",
+    "ended_at_simulation_s": 29.414999999998432,
+    "terminal_reason": null,
+    "events": []
+  }
+}

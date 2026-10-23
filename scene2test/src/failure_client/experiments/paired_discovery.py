@@ -80,11 +80,33 @@ class PairedDesign(StrictRecord):
     target_families_twelve: int = Field(default=4, ge=1, le=12)
     search: SearchBudget
     scene_domain: dict | None = None
+    secondary_measurement: Literal["dynamic-human-safety-v1"] | None = None
+    matched_local: dict | None = None
 
     @model_validator(mode="after")
     def coherent(self):
         if self.scene_domain is not None:
             checked_domain(self.scene_domain)
+        if self.matched_local is not None:
+            from failure_client.methods.matched_local import validate_design
+
+            if self.scene_domain is None or self.cold_start_per_arm != 1:
+                raise ValueError("matched local requires shared domain and one baseline per arm")
+            if self.methods != list(METHODS):
+                raise ValueError("matched local requires both arms")
+            validate_design(
+                self.matched_local, self.scene_domain, self.search.min_axis_change_fraction
+            )
+        dynamic = (
+            self.scene_domain is not None
+            and self.scene_domain["scene_schema"] == "clear-path-crossing-human-v6"
+        )
+        if dynamic != (self.secondary_measurement == "dynamic-human-safety-v1"):
+            raise ValueError(
+                "crossing domain requires explicit dynamic safety measurement and vice versa"
+            )
+        if dynamic and self.methods != list(METHODS):
+            raise ValueError("dynamic safety comparison requires both methods")
         random_only = self.purpose == "random-environment-sweep"
         if random_only:
             if (
@@ -148,6 +170,10 @@ def paired_plan(paths, design, *, fingerprint_fn=None):
     )
     original = locked["plan"]
     cfg = CampaignConfig.model_validate(original["target_config"])
+    if (cfg.scene_schema == "clear-path-crossing-human-v6") != (
+        design.secondary_measurement is not None
+    ):
+        raise ValueError("dynamic controls require explicit shared domain and safety measurement")
     n = len(design.seeds)
     arm_count = n * len(design.methods)
     random_only = design.methods == ["random"]
@@ -203,6 +229,17 @@ def paired_plan(paths, design, *, fingerprint_fn=None):
                 "Subdomain results do not establish whole-project original-family coverage",
             ],
         )
+    if design.secondary_measurement is not None:
+        from failure_client.evaluation.dynamic_human_safety import CONTRACT
+
+        manifest["secondary_measurement"] = dict(CONTRACT)
+    if design.matched_local is not None:
+        manifest.update(
+            matched_local=design.matched_local,
+            bootstrap="same fixed base, one separately paid execution per arm; both must PASS",
+            random_distribution="uniform choice of 1/2 axes on alternating slots; uniform values "
+            "outside common minimum-change gap; reset to shared fixed base every episode",
+        )
     return {"manifest": manifest, "sha256": digest(manifest)}
 
 
@@ -212,7 +249,23 @@ def checked_manifest(wrapped):
         raise ValueError("paired manifest digest or schema changed")
     design = PairedDesign.model_validate(manifest["design"])
     cfg = CampaignConfig.model_validate(manifest["robot_config"])
+    if (cfg.scene_schema == "clear-path-crossing-human-v6") != (
+        design.secondary_measurement is not None
+    ):
+        raise ValueError("dynamic controls require shared domain and safety measurement")
+    from failure_client.evaluation.dynamic_human_safety import CONTRACT
+
+    if manifest.get("secondary_measurement") != (
+        dict(CONTRACT) if design.secondary_measurement else None
+    ):
+        raise ValueError("dynamic safety measurement contract changed")
+    if manifest["execution_origin"] != "mock" and manifest["execution_origin"] != (
+        "openrouter_api" if cfg.robot.api_provider == "openrouter" else "openai_api"
+    ):
+        raise ValueError("robot API provider and execution origin mismatch")
     domain = design.scene_domain
+    if manifest.get("matched_local") != design.matched_local:
+        raise ValueError("frozen matched-local contract changed")
     axes = cfg.design()["axes"] if domain is None else checked_domain(domain, cfg.scene_schema)
     if (
         manifest.get("scene_domain") != domain
@@ -234,7 +287,7 @@ def checked_manifest(wrapped):
         design.methods
     ):
         raise ValueError("paired manifest history/method policy changed")
-    if manifest["execution_origin"] not in {"mock", "openai_api"}:
+    if manifest["execution_origin"] not in {"mock", "openai_api", "openrouter_api"}:
         raise ValueError("invalid execution origin")
     if digest(manifest["evaluators"]) != digest(
         {
@@ -274,6 +327,8 @@ class PairedArm(IndependentSeed):
         }
         if design.scene_domain is not None:
             plan["scene_domain"] = design.scene_domain
+        if design.matched_local is not None:
+            plan["matched_local"] = design.matched_local
         lock = {"plan": plan, "environment": manifest["environment"]}
         root = Path(root)
         root.mkdir(parents=True, exist_ok=False)
@@ -297,6 +352,61 @@ class PairedArm(IndependentSeed):
     def _selection(self):
         index = len(self.state["attempts"])
         cold = index < self.plan["cold_start_per_seed"]
+        if self.plan.get("matched_local") is not None:
+            from failure_client.methods.autonomous_feedback import selection
+            from failure_client.methods.matched_local import random_candidate
+
+            spec = self.plan["matched_local"]
+            if cold:
+                return {
+                    "stage": "cold_start",
+                    "strategy": "shared_fixed_baseline",
+                    "axis": None,
+                    "parameters": dict(spec["base_parameters"]),
+                    "evidence": {"source": "predeclared common base; not LLM selected"},
+                    "scheduler": {"seed": self.plan["seed"], "index": index},
+                }, None
+            if self.plan["method"] == "random":
+                return random_candidate(
+                    spec,
+                    self.plan["scene_domain"],
+                    self.budget.min_axis_change_fraction,
+                    self.plan["seed"],
+                    index - 1,
+                ), None
+            memory = self._memory()
+            if not memory["cases"]:
+                return None, None
+            candidate, ctx = selection(
+                memory,
+                self.state["attempts"],
+                self.budget,
+                self.cfg.scene_schema,
+                scene_domain=self.plan["scene_domain"],
+                matched_local=spec,
+            )
+            if ctx is not None:
+                ctx["development_search"].update(mode=self.mode, external_history=False)
+                ctx["failure_objective"]["scope"] = "Only own arm/seed; fixed shared base"
+                # Match the durable host's response reconstruction contract.
+                ctx["proposal_feedback"] = {
+                    "policy": self.budget.reproposal_policy,
+                    "remaining_requests": self.budget.max_afs_requests
+                    - sum(
+                        "rejection" in p
+                        or any(
+                            a["candidate"].get("proposal_id") == p["id"]
+                            for a in self.state["attempts"]
+                        )
+                        for p in self.state["proposals"]
+                    ),
+                    "rejected_proposals": [
+                        {"proposal_id": p["id"], **p["rejection"]}
+                        for p in self.state["proposals"]
+                        if "rejection" in p
+                    ][-4:],
+                }
+            return candidate, ctx
         if cold or self.plan["method"] == "random":
             return {
                 "stage": "cold_start" if cold else "discovery",
@@ -415,6 +525,7 @@ class PairedDiscovery:
             or p["execution_origin"] != expected["execution_origin"]
             or arm.state["lock"]["environment"] != expected["environment"]
             or p.get("scene_domain") != self.design.scene_domain
+            or p.get("matched_local") != self.design.matched_local
         ):
             raise ValueError("paired arm configuration binding changed")
         if method == "random" and arm.state["proposals"]:
@@ -453,6 +564,8 @@ class PairedDiscovery:
                 arm._fresh()  # validate EVERY arm before the first paid dispatch
             while launched < max_new_attempts:
                 arms = self.arms()
+                if self.baseline_check(arms)["status"] == "not_confirmed":
+                    break
                 blocked = next((a for a in arms if a.state["status"] == "NEEDS_ATTENTION"), None)
                 stopped = next(
                     (
@@ -575,9 +688,16 @@ class PairedDiscovery:
                 "READY",
             )
         )
-        real = self.manifest["execution_origin"] == "openai_api"
+        real = self.manifest["execution_origin"] in {"openai_api", "openrouter_api"}
+        if self.baseline_check(arms)["status"] == "not_confirmed":
+            status = "BASELINE_NOT_CONFIRMED"
         return {
             "campaign": str(self.root),
+            **(
+                {"dynamic_human_safety": self.safety_summary(raw)}
+                if self.design.secondary_measurement
+                else {}
+            ),
             "mode": MODE,
             "purpose": self.design.purpose,
             "status": status,
@@ -609,14 +729,88 @@ class PairedDiscovery:
             "afs_request_upper_bound": self.manifest["afs_request_upper_bound"],
             "external_history_in_evaluation": [],
             "environment_distribution": self.environment_distribution(arms),
-            "sampling_scope": "Same scene topology/object counts and declared parameter bounds; "
+            "sampling_scope": "Shared fixed-base local 1/2-axis changes; not full-domain Random"
+            if self.design.matched_local
+            else "Same scene topology/object counts and declared parameter bounds; "
             "uniform parameter sampling, not new venue generation or matched-change Random",
+            "baseline_check": self.baseline_check(arms),
+            "matched_change_counts": self.matched_change_counts(arms),
             "limits": self.manifest["limits"],
         }
+
+    def baseline_check(self, arms):
+        if self.design.matched_local is None:
+            return {"status": "not_required"}
+        rows = [
+            {
+                "seed": a.plan["seed"],
+                "method": a.plan["method"],
+                "status": a.state["attempts"][0].get("episode", {}).get("status"),
+                "outcome": a.state["attempts"][0].get("episode", {}).get("task_outcome"),
+            }
+            for a in arms
+            if a.state["attempts"]
+        ]
+        return {
+            "status": "not_confirmed"
+            if any(
+                r["status"] is not None and (r["status"] != "VALID" or r["outcome"] != "PASS")
+                for r in rows
+            )
+            else "pass"
+            if len(rows) == len(arms)
+            and all(r["status"] == "VALID" and r["outcome"] == "PASS" for r in rows)
+            else "awaiting",
+            "arms": rows,
+        }
+
+    def matched_change_counts(self, arms):
+        if self.design.matched_local is None:
+            return []
+        base = self.design.matched_local["base_parameters"]
+        result = []
+        for arm in arms:
+            bins = {str(n): {"attempted": 0, "valid": 0, "excluded": 0} for n in (0, 1, 2)}
+            for a in arm.state["attempts"]:
+                count = sum(a["candidate"]["parameters"][k] != v for k, v in base.items())
+                bucket = bins[str(count)]
+                bucket["attempted"] += 1
+                status = a.get("episode", {}).get("status")
+                bucket["valid"] += status == "VALID"
+                bucket["excluded"] += status == "INCONCLUSIVE"
+            result.append({"method": arm.plan["method"], "seed": arm.plan["seed"], "counts": bins})
+        return result
+
+    def safety_summary(self, records):
+        from failure_client.evaluation.dynamic_human_safety import safety_metrics
+
+        return safety_metrics(
+            records, seeds=self.design.seeds, valid_per_arm=self.design.valid_per_arm
+        )
 
     def random_schedule(self):
         """All scheduled draws, including attempt slots that may remain unused. No calls."""
         cfg = CampaignConfig.model_validate(self.manifest["robot_config"])
+        if self.design.matched_local is not None:
+            from failure_client.methods.matched_local import random_candidate
+
+            return [
+                {
+                    "seed": seed,
+                    "index": index,
+                    "parameters": dict(self.design.matched_local["base_parameters"])
+                    if index == 0
+                    else random_candidate(
+                        self.design.matched_local,
+                        self.design.scene_domain,
+                        self.design.search.min_axis_change_fraction,
+                        seed,
+                        index - 1,
+                    )["parameters"],
+                }
+                for seed in self.design.seeds
+                for index in range(self.design.attempts_per_arm)
+            ]
         return [
             {
                 "seed": seed,
@@ -686,7 +880,12 @@ class PairedDiscovery:
             "attempted": describe(attempted),
             "limits": "Includes excluded intents; marginal parameter distribution is not "
             "joint scene coverage, physical difficulty, or failure-family coverage; "
-            "independent uniform draws do not guarantee balanced bins",
+            "local draws vary only scheduled axes from the fixed base"
+            if self.design.matched_local
+            else (
+                "Includes excluded intents; independent uniform draws do not guarantee "
+                "balanced bins"
+            ),
         }
 
     def report(self):
@@ -774,6 +973,39 @@ class PairedDiscovery:
                     else "고정 예산 AFS/Random 비교"
                 )
             )
+            if "dynamic_human_safety" in result:
+                safe = result["dynamic_human_safety"]
+                display += (
+                    "<h2>Dynamic human safety events — separate from goal FDR</h2>"
+                    "<p>Contact or sustained protection-zone exposure. Goal PASS/FAIL unchanged; "
+                    "unknowns are not safe and do not receive replacement episodes.</p><pre>"
+                    + escape(
+                        json.dumps(
+                            {k: v for k, v in safe.items() if k != "arms"},
+                            ensure_ascii=False,
+                            indent=2,
+                        )
+                    )
+                    + "</pre><table border='1'><tr><th>Method</th><th>Seed</th><th>Measured</th>"
+                    "<th>Unknown</th><th>Events</th><th>Goal PASS with event</th></tr>"
+                    + "".join(
+                        "<tr>"
+                        + "".join(
+                            f"<td>{escape(str(a[k]))}</td>"
+                            for k in (
+                                "method",
+                                "seed",
+                                "measured",
+                                "unknown",
+                                "events",
+                                "goal_pass_with_event",
+                            )
+                        )
+                        + "</tr>"
+                        for a in safe["arms"]
+                    )
+                    + "</table>"
+                )
             (output / "report.html").write_text(
                 '<!doctype html><meta charset="utf-8"><h1>'
                 + title

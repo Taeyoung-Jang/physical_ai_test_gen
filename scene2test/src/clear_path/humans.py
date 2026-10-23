@@ -1,6 +1,6 @@
 """Declared static human proxy geometry and fixed research measurement contract."""
 
-from .contracts import HumanFixture
+from .contracts import CrossingHumanFixture, HumanFixture
 
 SCHEMA = "clear-path-human-v5"
 PROXY_ID = "human_proxy_1"
@@ -30,7 +30,7 @@ def human_geometry(config):
 
 def human_scene(config):
     """Position is scene-owned; proxy size and research thresholds are fixed."""
-    return {
+    result = {
         "schema_version": "human-proxy-scene-v1",
         "frame": "world_m",
         "motion_model": "static_proxies_piecewise_linear_base",
@@ -50,3 +50,21 @@ def human_scene(config):
             for row in human_geometry(config)
         ],
     }
+    if isinstance(config, CrossingHumanFixture):
+        y = human_geometry(config)[0]["center_m"][1]
+        result.update(
+            schema_version="crossing-human-scene-v1",
+            motion_model="distance_triggered_single_kinematic_crossing_v1",
+            motion={
+                "start_xy_m": [config.human_x_m, y],
+                "end_xy_m": [config.human_x_m, -y],
+                "speed_mps": config.human_speed_mps,
+                "trigger_distance_m": config.human_trigger_distance_m,
+                "trigger_metric": "planar robot-base to current proxy center distance <= threshold",
+                "armed_after_settle": True,
+                "clock": "simulation time, including inference waits",
+                "stop_at_end": True,
+                "physical_model": "prescribed mocap body; no gait or reaction to contact",
+            },
+        )
+    return result

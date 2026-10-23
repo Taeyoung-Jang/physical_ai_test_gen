@@ -1,0 +1,17 @@
+{
+  "task": "Switch robot-arm AFS only to user-selected OpenRouter openai/gpt-6-luna-pro",
+  "source": "scene2test/experiments/robot_arm_libero/placement_wide_v1",
+  "destination": "scene2test/experiments/robot_arm_libero/placement_wide_openrouter_v1",
+  "pre_edit_source_audit": "All old frozen source hashes matched before edits; captured and embedded in destination transition.json",
+  "preserved_original": "12 bootstrap outcomes and original untransmitted request remain at source; no old manifest/intent/result modification",
+  "transmission_basis": "User-supplied ValueError missing OPENAI_API_KEY traceback plus provider's pre-client key check, not mere missing response",
+  "transfer": "Candidate/seed/robot intent/VALID receipt=result/initial requested pose/trace count+success checked; 120 copied artifacts source/copy hash matched; local model hashes equal source manifest",
+  "inherited_totals": {"robot_attempts": 12, "afs_pass": 1, "afs_fail": 5, "random_pass": 1, "random_fail": 5},
+  "remaining_caps": {"robot_attempts": 12, "new_openrouter_requests": 6, "historical_unsent_intents_preserved_separately": 1},
+  "provider": {"endpoint": "https://openrouter.ai/api/v1/chat/completions", "model": "openai/gpt-6-luna-pro", "key_env": "OPENROUTER_API_KEY", "service_tier": "omitted", "allow_fallbacks": false, "require_parameters": true, "read_timeout_s": 300, "automatic_retries": 0},
+  "behavior": "API-key preflight before new intents; raw response/model/provider/id/usage/cost saved before validation; wrong model/refusal/length/tool/error rejected; unknown usage not zero; same bounds/robot/background/seeds/Random/budget/goal",
+  "tests": "47 related CPU tests passed in 3.23s, with fake keys and mock HTTP/processes; Ruff/diff clean",
+  "new_paid_api_gpu_robot_execution": false,
+  "claim": "Versioned provider/model development transition, not independent replication or same direct-OpenAI condition. No new AFS response or superiority result. Do not double-count inherited episodes across roots.",
+  "sources": ["https://openrouter.ai/openai/gpt-6-luna-pro", "https://openrouter.ai/docs/guides/features/structured-outputs"]
+}

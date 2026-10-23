@@ -58,6 +58,8 @@ def command(config, scene, run_dir):
     ]
     if robot.enable_push:
         args.append("--enable-push")
+    if robot.api_provider != "openai":
+        args.extend(["--api-provider", robot.api_provider])
     if robot.service_tier is not None:
         args.extend(["--service-tier", robot.service_tier])
     if robot.max_seconds is not None:

@@ -14,9 +14,10 @@ CURRENT = contextvars.ContextVar("robot_debug", default=None)
 
 def clean(value):
     value = str(value)
-    key = os.getenv("OPENAI_API_KEY")
-    if key:
-        value = value.replace(key, "[REDACTED]")
+    for name in ("OPENAI_API_KEY", "OPENROUTER_API_KEY"):
+        key = os.getenv(name)
+        if key:
+            value = value.replace(key, "[REDACTED]")
     value = re.sub(r"(?i)Bearer\s+\S+|sk-[\w-]+", "[REDACTED]", value)
     return value[:2000]
 

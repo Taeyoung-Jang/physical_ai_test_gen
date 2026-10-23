@@ -106,7 +106,7 @@ class EpisodeRecord(StrictRecord):
     task_outcome: Literal["PASS", "FAIL", "INCONCLUSIVE"] = "INCONCLUSIVE"
     condition_id: str | None = None
     scene_id: str | None = None
-    policy_origin: Literal["openai_api", "mock"] | None = None
+    policy_origin: Literal["openai_api", "openrouter_api", "mock"] | None = None
     returned_models: list[str] = Field(default_factory=list)
     termination_reason: str | None = None
     measures: TraceMeasures | None = None

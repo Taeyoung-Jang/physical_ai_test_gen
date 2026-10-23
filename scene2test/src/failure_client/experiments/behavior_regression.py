@@ -50,6 +50,7 @@ def replay_plan(
         protocol = protocols[0]
         robot = RobotSettings(
             model=model or protocol["model"],
+            api_provider=protocol.get("api_provider", "openai"),
             service_tier=service_tier if service_tier is not None else protocol.get("service_tier"),
             max_calls=protocol["max_calls"],
             max_seconds=protocol["max_simulation_s"],

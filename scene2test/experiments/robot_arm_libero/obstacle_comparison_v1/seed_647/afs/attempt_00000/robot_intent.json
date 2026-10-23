@@ -1,0 +1,30 @@
+{
+  "positions": {
+    "bowl_x": -0.075,
+    "bowl_y": 0.0,
+    "plate_x": 0.06,
+    "plate_y": 0.2
+  },
+  "parameters": {
+    "obstacle_x": -0.026486017642990477,
+    "obstacle_y": 0.09466847940386115,
+    "obstacle_height": 0.09458513119880818
+  },
+  "obstacles": [
+    {
+      "id": "blocker",
+      "shape": "box",
+      "xy_m": [
+        -0.026486017642990477,
+        0.09466847940386115
+      ],
+      "size_m": [
+        0.05,
+        0.06,
+        0.09458513119880818
+      ]
+    }
+  ],
+  "scene_seed": 64700,
+  "hypothesis": "uniform bootstrap"
+}

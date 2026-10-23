@@ -1,0 +1,13 @@
+{
+  "prepared": "scene2test/experiments/robot_arm_libero/environment_comparison_v2",
+  "axes": 10,
+  "robot_episode_cap": 24,
+  "afs_request_cap": 6,
+  "new_robot_runs": 0,
+  "new_api_calls": 0,
+  "final_cpu_geometry_valid": 12,
+  "full_robotarm_tests_passed_before_final_extra_test": 117,
+  "final_expanded_tests_passed": 26,
+  "old_frozen_source_changes": [],
+  "claim": "Expanded environment generation only; repeated settings remain legal; no performance claim"
+}

@@ -36,16 +36,26 @@ HUMAN_AXES = {
     "human_x_m": (3.65, 4.35),
     "human_lateral_fraction": (-1.0, 1.0),
 }
+CROSSING_SCHEMA = "clear-path-crossing-human-v6"
+CROSSING_AXES = {
+    **GOAL_REGION_AXES,
+    "human_x_m": (3.65, 4.35),
+    "human_speed_mps": (0.1, 1.5),
+    "human_trigger_distance_m": (0.5, 5.0),
+}
 SCHEMAS = (
     "clear-path-fixture-v1",
     "clear-path-corridor-v2",
     "clear-path-obstacles-v3",
     "clear-path-goal-region-v4",
     "clear-path-human-v5",
+    CROSSING_SCHEMA,
 )
 
 
 def axes_for_schema(schema="clear-path-fixture-v1"):
+    if schema == CROSSING_SCHEMA:
+        return dict(CROSSING_AXES)
     if schema == "clear-path-human-v5":
         return dict(HUMAN_AXES)
     if schema == "clear-path-goal-region-v4":

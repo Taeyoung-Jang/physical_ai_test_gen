@@ -1,0 +1,30 @@
+{
+  "positions": {
+    "bowl_x": -0.075,
+    "bowl_y": 0.0,
+    "plate_x": 0.06,
+    "plate_y": 0.2
+  },
+  "parameters": {
+    "obstacle_x": -0.0264,
+    "obstacle_y": 0.0951,
+    "obstacle_height": 0.17
+  },
+  "obstacles": [
+    {
+      "id": "blocker",
+      "shape": "box",
+      "xy_m": [
+        -0.0264,
+        0.0951
+      ],
+      "size_m": [
+        0.05,
+        0.06,
+        0.17
+      ]
+    }
+  ],
+  "scene_seed": 64102,
+  "hypothesis": "Prior valid attempts at this corridor location failed with the bowl unmoved and recorded robot-obstacle contact; the higher-contact attempt used a 0.1511 m box."
+}

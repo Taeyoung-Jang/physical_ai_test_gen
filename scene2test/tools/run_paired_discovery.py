@@ -35,6 +35,37 @@ def compact(value):
             else {}
         )
         | {
+            "baseline_check": value.get("baseline_check", {"status": "not_required"}),
+            "matched_change_counts": value.get("matched_change_counts", []),
+            **(
+                {
+                    "dynamic_human_safety": {
+                        "comparison_status": value["dynamic_human_safety"]["comparison_status"],
+                        "relative_event_rate_gain": value["dynamic_human_safety"][
+                            "relative_event_rate_gain"
+                        ],
+                        "arms": [
+                            {
+                                k: a[k]
+                                for k in (
+                                    "method",
+                                    "seed",
+                                    "valid",
+                                    "measured",
+                                    "unknown",
+                                    "events",
+                                    "event_rate",
+                                    "goal_pass_with_event",
+                                    "triggered_episodes",
+                                )
+                            }
+                            for a in value["dynamic_human_safety"]["arms"]
+                        ],
+                    }
+                }
+                if "dynamic_human_safety" in value
+                else {}
+            ),
             "arms": [
                 {
                     k: r[k]

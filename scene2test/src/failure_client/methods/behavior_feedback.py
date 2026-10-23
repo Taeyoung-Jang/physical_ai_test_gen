@@ -72,6 +72,7 @@ def feedback_context(
     scene_schema="clear-path-fixture-v1",
     selection_policy="hypothesis-v2",
     scene_domain=None,
+    required_evidence_ids=(),
 ):
     if selection_policy not in ("novelty-v1", "hypothesis-v2"):
         raise ValueError("unknown campaign selection policy")
@@ -91,6 +92,12 @@ def feedback_context(
     latest = episodes[-1]
     # Keep latest, a PASS, a FAIL, then recent observations; disclose every omission.
     selected = [latest]
+    for ref in required_evidence_ids:
+        row = next((e for e in episodes if e["record"]["evidence_id"] == ref), None)
+        if row is None:
+            raise ValueError("required baseline evidence is missing")
+        if row not in selected:
+            selected.append(row)
     for outcome in ("PASS", "FAIL"):
         row = next((e for e in reversed(episodes) if e["record"]["task_outcome"] == outcome), None)
         if row is not None and row not in selected:
@@ -101,8 +108,22 @@ def feedback_context(
         if row not in selected:
             selected.append(row)
     evidence = []
+    secondary = {}
+    if scene_schema == "clear-path-crossing-human-v6":
+        from failure_client.evaluation.dynamic_human_safety import CONTRACT
+
+        secondary["secondary_measurement_contract"] = dict(CONTRACT)
     for entry in selected[:history_limit]:
         record, behavior = entry["record"], entry["behavior"]
+        dynamic = {}
+        if scene_schema == "clear-path-crossing-human-v6":
+            from failure_client.evaluation.dynamic_human_safety import measure_dynamic_humans
+            from failure_client.evaluation.research_records import EpisodeRecord
+
+            measurement = measure_dynamic_humans(EpisodeRecord.model_validate(record))
+            dynamic["dynamic_human_safety"] = {
+                k: v for k, v in measurement.items() if k != "exposure_intervals_s"
+            }
         evidence.append(
             {
                 "id": record["evidence_id"],
@@ -114,6 +135,7 @@ def feedback_context(
                 **compact_evidence(entry),
                 "behavior_pattern": behavior_signature(entry),
                 "warnings": behavior["warnings"],
+                **dynamic,
             }
         )
     compact_cases = [
@@ -150,6 +172,7 @@ def feedback_context(
         modes = ["cross_mechanism", "success_probe", "boundary_probe"]
     return {
         "schema_version": "behavior-campaign-feedback-v1",
+        **secondary,
         **({"scene_domain": scene_domain} if scene_domain is not None else {}),
         "latest": {"parameters": parameters(latest_case), "evidence": evidence},
         "scene_graph": graph(parse_fixture(latest_case["parameters"])),
