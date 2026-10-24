@@ -1,9 +1,0 @@
-{
-  "status": "INCONCLUSIVE",
-  "task_outcome": null,
-  "reason": "preserved_pre_worker_source_drift",
-  "administrative_record": true,
-  "robot_executed": false,
-  "original_directory": "/workspace/g1_failure/src/physical_ai_test_gen/scene2test/experiments/robot_arm_libero/obstacle_comparison_v1/seed_647/random/attempt_00001",
-  "claim": "Original intent consumes its slot. No retry or replacement."
-}

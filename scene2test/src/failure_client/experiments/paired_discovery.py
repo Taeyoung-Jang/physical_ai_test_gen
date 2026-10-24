@@ -68,9 +68,12 @@ RANDOM_LIMITS = [
 
 class PairedDesign(StrictRecord):
     schema_version: Literal["paired-trajectory-design-v1"] = "paired-trajectory-design-v1"
-    purpose: Literal["connection-smoke", "evaluation", "random-environment-sweep"] = (
-        "connection-smoke"
-    )
+    purpose: Literal[
+        "connection-smoke",
+        "evaluation",
+        "random-environment-sweep",
+        "robot-vulnerability-assessment",
+    ] = "connection-smoke"
     methods: list[Literal["afs", "random"]] = Field(default_factory=lambda: list(METHODS))
     seeds: list[int] = Field(default_factory=lambda: [17], min_length=1, max_length=20)
     valid_per_arm: int = Field(default=3, ge=3, le=60)
@@ -85,6 +88,10 @@ class PairedDesign(StrictRecord):
 
     @model_validator(mode="after")
     def coherent(self):
+        assessment = self.purpose == "robot-vulnerability-assessment"
+        single_assessment = assessment and self.methods == ["afs"]
+        if assessment and (self.methods != ["afs"] or self.matched_local is None):
+            raise ValueError("assessment requires AFS with shared fixed-base local changes")
         if self.scene_domain is not None:
             checked_domain(self.scene_domain)
         if self.matched_local is not None:
@@ -92,7 +99,7 @@ class PairedDesign(StrictRecord):
 
             if self.scene_domain is None or self.cold_start_per_arm != 1:
                 raise ValueError("matched local requires shared domain and one baseline per arm")
-            if self.methods != list(METHODS):
+            if self.methods != list(METHODS) and not single_assessment:
                 raise ValueError("matched local requires both arms")
             validate_design(
                 self.matched_local, self.scene_domain, self.search.min_axis_change_fraction
@@ -105,7 +112,7 @@ class PairedDesign(StrictRecord):
             raise ValueError(
                 "crossing domain requires explicit dynamic safety measurement and vice versa"
             )
-        if dynamic and self.methods != list(METHODS):
+        if dynamic and self.methods != list(METHODS) and not single_assessment:
             raise ValueError("dynamic safety comparison requires both methods")
         random_only = self.purpose == "random-environment-sweep"
         if random_only:
@@ -118,7 +125,7 @@ class PairedDesign(StrictRecord):
                     "Random-only sweep requires Random only, zero AFS and zero bootstrap"
                 )
         elif (
-            self.methods != list(METHODS)
+            (self.methods != list(METHODS) and not single_assessment)
             or self.afs_requests_per_seed < 1
             or self.cold_start_per_arm < 1
         ):
@@ -159,6 +166,9 @@ def paired_fingerprint(config):
     )
     value["source_hashes"]["tools/run_navigation_comparison.sh"] = _hash_file(
         PROJECT / "tools/run_navigation_comparison.sh"
+    )
+    value["source_hashes"]["tools/run_humanoid_assessment.py"] = _hash_file(
+        PROJECT / "tools/run_humanoid_assessment.py"
     )
     return value
 
@@ -240,6 +250,19 @@ def paired_plan(paths, design, *, fingerprint_fn=None):
             random_distribution="uniform choice of 1/2 axes on alternating slots; uniform values "
             "outside common minimum-change gap; reset to shared fixed base every episode",
         )
+    if design.purpose == "robot-vulnerability-assessment":
+        manifest["limits"] = [
+            *manifest["limits"],
+            "Targeted fixed-task vulnerability assessment; not representative failure probability",
+            "Observed rule detections and hypotheses do not establish physical root causes",
+            "All attempts including exclusions consume the cap; no automatic replacement",
+        ]
+        manifest["bootstrap"] = "one newly executed fixed baseline per method; PASS required"
+        if design.methods == ["afs"]:
+            manifest.update(
+                method_assignment="single AFS assessment; own seed history only",
+                random_distribution="not_requested_single_method_assessment",
+            )
     return {"manifest": manifest, "sha256": digest(manifest)}
 
 
@@ -665,7 +688,9 @@ class PairedDiscovery:
         if comparison is None:
             for view in metrics.values():
                 view["comparison"] = {
-                    "status": "not_requested_random_only",
+                    "status": "not_requested_assessment"
+                    if self.design.purpose == "robot-vulnerability-assessment"
+                    else "not_requested_random_only",
                     "relative_gain": None,
                     "gain_target_observed": None,
                     "per_seed": [],
@@ -790,6 +815,8 @@ class PairedDiscovery:
 
     def random_schedule(self):
         """All scheduled draws, including attempt slots that may remain unused. No calls."""
+        if "random" not in self.design.methods:
+            return []
         cfg = CampaignConfig.model_validate(self.manifest["robot_config"])
         if self.design.matched_local is not None:
             from failure_client.methods.matched_local import random_candidate
@@ -841,7 +868,7 @@ class PairedDiscovery:
         ]
         return {
             "planned_random_slots_including_unused": len(schedule),
-            "initial_goal_center_box_clearance_min_m": min(gaps),
+            "initial_goal_center_box_clearance_min_m": min(gaps, default=None),
             "initial_goal_center_box_clearance_over_0_4_m": sum(g > 0.4 for g in gaps),
             "rejected_or_resampled": 0,
             "claim": "Initial projected box geometry only; NOT complete path/physical feasibility, "

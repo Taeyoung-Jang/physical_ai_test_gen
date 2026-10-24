@@ -25,7 +25,7 @@ class RobotSettings(StrictRecord):
     groot_root: str = "/workspace/g1_failure/src/GR00T-WholeBodyControl"
     max_calls: int = Field(default=10, ge=1, le=20)
     max_seconds: float | None = Field(default=None, ge=3)
-    response_timeout: float = Field(default=300.0, ge=1, le=300)
+    response_timeout: float = Field(default=300.0, ge=1, le=600)
     enable_push: bool = True
     navigation_completion: Literal["position_only_v1", "goal_dwell_v1"] = "position_only_v1"
     watchdog_wall_s: float | None = Field(default=None, gt=0)

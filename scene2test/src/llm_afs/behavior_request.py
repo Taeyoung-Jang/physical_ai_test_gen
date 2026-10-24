@@ -292,6 +292,8 @@ def request(
         + selection_instructions
         + "\nCopy context_sha256 from the request exactly; never compute or invent it.",
     )
+    if api_provider == "openrouter" and model == "openai/gpt-6-luna":
+        body["max_output_tokens"] = 128000
     if autonomous:
         body["instructions"] += """
 For the next independent experiment, prefer a concrete point: axis + value,

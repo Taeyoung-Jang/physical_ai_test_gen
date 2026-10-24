@@ -1,0 +1,49 @@
+{
+  "schema_version": "humanoid-luna-remaining-20calls-plan-v1",
+  "previous_model": "openai/gpt-6-luna-pro",
+  "new_model": "openai/gpt-6-luna",
+  "api_provider": "openrouter",
+  "sources": [
+    {
+      "method": "afs",
+      "source": "/workspace/g1_failure/src/physical_ai_test_gen/scene2test/development/humanoid_timeout600_20261023_v2/afs",
+      "arm": "/workspace/g1_failure/src/physical_ai_test_gen/scene2test/development/humanoid_timeout600_20261023_v2/afs/seeds/75001/afs",
+      "manifest_sha256": "88aa4a3e3cdef327d581d8f6be9eeb98535559d4b096b264e732dbf3463b90d3",
+      "state_sha256": "ea0aa90acb35bc39fb2eb0701e1ba8d1b0cd4b01fec5c41e4db327420f1e5b08",
+      "spent_attempts": 4,
+      "remaining_probe_slots": 6
+    },
+    {
+      "method": "random",
+      "source": "/workspace/g1_failure/src/physical_ai_test_gen/scene2test/development/humanoid_timeout600_20261023_v2/random",
+      "arm": "/workspace/g1_failure/src/physical_ai_test_gen/scene2test/development/humanoid_timeout600_20261023_v2/random/seeds/75001/random",
+      "manifest_sha256": "e8d7c54118f2bd22cc6569d2fcd1826eb57255bc2fa17ddd9d8f6ef3d8936572",
+      "state_sha256": "635ba6bac37f54a45ce53bb345008c3301abe9305c10c2e9d53567ac04721ee9",
+      "spent_attempts": 8,
+      "remaining_probe_slots": 2
+    }
+  ],
+  "new_seed": 75002,
+  "pro_history_imported": false,
+  "pro_outcomes_pooled": false,
+  "remaining_environment_probes": {
+    "afs": 6,
+    "random": 2
+  },
+  "additional_baselines": {
+    "shared_control": 1,
+    "afs": 1,
+    "random": 1
+  },
+  "robot_api_call_cap": 220,
+  "afs_proposal_cap": 9,
+  "sampling": "New Luna-only segment: fresh 1/2-axis cycle and uniform Random draws, same base/bounds; not exact replay of Pro scenes.",
+  "robot_api_calls_per_episode": 20,
+  "prior_10call_control": {
+    "path": "/workspace/g1_failure/src/physical_ai_test_gen/scene2test/development/humanoid_luna_remaining_20261023_v3/control",
+    "result_sha256": "15d50b18008074a8780bf77b1e281d887e46e88084df0a97adb114593108775b",
+    "outcome": "FAIL",
+    "reason": "BUDGET_EXHAUSTED",
+    "history_imported": false
+  }
+}

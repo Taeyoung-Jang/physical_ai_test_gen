@@ -1,8 +1,0 @@
-{
-  "stage": "runner",
-  "limit_wall_s": 353.0,
-  "elapsed_wall_s": 353.00192396499915,
-  "simulation_time_s": 613.019999999515,
-  "observation_version": 5,
-  "client_request_id": "8eb31c00-da42-43c5-99eb-a83e132c74fd"
-}

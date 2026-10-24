@@ -1,0 +1,514 @@
+{
+  "version": "libero-object-goal-search-v1",
+  "seed_sampling": "18 distinct SystemRandom seeds drawn once before geometry or policy outcomes; no filtering",
+  "tasks": {
+    "object": [
+      {
+        "version": "libero-object-goal-search-v1",
+        "task": "object",
+        "robot": {
+          "upstream_root": "/workspace/g1_failure/src/Isaac-GR00T",
+          "python": "/workspace/g1_failure/src/physical_ai_test_gen/scene2test/experiments/robot_arm_libero/.venv-arm/bin/python",
+          "model_repository": "nvidia/GR00T-N1.7-LIBERO",
+          "model_revision": "2ea293aa20ba7cf5bbf3ba17a5fbcb1a01cbfe21",
+          "libero_config_path": "/workspace/g1_failure/src/physical_ai_test_gen/scene2test/experiments/robot_arm_libero/libero_config",
+          "max_episode_steps": 300,
+          "n_action_steps": 8,
+          "model_path": "/workspace/g1_failure/src/physical_ai_test_gen/scene2test/experiments/robot_arm_libero/models/GR00T-N1.7-LIBERO/libero_object",
+          "suite": "libero_object",
+          "env_name": "libero_sim/pick_up_the_butter_and_place_it_in_the_basket"
+        },
+        "domain": {
+          "butter_x": [
+            -0.17,
+            -0.11
+          ],
+          "butter_y": [
+            -0.27,
+            -0.21
+          ],
+          "butter_yaw": [
+            -3.141592653589793,
+            3.141592653589793
+          ],
+          "butter_mass_scale": [
+            0.5,
+            3.0
+          ],
+          "butter_friction": [
+            0.25,
+            1.2
+          ],
+          "basket_x": [
+            -0.035,
+            0.035
+          ],
+          "basket_y": [
+            0.25,
+            0.32
+          ],
+          "basket_yaw": [
+            -0.5235987755982988,
+            0.5235987755982988
+          ],
+          "box_x": [
+            -0.06,
+            -0.02
+          ],
+          "box_y": [
+            0.015,
+            0.055
+          ],
+          "box_width": [
+            0.02,
+            0.06
+          ],
+          "box_depth": [
+            0.02,
+            0.06
+          ],
+          "box_height": [
+            0.03,
+            0.18
+          ],
+          "box_yaw": [
+            -1.5707963267948966,
+            1.5707963267948966
+          ]
+        },
+        "methods": [
+          "afs",
+          "random"
+        ],
+        "per_arm": 4,
+        "bootstrap": 2,
+        "seeds": [
+          470290,
+          658612,
+          534585
+        ],
+        "background_seed": 76001,
+        "afs_api_provider": "openrouter",
+        "afs_model": "openai/gpt-6-luna-pro",
+        "afs_timeout_s": 300,
+        "scope": "Task-specific development domain; own task/set/seed history; no causal-family or held-out superiority claim"
+      },
+      {
+        "version": "libero-object-goal-search-v1",
+        "task": "object",
+        "robot": {
+          "upstream_root": "/workspace/g1_failure/src/Isaac-GR00T",
+          "python": "/workspace/g1_failure/src/physical_ai_test_gen/scene2test/experiments/robot_arm_libero/.venv-arm/bin/python",
+          "model_repository": "nvidia/GR00T-N1.7-LIBERO",
+          "model_revision": "2ea293aa20ba7cf5bbf3ba17a5fbcb1a01cbfe21",
+          "libero_config_path": "/workspace/g1_failure/src/physical_ai_test_gen/scene2test/experiments/robot_arm_libero/libero_config",
+          "max_episode_steps": 300,
+          "n_action_steps": 8,
+          "model_path": "/workspace/g1_failure/src/physical_ai_test_gen/scene2test/experiments/robot_arm_libero/models/GR00T-N1.7-LIBERO/libero_object",
+          "suite": "libero_object",
+          "env_name": "libero_sim/pick_up_the_butter_and_place_it_in_the_basket"
+        },
+        "domain": {
+          "butter_x": [
+            -0.17,
+            -0.11
+          ],
+          "butter_y": [
+            -0.27,
+            -0.21
+          ],
+          "butter_yaw": [
+            -3.141592653589793,
+            3.141592653589793
+          ],
+          "butter_mass_scale": [
+            0.5,
+            3.0
+          ],
+          "butter_friction": [
+            0.25,
+            1.2
+          ],
+          "basket_x": [
+            -0.035,
+            0.035
+          ],
+          "basket_y": [
+            0.25,
+            0.32
+          ],
+          "basket_yaw": [
+            -0.5235987755982988,
+            0.5235987755982988
+          ],
+          "box_x": [
+            -0.06,
+            -0.02
+          ],
+          "box_y": [
+            0.015,
+            0.055
+          ],
+          "box_width": [
+            0.02,
+            0.06
+          ],
+          "box_depth": [
+            0.02,
+            0.06
+          ],
+          "box_height": [
+            0.03,
+            0.18
+          ],
+          "box_yaw": [
+            -1.5707963267948966,
+            1.5707963267948966
+          ]
+        },
+        "methods": [
+          "afs",
+          "random"
+        ],
+        "per_arm": 4,
+        "bootstrap": 2,
+        "seeds": [
+          834789,
+          601202,
+          858884
+        ],
+        "background_seed": 76001,
+        "afs_api_provider": "openrouter",
+        "afs_model": "openai/gpt-6-luna-pro",
+        "afs_timeout_s": 300,
+        "scope": "Task-specific development domain; own task/set/seed history; no causal-family or held-out superiority claim"
+      },
+      {
+        "version": "libero-object-goal-search-v1",
+        "task": "object",
+        "robot": {
+          "upstream_root": "/workspace/g1_failure/src/Isaac-GR00T",
+          "python": "/workspace/g1_failure/src/physical_ai_test_gen/scene2test/experiments/robot_arm_libero/.venv-arm/bin/python",
+          "model_repository": "nvidia/GR00T-N1.7-LIBERO",
+          "model_revision": "2ea293aa20ba7cf5bbf3ba17a5fbcb1a01cbfe21",
+          "libero_config_path": "/workspace/g1_failure/src/physical_ai_test_gen/scene2test/experiments/robot_arm_libero/libero_config",
+          "max_episode_steps": 300,
+          "n_action_steps": 8,
+          "model_path": "/workspace/g1_failure/src/physical_ai_test_gen/scene2test/experiments/robot_arm_libero/models/GR00T-N1.7-LIBERO/libero_object",
+          "suite": "libero_object",
+          "env_name": "libero_sim/pick_up_the_butter_and_place_it_in_the_basket"
+        },
+        "domain": {
+          "butter_x": [
+            -0.17,
+            -0.11
+          ],
+          "butter_y": [
+            -0.27,
+            -0.21
+          ],
+          "butter_yaw": [
+            -3.141592653589793,
+            3.141592653589793
+          ],
+          "butter_mass_scale": [
+            0.5,
+            3.0
+          ],
+          "butter_friction": [
+            0.25,
+            1.2
+          ],
+          "basket_x": [
+            -0.035,
+            0.035
+          ],
+          "basket_y": [
+            0.25,
+            0.32
+          ],
+          "basket_yaw": [
+            -0.5235987755982988,
+            0.5235987755982988
+          ],
+          "box_x": [
+            -0.06,
+            -0.02
+          ],
+          "box_y": [
+            0.015,
+            0.055
+          ],
+          "box_width": [
+            0.02,
+            0.06
+          ],
+          "box_depth": [
+            0.02,
+            0.06
+          ],
+          "box_height": [
+            0.03,
+            0.18
+          ],
+          "box_yaw": [
+            -1.5707963267948966,
+            1.5707963267948966
+          ]
+        },
+        "methods": [
+          "afs",
+          "random"
+        ],
+        "per_arm": 4,
+        "bootstrap": 2,
+        "seeds": [
+          584477,
+          865653,
+          626650
+        ],
+        "background_seed": 76001,
+        "afs_api_provider": "openrouter",
+        "afs_model": "openai/gpt-6-luna-pro",
+        "afs_timeout_s": 300,
+        "scope": "Task-specific development domain; own task/set/seed history; no causal-family or held-out superiority claim"
+      }
+    ],
+    "goal": [
+      {
+        "version": "libero-object-goal-search-v1",
+        "task": "goal",
+        "robot": {
+          "upstream_root": "/workspace/g1_failure/src/Isaac-GR00T",
+          "python": "/workspace/g1_failure/src/physical_ai_test_gen/scene2test/experiments/robot_arm_libero/.venv-arm/bin/python",
+          "model_repository": "nvidia/GR00T-N1.7-LIBERO",
+          "model_revision": "2ea293aa20ba7cf5bbf3ba17a5fbcb1a01cbfe21",
+          "libero_config_path": "/workspace/g1_failure/src/physical_ai_test_gen/scene2test/experiments/robot_arm_libero/libero_config",
+          "max_episode_steps": 300,
+          "n_action_steps": 8,
+          "model_path": "/workspace/g1_failure/src/physical_ai_test_gen/scene2test/experiments/robot_arm_libero/models/GR00T-N1.7-LIBERO/libero_goal",
+          "suite": "libero_goal",
+          "env_name": "libero_sim/open_the_middle_drawer_of_the_cabinet"
+        },
+        "domain": {
+          "cabinet_x": [
+            0.015,
+            0.065
+          ],
+          "cabinet_y": [
+            -0.28,
+            -0.24
+          ],
+          "cabinet_yaw_delta": [
+            -0.15,
+            0.15
+          ],
+          "drawer_damping_scale": [
+            0.5,
+            4.0
+          ],
+          "drawer_frictionloss_n": [
+            0.0,
+            4.0
+          ],
+          "box_lateral": [
+            0.02,
+            0.08
+          ],
+          "box_forward": [
+            0.16,
+            0.22
+          ],
+          "box_width": [
+            0.02,
+            0.05
+          ],
+          "box_depth": [
+            0.02,
+            0.045
+          ],
+          "box_height": [
+            0.04,
+            0.16
+          ],
+          "box_yaw": [
+            -1.5707963267948966,
+            1.5707963267948966
+          ]
+        },
+        "methods": [
+          "afs",
+          "random"
+        ],
+        "per_arm": 4,
+        "bootstrap": 2,
+        "seeds": [
+          677487,
+          609895,
+          477723
+        ],
+        "background_seed": 76002,
+        "afs_api_provider": "openrouter",
+        "afs_model": "openai/gpt-6-luna-pro",
+        "afs_timeout_s": 300,
+        "scope": "Task-specific development domain; own task/set/seed history; no causal-family or held-out superiority claim"
+      },
+      {
+        "version": "libero-object-goal-search-v1",
+        "task": "goal",
+        "robot": {
+          "upstream_root": "/workspace/g1_failure/src/Isaac-GR00T",
+          "python": "/workspace/g1_failure/src/physical_ai_test_gen/scene2test/experiments/robot_arm_libero/.venv-arm/bin/python",
+          "model_repository": "nvidia/GR00T-N1.7-LIBERO",
+          "model_revision": "2ea293aa20ba7cf5bbf3ba17a5fbcb1a01cbfe21",
+          "libero_config_path": "/workspace/g1_failure/src/physical_ai_test_gen/scene2test/experiments/robot_arm_libero/libero_config",
+          "max_episode_steps": 300,
+          "n_action_steps": 8,
+          "model_path": "/workspace/g1_failure/src/physical_ai_test_gen/scene2test/experiments/robot_arm_libero/models/GR00T-N1.7-LIBERO/libero_goal",
+          "suite": "libero_goal",
+          "env_name": "libero_sim/open_the_middle_drawer_of_the_cabinet"
+        },
+        "domain": {
+          "cabinet_x": [
+            0.015,
+            0.065
+          ],
+          "cabinet_y": [
+            -0.28,
+            -0.24
+          ],
+          "cabinet_yaw_delta": [
+            -0.15,
+            0.15
+          ],
+          "drawer_damping_scale": [
+            0.5,
+            4.0
+          ],
+          "drawer_frictionloss_n": [
+            0.0,
+            4.0
+          ],
+          "box_lateral": [
+            0.02,
+            0.08
+          ],
+          "box_forward": [
+            0.16,
+            0.22
+          ],
+          "box_width": [
+            0.02,
+            0.05
+          ],
+          "box_depth": [
+            0.02,
+            0.045
+          ],
+          "box_height": [
+            0.04,
+            0.16
+          ],
+          "box_yaw": [
+            -1.5707963267948966,
+            1.5707963267948966
+          ]
+        },
+        "methods": [
+          "afs",
+          "random"
+        ],
+        "per_arm": 4,
+        "bootstrap": 2,
+        "seeds": [
+          234512,
+          432541,
+          426913
+        ],
+        "background_seed": 76002,
+        "afs_api_provider": "openrouter",
+        "afs_model": "openai/gpt-6-luna-pro",
+        "afs_timeout_s": 300,
+        "scope": "Task-specific development domain; own task/set/seed history; no causal-family or held-out superiority claim"
+      },
+      {
+        "version": "libero-object-goal-search-v1",
+        "task": "goal",
+        "robot": {
+          "upstream_root": "/workspace/g1_failure/src/Isaac-GR00T",
+          "python": "/workspace/g1_failure/src/physical_ai_test_gen/scene2test/experiments/robot_arm_libero/.venv-arm/bin/python",
+          "model_repository": "nvidia/GR00T-N1.7-LIBERO",
+          "model_revision": "2ea293aa20ba7cf5bbf3ba17a5fbcb1a01cbfe21",
+          "libero_config_path": "/workspace/g1_failure/src/physical_ai_test_gen/scene2test/experiments/robot_arm_libero/libero_config",
+          "max_episode_steps": 300,
+          "n_action_steps": 8,
+          "model_path": "/workspace/g1_failure/src/physical_ai_test_gen/scene2test/experiments/robot_arm_libero/models/GR00T-N1.7-LIBERO/libero_goal",
+          "suite": "libero_goal",
+          "env_name": "libero_sim/open_the_middle_drawer_of_the_cabinet"
+        },
+        "domain": {
+          "cabinet_x": [
+            0.015,
+            0.065
+          ],
+          "cabinet_y": [
+            -0.28,
+            -0.24
+          ],
+          "cabinet_yaw_delta": [
+            -0.15,
+            0.15
+          ],
+          "drawer_damping_scale": [
+            0.5,
+            4.0
+          ],
+          "drawer_frictionloss_n": [
+            0.0,
+            4.0
+          ],
+          "box_lateral": [
+            0.02,
+            0.08
+          ],
+          "box_forward": [
+            0.16,
+            0.22
+          ],
+          "box_width": [
+            0.02,
+            0.05
+          ],
+          "box_depth": [
+            0.02,
+            0.045
+          ],
+          "box_height": [
+            0.04,
+            0.16
+          ],
+          "box_yaw": [
+            -1.5707963267948966,
+            1.5707963267948966
+          ]
+        },
+        "methods": [
+          "afs",
+          "random"
+        ],
+        "per_arm": 4,
+        "bootstrap": 2,
+        "seeds": [
+          755925,
+          893346,
+          524616
+        ],
+        "background_seed": 76002,
+        "afs_api_provider": "openrouter",
+        "afs_model": "openai/gpt-6-luna-pro",
+        "afs_timeout_s": 300,
+        "scope": "Task-specific development domain; own task/set/seed history; no causal-family or held-out superiority claim"
+      }
+    ]
+  }
+}

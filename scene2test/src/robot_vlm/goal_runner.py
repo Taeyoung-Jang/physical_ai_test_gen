@@ -22,7 +22,7 @@ from clear_path.humans import human_geometry, human_scene
 from simulation_server.groot_locomotion import G1OnnxController
 
 from . import goal_policy as policy_module
-from . import navigation_tools
+from . import navigation_tools, reasoning_fallback
 from .api_transport import DiagnosticError
 from .behavior_events import BehaviorEvents
 from .budget import simulation_limit
@@ -72,6 +72,12 @@ def run(
     policy.navigation_completion = nav_contract
     max_seconds = simulation_limit(max_seconds)
     timing = RequestTiming(response_timeout)
+    fallback_enabled = reasoning_fallback.eligible(
+        getattr(policy, "api_provider", "openai"), getattr(policy, "model", None)
+    )
+    response_deadline = reasoning_fallback.deadline(timing, fallback_enabled)
+    if fallback_enabled:
+        policy.reasoning_effort = "high"
     config = validate_scene(scene_config)
     source = groot_root / "decoupled_wbc/sim2mujoco/resources/robots/g1/g1_gear_wbc.xml"
     xml = fixture.world_xml(config, source)
@@ -171,9 +177,12 @@ def run(
             "max_calls": max_calls,
             "max_simulation_s": requested_max_seconds,
             "simulation_time_unlimited": requested_max_seconds is None,
-            "max_output_tokens_per_call": None,
-            "output_token_limit_policy": "provider_default_no_client_cap",
-            "response_deadline_wall_s": timing.deadline_s,
+            "max_output_tokens_per_call": 128000 if fallback_enabled else None,
+            "output_token_limit_policy": "explicit_128000"
+            if fallback_enabled
+            else "provider_default_no_client_cap",
+            "reasoning_fallback": reasoning_fallback.contract(fallback_enabled),
+            "response_deadline_wall_s": response_deadline,
             "http_read_timeout_s": timing.read_s,
             "timing_contract": "goal-request-timing-v2; inference counts toward simulation budget",
             "connection_retry_policy": connection_retry_contract(),
@@ -210,6 +219,7 @@ def run(
                 for path, value in robot_audit.get("source_sha256", {}).items()
             },
             "source_hashes": {
+                "reasoning_fallback": audit.sha256(Path(reasoning_fallback.__file__)),
                 "scene_config": audit.sha256(Path(__file__).with_name("scene_config.py")),
                 "fixture_contracts": audit.sha256(
                     Path(__file__).parents[1] / "clear_path/contracts.py"
@@ -529,11 +539,11 @@ def run(
                     if (
                         not terminated
                         and data.time < max_seconds
-                        and time.monotonic() - began > timing.deadline_s
+                        and time.monotonic() - began > response_deadline
                     ):
                         diagnostic = {
                             "stage": "runner",
-                            "limit_wall_s": timing.deadline_s,
+                            "limit_wall_s": response_deadline,
                             "elapsed_wall_s": time.monotonic() - began,
                             "simulation_time_s": float(data.time),
                             "observation_version": obs.state_version,
@@ -548,6 +558,40 @@ def run(
                     break
                 try:
                     action, metadata = future.result()
+                except DiagnosticError as exc:
+                    effort = getattr(policy, "reasoning_effort", "high")
+                    lower = (
+                        reasoning_fallback.next_effort(exc, effort) if fallback_enabled else None
+                    )
+                    if lower is None or calls >= max_calls:
+                        raise
+                    event = {
+                        "event": "reasoning_fallback",
+                        "observation_version": obs.state_version,
+                        "from_effort": effort,
+                        "to_effort": lower,
+                        "next_observation_version": calls,
+                        "remaining_api_calls": max_calls - calls,
+                        "diagnostic": exc.diagnostic,
+                        "executed": False,
+                    }
+                    decisions.write(json.dumps(event) + "\n")
+                    decisions.flush()
+                    journal.emit(
+                        "reasoning_fallback",
+                        **{
+                            k: v
+                            for k, v in event.items()
+                            if k not in {"event", "observation_version"}
+                        },
+                    )
+                    print(
+                        f"REASONING_FALLBACK={effort}->{lower}; verified length; "
+                        f"remaining API calls={max_calls - calls}",
+                        flush=True,
+                    )
+                    policy.reasoning_effort = lower
+                    continue
                 finally:
                     consumed = True
                 record = {

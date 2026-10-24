@@ -1,9 +1,0 @@
-{
-  "status": "no_path",
-  "path_xy_m": [],
-  "radius_m": 0.4,
-  "planning_radius_m": 0.5,
-  "resolution_m": 0.05,
-  "endpoint_connector_limit_m": 0.35,
-  "claim": "padded static circular-footprint route, not whole-body feasibility"
-}

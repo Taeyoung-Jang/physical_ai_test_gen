@@ -97,6 +97,9 @@ class GoalPolicy(OpenAIPolicy):
             body["service_tier"] = self.service_tier
         body["instructions"] = INSTRUCTIONS
         body["reasoning"] = {"effort": "high"}
+        if self.api_provider == "openrouter" and self.model == "openai/gpt-6-luna":
+            body["reasoning"] = {"effort": getattr(self, "reasoning_effort", "high")}
+            body["max_output_tokens"] = 128000
         body["text"]["format"]["schema"] = schema(GoalEnvelope)
         body["text"]["format"]["name"] = "robot_goal_action"
         context = {

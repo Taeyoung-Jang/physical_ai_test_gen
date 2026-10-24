@@ -15,6 +15,7 @@ from .test_afs_autonomous import Proposer, reload, setup
 def body():
     value = request_body({"case": "crossing"}, {"type": "object", "properties": {}})
     value.update(model="openai/gpt-6-luna", api_provider="openrouter")
+    value["max_output_tokens"] = 128000
     return value
 
 
@@ -40,6 +41,7 @@ def test_afs_openrouter_wire_and_saved_response(monkeypatch):
         assert str(request.url) == openrouter.ENDPOINT
         wire = json.loads(request.content)
         assert wire["model"] == "openai/gpt-6-luna"
+        assert wire["max_tokens"] == 128000
         assert wire["messages"][0]["role"] == "system"
         assert wire["messages"][1] == {
             "role": "user",
@@ -109,6 +111,7 @@ def test_afs_openrouter_saved_response_resumes_without_resending(tmp_path, monke
         def __call__(self, body, **kwargs):
             assert body["api_provider"] == "openrouter"
             assert body["model"] == "openai/gpt-6-luna"
+            assert body["max_output_tokens"] == 128000
             result = super().__call__(body, **kwargs)
             result.update(api_provider="openrouter", routed_provider="OpenAI")
             return result

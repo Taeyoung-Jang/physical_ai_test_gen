@@ -134,6 +134,26 @@ def test_real_policy_parser_with_goal_and_push_capabilities(monkeypatch):
     assert "PushAction" in json.dumps(seen[-1]["response_format"])
 
 
+@pytest.mark.parametrize("cls", [GoalPolicy, PushPolicy])
+def test_luna_explicit_128k_completion_limit_reaches_http(monkeypatch, cls):
+    monkeypatch.setenv("OPENROUTER_API_KEY", "fake-router-test-secret")
+    seen = []
+
+    def handler(request):
+        wire = json.loads(request.content)
+        seen.append(wire)
+        assert wire["model"] == "openai/gpt-6-luna"
+        assert wire["max_tokens"] == 128000
+        assert wire["reasoning"] == {"effort": "high"}
+        return httpx.Response(200, json=response(model="openai/gpt-6-luna"))
+
+    policy = cls(
+        model="openai/gpt-6-luna", api_provider="openrouter", transport=httpx.MockTransport(handler)
+    )
+    action, _ = policy.decide(obs(), PNG)
+    assert action.action == "navigate_to" and len(seen) == 1
+
+
 @pytest.mark.parametrize("failure", ["timeout", "http429", "http500", "unknown_connect"])
 def test_post_send_or_ambiguous_errors_never_retry_or_switch_provider(
     tmp_path, monkeypatch, failure

@@ -38,7 +38,7 @@ def main():
         "--response-timeout",
         type=float,
         default=90,
-        help="HTTP read timeout in seconds (1..300); runner deadline adds 30s",
+        help="HTTP read timeout (1..600); Luna length fallback wall deadline >=1200s, others +53s",
     )
     p.add_argument(
         "--groot-root", type=Path, default=Path("/workspace/g1_failure/src/GR00T-WholeBodyControl")
@@ -75,16 +75,21 @@ def main():
     except ValueError as exc:
         p.error(str(exc))
     simulation_label = "unlimited" if args.max_seconds is None else f"{args.max_seconds}s"
+    from robot_vlm import reasoning_fallback
     from robot_vlm.timing import RequestTiming
 
     try:
         timing = RequestTiming(args.response_timeout)
     except ValueError as exc:
         p.error(str(exc))
+    fallback_enabled = reasoning_fallback.eligible(args.api_provider, args.model)
+    wall_deadline = reasoning_fallback.deadline(timing, fallback_enabled)
     print(
-        f"TIMING: HTTP read={timing.read_s}s; runner deadline={timing.deadline_s}s; "
+        f"TIMING: HTTP read={timing.read_s}s; runner deadline="
+        f"{wall_deadline}s; "
         f"simulation={simulation_label} (includes inference waits); "
-        "pre-send TCP retries<=2 (1s/2s backoff); ambiguous/post-send retries=0",
+        "pre-send TCP retries<=2 (1s/2s backoff); ambiguous retries=0; "
+        "verified-length reasoning fallback=high->medium->low->none for OpenRouter Luna",
         flush=True,
     )
     print(f"NAVIGATION_COMPLETION={args.navigation_completion}; post-budget grace=0s", flush=True)
@@ -176,7 +181,7 @@ def main():
             "robot loop error; inspect error.json for redacted message and stack"
         ) from None
     print(
-        f"DEBUG_LOGS={root / 'api_call_*.jsonl'}; per-call wall deadline={timing.deadline_s}s; "
+        f"DEBUG_LOGS={root / 'api_call_*.jsonl'}; per-call wall deadline={wall_deadline}s; "
         f"simulation budget={simulation_label}",
         flush=True,
     )

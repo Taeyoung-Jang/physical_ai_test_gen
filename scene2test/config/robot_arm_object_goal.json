@@ -1,0 +1,28 @@
+{
+  "schema_version": "robot-arm-object-goal-smoke-v1",
+  "purpose": "two_single_episode_development_probes_not_afs_comparison",
+  "upstream_root": "/workspace/g1_failure/src/Isaac-GR00T",
+  "python": "/workspace/g1_failure/src/physical_ai_test_gen/scene2test/experiments/robot_arm_libero/.venv-arm/bin/python",
+  "model_repository": "nvidia/GR00T-N1.7-LIBERO",
+  "model_revision": "2ea293aa20ba7cf5bbf3ba17a5fbcb1a01cbfe21",
+  "libero_config_path": "/workspace/g1_failure/src/physical_ai_test_gen/scene2test/experiments/robot_arm_libero/libero_config",
+  "max_episode_steps": 300,
+  "n_action_steps": 8,
+  "afs_requests": 0,
+  "environment_changes": [],
+  "sampling": "upstream seeded reset; not official fixed-init-state benchmark protocol",
+  "cases": [
+    {
+      "suite": "libero_object",
+      "task": "pick_up_the_butter_and_place_it_in_the_basket",
+      "seed": 76001,
+      "model_path": "/workspace/g1_failure/src/physical_ai_test_gen/scene2test/experiments/robot_arm_libero/models/GR00T-N1.7-LIBERO/libero_object"
+    },
+    {
+      "suite": "libero_goal",
+      "task": "open_the_middle_drawer_of_the_cabinet",
+      "seed": 76002,
+      "model_path": "/workspace/g1_failure/src/physical_ai_test_gen/scene2test/experiments/robot_arm_libero/models/GR00T-N1.7-LIBERO/libero_goal"
+    }
+  ]
+}

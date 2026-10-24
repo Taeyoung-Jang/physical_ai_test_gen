@@ -23,8 +23,8 @@ class RequestTiming:
     read_s: float = 90.0
 
     def __post_init__(self):
-        if not math.isfinite(self.read_s) or not 1 <= self.read_s <= 300:
-            raise ValueError("response-timeout must be finite, 1..300 seconds")
+        if not math.isfinite(self.read_s) or not 1 <= self.read_s <= 600:
+            raise ValueError("response-timeout must be finite, 1..600 seconds")
 
     @property
     def deadline_s(self):

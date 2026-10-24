@@ -1,0 +1,130 @@
+{
+  "version": "arm-free-pair-comparison-v4",
+  "experiment": {
+    "version": "libero-placement-comparison-v1",
+    "scope": "Independent two-box DEVELOPMENT domain. Same shared sampling/bounds/robot/task both arms; no enforced parallelism or central corridor. Fixed nonoverlapping placement regions avoid known background clutter; not held-out score or guaranteed failure.",
+    "robot": {
+      "upstream_root": "/workspace/g1_failure/src/Isaac-GR00T",
+      "python": "/workspace/g1_failure/src/physical_ai_test_gen/scene2test/experiments/robot_arm_libero/.venv-arm/bin/python",
+      "model_repository": "nvidia/GR00T-N1.7-LIBERO",
+      "model_path": "/workspace/g1_failure/src/physical_ai_test_gen/scene2test/experiments/robot_arm_libero/models/GR00T-N1.7-LIBERO/libero_spatial",
+      "env_name": "libero_sim/pick_up_the_black_bowl_from_table_center_and_place_it_on_the_plate",
+      "suite": "libero_spatial",
+      "max_episode_steps": 300,
+      "n_action_steps": 8,
+      "model_revision": "2ea293aa20ba7cf5bbf3ba17a5fbcb1a01cbfe21",
+      "libero_config_path": "/workspace/g1_failure/src/physical_ai_test_gen/scene2test/experiments/robot_arm_libero/libero_config"
+    },
+    "methods": [
+      "afs",
+      "random"
+    ],
+    "seeds": [
+      727,
+      733,
+      739
+    ],
+    "per_arm": 4,
+    "bootstrap": 2,
+    "afs_model": "openai/gpt-6-luna-pro",
+    "afs_service_tier": null,
+    "bounds": {
+      "bowl_x": [
+        -0.1,
+        -0.05
+      ],
+      "bowl_y": [
+        -0.01,
+        0.01
+      ],
+      "plate_x": [
+        0.06,
+        0.1
+      ],
+      "plate_y": [
+        0.19,
+        0.24
+      ]
+    },
+    "background_seed": 51000,
+    "background_positions": {
+      "akita_black_bowl_2": [
+        -0.25,
+        0.4
+      ]
+    },
+    "afs_api_provider": "openrouter"
+  },
+  "measurement": {
+    "version": "arm-contact-fall-v1",
+    "below_table_margin_m": 0.05,
+    "below_table_dwell_s": 0.1,
+    "contact_distance_tolerance_m": 1e-06
+  },
+  "domain": {
+    "bowl_x": [
+      -0.1,
+      -0.05
+    ],
+    "bowl_y": [
+      -0.01,
+      0.01
+    ],
+    "plate_x": [
+      0.06,
+      0.1
+    ],
+    "plate_y": [
+      0.19,
+      0.24
+    ],
+    "box1_x": [
+      -0.24,
+      -0.0075
+    ],
+    "box1_y": [
+      0.1,
+      0.12
+    ],
+    "box1_width": [
+      0.02,
+      0.06
+    ],
+    "box1_depth": [
+      0.02,
+      0.06
+    ],
+    "box1_height": [
+      0.03,
+      0.2
+    ],
+    "box1_yaw": [
+      -1.5707963267948966,
+      1.5707963267948966
+    ],
+    "box2_x": [
+      -0.12,
+      -0.075
+    ],
+    "box2_y": [
+      0.24,
+      0.3
+    ],
+    "box2_width": [
+      0.02,
+      0.06
+    ],
+    "box2_depth": [
+      0.02,
+      0.06
+    ],
+    "box2_height": [
+      0.03,
+      0.2
+    ],
+    "box2_yaw": [
+      -1.5707963267948966,
+      1.5707963267948966
+    ]
+  }
+}

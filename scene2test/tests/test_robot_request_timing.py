@@ -10,7 +10,7 @@ from robot_vlm.debug_log import CURRENT, Journal
 from robot_vlm.timing import RequestTiming
 
 
-@pytest.mark.parametrize("value", [0, -1, 301, float("nan"), float("inf")])
+@pytest.mark.parametrize("value", [0, -1, 601, float("nan"), float("inf")])
 def test_invalid_timeout(value):
     with pytest.raises(ValueError):
         RequestTiming(value)
@@ -20,6 +20,34 @@ def test_coordinated_deadline():
     assert RequestTiming().read_s == 90
     assert RequestTiming().deadline_s == 143
     assert RequestTiming(60).deadline_s == 113
+    assert RequestTiming(300).deadline_s == 353
+    assert RequestTiming(600).deadline_s == 653
+
+
+def test_long_timeout_reaches_robot_subprocess_and_http_transport(tmp_path, monkeypatch):
+    from failure_client.experiments.local_goal_adapter import command
+    from failure_client.experiments.research_protocol import CampaignConfig, RobotSettings
+
+    cfg = CampaignConfig(robot=RobotSettings(response_timeout=600.0))
+    args = command(cfg, tmp_path / "scene.json", tmp_path / "rollout")
+    assert args[args.index("--response-timeout") + 1] == "600.0"
+    monkeypatch.setenv("OPENAI_API_KEY", "mock-secret")
+    journal = Journal(tmp_path / "long.jsonl", 0, read_timeout_s=600)
+    token = CURRENT.set(journal)
+    seen = []
+
+    def handler(req):
+        seen.append(req)
+        assert req.extensions["timeout"]["read"] == 600
+        req.extensions["trace"]("http11.receive_response_headers.failed", {})
+        raise httpx.ReadTimeout("synthetic long timeout", request=req)
+
+    try:
+        with pytest.raises(DiagnosticError):
+            call({"model": "gpt-6-astra"}, lambda x: x, transport=httpx.MockTransport(handler))
+        assert len(seen) == 1
+    finally:
+        CURRENT.reset(token)
 
 
 def test_http_timeout_propagation_and_failed_phase_survives_cleanup(tmp_path, monkeypatch):
